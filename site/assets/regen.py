@@ -17,7 +17,7 @@ from culture.rules import decide, LineConfig
 from culture.rationale import generate_rationale
 from culture.records import RecordWriter, hash_file, verify_chain
 
-ROOT = "/Users/nitishc/Desktop/projs/cultureqc"
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "assets2")
 LAD = os.path.join(HERE, "ladder2")

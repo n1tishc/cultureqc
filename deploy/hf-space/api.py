@@ -155,23 +155,45 @@ def health() -> dict:
     }
 
 
-# Repo checkout: <root>/site/index.html. In the Space this path does not exist.
+# Repo checkout: <root>/site/dist, the Vite build output. In the Space this path
+# does not exist, and in a checkout it only exists once `npm run build` has run —
+# the dev server serves the page during development and proxies here for the API.
 _SITE = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(
-    os.path.abspath(__file__)))), "site")
+    os.path.abspath(__file__)))), "site", "dist")
 _PAGE = os.path.join(_SITE, "index.html")
 if os.path.isdir(_SITE):
     from fastapi.staticfiles import StaticFiles
     app.mount("/site", StaticFiles(directory=_SITE, html=True), name="site")
+    # The built page asks for /assets/*, /img/* and a couple of files at the
+    # root, so serving index.html alone would give a page with no styles and no
+    # images. Each is registered explicitly rather than mounting StaticFiles at
+    # "/", which would sit in front of /health and /analyze.
+    from fastapi.responses import FileResponse as _FileResponse
+
+    for _sub in ("assets", "img"):
+        _d = os.path.join(_SITE, _sub)
+        if os.path.isdir(_d):
+            app.mount("/" + _sub, StaticFiles(directory=_d), name=_sub)
+
+    def _serve(path: str):
+        return lambda: _FileResponse(path)
+
+    for _name in sorted(os.listdir(_SITE)):
+        _f = os.path.join(_SITE, _name)
+        if os.path.isfile(_f) and _name != "index.html":
+            app.get("/" + _name, include_in_schema=False)(_serve(_f))
 
 
 @app.get("/")
 def root():
-    """The API in the Space; the page too when running from a checkout.
+    """The API in the Space; the built page too when running from a checkout.
 
     site/ is not copied into the Space (see deploy/sync_space.py), so in
     production this stays JSON and Vercel serves the page. Locally it means one
-    command gives you the page and the pipeline on one origin, which is also the
-    only way to exercise the real CORS-free path before deploying.
+    command gives you the page and the pipeline on one origin, which is the only
+    way to exercise the real CORS-free path before deploying — but it serves the
+    *build*, so `npm run build` has to have run. For day-to-day frontend work,
+    `npm run dev` proxies /health and /analyze here instead.
     """
     if os.path.isfile(_PAGE):
         from fastapi.responses import FileResponse

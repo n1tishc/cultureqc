@@ -7,7 +7,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  contract:
+  api:
+    name: API contract
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,7 +26,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install fastapi 'python-multipart' httpx pytest numpy Pillow pyyaml opencv-python-headless
 
-      - name: API contract tests
+      - name: Contract tests
         run: python -m pytest deploy/hf-space/test_api.py -q
 
       # The Space carries generated copies of culture/ and config/. If they drift,
@@ -33,9 +34,28 @@ jobs:
       - name: Space is in sync with the repo
         run: python deploy/sync_space.py --check
 
-      # site/index.html is generated. A hand-edit there would be overwritten on
-      # the next build, so the committed file must match what assemble.py emits.
-      - name: site/index.html matches its source
+  site:
+    name: Site build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+
+      - name: Install
+        run: npm --prefix site ci
+
+      - name: Build
+        run: npm --prefix site run build
+
+      # site/src/data.json is generated from the pipeline output committed under
+      # site/assets/. If someone hand-edits the JSON, the page stops matching the
+      # records it claims to show — which is the one thing this page must not do.
+      - name: Reference data matches the pipeline output it came from
         run: |
-          python site/src/assemble.py
-          git diff --exit-code -- site/index.html
+          python3 site/assets/build_data.py
+          git diff --exit-code -- site/src/data.json site/public/img

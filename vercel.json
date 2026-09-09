@@ -1,15 +1,29 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "outputDirectory": "site",
-  "buildCommand": null,
-  "installCommand": null,
-  "framework": null,
+  "framework": "vite",
+  "installCommand": "npm --prefix site ci",
+  "buildCommand": "npm --prefix site run build",
+  "outputDirectory": "site/dist",
   "cleanUrls": true,
   "headers": [
     {
       "source": "/index.html",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
+      ]
+    },
+    {
+      "comment": "Vite fingerprints everything under /assets, so it can be cached hard.",
+      "source": "/assets/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
+    {
+      "comment": "The reference images are not fingerprinted; a day is enough.",
+      "source": "/img/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=86400" }
       ]
     },
     {

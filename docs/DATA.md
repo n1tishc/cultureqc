@@ -35,10 +35,10 @@ earlier run of it.
 Only the training and asset-generation path:
 
 - `scripts/synth_contamination.py` — composites sprites onto clean tiles
-- `site/src/regen.py` — rebuilds the landing page's contaminated-field image
+- `site/assets/regen.py` — rebuilds the landing page's contaminated-field image
 
 Neither the library (`culture/`), the API (`deploy/hf-space/`), nor the site
-build (`site/src/assemble.py`) touches `data/`. A fresh clone can install,
+build (`site/assets/build_data.py`) touches `data/`. A fresh clone can install,
 analyse an image, run the tests, and rebuild the page without downloading
 anything from here.
 

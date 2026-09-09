@@ -2,14 +2,14 @@
 
 The card is the one asset that cannot be inlined: crawlers do not fetch data:
 URIs, so og:image has to be a real file at a real URL. The favicon can be, and
-is, inlined by assemble.py — so this breaks the page's zero-external-requests
+is, served from public/ — so this is the page's one external-request
 rule by exactly one file.
 
 Everything on the card is real: the field is the composited Huh7 frame the page
 already ships, the box is the Grad-CAM evidence box the classifier drew on it,
 and the readouts and record hash are read straight out of results.json.
 
-    python site/src/make_og.py        ->  site/og.png, site/favicon.png
+    python site/assets/make_og.py     ->  site/public/og.png, site/public/favicon.png
 """
 import base64, json, os, sys
 
@@ -29,8 +29,8 @@ def b64(p):
 
 
 FIELD = "data:image/png;base64," + b64(os.path.join(SRC, REC["image_ref"]))
-ARCHIVO = b64(os.path.join(HERE, "archivo-latin.woff2"))
-MARTIAN = b64(os.path.join(HERE, "martian-latin.woff2"))
+ARCHIVO = b64(os.path.join(HERE, "..", "src", "assets", "fonts", "archivo-latin.woff2"))
+MARTIAN = b64(os.path.join(HERE, "..", "src", "assets", "fonts", "martian-latin.woff2"))
 
 # The evidence box is measured on a centred 256x256 crop; mapping it back to the
 # 704x520 field offsets the origin and leaves the box's own size in tile pixels.
@@ -145,5 +145,5 @@ def shoot(html, path, w, h):
 
 
 if __name__ == "__main__":
-    shoot(CARD, os.path.join(SITE, "og.png"), 1200, 630)
-    shoot(ICON, os.path.join(SITE, "favicon.png"), 512, 512)
+    shoot(CARD, os.path.join(SITE, "public", "og.png"), 1200, 630)
+    shoot(ICON, os.path.join(SITE, "public", "favicon.png"), 512, 512)

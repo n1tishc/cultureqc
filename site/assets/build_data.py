@@ -1,30 +1,39 @@
-"""Assemble the single-file cultureQC landing page: template + inlined fonts + inlined webp + real pipeline data."""
-import base64, json, os, re, sys
+"""Build the page's reference data: real pipeline output → site/src/data.json.
+
+This replaces the old assemble.py, which inlined everything as base64 into a
+single 767 KB index.html. Vite bundles the app now, so the images are copied to
+site/public/img/ as real files the browser can cache, and the JSON carries their
+URLs instead of their bytes.
+
+    python site/assets/build_data.py
+
+The arithmetic below (fix_boxes, fix_rationale, canonical) is carried over
+unchanged. `canonical()` in particular must stay byte-identical to what
+culture/records.py hashes, because the page recomputes those digests in the
+browser and shows them failing if they disagree.
+"""
+import base64, json, os, re, shutil
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+SITE = os.path.dirname(HERE)
 WEB = os.path.join(HERE, "web")
 SRC = os.path.join(HERE, "pipeline-output")
 LAD = os.path.join(HERE, "ladder")
-OUT = os.path.join(os.path.dirname(HERE), "index.html")
-TEMPLATE = os.path.join(HERE, "template.html")
-
-# Where the page will live, e.g. "https://cultureqc.example". Open Graph needs an
-# absolute URL, so link previews stay off until this is filled in.
-SITE_URL = "https://cultureqc.vercel.app"
-
-
-def b64(path):
-    with open(path, "rb") as f:
-        return base64.b64encode(f.read()).decode("ascii")
-
-
-def webp(name):
-    return "data:image/webp;base64," + b64(os.path.join(WEB, name))
-
+IMG_OUT = os.path.join(SITE, "public", "img")
+DATA_OUT = os.path.join(SITE, "src", "data.json")
 
 results = json.load(open(os.path.join(SRC, "results.json")))["results"]
 records = [json.loads(l) for l in open(os.path.join(SRC, "events.jsonl")) if l.strip()]
 ladder = json.load(open(os.path.join(LAD, "ladder.json")))
+
+
+def img(name):
+    """Copy a webp into public/ and return the URL the page will request."""
+    src = os.path.join(WEB, name)
+    os.makedirs(IMG_OUT, exist_ok=True)
+    shutil.copy2(src, os.path.join(IMG_OUT, name))
+    return "/img/" + name
+
 
 # canonical JSON exactly as culture/records.py hashes it
 def canonical(rec):
@@ -96,8 +105,8 @@ for i, name in enumerate(ORDER):
         "kind": KIND[name],
         "file": r["file"],
         "w": r["w"], "h": r["h"],
-        "img": webp(f"{name}.webp"),
-        "mask": webp(f"{name}_mask.webp"),
+        "img": img(f"{name}.webp"),
+        "mask": img(f"{name}_mask.webp"),
         "confluency": r["confluency_probmap"],
         "confluencyConf": r["confluency_confidence"],
         "method": r["confluency_method"],
@@ -121,41 +130,12 @@ for line in ["A172", "BT474", "BV2", "Huh7"]:
         lad.append({
             "line": line, "sev": sev, "n": e["n_sprites"], "flag": e["flag"],
             "conf": e["confidence"], "boxes": e["boxes"],
-            "img": webp(f"lad_{line}_{sev}.webp"),
+            "img": img(f"lad_{line}_{sev}.webp"),
         })
 
-data = {"leaves": leaves, "ladder": lad}
+os.makedirs(os.path.dirname(DATA_OUT), exist_ok=True)
+with open(DATA_OUT, "w") as f:
+    json.dump({"leaves": leaves, "ladder": lad}, f, separators=(",", ":"))
 
-html = open(TEMPLATE).read()
-html = html.replace("/*{{FONT_ARCHIVO}}*/", b64(os.path.join(HERE, "archivo-latin.woff2")))
-html = html.replace("/*{{FONT_MARTIAN}}*/", b64(os.path.join(HERE, "martian-latin.woff2")))
-payload = json.dumps(data, separators=(",", ":"))
-assert "</script" not in payload
-html = html.replace("/*{{DATA}}*/", payload)
-
-# The favicon inlines, so it costs no request. og:image cannot: crawlers do not
-# fetch data: URIs and Open Graph needs an absolute URL, so it is the single
-# external asset on the page — and only once SITE_URL says where the page lives.
-# Empty SITE_URL emits no og:image at all rather than a URL that 404s.
-head = []
-icon = os.path.join(os.path.dirname(HERE), "favicon.png")
-if os.path.exists(icon):
-    head.append('<link rel="icon" type="image/png" href="data:image/png;base64,%s">' % b64(icon))
-if SITE_URL:
-    base = SITE_URL.rstrip("/")
-    head += ['<link rel="canonical" href="%s/">' % base,
-             '<meta property="og:url" content="%s/">' % base,
-             '<meta property="og:image" content="%s/og.png">' % base,
-             '<meta property="og:image:width" content="1200">',
-             '<meta property="og:image:height" content="630">',
-             '<meta property="og:image:alt" content="A real Huh7 field with the '
-             'classifier\'s evidence box drawn on it, beside its confluency, QC flag, '
-             'recommended action and record hash.">']
-else:
-    head.append("<!-- og:image omitted: set SITE_URL in assemble.py once the page has a home -->")
-html = html.replace("/*{{HEAD_EXTRA}}*/", "\n".join(head))
-
-os.makedirs(os.path.dirname(OUT), exist_ok=True)
-with open(OUT, "w") as f:
-    f.write(html)
-print(f"wrote {OUT}  {os.path.getsize(OUT)/1024:.0f} KB")
+print(f"wrote {DATA_OUT}  {os.path.getsize(DATA_OUT)/1024:.0f} KB")
+print(f"wrote {len(os.listdir(IMG_OUT))} images to {IMG_OUT}")

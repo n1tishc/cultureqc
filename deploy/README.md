@@ -1,9 +1,9 @@
 # Deploying cultureQC
 
 ```
-Browser ──► Vercel (static)          ──►  HuggingFace Space (Docker + FastAPI)
-            site/index.html               deploy/hf-space/
-            no build step                 loads the models once, serves /analyze
+Browser ──► Vercel (React + Vite)    ──►  HuggingFace Space (Docker + FastAPI)
+            site/ ──► site/dist           deploy/hf-space/
+            npm run build                 loads the models once, serves /analyze
 ```
 
 Two independent deployments joined by one URL. Neither can break the other's
@@ -18,7 +18,7 @@ manifest — even when the API is asleep or gone.
 | `deploy/hf-space/api.py` | the FastAPI app; the only entrypoint |
 | `deploy/hf-space/culture/`, `config/` | **generated** — see sync, below |
 | `deploy/sync_space.py` | copies the pipeline into the Space |
-| `vercel.json` | serves `site/` with no build |
+| `vercel.json` | builds `site/` with Vite and serves `site/dist` |
 
 `culture/` and `config/` inside the Space are copies. Keeping a second
 hand-edited copy of the analysis code is how a deployed pipeline quietly stops
@@ -78,51 +78,74 @@ downloads itself on first construction.
 
 ## Frontend — Vercel
 
-The site is **one self-contained HTML file with no build step** — not a React
-app, so there is no bundler, no `node_modules`, and no `VITE_*` environment
-variable. The API URL is a constant in the page, set at assemble time:
+React 18 on Vite. The API URL is a module constant rather than an environment
+variable:
 
 ```js
-// site/src/template.html
-const ANALYSIS_API = "https://longgrainrice-cultureqc-api.hf.space";
+// site/src/config.js
+export const ANALYSIS_API = "https://longgrainrice-cultureqc-api.hf.space";
 ```
 
-```python
-# site/src/assemble.py
-SITE_URL = "https://cultureqc.vercel.app"   # absolute URL for og:image
-```
-
-After editing either, rebuild and commit the result:
+Change it and rebuild; nothing else has to move. `site/index.html` carries the
+`og:image` and `canonical` tags, which need the absolute site URL because
+crawlers do not resolve relative ones.
 
 ```bash
-python site/src/assemble.py
+cd site
+npm install
+npm run build     # -> site/dist
+npm run preview   # serve that build locally before pushing
 ```
 
-Import the repo into Vercel. `vercel.json` already sets `outputDirectory: site`
-and disables the build and install commands, so the framework preset should be
-**Other** and no environment variables are needed.
+Import the repo into Vercel. `vercel.json` already sets the framework, the build
+and install commands and `outputDirectory: site/dist`, so no dashboard
+configuration and no environment variables are needed.
 
 ### Why no `VITE_API_URL`
 
-An env var would require a build step to substitute it, which would mean adding
-a bundler to a page that does not need one. The constant is set by
-`assemble.py`, which is the build step this project already has.
+An env var would put the deployed page's endpoint somewhere the repo cannot see,
+so a checkout would no longer tell you what the live page talks to — and a
+missing variable fails at runtime, in the browser, as a page that silently
+cannot analyse. A constant fails at review time instead. It also keeps preview
+deployments and production pointing at the same Space without per-environment
+configuration, which is what you want here: there is only one Space.
+
+### Regenerating the page's reference data
+
+`site/src/data.json` and `site/public/img/` are generated from real pipeline
+output committed under `site/assets/`:
+
+```bash
+python site/assets/build_data.py
+```
+
+CI re-runs this and fails if the committed output differs, because a hand-edited
+`data.json` would make the page display records the pipeline never wrote.
 
 ## Local development
 
-One command gives you the page and the pipeline on the same origin:
+Two processes. The API on 7860, and the Vite dev server proxying `/health` and
+`/analyze` to it — so the browser makes same-origin calls and there is no CORS
+difference between development and the deployed page:
 
 ```bash
-python deploy/hf-space/api.py     # http://127.0.0.1:7860
+python deploy/hf-space/api.py           # http://127.0.0.1:7860
+cd site && npm run dev                  # http://localhost:5173
 ```
 
-`/` serves `site/index.html` when running from a checkout (the Space has no
-`site/`, so there it stays JSON). The page prefers a local endpoint over the
-hosted one whenever it is opened from localhost, a private LAN address, or
-disk — so local work never silently tests the deployed service.
+The page prefers a local endpoint over the hosted one whenever it is opened from
+localhost or a private LAN address, so local work never silently tests the
+deployed service.
 
-This replaces the previous `demo/serve.py`, which spoke an older contract (raw
-request body, `{"ok": true}`) and would have drifted from the deployed API.
+`api.py` also serves the *built* page at `/` when it can find `site/dist`, which
+is how the same-origin path gets exercised against a production-shaped bundle:
+
+```bash
+cd site && npm run build
+python deploy/hf-space/api.py           # now / serves the build too
+```
+
+That route stays JSON in the Space, which has no `site/` at all.
 
 ## The one path worth re-checking after you deploy
 

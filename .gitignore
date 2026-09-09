@@ -4,6 +4,12 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 
+# ── Node / Vite (the frontend lives in site/) ──
+node_modules/
+site/dist/
+site/dist-*/
+*.local
+
 # ── OS ──
 .DS_Store
 
