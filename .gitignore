@@ -25,6 +25,9 @@ bacteria_sprites.zip
 demo/uploads/
 demo/events_web.jsonl
 events*.jsonl
+# ...except this one, which is not runtime output: it is the nine real records
+# the page displays and re-verifies, and site/assets/build_data.py reads it.
+!site/assets/pipeline-output/events.jsonl
 
 # ── Local tool state ──
 # Kept on disk, out of the repo: these are editor/agent scratch, not project source.
