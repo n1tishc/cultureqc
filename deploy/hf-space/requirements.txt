@@ -1,0 +1,27 @@
+# Lower bounds rather than exact pins, deliberately. The versions this code is
+# developed against locally are built for Python 3.14; this image is 3.11, where
+# some of those wheels do not exist. Bounds let pip resolve what actually works
+# on 3.11 while still refusing anything too old for the APIs in culture/.
+#
+# Torch resolves to the CPU wheel via the extra index in the Dockerfile.
+torch>=2.2
+torchvision>=0.17
+
+fastapi>=0.110
+uvicorn[standard]>=0.27
+python-multipart>=0.0.9
+
+cellpose>=4.0             # Cellpose-SAM (cpsam) — culture/seg.py
+timm>=1.0                 # EfficientNet-B0 backbone — culture/qc.py
+grad-cam>=1.5             # imports as pytorch_grad_cam; the evidence boxes
+huggingface_hub>=0.20     # pulls the QC checkpoint at startup
+scikit-image>=0.22        # threshold_otsu, the baseline in culture/seg.py
+opencv-python-headless>=4.8
+Pillow>=10.0
+numpy>=1.26
+PyYAML>=6.0
+
+# Deliberately absent: transformers. culture/rationale.py imports it only inside
+# vlm_rationale(), and culture/pipeline.py calls generate_rationale(use_vlm=False)
+# — the shipped rationale is the deterministic template. Including transformers
+# would add gigabytes to the image for a code path this deployment never takes.

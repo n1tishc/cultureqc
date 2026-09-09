@@ -1,0 +1,656 @@
+{
+  "chain_intact": true,
+  "bad_line": null,
+  "sprite_scale": 0.45,
+  "hero_organisms": 416,
+  "results": {
+    "BV2": {
+      "file": "BV2_Phase_A4_2_02d08h00m_3.tif",
+      "kind": "real",
+      "w": 704,
+      "h": 520,
+      "confluency_probmap": 38.23,
+      "confluency_confidence": 0.469,
+      "confluency_method": "probmap",
+      "confluency_threshold_baseline": 40.0,
+      "qc_flag": "normal",
+      "qc_confidence": 0.9986,
+      "per_class_probs": {
+        "normal": 0.9986,
+        "contamination_suspected": 0.0,
+        "detachment": 0.0,
+        "image_quality": 0.0014
+      },
+      "boxes": [
+        {
+          "x": 0.31818,
+          "y": 0.25385,
+          "w": 1.0,
+          "h": 1.0
+        }
+      ],
+      "action": "feed",
+      "action_reason": "Feed interval 24h elapsed (24h since last feed). Confluency 38.2% (target 80%).",
+      "rationale": "No abnormalities detected in the field of view; culture appears healthy. Confluency 38.2% below target (80%); recommend perform media exchange.",
+      "n_organisms": null,
+      "record": {
+        "schema_version": "0.2",
+        "flask_id": "F-BV2",
+        "cell_line": "BV2",
+        "protocol_stage": null,
+        "captured_at": "2026-09-07T21:04:08.659932+00:00",
+        "image_ref": "BV2_Phase_A4_2_02d08h00m_3.tif",
+        "image_hash": "200c91b24e66b5b64f2a0192aaf243476482587a8afec9c45739329ae0c4c84e",
+        "pixel_size_um": null,
+        "confluency_pct": 38.23,
+        "confluency_confidence": 0.469,
+        "confluency_method": "probmap",
+        "qc_flag": "normal",
+        "qc_confidence": 0.9986,
+        "qc_severity": null,
+        "qc_evidence_bbox": [
+          0,
+          0,
+          256,
+          256
+        ],
+        "qc_rationale": "No abnormalities detected in the field of view; culture appears healthy. Confluency 38.2% below target (80%); recommend perform media exchange.",
+        "growth_trend": null,
+        "eta_to_target_hours": null,
+        "recommended_action": "feed",
+        "action_reason": "Feed interval 24h elapsed (24h since last feed). Confluency 38.2% (target 80%).",
+        "decided_by": "rules_v0.2",
+        "model_versions": {
+          "seg": "cpsam_v2",
+          "qc": "qc_effnetb0_v1",
+          "vlm": "template"
+        },
+        "model_weights_hash": null,
+        "reviewed_by": null,
+        "review_outcome": null,
+        "record_id": "149ff685-ee52-4a3b-ad87-23320c4eb9d1",
+        "analysed_at": "2026-09-07T21:04:08.663561+00:00",
+        "prev_record_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "record_hash": "c6bef055a0f1b8f6fe1cb8fb531a7c4e9be93478bdb283730d0310febe3ceeb3"
+      }
+    },
+    "A172": {
+      "file": "A172_Phase_C7_1_00d00h00m_1.tif",
+      "kind": "real",
+      "w": 704,
+      "h": 520,
+      "confluency_probmap": 10.12,
+      "confluency_confidence": 0.934,
+      "confluency_method": "probmap",
+      "confluency_threshold_baseline": 3.14,
+      "qc_flag": "normal",
+      "qc_confidence": 1.0,
+      "per_class_probs": {
+        "normal": 1.0,
+        "contamination_suspected": 0.0,
+        "detachment": 0.0,
+        "image_quality": 0.0
+      },
+      "boxes": [
+        {
+          "x": 0.31818,
+          "y": 0.25385,
+          "w": 1.0,
+          "h": 1.0
+        }
+      ],
+      "action": "feed",
+      "action_reason": "Feed interval 24h elapsed (24h since last feed). Confluency 10.1% (target 80%).",
+      "rationale": "No abnormalities detected in the field of view; culture appears healthy. Confluency 10.1% below target (80%); recommend perform media exchange.",
+      "n_organisms": null,
+      "record": {
+        "schema_version": "0.2",
+        "flask_id": "F-A172",
+        "cell_line": "A172",
+        "protocol_stage": null,
+        "captured_at": "2026-09-07T21:04:20.293124+00:00",
+        "image_ref": "A172_Phase_C7_1_00d00h00m_1.tif",
+        "image_hash": "01738080cf2811198a8871bd80af7e517da750fb55fd560acfd0eb056f09a316",
+        "pixel_size_um": null,
+        "confluency_pct": 10.12,
+        "confluency_confidence": 0.934,
+        "confluency_method": "probmap",
+        "qc_flag": "normal",
+        "qc_confidence": 1.0,
+        "qc_severity": null,
+        "qc_evidence_bbox": [
+          0,
+          0,
+          256,
+          256
+        ],
+        "qc_rationale": "No abnormalities detected in the field of view; culture appears healthy. Confluency 10.1% below target (80%); recommend perform media exchange.",
+        "growth_trend": null,
+        "eta_to_target_hours": null,
+        "recommended_action": "feed",
+        "action_reason": "Feed interval 24h elapsed (24h since last feed). Confluency 10.1% (target 80%).",
+        "decided_by": "rules_v0.2",
+        "model_versions": {
+          "seg": "cpsam_v2",
+          "qc": "qc_effnetb0_v1",
+          "vlm": "template"
+        },
+        "model_weights_hash": null,
+        "reviewed_by": null,
+        "review_outcome": null,
+        "record_id": "cb1f9c7c-c919-4ec0-b02a-06e86cd82a0d",
+        "analysed_at": "2026-09-07T21:04:20.294029+00:00",
+        "prev_record_hash": "c6bef055a0f1b8f6fe1cb8fb531a7c4e9be93478bdb283730d0310febe3ceeb3",
+        "record_hash": "590d675a2547afd0bc2b13dc8b6d1a352d11f4875c5d8839c9a216a0ecb5723e"
+      }
+    },
+    "Huh7": {
+      "file": "Huh7_Phase_A12_1_02d16h00m_1.tif",
+      "kind": "real",
+      "w": 704,
+      "h": 520,
+      "confluency_probmap": 35.23,
+      "confluency_confidence": 0.711,
+      "confluency_method": "probmap",
+      "confluency_threshold_baseline": 4.74,
+      "qc_flag": "normal",
+      "qc_confidence": 0.9994,
+      "per_class_probs": {
+        "normal": 0.9994,
+        "contamination_suspected": 0.0,
+        "detachment": 0.0,
+        "image_quality": 0.0006
+      },
+      "boxes": [
+        {
+          "x": 0.31818,
+          "y": 0.25385,
+          "w": 1.0,
+          "h": 1.0
+        }
+      ],
+      "action": "feed",
+      "action_reason": "Feed interval 24h elapsed (24h since last feed). Confluency 35.2% (target 80%).",
+      "rationale": "No abnormalities detected in the field of view; culture appears healthy. Confluency 35.2% below target (80%); recommend perform media exchange.",
+      "n_organisms": null,
+      "record": {
+        "schema_version": "0.2",
+        "flask_id": "F-Huh7",
+        "cell_line": "Huh7",
+        "protocol_stage": null,
+        "captured_at": "2026-09-07T21:04:32.233540+00:00",
+        "image_ref": "Huh7_Phase_A12_1_02d16h00m_1.tif",
+        "image_hash": "6443b227b20ee68689b18390401964bd92555709d2a72acb5abd4dce3057b09d",
+        "pixel_size_um": null,
+        "confluency_pct": 35.23,
+        "confluency_confidence": 0.711,
+        "confluency_method": "probmap",
+        "qc_flag": "normal",
+        "qc_confidence": 0.9994,
+        "qc_severity": null,
+        "qc_evidence_bbox": [
+          0,
+          0,
+          256,
+          256
+        ],
+        "qc_rationale": "No abnormalities detected in the field of view; culture appears healthy. Confluency 35.2% below target (80%); recommend perform media exchange.",
+        "growth_trend": null,
+        "eta_to_target_hours": null,
+        "recommended_action": "feed",
+        "action_reason": "Feed interval 24h elapsed (24h since last feed). Confluency 35.2% (target 80%).",
+        "decided_by": "rules_v0.2",
+        "model_versions": {
+          "seg": "cpsam_v2",
+          "qc": "qc_effnetb0_v1",
+          "vlm": "template"
+        },
+        "model_weights_hash": null,
+        "reviewed_by": null,
+        "review_outcome": null,
+        "record_id": "0b46cea2-1e40-4272-aa55-0d53a7e58d1e",
+        "analysed_at": "2026-09-07T21:04:32.234579+00:00",
+        "prev_record_hash": "590d675a2547afd0bc2b13dc8b6d1a352d11f4875c5d8839c9a216a0ecb5723e",
+        "record_hash": "11e5c29023e853534d3a1439f1281959382181db4ffae86e5aa6ecc53d3d92e8"
+      }
+    },
+    "BT474": {
+      "file": "BT474_Phase_D3_1_04d04h00m_4.tif",
+      "kind": "real",
+      "w": 704,
+      "h": 520,
+      "confluency_probmap": 33.77,
+      "confluency_confidence": 0.641,
+      "confluency_method": "probmap",
+      "confluency_threshold_baseline": 2.69,
+      "qc_flag": "normal",
+      "qc_confidence": 0.9997,
+      "per_class_probs": {
+        "normal": 0.9997,
+        "contamination_suspected": 0.0,
+        "detachment": 0.0,
+        "image_quality": 0.0002
+      },
+      "boxes": [
+        {
+          "x": 0.31818,
+          "y": 0.25385,
+          "w": 0.28906,
+          "h": 1.0
+        },
+        {
+          "x": 0.70881,
+          "y": 0.25385,
+          "w": 0.125,
+          "h": 0.10156
+        }
+      ],
+      "action": "feed",
+      "action_reason": "Feed interval 24h elapsed (24h since last feed). Confluency 33.8% (target 80%).",
+      "rationale": "No abnormalities detected in the field of view; culture appears healthy. Confluency 33.8% below target (80%); recommend perform media exchange.",
+      "n_organisms": null,
+      "record": {
+        "schema_version": "0.2",
+        "flask_id": "F-BT474",
+        "cell_line": "BT474",
+        "protocol_stage": null,
+        "captured_at": "2026-09-07T21:04:44.028253+00:00",
+        "image_ref": "BT474_Phase_D3_1_04d04h00m_4.tif",
+        "image_hash": "3412975eaa09fc673deefef00971508c9c73482dbfea8ba0aa24298a98195bbe",
+        "pixel_size_um": null,
+        "confluency_pct": 33.77,
+        "confluency_confidence": 0.641,
+        "confluency_method": "probmap",
+        "qc_flag": "normal",
+        "qc_confidence": 0.9997,
+        "qc_severity": null,
+        "qc_evidence_bbox": [
+          0,
+          0,
+          74,
+          256
+        ],
+        "qc_rationale": "No abnormalities detected in the field of view; culture appears healthy. Confluency 33.8% below target (80%); recommend perform media exchange.",
+        "growth_trend": null,
+        "eta_to_target_hours": null,
+        "recommended_action": "feed",
+        "action_reason": "Feed interval 24h elapsed (24h since last feed). Confluency 33.8% (target 80%).",
+        "decided_by": "rules_v0.2",
+        "model_versions": {
+          "seg": "cpsam_v2",
+          "qc": "qc_effnetb0_v1",
+          "vlm": "template"
+        },
+        "model_weights_hash": null,
+        "reviewed_by": null,
+        "review_outcome": null,
+        "record_id": "84ff64a5-5def-4561-a032-ad2d48dc34fe",
+        "analysed_at": "2026-09-07T21:04:44.030378+00:00",
+        "prev_record_hash": "11e5c29023e853534d3a1439f1281959382181db4ffae86e5aa6ecc53d3d92e8",
+        "record_hash": "a17becb0748b98f7aa1e7a8d660165d4a0f28eb88ff1fc73a150e23f8186c29d"
+      }
+    },
+    "Huh7contam": {
+      "file": "Huh7_contaminated_field.png",
+      "kind": "composite",
+      "w": 704,
+      "h": 520,
+      "confluency_probmap": 13.45,
+      "confluency_confidence": 0.842,
+      "confluency_method": "probmap",
+      "confluency_threshold_baseline": 25.46,
+      "qc_flag": "contamination_suspected",
+      "qc_confidence": 0.999,
+      "per_class_probs": {
+        "normal": 0.0,
+        "contamination_suspected": 0.999,
+        "detachment": 0.0001,
+        "image_quality": 0.0009
+      },
+      "boxes": [
+        {
+          "x": 0.31818,
+          "y": 0.25385,
+          "w": 1.0,
+          "h": 1.0
+        }
+      ],
+      "action": "human_review",
+      "action_reason": "QC flag 'contamination_suspected' at 100% confidence (threshold 70%). Automated decisions paused until human review.",
+      "rationale": "Small dark rod-like or particulate objects detected in the lower-right quadrant (confidence 100%). Confluency 13.4% below target (80%); recommend pause automated decisions and flag for human review.",
+      "n_organisms": 416,
+      "record": {
+        "schema_version": "0.2",
+        "flask_id": "F-Huh7contam",
+        "cell_line": "Huh7",
+        "protocol_stage": null,
+        "captured_at": "2026-09-07T21:04:55.773561+00:00",
+        "image_ref": "Huh7_contaminated_field.png",
+        "image_hash": "0ab25bdd5666adce6777c4786d6d5b9ce49ec28f54eca49d32b01e687b12380e",
+        "pixel_size_um": null,
+        "confluency_pct": 13.45,
+        "confluency_confidence": 0.842,
+        "confluency_method": "probmap",
+        "qc_flag": "contamination_suspected",
+        "qc_confidence": 0.999,
+        "qc_severity": null,
+        "qc_evidence_bbox": [
+          0,
+          0,
+          256,
+          256
+        ],
+        "qc_rationale": "Small dark rod-like or particulate objects detected in the lower-right quadrant (confidence 100%). Confluency 13.4% below target (80%); recommend pause automated decisions and flag for human review.",
+        "growth_trend": null,
+        "eta_to_target_hours": null,
+        "recommended_action": "human_review",
+        "action_reason": "QC flag 'contamination_suspected' at 100% confidence (threshold 70%). Automated decisions paused until human review.",
+        "decided_by": "rules_v0.2",
+        "model_versions": {
+          "seg": "cpsam_v2",
+          "qc": "qc_effnetb0_v1",
+          "vlm": "template"
+        },
+        "model_weights_hash": null,
+        "reviewed_by": null,
+        "review_outcome": null,
+        "record_id": "8266992d-7461-4548-a969-59bdbefea574",
+        "analysed_at": "2026-09-07T21:04:55.777802+00:00",
+        "prev_record_hash": "a17becb0748b98f7aa1e7a8d660165d4a0f28eb88ff1fc73a150e23f8186c29d",
+        "record_hash": "9d30daa73f9a0f992f15d2580b735e6e6296ddc154fcd2805f159bf49535d96b"
+      }
+    },
+    "contam": {
+      "file": "contam_00015.png",
+      "kind": "tile",
+      "w": 256,
+      "h": 256,
+      "confluency_probmap": 86.71,
+      "confluency_confidence": 0.151,
+      "confluency_method": "probmap",
+      "confluency_threshold_baseline": 26.86,
+      "qc_flag": "contamination_suspected",
+      "qc_confidence": 1.0,
+      "per_class_probs": {
+        "normal": 0.0,
+        "contamination_suspected": 1.0,
+        "detachment": 0.0,
+        "image_quality": 0.0
+      },
+      "boxes": [
+        {
+          "x": 0.0,
+          "y": 0.07031,
+          "w": 1.0,
+          "h": 0.92969
+        }
+      ],
+      "action": "human_review",
+      "action_reason": "QC flag 'contamination_suspected' at 100% confidence (threshold 70%). Automated decisions paused until human review.",
+      "rationale": "Small dark rod-like or particulate objects detected in the lower-right quadrant (confidence 100%). Confluency 86.7% above target (80%); recommend pause automated decisions and flag for human review.",
+      "n_organisms": null,
+      "record": {
+        "schema_version": "0.2",
+        "flask_id": "F-contam",
+        "cell_line": "contam",
+        "protocol_stage": null,
+        "captured_at": "2026-09-07T21:05:00.448278+00:00",
+        "image_ref": "contam_00015.png",
+        "image_hash": "9656003a495246dda8a4148d72228f95436c73074863cf5b86337b7b956ae44a",
+        "pixel_size_um": null,
+        "confluency_pct": 86.71,
+        "confluency_confidence": 0.151,
+        "confluency_method": "probmap",
+        "qc_flag": "contamination_suspected",
+        "qc_confidence": 1.0,
+        "qc_severity": null,
+        "qc_evidence_bbox": [
+          0,
+          18,
+          256,
+          238
+        ],
+        "qc_rationale": "Small dark rod-like or particulate objects detected in the lower-right quadrant (confidence 100%). Confluency 86.7% above target (80%); recommend pause automated decisions and flag for human review.",
+        "growth_trend": null,
+        "eta_to_target_hours": null,
+        "recommended_action": "human_review",
+        "action_reason": "QC flag 'contamination_suspected' at 100% confidence (threshold 70%). Automated decisions paused until human review.",
+        "decided_by": "rules_v0.2",
+        "model_versions": {
+          "seg": "cpsam_v2",
+          "qc": "qc_effnetb0_v1",
+          "vlm": "template"
+        },
+        "model_weights_hash": null,
+        "reviewed_by": null,
+        "review_outcome": null,
+        "record_id": "064a9360-6645-474d-a32f-96d32cbfee27",
+        "analysed_at": "2026-09-07T21:05:00.448489+00:00",
+        "prev_record_hash": "9d30daa73f9a0f992f15d2580b735e6e6296ddc154fcd2805f159bf49535d96b",
+        "record_hash": "2b1d1466600a1ec4bf825fedf5bd6134bfdd294794a813aff3c809b81b482c98"
+      }
+    },
+    "detach": {
+      "file": "detach_00003.png",
+      "kind": "tile",
+      "w": 256,
+      "h": 256,
+      "confluency_probmap": 55.78,
+      "confluency_confidence": 0.0,
+      "confluency_method": "probmap",
+      "confluency_threshold_baseline": 60.79,
+      "qc_flag": "detachment",
+      "qc_confidence": 1.0,
+      "per_class_probs": {
+        "normal": 0.0,
+        "contamination_suspected": 0.0,
+        "detachment": 1.0,
+        "image_quality": 0.0
+      },
+      "boxes": [
+        {
+          "x": 0.40625,
+          "y": 0.28516,
+          "w": 0.59375,
+          "h": 0.71484
+        },
+        {
+          "x": 0.0,
+          "y": 0.56641,
+          "w": 0.38281,
+          "h": 0.43359
+        },
+        {
+          "x": 0.0,
+          "y": 0.125,
+          "w": 0.38672,
+          "h": 0.42969
+        }
+      ],
+      "action": "human_review",
+      "action_reason": "QC flag 'detachment' at 100% confidence (threshold 70%). Automated decisions paused until human review.",
+      "rationale": "Gaps in the cell monolayer with bright rounded floating bodies detected in the lower-right quadrant (confidence 100%). Confluency 55.8% below target (80%); recommend pause automated decisions and flag for human review.",
+      "n_organisms": null,
+      "record": {
+        "schema_version": "0.2",
+        "flask_id": "F-detach",
+        "cell_line": "detach",
+        "protocol_stage": null,
+        "captured_at": "2026-09-07T21:05:05.021488+00:00",
+        "image_ref": "detach_00003.png",
+        "image_hash": "7857e9fca7ba4c6baec08a72ef92e72bd8a5017647a16b614d45806b298fd01d",
+        "pixel_size_um": null,
+        "confluency_pct": 55.78,
+        "confluency_confidence": 0.0,
+        "confluency_method": "probmap",
+        "qc_flag": "detachment",
+        "qc_confidence": 1.0,
+        "qc_severity": null,
+        "qc_evidence_bbox": [
+          104,
+          73,
+          152,
+          183
+        ],
+        "qc_rationale": "Gaps in the cell monolayer with bright rounded floating bodies detected in the lower-right quadrant (confidence 100%). Confluency 55.8% below target (80%); recommend pause automated decisions and flag for human review.",
+        "growth_trend": null,
+        "eta_to_target_hours": null,
+        "recommended_action": "human_review",
+        "action_reason": "QC flag 'detachment' at 100% confidence (threshold 70%). Automated decisions paused until human review.",
+        "decided_by": "rules_v0.2",
+        "model_versions": {
+          "seg": "cpsam_v2",
+          "qc": "qc_effnetb0_v1",
+          "vlm": "template"
+        },
+        "model_weights_hash": null,
+        "reviewed_by": null,
+        "review_outcome": null,
+        "record_id": "b6239f65-78e2-4d32-b89f-853db2849fc6",
+        "analysed_at": "2026-09-07T21:05:05.021957+00:00",
+        "prev_record_hash": "2b1d1466600a1ec4bf825fedf5bd6134bfdd294794a813aff3c809b81b482c98",
+        "record_hash": "0749e8417a17de47e4b15887749d73e3fc9fa55b01135165edc61802946a9ce0"
+      }
+    },
+    "imgq": {
+      "file": "imgq_00012.png",
+      "kind": "tile",
+      "w": 256,
+      "h": 256,
+      "confluency_probmap": 58.82,
+      "confluency_confidence": 0.436,
+      "confluency_method": "probmap",
+      "confluency_threshold_baseline": 48.22,
+      "qc_flag": "image_quality",
+      "qc_confidence": 0.995,
+      "per_class_probs": {
+        "normal": 0.0047,
+        "contamination_suspected": 0.0003,
+        "detachment": 0.0,
+        "image_quality": 0.995
+      },
+      "boxes": [
+        {
+          "x": 0.18359,
+          "y": 0.0,
+          "w": 0.57812,
+          "h": 1.0
+        }
+      ],
+      "action": "human_review",
+      "action_reason": "QC flag 'image_quality' at 100% confidence (threshold 70%). Automated decisions paused until human review.",
+      "rationale": "Image artifact detected (possible blur, dust, bubble, or scratch) in the lower-left quadrant (confidence 100%). Confluency 58.8% below target (80%); recommend pause automated decisions and flag for human review.",
+      "n_organisms": null,
+      "record": {
+        "schema_version": "0.2",
+        "flask_id": "F-imgq",
+        "cell_line": "imgq",
+        "protocol_stage": null,
+        "captured_at": "2026-09-07T21:05:09.707428+00:00",
+        "image_ref": "imgq_00012.png",
+        "image_hash": "bf11813853f0e6355e2f9425f14df8ec4e15e043c1de9ae6c3be2729309db4ff",
+        "pixel_size_um": null,
+        "confluency_pct": 58.82,
+        "confluency_confidence": 0.436,
+        "confluency_method": "probmap",
+        "qc_flag": "image_quality",
+        "qc_confidence": 0.995,
+        "qc_severity": null,
+        "qc_evidence_bbox": [
+          47,
+          0,
+          148,
+          256
+        ],
+        "qc_rationale": "Image artifact detected (possible blur, dust, bubble, or scratch) in the lower-left quadrant (confidence 100%). Confluency 58.8% below target (80%); recommend pause automated decisions and flag for human review.",
+        "growth_trend": null,
+        "eta_to_target_hours": null,
+        "recommended_action": "human_review",
+        "action_reason": "QC flag 'image_quality' at 100% confidence (threshold 70%). Automated decisions paused until human review.",
+        "decided_by": "rules_v0.2",
+        "model_versions": {
+          "seg": "cpsam_v2",
+          "qc": "qc_effnetb0_v1",
+          "vlm": "template"
+        },
+        "model_weights_hash": null,
+        "reviewed_by": null,
+        "review_outcome": null,
+        "record_id": "713326d3-93f0-4fe6-a00a-a12e6dc1ee6c",
+        "analysed_at": "2026-09-07T21:05:09.707746+00:00",
+        "prev_record_hash": "0749e8417a17de47e4b15887749d73e3fc9fa55b01135165edc61802946a9ce0",
+        "record_hash": "e2c823305f3265829f56756db15c5a9a14522f4c63c78ad6fee712a8c50f47eb"
+      }
+    },
+    "normal": {
+      "file": "normal_00005.png",
+      "kind": "tile",
+      "w": 256,
+      "h": 256,
+      "confluency_probmap": 27.14,
+      "confluency_confidence": 0.901,
+      "confluency_method": "probmap",
+      "confluency_threshold_baseline": 22.72,
+      "qc_flag": "normal",
+      "qc_confidence": 0.9998,
+      "per_class_probs": {
+        "normal": 0.9998,
+        "contamination_suspected": 0.0,
+        "detachment": 0.0,
+        "image_quality": 0.0001
+      },
+      "boxes": [
+        {
+          "x": 0.0,
+          "y": 0.0,
+          "w": 1.0,
+          "h": 1.0
+        }
+      ],
+      "action": "feed",
+      "action_reason": "Feed interval 24h elapsed (24h since last feed). Confluency 27.1% (target 80%).",
+      "rationale": "No abnormalities detected in the field of view; culture appears healthy. Confluency 27.1% below target (80%); recommend perform media exchange.",
+      "n_organisms": null,
+      "record": {
+        "schema_version": "0.2",
+        "flask_id": "F-normal",
+        "cell_line": "normal",
+        "protocol_stage": null,
+        "captured_at": "2026-09-07T21:05:14.278162+00:00",
+        "image_ref": "normal_00005.png",
+        "image_hash": "da34091dcd156161b6a18172cbdb33651e23c4a440ac6aaf702b46f9af771523",
+        "pixel_size_um": null,
+        "confluency_pct": 27.14,
+        "confluency_confidence": 0.901,
+        "confluency_method": "probmap",
+        "qc_flag": "normal",
+        "qc_confidence": 0.9998,
+        "qc_severity": null,
+        "qc_evidence_bbox": [
+          0,
+          0,
+          256,
+          256
+        ],
+        "qc_rationale": "No abnormalities detected in the field of view; culture appears healthy. Confluency 27.1% below target (80%); recommend perform media exchange.",
+        "growth_trend": null,
+        "eta_to_target_hours": null,
+        "recommended_action": "feed",
+        "action_reason": "Feed interval 24h elapsed (24h since last feed). Confluency 27.1% (target 80%).",
+        "decided_by": "rules_v0.2",
+        "model_versions": {
+          "seg": "cpsam_v2",
+          "qc": "qc_effnetb0_v1",
+          "vlm": "template"
+        },
+        "model_weights_hash": null,
+        "reviewed_by": null,
+        "review_outcome": null,
+        "record_id": "b3c2b813-e20d-499a-83b5-f30735eb625b",
+        "analysed_at": "2026-09-07T21:05:14.278577+00:00",
+        "prev_record_hash": "e2c823305f3265829f56756db15c5a9a14522f4c63c78ad6fee712a8c50f47eb",
+        "record_hash": "43fd1fd75072786c3d4fd785af0c45124354c36f0bed806b5168a79dee70d9a7"
+      }
+    }
+  }
+}

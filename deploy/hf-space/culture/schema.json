@@ -1,0 +1,141 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "cultureQC Record",
+  "description": "One auditable record per analysed brightfield image. Numbers come from models; the VLM/template only explains and recommends.",
+  "type": "object",
+  "required": [
+    "record_id",
+    "prev_record_hash",
+    "schema_version",
+    "flask_id",
+    "cell_line",
+    "captured_at",
+    "analysed_at",
+    "image_ref",
+    "image_hash",
+    "confluency_pct",
+    "confluency_confidence",
+    "confluency_method",
+    "qc_flag",
+    "qc_confidence",
+    "recommended_action",
+    "action_reason",
+    "decided_by",
+    "model_versions"
+  ],
+  "properties": {
+    "record_id": {
+      "type": "string",
+      "description": "UUID v4 for this record"
+    },
+    "prev_record_hash": {
+      "type": "string",
+      "description": "SHA-256 of the previous record's canonical JSON. Genesis record uses 64 zeros."
+    },
+    "schema_version": {
+      "type": "string",
+      "const": "0.2"
+    },
+    "flask_id": {
+      "type": "string"
+    },
+    "cell_line": {
+      "type": "string"
+    },
+    "protocol_stage": {
+      "type": ["string", "null"]
+    },
+    "captured_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "analysed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "image_ref": {
+      "type": "string",
+      "description": "Path or URI to the source image"
+    },
+    "image_hash": {
+      "type": "string",
+      "description": "SHA-256 of the raw image bytes"
+    },
+    "pixel_size_um": {
+      "type": ["number", "null"]
+    },
+    "confluency_pct": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "confluency_confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "confluency_method": {
+      "type": "string",
+      "enum": ["cpsam_v2_probmap", "cpsam_v2_instance", "threshold_baseline"]
+    },
+    "qc_flag": {
+      "type": "string",
+      "enum": ["normal", "contamination_suspected", "detachment", "image_quality"]
+    },
+    "qc_confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "qc_severity": {
+      "type": ["string", "null"],
+      "enum": ["early", "mid", "late", null]
+    },
+    "qc_evidence_bbox": {
+      "type": ["array", "null"],
+      "items": {"type": "integer"},
+      "minItems": 4,
+      "maxItems": 4,
+      "description": "[x, y, w, h] in tile coordinates"
+    },
+    "qc_rationale": {
+      "type": ["string", "null"],
+      "description": "<=2 sentences, references image regions"
+    },
+    "growth_trend": {
+      "type": ["string", "null"],
+      "enum": ["rising", "flat", "falling", "unknown", null]
+    },
+    "eta_to_target_hours": {
+      "type": ["number", "null"]
+    },
+    "recommended_action": {
+      "type": "string",
+      "enum": ["passage", "feed", "hold", "human_review"]
+    },
+    "action_reason": {
+      "type": "string"
+    },
+    "decided_by": {
+      "type": "string"
+    },
+    "model_versions": {
+      "type": "object",
+      "properties": {
+        "seg": {"type": "string"},
+        "qc": {"type": "string"},
+        "vlm": {"type": ["string", "null"]}
+      }
+    },
+    "model_weights_hash": {
+      "type": ["object", "null"]
+    },
+    "reviewed_by": {
+      "type": ["string", "null"]
+    },
+    "review_outcome": {
+      "type": ["string", "null"]
+    }
+  },
+  "additionalProperties": false
+}

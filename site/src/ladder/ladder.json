@@ -1,0 +1,498 @@
+{
+  "A172": {
+    "clean": {
+      "n_sprites": 0,
+      "flag": "normal",
+      "confidence": 1.0,
+      "probs": {
+        "normal": 1.0,
+        "contamination_suspected": 0.0,
+        "detachment": 0.0,
+        "image_quality": 0.0
+      },
+      "boxes": [
+        {
+          "x": 0.0,
+          "y": 0.0,
+          "w": 1.0,
+          "h": 1.0,
+          "px": [
+            0,
+            0,
+            256,
+            256
+          ]
+        }
+      ],
+      "file": "A172_clean.png"
+    },
+    "early": {
+      "n_sprites": 27,
+      "flag": "contamination_suspected",
+      "confidence": 1.0,
+      "probs": {
+        "normal": 0.0,
+        "contamination_suspected": 1.0,
+        "detachment": 0.0,
+        "image_quality": 0.0
+      },
+      "boxes": [
+        {
+          "x": 0.0,
+          "y": 0.0,
+          "w": 1.0,
+          "h": 1.0,
+          "px": [
+            0,
+            0,
+            256,
+            256
+          ]
+        }
+      ],
+      "file": "A172_early.png"
+    },
+    "mid": {
+      "n_sprites": 126,
+      "flag": "contamination_suspected",
+      "confidence": 1.0,
+      "probs": {
+        "normal": 0.0,
+        "contamination_suspected": 1.0,
+        "detachment": 0.0,
+        "image_quality": 0.0
+      },
+      "boxes": [
+        {
+          "x": 0.33594,
+          "y": 0.0,
+          "w": 0.66406,
+          "h": 1.0,
+          "px": [
+            86,
+            0,
+            170,
+            256
+          ]
+        },
+        {
+          "x": 0.0,
+          "y": 0.57422,
+          "w": 0.26562,
+          "h": 0.42578,
+          "px": [
+            0,
+            147,
+            68,
+            109
+          ]
+        },
+        {
+          "x": 0.0,
+          "y": 0.1875,
+          "w": 0.20312,
+          "h": 0.36719,
+          "px": [
+            0,
+            48,
+            52,
+            94
+          ]
+        }
+      ],
+      "file": "A172_mid.png"
+    },
+    "late": {
+      "n_sprites": 470,
+      "flag": "contamination_suspected",
+      "confidence": 1.0,
+      "probs": {
+        "normal": 0.0,
+        "contamination_suspected": 1.0,
+        "detachment": 0.0,
+        "image_quality": 0.0
+      },
+      "boxes": [
+        {
+          "x": 0.0,
+          "y": 0.0,
+          "w": 1.0,
+          "h": 1.0,
+          "px": [
+            0,
+            0,
+            256,
+            256
+          ]
+        }
+      ],
+      "file": "A172_late.png"
+    }
+  },
+  "BT474": {
+    "clean": {
+      "n_sprites": 0,
+      "flag": "normal",
+      "confidence": 0.9997,
+      "probs": {
+        "normal": 0.9997,
+        "contamination_suspected": 0.0,
+        "detachment": 0.0,
+        "image_quality": 0.0002
+      },
+      "boxes": [
+        {
+          "x": 0.0,
+          "y": 0.0,
+          "w": 0.28906,
+          "h": 1.0,
+          "px": [
+            0,
+            0,
+            74,
+            256
+          ]
+        },
+        {
+          "x": 0.39062,
+          "y": 0.0,
+          "w": 0.125,
+          "h": 0.10156,
+          "px": [
+            100,
+            0,
+            32,
+            26
+          ]
+        }
+      ],
+      "file": "BT474_clean.png"
+    },
+    "early": {
+      "n_sprites": 31,
+      "flag": "contamination_suspected",
+      "confidence": 1.0,
+      "probs": {
+        "normal": 0.0,
+        "contamination_suspected": 1.0,
+        "detachment": 0.0,
+        "image_quality": 0.0
+      },
+      "boxes": [
+        {
+          "x": 0.0,
+          "y": 0.0,
+          "w": 1.0,
+          "h": 1.0,
+          "px": [
+            0,
+            0,
+            256,
+            256
+          ]
+        }
+      ],
+      "file": "BT474_early.png"
+    },
+    "mid": {
+      "n_sprites": 119,
+      "flag": "contamination_suspected",
+      "confidence": 1.0,
+      "probs": {
+        "normal": 0.0,
+        "contamination_suspected": 1.0,
+        "detachment": 0.0,
+        "image_quality": 0.0
+      },
+      "boxes": [
+        {
+          "x": 0.0,
+          "y": 0.0,
+          "w": 1.0,
+          "h": 1.0,
+          "px": [
+            0,
+            0,
+            256,
+            256
+          ]
+        }
+      ],
+      "file": "BT474_mid.png"
+    },
+    "late": {
+      "n_sprites": 471,
+      "flag": "contamination_suspected",
+      "confidence": 1.0,
+      "probs": {
+        "normal": 0.0,
+        "contamination_suspected": 1.0,
+        "detachment": 0.0,
+        "image_quality": 0.0
+      },
+      "boxes": [
+        {
+          "x": 0.0,
+          "y": 0.0,
+          "w": 1.0,
+          "h": 1.0,
+          "px": [
+            0,
+            0,
+            256,
+            256
+          ]
+        }
+      ],
+      "file": "BT474_late.png"
+    }
+  },
+  "BV2": {
+    "clean": {
+      "n_sprites": 0,
+      "flag": "normal",
+      "confidence": 0.9986,
+      "probs": {
+        "normal": 0.9986,
+        "contamination_suspected": 0.0,
+        "detachment": 0.0,
+        "image_quality": 0.0014
+      },
+      "boxes": [
+        {
+          "x": 0.0,
+          "y": 0.0,
+          "w": 1.0,
+          "h": 1.0,
+          "px": [
+            0,
+            0,
+            256,
+            256
+          ]
+        }
+      ],
+      "file": "BV2_clean.png"
+    },
+    "early": {
+      "n_sprites": 31,
+      "flag": "contamination_suspected",
+      "confidence": 1.0,
+      "probs": {
+        "normal": 0.0,
+        "contamination_suspected": 1.0,
+        "detachment": 0.0,
+        "image_quality": 0.0
+      },
+      "boxes": [
+        {
+          "x": 0.15234,
+          "y": 0.1875,
+          "w": 0.84766,
+          "h": 0.8125,
+          "px": [
+            39,
+            48,
+            217,
+            208
+          ]
+        },
+        {
+          "x": 0.12891,
+          "y": 0.0,
+          "w": 0.37109,
+          "h": 0.45312,
+          "px": [
+            33,
+            0,
+            95,
+            116
+          ]
+        }
+      ],
+      "file": "BV2_early.png"
+    },
+    "mid": {
+      "n_sprites": 124,
+      "flag": "contamination_suspected",
+      "confidence": 1.0,
+      "probs": {
+        "normal": 0.0,
+        "contamination_suspected": 1.0,
+        "detachment": 0.0,
+        "image_quality": 0.0
+      },
+      "boxes": [
+        {
+          "x": 0.14062,
+          "y": 0.16797,
+          "w": 0.73438,
+          "h": 0.83203,
+          "px": [
+            36,
+            43,
+            188,
+            213
+          ]
+        },
+        {
+          "x": 0.71484,
+          "y": 0.14453,
+          "w": 0.28516,
+          "h": 0.36719,
+          "px": [
+            183,
+            37,
+            73,
+            94
+          ]
+        }
+      ],
+      "file": "BV2_mid.png"
+    },
+    "late": {
+      "n_sprites": 470,
+      "flag": "contamination_suspected",
+      "confidence": 1.0,
+      "probs": {
+        "normal": 0.0,
+        "contamination_suspected": 1.0,
+        "detachment": 0.0,
+        "image_quality": 0.0
+      },
+      "boxes": [
+        {
+          "x": 0.0,
+          "y": 0.0,
+          "w": 1.0,
+          "h": 0.92188,
+          "px": [
+            0,
+            0,
+            256,
+            236
+          ]
+        },
+        {
+          "x": 0.16406,
+          "y": 0.69922,
+          "w": 0.26953,
+          "h": 0.30078,
+          "px": [
+            42,
+            179,
+            69,
+            77
+          ]
+        }
+      ],
+      "file": "BV2_late.png"
+    }
+  },
+  "Huh7": {
+    "clean": {
+      "n_sprites": 0,
+      "flag": "normal",
+      "confidence": 0.9994,
+      "probs": {
+        "normal": 0.9994,
+        "contamination_suspected": 0.0,
+        "detachment": 0.0,
+        "image_quality": 0.0006
+      },
+      "boxes": [
+        {
+          "x": 0.0,
+          "y": 0.0,
+          "w": 1.0,
+          "h": 1.0,
+          "px": [
+            0,
+            0,
+            256,
+            256
+          ]
+        }
+      ],
+      "file": "Huh7_clean.png"
+    },
+    "early": {
+      "n_sprites": 29,
+      "flag": "contamination_suspected",
+      "confidence": 1.0,
+      "probs": {
+        "normal": 0.0,
+        "contamination_suspected": 1.0,
+        "detachment": 0.0,
+        "image_quality": 0.0
+      },
+      "boxes": [
+        {
+          "x": 0.0,
+          "y": 0.0,
+          "w": 1.0,
+          "h": 1.0,
+          "px": [
+            0,
+            0,
+            256,
+            256
+          ]
+        }
+      ],
+      "file": "Huh7_early.png"
+    },
+    "mid": {
+      "n_sprites": 124,
+      "flag": "contamination_suspected",
+      "confidence": 1.0,
+      "probs": {
+        "normal": 0.0,
+        "contamination_suspected": 1.0,
+        "detachment": 0.0,
+        "image_quality": 0.0
+      },
+      "boxes": [
+        {
+          "x": 0.0,
+          "y": 0.0,
+          "w": 1.0,
+          "h": 1.0,
+          "px": [
+            0,
+            0,
+            256,
+            256
+          ]
+        }
+      ],
+      "file": "Huh7_mid.png"
+    },
+    "late": {
+      "n_sprites": 464,
+      "flag": "contamination_suspected",
+      "confidence": 1.0,
+      "probs": {
+        "normal": 0.0,
+        "contamination_suspected": 1.0,
+        "detachment": 0.0,
+        "image_quality": 0.0
+      },
+      "boxes": [
+        {
+          "x": 0.0,
+          "y": 0.0,
+          "w": 1.0,
+          "h": 1.0,
+          "px": [
+            0,
+            0,
+            256,
+            256
+          ]
+        }
+      ],
+      "file": "Huh7_late.png"
+    }
+  }
+}

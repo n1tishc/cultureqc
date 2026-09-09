@@ -1,0 +1,59 @@
+# cultureQC requirements
+# Tested on: Mac (CPU, Apple Silicon + Intel), Colab (T4 / A100)
+#
+# Install:
+#   pip install -r requirements.txt
+#
+# On Mac without GPU, Cellpose runs on CPU (~30-60s per image).
+# threshold method is instant and needs no GPU.
+
+# ── Core ──
+cellpose>=4.0              # segmentation backbone (cpsam_v2)
+torch>=2.0                 # cellpose dependency, pulls CPU-only on Mac automatically
+torchvision>=0.15
+
+# ── Image / array ──
+numpy>=1.24
+opencv-python-headless>=4.8
+scikit-image>=0.21
+Pillow>=9.0
+
+# ── Data ──
+pandas>=2.0
+pycocotools>=2.0           # COCO mask decoding for LIVECell
+
+# ── Classifier (evening 3) ──
+timm>=0.9                  # EfficientNet / ViT backbones
+grad-cam>=1.5              # imports as pytorch_grad_cam; culture/qc.py needs it
+                           # at runtime for the evidence boxes, so it is not optional
+
+# ── VLM rationale (evening 5, optional) ──
+# transformers>=4.40       # uncomment when you get to the VLM
+# accelerate>=0.27
+
+# ── Service / demo ──
+gradio>=4.0                # demo/app.py, the console surface
+
+# ── Eval / viz ──
+matplotlib>=3.7
+scipy>=1.10
+tqdm>=4.65
+
+# ── Audit record ──
+jsonschema>=4.17           # schema validation for the output contract
+
+# ── Hugging Face ──
+huggingface_hub>=0.20      # culture/qc.py pulls the QC checkpoint from the Hub
+
+# ── Serving API (deploy/hf-space/api.py) ──
+# The Space pins its own versions in deploy/hf-space/requirements.txt; these are
+# the loose local equivalents so `python deploy/hf-space/api.py` runs from a
+# venv built off this file.
+fastapi>=0.110
+uvicorn[standard]>=0.27
+python-multipart>=0.0.9
+
+# ── Tests ──
+pytest>=8.0
+httpx>=0.27                # FastAPI TestClient
+playwright>=1.40           # browser checks; also needs `playwright install chromium`

@@ -1,0 +1,19 @@
+# Virtualenv — 1.5 GB, and contains individual files over GitHub's 100 MB limit
+# (torch's libtorch_cpu.dylib, playwright's node binary). Recreate with:
+#   python -m venv .venv && .venv/bin/pip install -r requirements.txt
+.venv/
+
+# Upstream training corpora — 1.8 GB, and data/sources/deepbacs/training.zip is
+# itself over the 100 MB limit. These are downloaded inputs, not project source.
+# data/sprites/ IS tracked: it is what the contamination synthesis composites.
+data/sources/
+
+__pycache__/
+*.py[cod]
+.DS_Store
+.pytest_cache/
+
+# Runtime output from a local API run
+demo/uploads/
+demo/events_web.jsonl
+events*.jsonl
