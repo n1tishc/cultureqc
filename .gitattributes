@@ -8,7 +8,7 @@ deploy/hf-space/config/**  linguist-generated=true
 site/src/data.json linguist-generated=true
 
 # Lockfiles are machine-written; GitHub counts them as source otherwise.
-site/package-lock.json linguist-generated=true
+package-lock.json linguist-generated=true
 
 # Binary assets, so git never tries to diff or normalise them.
 *.woff2 binary

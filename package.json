@@ -1,0 +1,13 @@
+{
+  "name": "cultureqc",
+  "private": true,
+  "description": "Root manifest so the frontend in site/ can be built from the repository root. The app itself is site/package.json.",
+  "scripts": {
+    "build": "npm --prefix site run build",
+    "dev": "npm --prefix site run dev",
+    "preview": "npm --prefix site run preview"
+  },
+  "workspaces": [
+    "site"
+  ]
+}
