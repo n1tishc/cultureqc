@@ -1,0 +1,41 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      # Deliberately not requirements.txt. The contract suite stubs the models,
+      # so it needs no torch and no cellpose — installing them would turn a
+      # 40-second job into a five-minute one to exercise nothing extra.
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install fastapi 'python-multipart' httpx pytest numpy Pillow pyyaml opencv-python-headless
+
+      - name: API contract tests
+        run: python -m pytest deploy/hf-space/test_api.py -q
+
+      # The Space carries generated copies of culture/ and config/. If they drift,
+      # the deployed pipeline stops being the one in this repo — silently.
+      - name: Space is in sync with the repo
+        run: python deploy/sync_space.py --check
+
+      # site/index.html is generated. A hand-edit there would be overwritten on
+      # the next build, so the committed file must match what assemble.py emits.
+      - name: site/index.html matches its source
+        run: |
+          python site/src/assemble.py
+          git diff --exit-code -- site/index.html

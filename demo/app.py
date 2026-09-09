@@ -1,6 +1,6 @@
 """
 cultureQC demo — dark, image-dominant review surface for exception review
-of automated cell-culture QC calls. See UI_PLAN.md for the design brief.
+of automated cell-culture QC calls. See docs/UI_PLAN.md for the design brief.
 
     python demo/app.py
 

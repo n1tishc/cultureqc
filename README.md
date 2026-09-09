@@ -4,6 +4,9 @@
 
 [Live demo](https://cultureqc.vercel.app) · [API](https://longgrainrice-cultureqc-api.hf.space/docs)
 
+[![tests](https://github.com/n1tishc/cultureqc/actions/workflows/tests.yml/badge.svg)](https://github.com/n1tishc/cultureqc/actions/workflows/tests.yml)
+[![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 cultureQC reads a phase-contrast image of a cell culture and returns a confluency
 estimate, a QC flag with visual evidence of *where* it is looking, a recommended
 action, and a hash-chained audit record — from a single call.
@@ -70,16 +73,25 @@ deploy/           how it ships
   sync_space.py     mirrors culture/ + config/ into the Space
   README.md         deployment runbook
 
-site/             the landing page — one self-contained HTML file, no build
+site/             the landing page
+  src/template.html the readable source — edit here, never index.html
+  src/assemble.py   inlines fonts, images and data into one file
+  index.html        generated. What Vercel serves.
+
 demo/app.py       Gradio console, the human review surface
 scripts/          dataset prep and contamination synthesis
 config/lines/     per-cell-line thresholds
 test-data/        real phase-contrast tiles + synthetic challenge cases
-docs/             audit field mapping
+
+docs/
+  DATA.md           training data: what it is, how to regenerate it
+  audit_mapping.md  record fields mapped to audit requirements
+  PRODUCT.md, DESIGN.md, UI_PLAN.md   working documents for the demo surfaces
 ```
 
-`PRODUCT.md`, `DESIGN.md` and `UI_PLAN.md` are working documents for the demo
-surfaces, not user documentation.
+Training data is not tracked — it is downloaded and derived, and regenerating it
+is two commands. See [`docs/DATA.md`](docs/DATA.md). Nothing in the library, the
+API or the site build depends on it.
 
 ## Getting started
 
@@ -115,6 +127,11 @@ evidence-box arithmetic, the CORS allowlist, and that concurrent uploads cannot
 break the hash chain. Models are stubbed — the concurrency test is the exception
 and drives the real `RecordWriter`, because the bug it guards is in the write
 path rather than in inference.
+
+Because the models are stubbed, the suite needs no torch and no cellpose and
+runs in seconds; `.github/workflows/tests.yml` lists the light dependency set and
+also checks that the Space mirror and `site/index.html` are in sync with their
+sources on every push.
 
 ## Known limits
 
@@ -152,3 +169,17 @@ break the other's build, and the page still hashes files and builds a verifiable
 manifest when the API is asleep.
 
 See [`deploy/README.md`](deploy/README.md).
+
+### Why the frontend is one HTML file and not a React app
+
+There is one interactive surface — drop images, watch them hash, read the
+verdicts, verify the chain — and no routing, no shared state worth a store, and
+no component reuse across pages. A bundler would add `node_modules`, a build
+step, and a second thing that can fail on deploy, to render markup that a
+single file already renders. `site/src/assemble.py` is the build step: it inlines
+the fonts, images and reference data into `site/index.html`, which is what Vercel
+serves. Edit `site/src/template.html` and rebuild; never edit `index.html`.
+
+## License
+
+MIT — see [LICENSE](LICENSE).

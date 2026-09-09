@@ -1,19 +1,27 @@
-# Virtualenv — 1.5 GB, and contains individual files over GitHub's 100 MB limit
-# (torch's libtorch_cpu.dylib, playwright's node binary). Recreate with:
-#   python -m venv .venv && .venv/bin/pip install -r requirements.txt
+# ── Python ──
 .venv/
-
-# Upstream training corpora — 1.8 GB, and data/sources/deepbacs/training.zip is
-# itself over the 100 MB limit. These are downloaded inputs, not project source.
-# data/sprites/ IS tracked: it is what the contamination synthesis composites.
-data/sources/
-
 __pycache__/
 *.py[cod]
-.DS_Store
 .pytest_cache/
 
-# Runtime output from a local API run
+# ── OS ──
+.DS_Store
+
+# ── Training data (regenerable; see docs/DATA.md) ──
+# Nothing under data/ is source. `data/sources/` is downloaded from Zenodo and
+# `data/sprites/` is derived from it by scripts/extract_sprites.py, so both are
+# reproducible from two commands and neither belongs in git — together they were
+# 1.8 GB of downloads and 15 MB of committed PNGs.
+data/
+bacteria_sprites.zip
+
+# ── Runtime output ──
 demo/uploads/
 demo/events_web.jsonl
 events*.jsonl
+
+# ── Local tool state ──
+# Kept on disk, out of the repo: these are editor/agent scratch, not project source.
+.claude/
+.codex/
+.impeccable/

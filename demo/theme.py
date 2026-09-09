@@ -3,7 +3,7 @@ cultureQC dark theme — real lab-instrument software, not a Gradio default.
 
 Every token is set for both the light and dark variants to the same dark
 value, so the UI stays dark regardless of the browser's OS-level color
-scheme preference (per UI_PLAN.md: "Dark theme only. No light mode toggle
+scheme preference (per docs/UI_PLAN.md: "Dark theme only. No light mode toggle
 needed.").
 """
 
