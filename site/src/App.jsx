@@ -1,115 +1,209 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import DATA from "./data.json";
-import { Rail, ForeEdge } from "./components/Rail";
-import Hero from "./components/Hero";
-import { Integrate, Measure, Outputs, Recall } from "./components/Overview";
-import Leaf from "./components/Leaf";
 import Upload from "./components/Upload";
-import { Ladder, MeasureTable, Provenance } from "./components/AnalysisSections";
 import Chain from "./components/Chain";
-import Close from "./components/Close";
-import { useRailHeight, useReveals } from "./hooks/useReveals";
+import {
+  Ladder,
+  MeasureTable,
+  Provenance,
+} from "./components/AnalysisSections";
+import { Integrate, Measure } from "./components/Overview";
+import { Dashboard, Explorer, Icon } from "./components/Workspace";
+import { FLAGGED_LEAF } from "./lib/labels";
+import Home from "./components/Home";
 
-const VIEWS = ["overview", "analysis"];
-
-function viewFromHash() {
-  const h = (location.hash || "").replace(/^#\/?/, "").split("?")[0];
-  return VIEWS.includes(h) ? h : null;
+const NAV = [
+  ["home", "Home", "grid"],
+  ["demo", "Demo", "scan"],
+  ["upload", "Upload your data", "upload"],
+];
+const DEMO_NAV = [
+  ["overview", "Dataset summary", "grid"],
+  ["analysis", "Image explorer", "scan"],
+  ["benchmarks", "Benchmarks", "chart"],
+  ["audit", "Audit trail", "shield"],
+];
+const INFO = [
+  ["provenance", "Models & provenance", "layers"],
+  ["integration", "Integration", "code"],
+];
+const ROUTES = [...NAV, ...DEMO_NAV, ...INFO];
+function readRoute() {
+  const value = location.hash.replace(/^#\/?/, "").split("?")[0];
+  if (value === "analysis") return "demo";
+  return ROUTES.some(([id]) => id === value) ? value : "home";
 }
-
 export default function App() {
-  const L = DATA.leaves;
-  const [view, setView] = useState(() => viewFromHash() || "overview");
-  /* Set by go() and consumed after the panel is in the tree — the target
-     section does not exist to scroll to until the new view has rendered. */
-  const [jump, setJump] = useState(null);
-
-  const go = useCallback((name, opts = {}) => {
-    const next = VIEWS.includes(name) ? name : "overview";
-    setView(next);
-    setJump(opts.scrollTo || (opts.keepScroll ? null : "top"));
-    if (opts.push !== false && location.hash !== "#/" + next)
-      history.pushState({ view: next }, "", "#/" + next);
-  }, []);
-
+  const [view, setView] = useState(readRoute);
+  const [selected, setSelected] = useState(FLAGGED_LEAF);
+  const [menu, setMenu] = useState(false);
+  // Visited pages stay mounted so uploads and verification survive navigation.
+  const [visited, setVisited] = useState(() => new Set([readRoute()]));
   useEffect(() => {
-    const onPop = () => {
-      setView(viewFromHash() || "overview");
-      setJump("top");
-    };
-    window.addEventListener("popstate", onPop);
-    return () => window.removeEventListener("popstate", onPop);
-  }, []);
-
-  /* The hash is the address; make it one on first paint too, so a reload or a
-     copied link lands where the visitor actually was. */
-  useEffect(() => {
-    if (!viewFromHash())
-      history.replaceState({ view }, "", "#/" + view);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    if (!jump) return;
-    setJump(null);
-    if (jump === "top") {
-      window.scrollTo({ top: 0, behavior: "auto" });
-      return;
-    }
-    const t = document.getElementById(jump);
-    if (t)
+    const sync = () => {
+      const next = readRoute();
+      setView(next);
+      setVisited((old) => new Set([...old, next]));
+      setMenu(false);
+      window.scrollTo(0, 0);
       requestAnimationFrame(() =>
-        t.scrollIntoView({ behavior: "auto", block: "start" }),
+        document.getElementById("main")?.focus({ preventScroll: true }),
       );
-  }, [jump]);
-
-  useRailHeight();
-  useReveals(view);
-
+    };
+    window.addEventListener("hashchange", sync);
+    if (!location.hash) history.replaceState(null, "", "#/home");
+    return () => window.removeEventListener("hashchange", sync);
+  }, []);
+  useEffect(() => {
+    const onEscape = (event) => {
+      if (event.key === "Escape" && menu) {
+        setMenu(false);
+        document.querySelector(".menu-button")?.focus();
+      }
+    };
+    window.addEventListener("keydown", onEscape);
+    return () => window.removeEventListener("keydown", onEscape);
+  }, [menu]);
+  const go = (next) => {
+    setMenu(false);
+    if (view === next) window.scrollTo(0, 0);
+    else location.hash = "/" + next;
+  };
+  const inspect = (index) => {
+    setSelected(index);
+    go("demo");
+  };
+  const title = ROUTES.find(([id]) => id === view)[1];
+  const navItem = ([id, label, icon]) => (
+    <a
+      key={id}
+      href={"#/" + id}
+      className="nav-link"
+      aria-current={view === id || (id === "demo" && DEMO_NAV.some(([route]) => route === view)) ? "page" : undefined}
+      onClick={() => setMenu(false)}
+    >
+      <Icon name={icon} />
+      <span>{label}</span>
+      {id === "analysis" && (
+        <span className="nav-count">{DATA.leaves.length}</span>
+      )}
+    </a>
+  );
   return (
-    <>
-      <a className="skip" href="#main">
+    <div className="app-shell clean-shell">
+      <a
+        className="skip"
+        href="#main"
+        onClick={(event) => {
+          event.preventDefault();
+          document.getElementById("main")?.focus();
+        }}
+      >
         Skip to content
       </a>
-      <div className="grain" aria-hidden="true"></div>
-
-      <Rail view={view} onGo={go} leafCount={L.length} />
-      <ForeEdge view={view} />
-
-      <main id="main">
-        {/* Both panels stay mounted so the plate timelines, the batch and the
-            chain keep their state across a tab switch; only one is ever shown. */}
-        <div
-          role="tabpanel"
-          id="view-overview"
-          aria-labelledby="tab-overview"
-          tabIndex={0}
-          hidden={view !== "overview"}
-        >
-          <Hero leaves={L} onGo={go} />
-          <Outputs leaves={L} />
-          <Measure onGo={go} />
-          <Recall ladder={DATA.ladder} onGo={go} />
-          <Integrate />
+      <aside className="sidebar" data-open={menu}>
+        <a className="brand" href="#/home">
+          <span className="brand-symbol">
+            <Icon name="cells" />
+          </span>
+          culture<span>QC</span>
+        </a>
+        <div className="workspace-label">
+          <span className="workspace-avatar">CQ</span>
+          <div>
+            Cell culture analysis<small>Image-based quality control</small>
+          </div>
         </div>
-
-        <div
-          role="tabpanel"
-          id="view-analysis"
-          aria-labelledby="tab-analysis"
-          tabIndex={0}
-          hidden={view !== "analysis"}
-        >
-          <Leaf leaves={L} />
-          <Upload />
-          <MeasureTable leaves={L} />
-          <Ladder ladder={DATA.ladder} />
-          <Chain leaves={L} />
-          <Provenance />
+        <nav aria-label="Workspace">
+          <p className="nav-label">Workspace</p>
+          {NAV.map(navItem)}
+        </nav>
+        <div className="sidebar-foot">
+          <Icon name="layers" />
+          <div>
+            Research use
+            <small>Inspect evidence before acting</small>
+          </div>
         </div>
-
-        <Close leaves={L} onGo={go} />
-      </main>
-    </>
+      </aside>
+      {menu && (
+        <button
+          className="menu-scrim"
+          aria-label="Close navigation"
+          onClick={() => setMenu(false)}
+        />
+      )}
+      <div className="app-body">
+        <header className="topbar">
+          <button
+            className="icon-button menu-button"
+            aria-label={menu ? "Close navigation" : "Open navigation"}
+            aria-expanded={menu}
+            onClick={() => setMenu(!menu)}
+          >
+            <Icon name="menu" />
+          </button>
+          <div className="breadcrumb">
+            cultureQC
+            <Icon name="chevron" />
+            <strong>{title}</strong>
+          </div>
+          <span className="reference-badge">
+            <span />
+            {view === "upload" ? "Your workspace" : view === "home" ? "Cell analysis" : "Demo data"}
+          </span>
+          <a className="button primary top-upload" href="#/upload">
+            <Icon name="plus" />
+            New analysis
+          </a>
+        </header>
+        <main id="main" tabIndex={-1}>
+          {!["home", "overview", "analysis", "demo"].includes(view) && <h1 className="sr">{title}</h1>}
+          {visited.has("home") && <div hidden={view !== "home"}><Home leaves={DATA.leaves} /></div>}
+          {["demo", ...DEMO_NAV.map(([id]) => id)].includes(view) && <div className="demo-context"><div><strong>Demo workspace</strong><span>Sample images · precomputed results · {DATA.leaves.length} specimens</span></div><nav aria-label="Demo views">{[["demo", "Image explorer"], ["overview", "Dataset summary"], ["benchmarks", "Benchmarks"], ["audit", "Audit trail"]].map(([id,label]) => <a key={id} href={"#/" + id} aria-current={view === id || (id === "demo" && view === "analysis") ? "page" : undefined}>{label}</a>)}</nav></div>}
+          {visited.has("demo") && <div hidden={view !== "demo"}><Explorer leaves={DATA.leaves} selected={selected} onSelect={setSelected} /></div>}
+          {visited.has("overview") && (
+            <div hidden={view !== "overview"}>
+              <Dashboard leaves={DATA.leaves} onInspect={inspect} onGo={go} />
+            </div>
+          )}
+          {visited.has("upload") && (
+            <div hidden={view !== "upload"} className="page supporting">
+              <Upload />
+            </div>
+          )}
+          {visited.has("benchmarks") && (
+            <div hidden={view !== "benchmarks"} className="page supporting">
+              <Measure onGo={go} />
+              <MeasureTable leaves={DATA.leaves} />
+              <Ladder ladder={DATA.ladder} />
+            </div>
+          )}
+          {visited.has("audit") && (
+            <div hidden={view !== "audit"} className="page supporting">
+              <Chain leaves={DATA.leaves} />
+            </div>
+          )}
+          {visited.has("provenance") && (
+            <div hidden={view !== "provenance"} className="page supporting">
+              <Provenance />
+            </div>
+          )}
+          {visited.has("integration") && (
+            <div hidden={view !== "integration"} className="page supporting">
+              <Integrate />
+            </div>
+          )}
+        </main>
+        <footer className="app-footer">
+          <span>cultureQC · Image to evidence.</span>
+          <a href="#/integration">Integration</a>
+          <a href="#/provenance">
+            QC trained on synthetic data. View model limitations
+            <Icon name="arrow" />
+          </a>
+        </footer>
+      </div>
+    </div>
   );
 }

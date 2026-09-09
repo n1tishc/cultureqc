@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Plate from "./Plate";
 import Counter from "./Counter";
+import Leaders from "./Leaders";
 import {
   ACTION_LABEL,
   ACTION_TONE,
@@ -15,7 +16,14 @@ import { RM } from "../lib/motion";
 
 const ROWS = 5;
 
+/* Each reading and the pixels behind it. */
+const LEADS = [
+  { from: "#leaf-conf", to: "#leaf-plate .frame" },
+  { from: "#verdict", to: "#leaf-plate .ebox" },
+];
+
 export default function Leaf({ leaves }) {
+  const gridRef = useRef(null);
   const [idx, setIdx] = useState(FLAGGED_LEAF);
   const [run, setRun] = useState(0);
   /* The first paint is the destination, not a performance: someone arriving on
@@ -65,7 +73,11 @@ export default function Leaf({ leaves }) {
         real record in the chain below.
       </p>
 
-      <div className="leafgrid rv">
+      <div className="leafgrid rv" ref={gridRef}>
+        {/* Every printed reading ruled back to the pixels it was measured on:
+            the confluency to the whole field, the verdict to the region the
+            classifier actually looked at. */}
+        <Leaders hostRef={gridRef} pairs={LEADS} redrawKey={`${idx}:${run}`} />
         <div className="leafmain">
           <Plate id="leaf-plate" leaf={d} runKey={run} instant={instant} />
 
@@ -87,6 +99,7 @@ export default function Leaf({ leaves }) {
                 }
                 onClick={() => go(i)}
               >
+                <img className="step-thumb" src={leaf.img} alt="" width="80" height="54" loading="lazy" />
                 <span className="num">{pad2(i + 1)}</span>
                 <span className="nm">{leaf.short}</span>
                 <span className="fl"></span>
@@ -131,7 +144,7 @@ export default function Leaf({ leaves }) {
           <div className="witbody" id="witbody">
             <div className={rowCls(0)} data-w="1">
               <p className="wlabel">Confluency</p>
-              <p className="big">
+              <p className="big" id="leaf-conf">
                 <Counter
                   to={d.confluency}
                   delay={520}
@@ -147,7 +160,7 @@ export default function Leaf({ leaves }) {
                       ? `scaleX(${d.confluency / 100})`
                       : "scaleX(0)",
                     background:
-                      d.confluency >= 80 ? "var(--v-green)" : "var(--bone-2)",
+                      d.confluency >= 80 ? "var(--v-green)" : "var(--ink-2)",
                   }}
                 ></i>
                 <u style={{ left: "80%" }}></u>

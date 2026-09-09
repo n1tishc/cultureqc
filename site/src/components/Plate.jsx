@@ -67,9 +67,12 @@ export default function Plate({
       clearTimeout(t);
       t = setTimeout(fit, 120);
     };
+    const observer = new ResizeObserver(onResize);
+    if (matRef.current) observer.observe(matRef.current);
     window.addEventListener("resize", onResize);
     return () => {
       clearTimeout(t);
+      observer.disconnect();
       window.removeEventListener("resize", onResize);
     };
   });
@@ -81,8 +84,11 @@ export default function Plate({
     if (!leaf) return undefined;
     const frame = frameRef.current;
 
-    /* The Resting Frame Rule: mask off on a flagged leaf, boxes off on a clear one */
-    setMask(!drawBoxes);
+    /* The Resting Frame Rule: the segmentation is the confluency measurement,
+       so it stays on the field at rest — hiding it on a flagged leaf would hide
+       the evidence for one of the two readings printed beside it. The evidence
+       boxes are the QC classifier's, and appear only when it raised something. */
+    setMask(true);
     setBox(drawBoxes);
     setShown({ mask: false, boxes: false });
 
@@ -93,7 +99,7 @@ export default function Plate({
 
     const timers = [];
     const at = (ms, fn) => timers.push(setTimeout(fn, quick ? 0 : ms));
-    at(560, () => setShown((s) => ({ ...s, mask: !drawBoxes })));
+    at(560, () => setShown((s) => ({ ...s, mask: true })));
     at(900, () => setShown((s) => ({ ...s, boxes: drawBoxes })));
     return () => timers.forEach(clearTimeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -169,6 +175,7 @@ export default function Plate({
               }}
             />
             <span className="dot" aria-hidden="true"></span>Cell mask
+            <i className="tstate">{shown.mask ? "shown" : "hidden"}</i>
           </label>
           <label className="tog">
             <input
@@ -183,9 +190,34 @@ export default function Plate({
               }}
             />
             <span className="dot" aria-hidden="true"></span>Evidence boxes
+            <i className="tstate">
+              {!drawBoxes ? "none" : shown.boxes ? "shown" : "hidden"}
+            </i>
           </label>
           {extraTool}
         </div>
+        {/* The two layers are controlled independently, so the state where they
+            coincide has to be named rather than left to be noticed. */}
+        <span
+          className="layerstate"
+          data-layers={
+            shown.mask && shown.boxes
+              ? "both"
+              : shown.mask
+                ? "mask"
+                : shown.boxes
+                  ? "evidence"
+                  : "none"
+          }
+        >
+          {shown.mask && shown.boxes
+            ? "Overlaid — segmentation and evidence on the same field"
+            : shown.mask
+              ? "Segmentation only"
+              : shown.boxes
+                ? "Evidence only"
+                : "Field as captured"}
+        </span>
         <span className="platecap">
           {leaf && (
             <>

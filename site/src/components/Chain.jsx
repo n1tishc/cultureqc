@@ -114,8 +114,13 @@ export default function Chain({ leaves }) {
             node: `Chain intact — ${leaves.length} records verified in your browser`,
           }
         : {
+            /* Say what the walk actually found, and no more. Editing one record
+               fails that record and the link that reaches back to it; the walk
+               then heals, because leaf 07 links to leaf 06's untouched digest.
+               Claiming "every record after it is unprovable" is contradicted by
+               the rows underneath, which still read Verified. */
             s: "bad",
-            node: `Chain broken at leaf ${pad2(broken + 1)} — every record after it is unprovable`,
+            node: `Chain broken at leaf ${pad2(broken + 1)} — that record and the link after it fail verification`,
           },
     );
     running.current = false;

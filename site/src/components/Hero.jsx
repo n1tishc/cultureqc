@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import Plate from "./Plate";
 import Counter from "./Counter";
 import {
@@ -12,7 +12,17 @@ import {
 } from "../lib/labels";
 import { RM } from "../lib/motion";
 
+/* The fields of the canonical record worth printing in the first viewport —
+   enough to identify the run and to check the row against the chain below. */
+const REC_FIELDS = [
+  ["flask_id", (r) => r.flask_id],
+  ["analysed_at", (r) => r.analysed_at.replace("T", " ").slice(0, 19) + "Z"],
+  ["record_hash", (r) => r.record_hash],
+  ["schema_version", (r) => r.schema_version],
+];
+
 export default function Hero({ leaves, onGo }) {
+  const heroRef = useRef(null);
   /* Reduced motion gets the destination, not the journey: the flagged field
      directly, with no step and no sweep. */
   const [idx, setIdx] = useState(RM.matches ? FLAGGED_LEAF : CLEAN_LEAF);
@@ -36,7 +46,12 @@ export default function Hero({ leaves, onGo }) {
   }, [autoDone, idx]);
 
   return (
-    <section className="sec hero" id="sec-hero" aria-label="What cultureQC does">
+    <section
+      className="sec hero"
+      id="sec-hero"
+      ref={heroRef}
+      aria-label="What cultureQC does"
+    >
       <div className="heroL">
         <h1 className="hook">
           One brightfield image in. Four outputs,{" "}
@@ -52,7 +67,7 @@ export default function Hero({ leaves, onGo }) {
         <div className="readout" id="hero-readout">
           <div className="ro">
             <p className="rok">Confluency</p>
-            <p className="rov">
+            <p className="rov" id="hero-confluency">
               <Counter to={d.confluency} delay={520} runKey={`${idx}:${run}`} />
               <sup>%</sup>
             </p>
@@ -71,34 +86,53 @@ export default function Hero({ leaves, onGo }) {
           </div>
         </div>
 
-        <p className="herorec">
-          <span>Record</span>
-          <i title={"record_hash " + d.record.record_hash}>
-            {d.record.record_hash.slice(0, 20)}… · seg{" "}
-            {d.record.model_versions.seg} · qc {d.record.model_versions.qc}
-          </i>
-        </p>
+        {/* The record card: what the run is, the row it wrote, and the page's
+            primary action — the block every tool in this field hands you. */}
+        <div className="visa">
+          <div className="visahead">
+            <span className="visak">Cell line</span>
+            <span className="visav">{d.record.cell_line}</span>
+            <span className="visak">Records</span>
+            <span className="visav">{leaves.length}</span>
+          </div>
 
-        <div className="actions heroacts">
-          <button className="cta" type="button" onClick={() => onGo("analysis")}>
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              aria-hidden="true"
+          <details className="hero-record">
+            <summary>Inspect canonical record</summary>
+            <div className="herorec">
+            {REC_FIELDS.map(([key, read]) => (
+              <Fragment key={key}>
+                <b>{key}</b>
+                <i title={read(d.record)}>{read(d.record)}</i>
+              </Fragment>
+            ))}
+            </div>
+          </details>
+
+          <div className="actions heroacts">
+            <button
+              className="cta"
+              type="button"
+              onClick={() => onGo("analysis")}
             >
-              <path d="M4 6h16M4 12h16M4 18h10" strokeLinecap="round" />
-            </svg>
-            Open the analysis
-          </button>
-          <button
-            className="cta2"
-            type="button"
-            onClick={() => onGo("analysis", { scrollTo: "sec-upload" })}
-          >
-            Run your own field
-          </button>
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                aria-hidden="true"
+              >
+                <path d="M4 6h16M4 12h16M4 18h10" strokeLinecap="round" />
+              </svg>
+              Open the analysis
+            </button>
+            <button
+              className="cta2"
+              type="button"
+              onClick={() => onGo("analysis", { scrollTo: "sec-upload" })}
+            >
+              Run your own field
+            </button>
+          </div>
         </div>
       </div>
 
@@ -126,6 +160,14 @@ export default function Hero({ leaves, onGo }) {
             </button>
           }
         />
+        {/* The status chip on the field. Everything on it is stated in words
+            elsewhere in this viewport, so it is decoration to a screen reader
+            and hidden. */}
+        <div className="cachet" data-v={FLAG_TONE[d.flag]} aria-hidden="true">
+          <span className="ctop">QC</span>
+          <b>{FLAG_SHORT[d.flag]}</b>
+          <span className="cbot">{d.record.flask_id}</span>
+        </div>
         <p className="sr" role="status" aria-live="polite">
           {d.title}. Confluency {d.confluency.toFixed(1)} percent. QC flag{" "}
           {FLAG_LABEL[d.flag]}. Recommended action {ACTION_LABEL[d.action]}.

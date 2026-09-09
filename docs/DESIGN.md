@@ -1,6 +1,6 @@
 ---
 name: cultureQC
-description: Two surfaces, two worlds — a dark exception-review console and a bound-record landing page
+description: Two surfaces, two worlds — a dark exception-review console and a landing page built as the culture line's own travel document
 colors:
   # ── The Console World (demo/app.py) ──
   console-bg-primary: "#0f1117"
@@ -16,31 +16,40 @@ colors:
   console-on-accent: "#ffffff"
   console-fill-inactive: "#4b5563"
   console-scrollbar-hover: "#363a44"
-  # ── The Witness Book (site/index.html) ──
-  site-enamel-900: "#04100F"
-  site-enamel-850: "#061615"
-  site-enamel-800: "#08191A"
-  site-enamel-750: "#0A1F1E"
-  site-enamel-700: "#0D2725"
-  site-enamel-650: "#123230"
-  site-enamel-600: "#17403D"
-  site-enamel-500: "#22534F"
-  site-bone: "#EBE5D6"
-  site-bone-2: "#B8C0B8"
-  site-bone-3: "#8A968F"
-  site-sulphur: "#E2C21A"
-  site-sulphur-2: "#A08C25"
-  site-sulphur-3: "#5E5520"
-  site-cinnabar: "#E0492E"
-  site-cinnabar-t: "#F2705A"
-  site-v-green: "#22c55e"
-  site-v-amber: "#f59e0b"
-  site-v-red: "#ef4444"
-  site-invert-ink: "#0B1A19"
-  site-invert-prose: "#414E4A"
-  site-invert-rule: "#C2BBA9"
-  site-invert-label: "#4E5B57"
-  site-invert-addr: "#63540F"
+  # ── The Travel Document (site/src/App.jsx) ──
+  # the booklet cover
+  doc-cover-900: "#3F1019"
+  doc-cover-800: "#571825"
+  doc-cover-700: "#6B1F2D"
+  doc-cover-600: "#83323F"
+  # security paper
+  doc-paper: "#F3EEE2"
+  doc-paper-2: "#EDE6D6"
+  doc-paper-3: "#E4DBC7"
+  doc-paper-4: "#D6CBB2"
+  doc-rose: "#F3DCE0"
+  doc-leaf-green: "#DFE9D8"
+  # ink
+  doc-ink: "#1E1912"
+  doc-ink-2: "#554B3E"
+  doc-ink-3: "#6E6456"
+  # document chrome
+  doc-gold: "#C7A24D"
+  doc-gold-2: "#A5842F"
+  doc-gold-3: "#6A5426"
+  doc-gold-lift: "#D9BC7A"
+  # stamp inks — chrome only, never a verdict
+  doc-stamp-navy: "#1E2A56"
+  doc-stamp-purple: "#5C3F91"
+  doc-stamp-green: "#3F6B45"
+  # the verdict trio — the product reading an image, and nothing else
+  doc-v-green: "#2E6B3E"
+  doc-v-amber: "#8A5406"
+  doc-v-red: "#B4231A"
+  # the same trio lifted for the ink ground of a plate
+  doc-v-green-lifted: "#6FBF80"
+  doc-v-red-lifted: "#F0705E"
+  doc-evidence: "#E8503A"
 typography:
   # ── The Console World ──
   console-display:
@@ -78,129 +87,115 @@ typography:
     fontFamily: "ui-sans-serif, -apple-system, 'Segoe UI', sans-serif"
     fontSize: "12px"
     fontWeight: 400
-  # ── The Witness Book ──
-  site-poster:
-    fontFamily: "Archivo, 'Archivo Expanded', system-ui, sans-serif"
-    fontSize: "clamp(88px, 17vw, 278px)"
-    fontWeight: 800
-    lineHeight: 0.78
-    letterSpacing: "-0.055em"
-    fontVariation: "'wdth' 63"
+  # ── The Travel Document ──
+  doc-poster:
+    fontFamily: "'Bodoni Moda', Didot, 'Bodoni 72', Georgia, 'Times New Roman', serif"
+    fontSize: "clamp(72px, 10vw, 150px)"
+    fontWeight: 600
+    lineHeight: 0.92
+    letterSpacing: "-0.03em"
     fontFeature: "tabular-nums"
-  site-figure:
-    fontFamily: "Archivo, 'Archivo Expanded', system-ui, sans-serif"
-    fontSize: "clamp(42px, 4.4vw, 64px)"
-    fontWeight: 800
-    lineHeight: 0.86
-    letterSpacing: "-0.045em"
-    fontVariation: "'wdth' 68"
-    fontFeature: "tabular-nums"
-  site-display-major:
-    fontFamily: "Archivo, 'Archivo Expanded', system-ui, sans-serif"
-    fontSize: "clamp(34px, 5.4vw, 76px)"
-    fontWeight: 800
+  doc-figure:
+    fontFamily: "'Bodoni Moda', Didot, 'Bodoni 72', Georgia, 'Times New Roman', serif"
+    fontSize: "clamp(40px, 4vw, 58px)"
+    fontWeight: 600
     lineHeight: 0.98
-    letterSpacing: "-0.03em"
-    fontVariation: "'wdth' 66"
-  site-readout:
-    fontFamily: "Archivo, 'Archivo Expanded', system-ui, sans-serif"
-    fontSize: "clamp(23px, 2.5vw, 34px)"
-    fontWeight: 800
-    lineHeight: 1
-    letterSpacing: "-0.03em"
-    fontVariation: "'wdth' 70"
-    fontFeature: "tabular-nums"
-  site-readout-sm:
-    fontFamily: "Archivo, 'Archivo Expanded', system-ui, sans-serif"
-    fontSize: "clamp(15px, 1.5vw, 20px)"
-    fontWeight: 800
     letterSpacing: "-0.02em"
-    fontVariation: "'wdth' 70"
-  site-subhook:
-    fontFamily: "Archivo, 'Archivo Expanded', system-ui, sans-serif"
-    fontSize: "clamp(14.5px, 1.15vw, 17px)"
-    fontWeight: 400
-    lineHeight: 1.55
-    fontVariation: "'wdth' 106"
-  site-display:
-    fontFamily: "Archivo, 'Archivo Expanded', system-ui, sans-serif"
-    fontSize: "clamp(26px, 3.6vw, 48px)"
-    fontWeight: 800
-    lineHeight: 0.98
-    letterSpacing: "-0.03em"
-    fontVariation: "'wdth' 70"
-  site-hook:
-    fontFamily: "Archivo, 'Archivo Expanded', system-ui, sans-serif"
-    fontSize: "clamp(30px, 4vw, 58px)"
+    fontFeature: "tabular-nums"
+  doc-headline-major:
+    fontFamily: "'Bodoni Moda', Didot, 'Bodoni 72', Georgia, 'Times New Roman', serif"
+    fontSize: "clamp(32px, 4.6vw, 64px)"
+    fontWeight: 600
+    lineHeight: 1.02
+    letterSpacing: "-0.012em"
+  doc-headline:
+    fontFamily: "'Bodoni Moda', Didot, 'Bodoni 72', Georgia, 'Times New Roman', serif"
+    fontSize: "clamp(27px, 3.4vw, 46px)"
+    fontWeight: 600
+    lineHeight: 1.02
+    letterSpacing: "-0.012em"
+  doc-hook:
+    fontFamily: "'Bodoni Moda', Didot, 'Bodoni 72', Georgia, 'Times New Roman', serif"
+    fontSize: "clamp(27px, 3.1vw, 45px)"
+    fontWeight: 600
+    lineHeight: 1.06
+    letterSpacing: "-0.014em"
+  doc-readout:
+    fontFamily: "'Bodoni Moda', Didot, 'Bodoni 72', Georgia, 'Times New Roman', serif"
+    fontSize: "clamp(23px, 2.4vw, 33px)"
+    fontWeight: 600
+    lineHeight: 1.04
+    letterSpacing: "-0.015em"
+    fontFeature: "tabular-nums"
+  doc-title:
+    fontFamily: "'Bodoni Moda', Didot, 'Bodoni 72', Georgia, 'Times New Roman', serif"
+    fontSize: "clamp(19px, 1.9vw, 26px)"
+    fontWeight: 600
+    lineHeight: 1.08
+    letterSpacing: "-0.012em"
+  doc-verdict-name:
+    fontFamily: "'Bodoni Moda', Didot, 'Bodoni 72', Georgia, 'Times New Roman', serif"
+    fontSize: "clamp(17px, 1.6vw, 21px)"
     fontWeight: 700
-    lineHeight: 0.97
-    letterSpacing: "-0.035em"
-    fontVariation: "'wdth' 78"
-  site-closehook:
+    lineHeight: 1.12
+    letterSpacing: "-0.008em"
+  doc-lede:
     fontFamily: "Archivo, 'Archivo Expanded', system-ui, sans-serif"
-    fontSize: "clamp(30px, 5.4vw, 74px)"
-    fontWeight: 800
-    lineHeight: 0.95
-    letterSpacing: "-0.04em"
-    fontVariation: "'wdth' 72"
-  site-verdict-name:
-    fontFamily: "Archivo, 'Archivo Expanded', system-ui, sans-serif"
-    fontSize: "clamp(17px, 1.7vw, 22px)"
-    fontWeight: 800
-    lineHeight: 1.1
-    letterSpacing: "-0.02em"
-    fontVariation: "'wdth' 76"
-  site-title:
-    fontFamily: "Archivo, 'Archivo Expanded', system-ui, sans-serif"
-    fontSize: "clamp(19px, 2vw, 27px)"
-    fontWeight: 800
-    lineHeight: 1.05
-    letterSpacing: "-0.02em"
-    fontVariation: "'wdth' 74"
-  site-action:
-    fontFamily: "Archivo, 'Archivo Expanded', system-ui, sans-serif"
-    fontSize: "14px"
-    fontWeight: 800
-    letterSpacing: "0.02em"
-    fontVariation: "'wdth' 84"
-  site-lede:
-    fontFamily: "Archivo, 'Archivo Expanded', system-ui, sans-serif"
-    fontSize: "clamp(16px, 1.5vw, 19px)"
+    fontSize: "clamp(15.5px, 1.35vw, 18px)"
     fontWeight: 400
-    lineHeight: 1.6
-    fontVariation: "'wdth' 106"
-  site-body:
+    lineHeight: 1.62
+    fontVariation: "'wdth' 100"
+  doc-body:
     fontFamily: "Archivo, 'Archivo Expanded', system-ui, sans-serif"
     fontSize: "16px"
     fontWeight: 400
-    lineHeight: 1.6
+    lineHeight: 1.62
     fontVariation: "'wdth' 100"
-  site-label:
-    fontFamily: "'Martian Mono', ui-monospace, 'SF Mono', Menlo, monospace"
+  doc-note:
+    fontFamily: "Archivo, 'Archivo Expanded', system-ui, sans-serif"
+    fontSize: "13.5px"
+    fontWeight: 400
+    lineHeight: 1.5
+  doc-action:
+    fontFamily: "Archivo, 'Archivo Expanded', system-ui, sans-serif"
+    fontSize: "13.5px"
+    fontWeight: 700
+    letterSpacing: "0.09em"
+    fontVariation: "'wdth' 86"
+  doc-stamp:
+    fontFamily: "Archivo, 'Archivo Expanded', system-ui, sans-serif"
+    fontSize: "14px"
+    fontWeight: 800
+    lineHeight: 1.1
+    letterSpacing: "0.11em"
+    fontVariation: "'wdth' 80"
+  doc-machine-label:
+    fontFamily: "'B612 Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace"
     fontSize: "11px"
     fontWeight: 400
     letterSpacing: "0.13em"
-  site-hash:
-    fontFamily: "'Martian Mono', ui-monospace, 'SF Mono', Menlo, monospace"
-    fontSize: "11px"
-    fontWeight: 400
-    lineHeight: 1.45
+  doc-machine-data:
+    fontFamily: "'B612 Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace"
+    fontSize: "12px"
+    fontWeight: 700
+    lineHeight: 1.55
+    letterSpacing: "0.06em"
 rounded:
   console-sm: "8px"
   console-md: "10px"
   console-lg: "12px"
   console-pill: "999px"
-  site-none: "0"
+  doc-page: "3px"
 spacing:
   console-sm: "10px"
   console-md: "16px"
   console-lg: "20px"
-  site-edge: "30px"
-  site-pad: "clamp(18px, 3.4vw, 56px)"
-  site-block-top: "clamp(64px, 8vw, 132px)"
-  site-block-bottom: "clamp(56px, 7vw, 112px)"
-  site-head-gap: "clamp(28px, 4vw, 52px)"
-  site-gutter: "clamp(16px, 3vw, 44px)"
+  doc-cover-w: "178px"
+  doc-pad: "clamp(18px, 3.2vw, 52px)"
+  doc-sec-top: "clamp(48px, 5.6vw, 92px)"
+  doc-sec-bottom: "clamp(44px, 5vw, 80px)"
+  doc-head-gap: "clamp(24px, 3.2vw, 42px)"
+  doc-gutter: "clamp(16px, 3vw, 44px)"
 components:
   console-status-card:
     backgroundColor: "{colors.console-status-green} @ 8%"
@@ -223,73 +218,73 @@ components:
     backgroundColor: "{colors.console-bg-card}"
     rounded: "{rounded.console-sm}"
     padding: "0"
-  site-cta:
-    backgroundColor: "{colors.site-sulphur}"
-    textColor: "{colors.site-enamel-900}"
-    typography: "{typography.site-action}"
-    rounded: "{rounded.site-none}"
-    padding: "12px 20px"
-  site-cta-secondary:
+  doc-cta:
+    backgroundColor: "{colors.doc-cover-700}"
+    textColor: "{colors.doc-paper}"
+    typography: "{typography.doc-action}"
+    rounded: "{rounded.doc-page}"
+    padding: "12px 22px"
+  doc-cta-disabled:
     backgroundColor: "transparent"
-    textColor: "{colors.site-bone}"
-    typography: "{typography.site-label}"
-    rounded: "{rounded.site-none}"
+    textColor: "{colors.doc-ink-3}"
+  doc-cta2:
+    backgroundColor: "transparent"
+    textColor: "{colors.doc-stamp-navy}"
+    typography: "{typography.doc-machine-label}"
+    rounded: "{rounded.doc-page}"
     padding: "12px 18px"
-  site-toggle:
+  doc-cta2-hover:
+    backgroundColor: "{colors.doc-stamp-navy}"
+    textColor: "{colors.doc-paper}"
+  doc-toggle:
     backgroundColor: "transparent"
-    textColor: "{colors.site-bone-3}"
-    typography: "{typography.site-label}"
-    rounded: "{rounded.site-none}"
+    textColor: "{colors.doc-ink-3}"
+    typography: "{typography.doc-machine-label}"
     padding: "7px 12px"
-  site-toggle-checked:
-    backgroundColor: "{colors.site-enamel-700}"
-    textColor: "{colors.site-bone}"
-  site-step:
+  doc-toggle-checked:
+    backgroundColor: "{colors.doc-gold}"
+    textColor: "{colors.doc-ink}"
+  doc-step:
     backgroundColor: "transparent"
-    textColor: "{colors.site-bone-3}"
-    rounded: "{rounded.site-none}"
+    textColor: "{colors.doc-ink-3}"
+    typography: "{typography.doc-machine-label}"
     padding: "8px 4px 9px"
-  site-step-current:
-    backgroundColor: "{colors.site-sulphur}"
-    textColor: "{colors.site-enamel-900}"
-  site-verdict-badge:
-    backgroundColor: "currentColor @ 13%"
-    textColor: "{colors.site-v-green}"
-    rounded: "{rounded.site-none}"
-    padding: "8px 15px"
-  site-field-value:
-    backgroundColor: "{colors.site-sulphur}"
-    textColor: "{colors.site-invert-ink}"
-    typography: "{typography.site-hash}"
-    rounded: "{rounded.site-none}"
+  doc-step-current:
+    backgroundColor: "{colors.doc-stamp-navy}"
+    textColor: "{colors.doc-paper}"
+  doc-tab:
+    backgroundColor: "transparent"
+    textColor: "{colors.doc-gold-lift}"
+    typography: "{typography.doc-machine-label}"
+    padding: "11px 10px 11px 16px"
+  doc-tab-selected:
+    backgroundColor: "{colors.doc-cover-800}"
+    textColor: "{colors.doc-paper}"
+  doc-cachet:
+    backgroundColor: "{colors.doc-paper} @ 84%"
+    textColor: "{colors.doc-v-red}"
+    typography: "{typography.doc-stamp}"
+    padding: "9px 16px 8px"
+  doc-badge:
+    backgroundColor: "currentColor @ 9%"
+    textColor: "{colors.doc-v-amber}"
+    typography: "{typography.doc-stamp}"
+    padding: "9px 17px"
+  doc-field-value:
+    backgroundColor: "{colors.doc-gold}"
+    textColor: "{colors.doc-ink}"
+    typography: "{typography.doc-machine-data}"
     padding: "2px 7px"
-  site-view-tab:
+  doc-endpoint-input:
+    backgroundColor: "{colors.doc-paper}"
+    textColor: "{colors.doc-ink-2}"
+    typography: "{typography.doc-machine-label}"
+    padding: "8px 10px"
+  doc-mini-button:
     backgroundColor: "transparent"
-    textColor: "{colors.site-bone-3}"
-    typography: "{typography.site-label}"
-    rounded: "{rounded.site-none}"
-    padding: "15px 22px 14px"
-  site-view-tab-selected:
-    backgroundColor: "transparent"
-    textColor: "{colors.site-bone}"
-  site-ingest-mat:
-    backgroundColor: "{colors.site-enamel-750}"
-    rounded: "{rounded.site-none}"
-    padding: "clamp(30px, 5vw, 60px) clamp(18px, 3vw, 40px)"
-  site-conn-dot:
-    backgroundColor: "transparent"
-    textColor: "{colors.site-bone-3}"
-    rounded: "{rounded.site-none}"
-    width: "9px"
-    height: "9px"
-  site-error-track:
-    backgroundColor: "{colors.site-enamel-850}"
-    borderColor: "{colors.site-enamel-650}"
-    rounded: "{rounded.site-none}"
-    height: "15px"
-  site-error-bar:
-    backgroundColor: "{colors.site-sulphur}"
-    rounded: "{rounded.site-none}"
+    textColor: "{colors.doc-stamp-navy}"
+    typography: "{typography.doc-machine-label}"
+    padding: "8px 12px"
 ---
 
 # Design System: cultureQC
@@ -301,9 +296,9 @@ components:
 | If you are editing… | The governing world | Its brief | Token prefix |
 | --- | --- | --- | --- |
 | `demo/app.py` (the exception-review console) | **The Instrument Console** | `.impeccable/surfaces/demo-app-py.md` | `console-*` |
-| `site/index.html` (built from `site/src/template.html`) | **The Witness Book** | `.impeccable/surfaces/site-index-html.md` | `site-*` |
+| `site/src/App.jsx` (the React landing page; also `site/src/styles.css`, `site/index.html`) | **The Travel Document** | `site/.impeccable/surfaces/site-src-app-jsx.md` | `doc-*` |
 
-Every token in the frontmatter is namespaced by surface. Every canonical section below is split into `### The Console World` and `### The Witness Book`. A value, a rule or a component from one world is not evidence for the other; there is no shared palette, no shared type stack, and no shared shape vocabulary. The only thing they share is the product's three-colour verdict semantics — green/amber/red — and even that is *quoted* by the landing page rather than owned by it (see **The Colour Quarantine Rule**).
+Every token in the frontmatter is namespaced by surface. Every canonical section below is split into `### The Console World` and `### The Travel Document`. A value, a rule or a component from one world is not evidence for the other; there is no shared palette, no shared type stack, and no shared shape vocabulary. The only thing they share is the product's three-way verdict semantics — green/amber/red — and even that is *quoted* by the landing page in its own inks rather than copied from the console (see **The Colour Quarantine Rule**).
 
 **Do not copy a rule across the boundary.** If a new surface appears, it gets its own world block and its own prefix; it does not inherit either of these two.
 
@@ -325,30 +320,22 @@ The status card carries a full per-class probability breakdown and an evidence-r
 - Everything is a card except the rationale, which is deliberately plain text — the one place the UI drops its own chrome to let a sentence be read as a sentence.
 - The audit trail is always present, never announced: one quiet disclosure row, full fidelity underneath, and a per-class evidence breakdown one level up, inside the status card itself.
 
-### The Witness Book (`site/index.html`)
+### The Travel Document (`site/src/App.jsx`)
 
-**Creative North Star: "The Witness Book"**
+**Creative North Star: "The Travel Document"**
 
-The landing page is built as a bound, page-numbered, countersigned laboratory record volume — and it does not merely resemble one, it *is* one: the page holds the real hash-chained records the pipeline wrote, recomputes each SHA-256 digest in the visitor's own browser with WebCrypto over the same canonical JSON the Python writer hashed, and offers a control that mutates one field so the visitor watches the chain break. Nothing on the page is a picture of evidence. The specimen images, masks, Grad-CAM boxes, numbers and hashes all came out of the shipped pipeline.
+The landing page is issued, not designed: it is the culture line's own travel document. A burgundy buckram cover runs down the left edge, gold-blocked, carrying the wordmark, the two hash-routed gatherings, an authored gold seal and the section index for whichever gathering is open. Everything to its right is printed on security paper, and every analysis lands on that paper as a struck stamp that takes real page space. The record is not described; it is set as a machine-readable zone, two fixed 44-character lines built from the record's own fields.
 
-The ground is drenched laboratory enamel — a near-black blue-green at eight steps of the same hue — carrying a fixed buckram weave (two hairline gratings plus fractal-noise turbulence at 50% opacity, `mix-blend-mode: overlay`) and a stained fore-edge: a 30px fixed strip down the right of every viewport above 900px, ruled and rotated, acting as the volume's section index. Prose is bone; sulphur is document chrome and the only colour you can click. Sections are discrete blocks separated by hairline rules with deep gutters, each keyed with a document address, and the poster-scale figures (`2.3` / `31`) are set at the narrowest width the superfamily has.
+The stock is the world's foundation and is never "plain paper": a guilloché rosette lattice tiled at 104px in visa rose over a pale-green intaglio wash, with paper fibre suspended in the sheet — a single fixed layer composited `multiply` at 26% so the whole booklet is one continuous sheet rather than a texture repeated per section. The cover carries its own separate tooth (a fractal-noise buckram grain at `overlay`, 16%). Type is three registers for three jobs, and the registers do not trade places: an engraved didone for headings, figures and the wordmark; a machine mono for the MRZ, hashes, field labels and measured data; a variable grotesque for prose, controls and stamp lettering.
 
-The first viewport refuses the category's centered hero entirely: full-bleed enamel split into a plate at reckless scale and a ruled ledger reading of that same field. Confirmed rejections: no AI gradient mesh, no glassmorphism, no icon bento, no fake dashboards, no lab-coat stock photography, no particle fields, no hype copy, and none of the training-data default faces (Space Grotesk, Space Mono, Inter-as-display).
-
-**The volume is bound in two gatherings.** A tab bar in the rail switches between two hash-routed views, and only one is in the document at a time:
-
-| Route | Gathering | Carries |
-|---|---|---|
-| `#/overview` (default) | **The argument** | The thesis hero — plate at ~64% of the split, running the scan sweep and the one deliberate step, with a three-figure reading and the record line beneath it. Then the four bound outputs, the 2.3 pp / 31 pp head-to-head, the recall teaser, and the integration surface. |
-| `#/analysis` | **The evidence** | The nine-leaf instrument (plate, stepper, witness column), the visitor's own uploads, the confluency table, the full 4×4 severity matrix, the audit chain, and the provenance disclosure. |
-
-The closing leaf — the call and the colophon — is a `<footer id="sec-close">` sitting **outside both panels**, rendering exactly once below the router. Routing is real: `pushState` per view, browser back/forward, deep links, `aria-selected` on a `role="tablist"`, roving `tabindex`, arrow/Home/End traversal, and a fore-edge index that rebuilds itself for whichever gathering is open. In print the tab bar is dropped and `[role="tabpanel"][hidden]` is forced back to `display:block` — a printed copy is the whole volume, both gatherings, because a bound record with a hidden half is not a record.
+The one dark region on a light page is earned: grayscale phase-contrast microscopy loses its contrast on cream, so the specimen is a tipped-in plate laid on ink inside a gold hairline, and the analysis instrument rules leader lines from each printed reading back to the pixels it was measured on. Colour is quarantined — document chrome and verdict are two systems that share one ground and never substitute for each other — and no verdict is ever carried by colour alone: the cachet, badge and dot key their *shape* on the verdict, and every state also carries its word.
 
 **Key Characteristics:**
-- Everything is square. There is not one non-zero `border-radius` on the entire page.
-- One superfamily worked across its width axis, not two families; width narrows as size grows.
-- Motion snaps, never glides — a single orchestrated moment per leaf, then stillness.
-- Every claim is a briefed claim, every demonstration image is labelled with what it actually is, and the page carries its own provenance-and-limits section instead of hiding it.
+- The ground is security paper — guilloché, intaglio wash and fibre — never a flat fill, and never re-applied per section.
+- A verdict is shape + word + ink. Kill the colour and the page still reads.
+- Stamp inks number and letter the document; the verdict trio is the product reading an image and appears nowhere else.
+- Nearly no radius: one 3px page-corner token, plus the round and oval geometries that *are* verdict meaning.
+- Motion is a stamp landing: it stops dead, with no overshoot anywhere in the world.
 
 ## Colors
 
@@ -376,30 +363,34 @@ Almost entirely neutral, with color spent exclusively on QC status — never on 
 #### Named Rules
 **The Two-Axis Status Rule.** The status card's color (the QC verdict) and the action badge's color (the recommended action) are two independent axes that happen to share one three-color vocabulary, not one signal painted twice. They usually agree, but the rules engine (`culture/rules.py::decide()`) legitimately splits them in a specific, desired direction: a **green** (`normal`) verdict can pair with an **amber** (`feed`/`hold`) action when confluency simply hasn't reached target yet — "nothing's wrong, just not there yet" is a correct reading, not a defect, and the card and badge are allowed to disagree in exactly this way. The coupling that *does* hold as an invariant: a non-`normal` QC flag at or above the review-confidence threshold always forces `human_review`, so red on the status card and red on the action badge are shared whenever the flag reaches that threshold. Below threshold the two axes fully decouple in the shipped rules engine — a low-confidence non-`normal` flag can still draw red evidence boxes on the image while the action badge reads green or amber — but that decoupling is a byproduct of the confidence-threshold rule, not a pattern to design toward; new surfaces should assume verdict-color and action-color are independent unless proven coupled by the same threshold logic.
 
-### The Witness Book
+### The Travel Document
 
-Three colour families with three separate jobs, over an eight-step single-hue enamel ramp. The families do not substitute for one another.
+Four families on one paper ground, with four separate jobs. They do not substitute for one another, and two of them are formally quarantined from each other.
 
 #### Primary
-- **Sulphur** (`#E2C21A`): document chrome and the only colour you can act on. It fills the primary CTA, the current leaf in the stepper, the current tab in the fore-edge index, the checked toggle dot, the scan sweep, the confluency target marker on the bar, the "Witness" column heading, the field values on the inverted leaf, the selection highlight and every focus ring. Two damped steps carry it into type: **Sulphur Deep** (`#A08C25`) for document addresses, section captions, table captions and the chain-link hash line; **Sulphur Shadow** (`#5E5520`) for the resting underline colour on colophon links.
+- **Buckram Burgundy** (`#6B1F2D`, with `#3F1019` / `#571825` / `#83323F` as its cover ramp): the volume's own colour. It is the cover, the skip link, the primary action's fill, the italic clause inside every hook and closing headline, the winning bar on the measured comparison, and the drop state of the ingest mat. It is the page's identity, not a status.
+- **Pressed Gold** (`#C7A24D`, damped to `#A5842F` and `#6A5426`, lifted to `#D9BC7A` on the cover): document chrome and the current-state marker. It blocks the cover rule and the seal, fills the checked toggle and the schedule's field values, rules the plate's inner hairline and the leader lines, draws the scan sweep, and carries document addresses, captions and table captions in its damped steps. Gold marks *what this document is* and *where you are in it*.
 
-#### Secondary
-- **Cinnabar** (`#E0492E`): the marking colour. Evidence-box strokes and their serial chips, the flagged tick on a stepper leaf, the border of a flagged ladder cell, and the tamper annotation in the chain. **Cinnabar Tint** (`#F2705A`) marks a large method disagreement in the comparison table. Cinnabar never appears on anything interactive and never states a verdict; it points at pixels.
+#### Secondary — stamp inks
+- **Stamp Navy** (`#1E2A56`): the interactive stamp ink. It is the secondary control's rule and label, the current leaf in the stepper, the caret, and the global focus ring. If it is navy, it is a control.
+- **Stamp Purple** (`#5C3F91`): the clerk's numbering ink — the serial struck beside each chain record and each manifest row, and nothing else.
+- **Stamp Green** (`#3F6B45`): the reachable-module mark on the connection panel. A socket answering is document chrome, not a reading of an image.
 
-#### Tertiary — the quoted verdict trio
-- **Verdict Green / Amber / Red** (`#22c55e` / `#f59e0b` / `#ef4444`): the console's own status vocabulary, imported unchanged. On this page they appear only inside the witness column (verdict dot, verdict name, predicted probability row, action badge), the ladder cell tags, and the chain's row/status states. They are quoted product semantics, never page decoration.
+#### Tertiary — the verdict trio
+- **Verdict Green / Amber / Red** (`#2E6B3E` / `#8A5406` / `#B4231A`): the product reading an image, in print-ink values weighted for the paper ground. They appear on the cachet, the verdict dot and name, the action badge, the probability row that was actually predicted, the flagged manifest and chain rows, the severity-matrix cell border, and the chain's broken state. Nowhere else.
+- **Lifted trio** (`#6FBF80` green, `#F0705E` red, `#E8503A` evidence stroke): the same three meanings rendered on the ink ground of a plate or a matrix cell, where the print-ink values would disappear. A lifted value is the trio on ink; it is not a fourth colour and it never appears on paper.
 
 #### Neutral
-- **Enamel** (`#04100F` → `#22534F`, eight steps): the drenched ground. `enamel-800` is the page body; `850` is the witness column and the fore-edge; `900` is the plate backing, the code block and the deepest mat; `750` is a hover fill; `700` and `650` are hairline rules; `600` is the 2px section rule and the scrollbar thumb; `500` is the plate outline and the secondary-button border.
-- **Bone** (`#EBE5D6`): primary prose and display type, and the ground of the one inverted leaf.
-- **Bone Muted** (`#B8C0B8`): all secondary prose — ledes, rationale, table body, list copy, hash values.
-- **Bone Dim** (`#8A968F`): field labels, serials, captions, meta lines, inactive fore-edge tabs.
-- **Inverted stock** (`#0B1A19` ink, `#414E4A` prose, `#C2BBA9` rules, `#4E5B57` labels, `#63540F` addresses): used only on `#sec-outputs`.
+- **Security Paper** (`#F3EEE2` stock, `#EDE6D6` recessed fill and hover, `#E4DBC7` fine row rules and tracks, `#D6CBB2` structural hairlines and enclosure borders): the four-step stock ramp. Every border in the system is one of the last two.
+- **Visa Rose** (`#F3DCE0`) and **Intaglio Green** (`#DFE9D8`): the under-printing. They never carry type; they tint the guilloché ground, the visa panel's own stock, the ingest mat and the one tipped-in inverted leaf.
+- **Ink** (`#1E1912`): primary type, structural rules under section heads and tables, and the ground of every plate, thumbnail and code block.
+- **Ink 2** (`#554B3E`): all secondary prose — ledes, rationale, table body, list copy.
+- **Ink 3** (`#6E6456`): field labels, captions, footnotes, meta and inactive marks. **The hex is measured, not chosen:** it reaches 5.0:1 on the paper ground; its predecessor `#7A7062` measured 4.20:1 and failed. Do not lighten this token to taste.
 
 #### Named Rules
-**The Colour Quarantine Rule.** Three families, three jobs, no overlap. **Sulphur acts** — if it is sulphur, you can click it, or it is the volume's own chrome. **Cinnabar marks** — it points at pixels the model looked at, and it is never interactive. **The verdict trio quotes** — green/amber/red only ever appear where the page is reproducing the product's own reading of an image. Using a verdict colour as page decoration, sulphur as a verdict, or cinnabar on a button breaks the system. (One divergence the build carries and a later agent should not "fix": the integration code sample colours its string literals with the verdict green and its numeric comments with cinnabar. That is syntax highlighting inside a quoted artifact, not page decoration; leave it.)
+**The Colour Quarantine Rule.** Two colour systems share one paper ground and are not interchangeable, and this is the stylesheet's own governing rule, stated in its header. **Stamp inks — navy, purple, green, gold — are document chrome.** They mark pages, number leaves and letter the cachets; a stamp ink never states a verdict. **The verdict trio — `doc-v-green` / `doc-v-amber` / `doc-v-red` — is the product reading an image, and appears nowhere else.** This is enforced in the file and was a real defect once: API reachability originally used the verdict green and had to be moved to the stamp green, because a reachable socket is not a reading of a specimen. The only sanctioned variation is rendering, not meaning: on an ink ground the trio switches to its lifted values so the same three meanings stay legible on a dark plate.
 
-**The One Inverted Leaf Rule.** Exactly one section — `#sec-outputs`, "One image in. Four outputs, bound together." — carries `.invert`: bone ground, `#0B1A19` ink, sulphur-highlighted field values. It is a single tipped-in sheet of pale controlled-form stock in an otherwise drenched-dark volume, a deliberate stock change for rhythm, and it is the only one. A second inverted section destroys the device; the answer to "this section needs emphasis" is scale or a document address, never a second stock change.
+**The Shape-and-Word Rule.** A verdict is never carried by colour alone. Every verdict-bearing element keys its *shape* on `[data-v]` — an oval clears (`normal`), a ruled rectangle refers (`amber`), a heavy barred box refuses (`red`, 3px), a dashed outline is idle — and every state also carries its word, spelled out. Kill the colour and the page still reads. The selector form is load-bearing and is the trap in this system: the action badge carries **its own** `data-v`, because the recommended action and the QC flag are two axes that do not always agree, so its rules are compound (`.badge[data-v="red"]`) and must never become descendant rules. The verdict dot is the opposite — it is a child of `.verdict[data-v]` and inherits. Getting this backwards silently disables the shape channel and leaves colour alone carrying the verdict.
 
 ## Typography
 
@@ -424,33 +415,34 @@ Three colour families with three separate jobs, over an eight-step single-hue en
 
 **The Headline-vs-Row Copy Rule.** The status card's headline uses the full verdict phrase ("Contamination Suspected"); the evidence breakdown's row label for the same class uses the shorter form ("Contamination"). This isn't inconsistency — the headline has the full card width and reads as a sentence-level verdict, while the row label shares a fixed-width column with a bar and a percentage and would truncate or wrap under the longer phrase. Two label lengths for the same class are correct as long as each stays scoped to its own layout context; don't shorten the headline to match the row, and don't lengthen the row to match the headline.
 
-### The Witness Book
+### The Travel Document
 
-**Display + UI + Body:** `Archivo` (variable, weight 400–900, width 62%–125%), self-hosted as one inlined WOFF2, falling back to `system-ui`
-**Serial/Label/Mono:** `Martian Mono` (variable, weight 300–700), self-hosted as one inlined WOFF2, falling back to `ui-monospace`
+**Engraved (display) Font:** `Bodoni Moda` (variable, weight 400–900, self-hosted WOFF2), falling back to Didot, Bodoni 72, Georgia
+**Machine Font:** `B612 Mono` (self-hosted at 400 and 700), falling back to `ui-monospace`
+**Prose / Control Font:** `Archivo` (variable, weight 400–900, width 62%–125%, self-hosted), falling back to `system-ui`
 
-**Character:** One grotesque superfamily does all the work, and hierarchy is carried by its **width axis** rather than by introducing a second face. Poster figures are compressed almost to a column of strokes; prose is set slightly extended so it reads open at small sizes. Martian Mono is the volume's clerical hand: it sets serials, hashes, field labels and measured data, and it is never used as a "technical" costume on prose or display.
+**Character:** Three registers for three jobs. The didone is the engraver's hand — high-contrast, authoritative, reserved for headings, the wordmark and every figure a human reads as a *value*. The mono is the machine's hand — the MRZ, digests, field labels, column heads, states, and any datum a machine wrote. The grotesque is the human hand — prose, instructions, controls, and the heavy condensed lettering inside a struck stamp. The registers never swap: a heading in mono, or a hash in the didone, dissolves the whole conceit.
 
 #### Hierarchy
-- **Poster** (800, `clamp(88px, 17vw, 278px)`, `wdth` 63, line-height 0.78, tabular): the head-to-head figures, `2.3pp` and `31pp`. The narrowest setting in the system, at the largest size.
-- **Figure** (800, `clamp(46px, 5.2vw, 74px)`, `wdth` 68, line-height 0.86, tabular): the confluency reading at the top of the witness column, with its `%` set as a dim superscript at 0.32em.
-- **Display** (800, `clamp(26px, 3.6vw, 48px)`, `wdth` 70, line-height 0.98, uppercase, `text-wrap: balance`, `max-width: 22ch`): section headlines. The closing hook (`.sechead.major`) is the same construction one step **narrower** at `clamp(34px, 5.4vw, 76px)`, `wdth` 66, `max-width: 16ch` — bigger and tighter, exactly as the width axis demands.
-- **Hook** (700, `clamp(30px, 4vw, 58px)`, `wdth` 78, line-height 0.95, `letter-spacing: -.038em`, `text-wrap: balance`, `max-width: 15ch`): the single `h1` in the first viewport, with its second clause (`em`) in sulphur.
-- **Title** (800, `clamp(19px, 2vw, 27px)`, `wdth` 74, uppercase): the four output-schedule rows; the verdict name sits in the same register at `wdth` 76.
-- **Action** (800, 14px, `wdth` 84, uppercase, `letter-spacing: .02em`): the primary CTA label. The verdict badge is the same register at `wdth` 80.
-- **Lede** (400, `clamp(16px, 1.5vw, 19px)`, `wdth` 106, line-height 1.6, `max-width: 62ch`): the paragraph under each section headline. The hero's subhook is the same register one notch tighter — `clamp(14.5px, 1.15vw, 17px)`, `max-width: 46ch`.
-- **Body** (400, 16px, `wdth` 100 base; running prose at 13–15.5px sits at `wdth` 104–106): rationale, table cells, list copy, colophon.
-- **Note** (`.note`, 400, 13.5px, `wdth` 104, line-height 1.5, `bone-3`, `max-width: 62ch`): the caption role — a quiet explanatory line sitting beside or under a control.
-- **Footnote** (`.foot`, 400, 13.5px, `wdth` 104, line-height 1.55, `bone-3`, `max-width: 76ch`): the footnote role — the qualifying sentence under a figure, a table or the manifest. Wider measure than a note because it is a full sentence, not a caption.
-- **Label** (Martian Mono, `var(--micro)` = 11px, `letter-spacing` .1–.16em, uppercase): every field label, document address, caption, column head, toggle, tab, stepper label, connection label and the secondary-button label. One size, 42 usages — the token *is* the label role.
-- **Hash** (Martian Mono, 11px, `word-break: break-all`, line-height 1.45): every digest, the record line under the hero readout, and the seal at the foot of the volume.
+- **Poster** (didone 600, `clamp(72px, 10vw, 150px)`, line-height 0.92, tabular): the two head-to-head figures, each with a `.28em` unit suffix.
+- **Figure** (didone 600, `clamp(40px, 4vw, 58px)`, line-height 0.98, tabular): the confluency reading in the witness column, with its `%` as a `.32em` superscript in Ink 3.
+- **Headline** (didone 600, `clamp(27px, 3.4vw, 46px)`, line-height 1.02, `max-width: 22ch`, `text-wrap: balance`): every section head. The major variant steps to `clamp(32px, 4.6vw, 64px)` at 20ch; the closing hook to `clamp(29px, 4.4vw, 62px)` at 17ch.
+- **Hook** (didone 600, `clamp(27px, 3.1vw, 45px)`, line-height 1.06, `max-width: 19ch`): the single `h1` in the first viewport, its second clause set italic in Buckram Burgundy.
+- **Readout** (didone 600, `clamp(23px, 2.4vw, 33px)`, tabular): the three engraved data fields under the hook.
+- **Title** (didone 600, `clamp(19px, 1.9vw, 26px)`): the four bound-output rows and the batch head. The verdict name sits in the same register at 700.
+- **Lede** (Archivo 400, `clamp(15.5px, 1.35vw, 18px)`, line-height 1.62, `max-width: 66ch`): the paragraph under each section headline. The hero's subhook is the same register one notch tighter at `clamp(14.5px, 1.1vw, 16.5px)`, 46ch.
+- **Body** (Archivo 400, 16px, `wdth` 100, line-height 1.62): running prose, table cells, list copy. Notes and footnotes drop to 13.5px in Ink 3 at 62ch and 74ch respectively.
+- **Action** (Archivo 700, 13.5px, `wdth` 86, `letter-spacing: .09em`, uppercase): the primary control's label.
+- **Stamp** (Archivo 800, `clamp(13px, 1.25vw, 17px)`–14px, `wdth` 78–80, `letter-spacing: .09–.11em`, uppercase): the word inside a cachet or an action badge. The one place the grotesque is set heavy and condensed, because a rubber stamp is cut, not typeset.
+- **Machine label** (B612 Mono, `--micro` = 11px, `letter-spacing` .04–.19em, uppercase): every field label, document address, column head, toggle, tab, stepper label, state word and caption. One size, one token, dozens of usages — the token *is* the label role.
+- **Machine data** (B612 Mono, 11–12.5px, `word-break: break-all` on digests): the MRZ, every hash, endpoint strings, code blocks and the seal.
 
 #### Named Rules
-**The Width-Axis Rule.** Hierarchy is one superfamily worked across `font-variation-settings: 'wdth'`, and the correlation is inverse: **the bigger the type, the narrower the setting.** 63 at poster scale, 68 at the confluency figure, 70–78 across display and hook, 80–84 on UI and action labels, 88 at 15.5px list headings, 100 at body base, 104–106 for running prose and ledes. Never introduce a second display family to make something feel different — move it along the width axis. Never set prose narrow or a poster figure wide; that inverts the whole ramp.
+**The Three Hands Rule.** Engraved for what a person reads as a value, machine for what a machine wrote, grotesque for what a person reads as a sentence. A heading is never mono; a digest is never didone; an instruction is never uppercase mono — sentence-cased prose in the grotesque, because uppercase destroys word shape and a long mono line is a machine's line, not a person's. The ingest mat is the canonical demonstration: its headline is engraved, its format list is machine, and the sentence around them is Archivo.
 
-**The Clerical Hand Rule.** Martian Mono carries serials, hashes, field labels, measured data, and the secondary-action label — never display, never prose, never a headline. Its band is `var(--micro)` (11px) for labels and 11–13px for inline hash and code runs, and when it is uppercase it is always letterspaced (.02–.16em). If a line of Martian Mono is longer than about eight words, it is in the wrong face — which is why the dropzone's format list stays mono while the sentence around it does not.
+**The Micro Floor Rule.** Functional text sits at or above `--micro` (11px), and the label role cites the token rather than typing a size. Colour, weight and letterspacing differentiate labels; half-pixel size steps do not — a 9.5px and a 10.5px label are not a hierarchy, they are two illegible sizes. A relative-unit mark riding a figure (the `%` set at `.32em` on the confluency readout, the `.28em` unit on a poster figure) is a typographic superscript, not a label, and is out of scope.
 
-**The Document Address Rule.** Every section head pairs an uppercase headline with a Martian Mono document address (`Confluency · zero-shot`, `Audit trail · SHA-256`) in Sulphur Deep, sitting **after** the headline in DOM order and baseline-aligned to its right above 760px, stacking **below** it under 760px. It is never an eyebrow: it never sits above the headline at any viewport width, and it is a coordinate in the volume, not a category label for the section.
+**The Document Address Rule.** Every section head pairs an engraved headline with a machine-set document address in damped gold, sitting **after** the headline in DOM order and baseline-aligned to its right, stacking **below** it under 760px. It is never an eyebrow and never a kicker: it does not sit above the headline at any width, and it is a coordinate in the volume rather than a category label for the section.
 
 ## Layout
 
@@ -462,26 +454,28 @@ Card rhythm in the results stack: 12px gap between cards, 16px internal card pad
 
 Topbar controls are compact and un-labeled, right-aligned, sitting inline with the wordmark rather than in a form column. The cell-line dropdown and target-% field are grouped into a single bordered **control-cluster** unit with a 1px divider between them; the Analyze button sits outside the cluster as the one squared-off, fixed-size (min 116×40px) action that never stretches to fill the row. Three inputs (cell line, target %, Analyze) is the ceiling.
 
-### The Witness Book
+### The Travel Document
 
-**The volume.** A fixed 30px fore-edge strip runs the full height of the right side of the viewport at `z-index: 40`, with a horizontal hairline hatch over an enamel gradient; `body` compensates with `padding-right: 30px`. Below 900px the fore-edge is hidden and the padding drops to zero. Above it sits a sticky rail (`z-index: 30`, opaque `enamel-800`, hairline bottom rule) carrying the wordmark, the two-tab view bar and the volume's meta line (`Schema 0.2 · N leaves`, the leaf count written in at runtime). The rail's meta line is dropped below 620px; the tab bar never is.
+**The cover.** A fixed 178px burgundy column down the left edge at `z-index: 40`, with a 2px damped-gold right border and a gold hairline inset by `box-shadow`. `body` compensates with `padding-left: 178px`. It holds four things in vertical order: the wordmark over a gold rule, the two gathering tabs, the seal and its schema/leaf-count meta centred in the remaining space, and the section index blocked into the foot. Below 1080px the whole cover becomes a **sticky top bar**: the column turns into a row, the border moves to the bottom, the seal shrinks to 28px beside the meta, the tabs run horizontally with their register mark moving from a left tick to a 3px underline, and the section index is dropped. Below 700px the seal is dropped and the tabs take their own full-width row.
 
-**The first viewport (`.hero`).** A two-column grid — `minmax(0, .76fr) minmax(0, 1.38fr)` — giving the plate the **larger** share (≈64% of the split) and the argument the smaller. Its height is a `min-height: calc(100svh - 54px)`, not a definite height: the leaf fills the fold and is allowed to grow past it when the copy needs the room, and `Plate.fit()` measures the mat's own content box rather than depending on the section's height. Below 1080px it collapses to one column.
+**The first viewport.** A two-column grid, `minmax(0, .82fr) minmax(0, 1.3fr)`, giving the plate the larger share, at `min-height: calc(100svh - 40px)` — a floor, not a fixed height, so the leaf fills the fold and grows when the copy needs the room. Left: hook, subhook, the three engraved readouts, and the visa panel carrying the MRZ and the page's primary action full-bleed inside its own tinted stock. Right: the plate with the cachet struck over its top-right corner. Below 1000px it collapses to one column with the plate ordered first, and the cachet leaves the image to land under the caption at a shallower angle.
 
-**The nine-leaf instrument (`.leafgrid`, in `#/analysis`).** `grid-template-columns: minmax(0, 1.42fr) minmax(320px, .82fr)` inside one 1px `enamel-650` enclosure, plate left and witness column right. Below 1080px it goes to a single column and the witness column moves beneath the plate with its left rule becoming a top rule.
+**The analysis instrument.** `grid-template-columns: minmax(0, 1.42fr) minmax(320px, .82fr)` inside one hairline enclosure: plate and stepper left, witness column right, the readings stacking vertically beside the specimen so leader lines can rule each one back to its pixels. Below 1080px it goes single-column and the witness column's left rule becomes a top rule.
 
-**Section blocks.** Every subsequent section is a discrete block: `padding: clamp(64px, 8vw, 132px) clamp(18px, 3.4vw, 56px) clamp(56px, 7vw, 112px)`, separated by a 1px hairline top rule, with the section head separated from its body by a 2px `enamel-600` underline and `clamp(26px, 3.4vw, 44px)` of air. Deep gutters and hairline separation are the rhythm. **There are no cards** — nothing has a radius, a shadow and a fill floating on the ground. There *are* hairline-ruled **enclosures**: the leaf grid, the toggle strip, the stepper, the ingest mat and the connection panel each sit inside one 1px rule, sometimes over one enamel step. An enclosure is a ruled boundary drawn on the stock; a card is an object above it. Draw the first, never the second.
+**Section blocks.** Every section is a leaf: `clamp(48px, 5.6vw, 92px)` top, `clamp(44px, 5vw, 80px)` bottom, `clamp(18px, 3.2vw, 52px)` sides, separated by a paper-4 hairline. The head is an ink-ruled baseline with `clamp(24px, 3.2vw, 42px)` of air beneath it. **There are no cards.** There are ruled **enclosures** — the leaf grid, the toggle strip, the stepper, the connection panel, the visa panel and the ingest mat each sit inside one 1px rule, sometimes over one paper step or their own tint. An enclosure is a boundary drawn on the stock; a card is an object above it.
 
-**Two rule weights.** 1px hairlines (`enamel-650` between blocks, `enamel-700` between rows) do quiet separation; a 2px rule in `enamel-600` marks a structural head — the section head underline, the witness column head, the output schedule's top, the chain's top. A 2px rule turns sulphur (`.hh.win`) to mark the winning column of the head-to-head. Nothing is separated by a shadow or a filled panel.
+**Two rule weights and their inks.** A 1px paper-3 rule separates rows inside a block; a 1px paper-4 rule separates blocks and bounds enclosures; a 1px **ink** rule marks a structural head — the section-head baseline, the table head, the readout's top rule, the schedule's top, the chain's top. Weight and ink together, never a shadow, never a filled panel.
 
-**Measure.** Ledes cap at 62ch, the subhook at 46ch, footnotes at 76ch, notes at 62ch, the hook at 15ch, section headlines at 22ch, the closing hook at 16ch. Long copy is never full-bleed.
+**Measure.** Ledes cap at 66ch, the subhook at 46ch, footnotes at 74ch, notes at 62ch, output-row prose at 52ch, the hook at 19ch, section headlines at 22ch (20ch major, 17ch closing).
 
-**Breakpoints** (max-width, eleven steps): **1080** — hero and leaf grids collapse to one column, witness column moves below the plate, `Plate.fit()` switches to a width-only fit; **1000** and **900** — the upload grid stacks the connection panel under the dropzone, then the fore-edge is hidden, body padding removed, split grids collapse and the sideways-scroll notes appear; **820** — output schedule rows go to one column and field values left-align; **760** — section heads stack and the document address drops below the headline; **720** / **700** — chain records drop to two columns with the state on its own row; **640** / **620** — head-to-head stacks, stepper wraps to ~4-up, table padding tightens, the rail's meta line drops; **560** / **520** — the tab bar leaves the rail and becomes its own full-width row beneath the wordmark, each tab flexing to equal width.
+**Breakpoints** (max-width): **1080** — cover becomes a sticky bar, leaf grid and witness column stack; **1000** — the hero collapses to one column with the plate first and the cachet moves under the caption; **900** — upload grid and integration split stack, sideways-scroll notes appear; **820** — output rows go to one column and field values left-align; **760** — section heads stack and the document address drops below the headline; **720** — provenance rows wrap their key above the claim; **700** — chain records drop to two columns with the state on its own row, and the cover's seal is dropped; **640** — head-to-head stacks, the stepper wraps to three rows of three, the toggle strip becomes a ruled column with its state words right-aligned; **560** — the readouts and the teaser strip stack.
 
 #### Named Rules
-**The Real Region Rule.** Any element that scrolls sideways is a real, focusable region: `overflow-x: auto` plus `tabindex="0"`, `role="region"` and an `aria-label`, with a visible Martian Mono note (`Table scrolls sideways →`) that appears under 900px, and its caption placed **outside** the scroll box so the caption never scrolls away from the thing it names. Both the comparison table and the severity matrix follow this. `body` deliberately carries **no** `overflow-x: hidden` — that mask hid a genuine 547px overflow once, and it stays off so the next one is visible.
+**The Leader Line Rule.** In the analysis instrument, each printed reading is ruled back to the pixels it was measured on with a dashed damped-gold line and a small terminal dot, measured off the live layout rather than hand-placed, drawn in an absolutely positioned overlay that is never interactive. It is suppressed below 1080px, where the witness column no longer sits beside the plate and a leader would cross empty space. A reading that cannot be pointed at is a claim; a reading with a leader is a measurement.
 
-**The Measured Plate Rule.** The specimen is sized by JavaScript, not by CSS alone. `Plate.fit()` reads the mat's measured content box (client box minus its computed padding), and scales the image's *intrinsic* dimensions into it (`min(W/w, H/h, cap)`, with an upscale cap of 2.6 for full fields and 2.1 for 256px tiles so a tile never goes soft). Beneath it, the frame carries a CSS `aspect-ratio: var(--nw)/var(--nh)` fallback set from the same intrinsic dimensions. A scientific image must never be distorted and must be as large as the fold allows; never replace this with a fixed height, an `object-fit: contain` letterbox, or a hardcoded aspect ratio. Resize is debounced at 120ms, and a view switch re-fits the plate of the gathering that just opened — an element measured while its panel was `display:none` has no box, so it must be re-measured the moment it has one.
+**The Measured Plate Rule.** The specimen frame carries `aspect-ratio: var(--nw)/var(--nh)` from the image's own intrinsic dimensions, set on the element by the component, so a scientific image is never distorted and never letterboxed into a guessed box. Never replace this with a fixed height or a hardcoded ratio.
+
+**The Real Region Rule.** Anything that scrolls sideways is a real, focusable region — `overflow-x: auto`, `tabindex="0"`, `role="region"`, an `aria-label`, its own focus ring, and a visible machine-set note that appears under 900px. Its caption sits outside the scroll box so it never scrolls away from the thing it names. `body` carries no `overflow-x: hidden`; the mask would hide the next real overflow.
 
 ## Elevation & Depth
 
@@ -491,20 +485,24 @@ Flat by design. No drop shadows anywhere — depth is conveyed entirely through 
 
 **The Flat Ground Rule.** Nothing on this screen casts a shadow. Separation is fill and border only; a shadow here would read as decoration borrowed from a different, softer product. (The theme layer explicitly zeroes Gradio's default drop-shadow token; nothing overrides it back on.) The image pane's grid/vignette background is a tonal fill layer, not an exception — it has no origin, no direction, and casts nothing.
 
-### The Witness Book
+### The Travel Document
 
-There is no elevation. Nothing floats, nothing lifts, nothing casts. Depth is entirely material: eight steps of one enamel hue, hairline and 2px rules, an inset second rule 7px inside the mat, a radial gradient inside the mat that darkens toward its edges, and a fixed grain layer over the whole volume. The page has the depth of ink on stock, not of objects above a plane.
+Depth is printing, not stacking. Nothing floats above the page: separation is a rule, a stock step, a tint, or an ink ground. The three material devices are the security stock itself, ink absorbing into that stock, and the single contact shadow under the one physically tipped-in object.
 
-The two `box-shadow` declarations in the system are both **emission, not elevation**: the evidence box carries a 1px dark containment ring plus a 22px cinnabar glow so a 2px stroke separates from dark cell material, and the scan line carries an 18px sulphur glow so a 2px sweep reads as light crossing the plate. Both are centred, directionless halos on a light-emitting mark.
+**Ink absorption is a filter, not a bevel.** A single SVG filter (`#ink-bite`, `feTurbulence` + `feDisplacementMap`, defined once in `App.jsx` inside an unpainted host) displaces the perimeter of every struck mark, so a cachet's edge breaks against the paper the way a rubber stamp does. The action badge additionally multiplies into the stock (`mix-blend-mode: multiply`), so it is struck onto the paper rather than laid over it. Never simulate this with a bevel, an inner highlight or a texture image on top of the mark.
 
 #### Shadow Vocabulary
-- **Evidence halo** (`box-shadow: 0 0 0 1px rgba(4,16,15,.85), 0 0 22px 3px rgba(224,73,46,.42)`): behind a cinnabar evidence-box stroke only. Reduced to 12px/1.5px stroke on the small ladder tiles.
-- **Scan emission** (`box-shadow: 0 0 18px 3px rgba(226,194,26,.6)`): the sulphur scan line during a run, and nothing else.
+- **Plate contact** (`box-shadow: 0 1px 0 0 var(--doc-paper-4), 0 10px 26px -18px rgba(30,25,18,.6)`): the tipped-in specimen plate only. A hairline of stock beneath the mount plus a wide, heavily inset diffusion — a mounted photograph sitting on a page, not a floating panel. Bounded to `.mat`; nothing else in the world may take it.
+- **Struck-mark inset** (`box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 32–34%, transparent)`): the second ruled line inside a cachet or badge. An inset rule, not an elevation.
+- **Scan emission** (`box-shadow: 0 0 18px 3px rgba(199,162,77,.75)`): the gold scan line during a run, and nothing else.
+- **Evidence halo** (`box-shadow: 0 0 0 1px rgba(12,10,7,.9), 0 0 20px 3px rgba(232,80,58,.4)`): behind an evidence-box stroke on an ink ground only, reduced to 12px/1.5px on the severity-matrix tiles.
 
 #### Named Rules
-**The No-Elevation Rule.** No offset shadow, no blur beneath an element, no `backdrop-filter`, no glassmorphism, no layered floating panel. If something needs to separate, it gets a rule, an enamel step, or a gutter. A `box-shadow` is only permissible when it is a centred glow on a mark that is meant to emit light.
+**The Security Stock Rule.** The ground is printed security paper and is composed once, for the whole booklet: a guilloché rosette lattice tiled at 104px in visa rose, plus a suspended paper-fibre `feTurbulence`, on one `position: fixed` layer at `opacity: .26` with `mix-blend-mode: multiply` and `pointer-events: none`; over it a diagonal intaglio wash of pale green and rose at 50%, also multiplied. The cover carries its own separate tooth — a fractal-noise buckram grain at `overlay`, 16%. Never flatten this to a plain fill, never re-apply grain per section, never let it take a pointer event, and never raise its opacity to "make the texture visible" — under-printing is meant to be felt, not read. It is dropped in print.
 
-**The Grain Rule.** The buckram weave is a single `position: fixed` layer at `z-index: 0` — two 1px/3px hairline gratings at ~1.5% bone plus an SVG fractal-noise turbulence, composited at `opacity: .5` with `mix-blend-mode: overlay`, `pointer-events: none`. One layer for the whole volume; never re-apply grain per section, and never let it take a pointer event. It is suppressed in print.
+**The Plate-on-Ink Rule.** Grayscale phase-contrast microscopy loses its contrast on cream stock, so the specimen is mounted: an ink mat with a damped-gold hairline inset 5px, holding a frame outlined in gold over a near-black backing. This is the reason the one dark region on a light page exists, and it is reserved for real specimen imagery — plates, severity-matrix cells, manifest thumbnails and the code block. An ink ground is never used to make a UI panel feel important.
+
+**The Two Emitters Rule.** Only a mark that is meant to emit light may carry a glow, and only two do: the scan sweep and the evidence box, both on the ink ground of a plate. Everywhere else, if something needs to separate it gets a rule, a stock step or a gutter. No offset shadow under a panel, no `backdrop-filter`, no glass.
 
 ## Shapes
 
@@ -512,15 +510,15 @@ The two `box-shadow` declarations in the system are both **emission, not elevati
 
 Four corner radii cover the whole system: **8px** for interactive controls (Analyze button, control-cluster, audit JSON block); **10px** for content cards (status, confluency, results container); **12px** for the image frame, the one deliberately larger radius on the largest single element; and **999px** (full pill) for status-carrying elements (action badge, confidence pill, confluency bar and fill, evidence-breakdown tracks, view-toggle). The evidence-region-count dot is the one deliberate square-ish exception (2px radius) — a tick mark tying back to the red rectangles on the image, not a status pill. The vocabulary reads by role: pills carry status, 8px marks something you act on, 10px is a content container, 12px is the image stage itself.
 
-### The Witness Book
+### The Travel Document
 
-**The Square Corner Rule.** There is not one non-zero `border-radius` anywhere on this page, and that is an invariant, not an omission. Buttons, toggles, badges, plates, tiles, code blocks, the stepper, the chain rows, the focus ring and the skip link are all hard-cornered. A rounded corner here reads as a web component dropped into a printed record; the volume is ruled and set, not chipped and pilled. The one shape that is *not* square is the ladder cell, which is square in the other sense: `aspect-ratio: 1`.
+Form is ruled and orthogonal: rectangles bounded by a 1px rule, a stock step or a gutter. Enclosures group controls by sharing one outer border with internal 1px dividers rather than by spacing separate chips.
 
-Form language is ruled and orthogonal: everything is a rectangle defined by a 1px or 2px rule, a fill step, or a gutter. Controls are grouped by sharing one outer border with 1px internal dividers (the toggle pair, the stepper) rather than by spacing separate chips. Marks are geometric: an 11px square verdict dot with a 2px current-colour border and a 45% `color-mix` fill; an 8px square toggle dot; a 3px flag tick under each stepper leaf; 4px and 6px bar tracks. There are no circles.
+**The Page-Corner Rule.** There is exactly one radius token — `--r-page: 3px`, the corner of a booklet page — and it belongs to leaf-like objects: the primary and secondary controls, the visa panel, the ingest mat, the connection panel and the code block. Small utility inputs take a 2px near-square. Radius is not a style dial: a new surface does not get 8px because it looks softer.
 
-**Marks versus icons.** The volume's own mark vocabulary is closed and geometric: an 11px square verdict dot, an 8px square toggle dot, a 9px square connection dot, a 3px flag tick, 3–6px bar tracks, 1px and 2px rules. There are no circles in it.
+**Round is meaning, not decoration.** The exceptions to the orthogonal grammar are all verdict geometry, and they are load-bearing under The Shape-and-Word Rule: the cleared cachet is an oval (`border-radius: 46%/50%`), the cleared badge and manifest chip likewise (44%/50%, 40%/50%), the cleared verdict dot is a circle (50%), the referred states take a 1–2px near-square with an inset rule, and the refused states are hard-cornered with a 3px border. The connection dot is also round when a module answers — a filled stamp-green disc against its hollow, square-cornered idle state. Curvature here says something; it is never applied to make a control friendlier.
 
-Alongside it the build carries a **second, foreign mark system**: seventeen inline SVGs on a 24-unit grid drawn in the round-capped Feather/Lucide idiom (hamburger, plate, layers, shield-check, refresh, upload tray, play, check, cross, warning triangle, sparkle, envelope, GitHub), at `stroke-width` 1.5–2.4, `stroke-linecap: round`, sized 13–34px, `stroke: currentColor`, `aria-hidden`. Two of them carry `rx="1"` rounded rectangles. That idiom is not derived from anything else on this page and it is **not canonized** — see the `notCanonized` entry in `.impeccable/design.json`. What *is* canonized, and is the durable rule, is the **substrate**: any icon on this surface is authored inline SVG on `currentColor` and marked `aria-hidden`. Never an icon font, a glyph character, an emoji, or a third-party icon package.
+**Marks are geometric and closed.** A 13px verdict dot, an 8px toggle dot, a 9px connection dot, a 3px flag tick under each stepper leaf, 4–15px bar tracks, 1px and 2px rules, and a single authored gold seal. Any icon on this surface is authored inline SVG on `currentColor`, marked `aria-hidden` — never an icon font, a glyph character, an emoji or a third-party icon package.
 
 ## Components
 
@@ -557,79 +555,67 @@ Native `<details>`/`<summary>`, no card background — a quiet metadata row. Che
 #### Wordmark Status Dot
 8px filled circle, Signal Blue, no halo. Permanent `opacity` breathe (0.55↔1, 2.4s) signalling "instrument is live," not tied to analysis state.
 
-### The Witness Book
+### The Travel Document
 
 #### Buttons
-- **Shape:** hard-cornered (`border-radius: 0`), no exceptions.
-- **Primary (`.cta`):** sulphur fill, `enamel-900` text, 1px sulphur border, `12px 20px`, 800 weight at `wdth` 84, uppercase, with a 15px authored SVG. Hover lifts 2px on the snap curve (`cubic-bezier(.2,1.35,.35,1)`) and brightens the fill; active returns to 0.
-- **Secondary (`.cta2`):** transparent fill, bone text, 1px `enamel-500` border, `12px 18px`, Martian Mono 11px at `.12em`, uppercase. Hover turns border and text sulphur. This is the one interactive element set in mono.
-- **Focus:** the global `:focus-visible` ring — `2px solid` sulphur at `3px` offset — applies to every control. Never remove it, never replace it with a colour change.
+- **Primary (`.cta`):** burgundy fill, paper text, a `--cover-900` border with a gold hairline inset by `box-shadow`, `12px 22px`, Archivo 700 at `wdth` 86, uppercase, 3px page corner, with a 15px authored SVG. Hover brightens to `--cover-600` and lifts 2px on the snap curve; active returns to 0. **Disabled is inert, not dimmed:** it drops to transparent with an Ink 3 label, a paper-4 rule and no gold — an unavailable control reads as a blank field on the form, not as a live control someone greyed out.
+- **Secondary (`.cta2`):** transparent on a 1px stamp-navy rule with a navy machine-set label at 11px/.11em, `12px 18px`. Hover floods navy with paper lettering. Its **pending** variant — an address the document has not been issued yet — turns the rule dashed and the label Ink 3, and does not respond to hover: a visible blank is honest, a removed row is not.
+- **Focus:** the global ring, `2px solid` stamp navy at `3px` offset, on every control. Where the real input is zero-sized (toggles, ingest mat) a `:has(input:focus-visible)` rule puts the ring on the visible chrome. Never remove it, never replace it with a colour change.
 
-#### Toggle Pair (signature)
-Two label-wrapped checkboxes sharing one 1px `enamel-600` border with an internal 1px divider (the last cell drops its right rule), Martian Mono at the 11px `--micro` floor, uppercase at `.12em`. A **solo** variant (`.tog.solo`) closes the border on all four sides so a single toggle or a `Replay` button can stand alone with the same construction instead of being faked with an inline style. The native input is `opacity: 0` and zero-sized but present, so the label stays clickable and the keyboard path is intact; a `:has(input:focus-visible)` rule puts the ring on the visible chrome. An 8px square dot fills sulphur when checked and the cell fills `enamel-700`. A disabled toggle drops to 40% opacity rather than disappearing — the control stays legible as unavailable, and the evidence-box toggle is disabled on a `normal` leaf because there is nothing to show.
+#### The Cover (signature)
+Burgundy buckram with its own fractal-noise tooth, gold-blocked: an engraved wordmark with its second half in gold, over a damped-gold rule. The two gathering tabs are machine-set 11px uppercase in lifted gold, each marked when open by a short gold tick struck in from the left edge plus a darker burgundy fill and paper-white lettering — the fill and the ink carry the state, the tick is the register mark beside it. Below the tabs the seal sits in the cover's own space with the schema and leaf count beneath it. The section index is blocked into the foot: one full-width entry per section, each with its own gold tick that grows to 55% on hover and full on the current entry, whose label goes paper-white at 700. No opacity is used on that lettering — 11px uppercase on burgundy has nothing to give away — and hovering the entry you are already on must not retract its own mark.
 
-#### Leaf Stepper (signature)
-One bordered strip of equal-width buttons, one per record, each carrying a zero-padded leaf number (Martian Mono 11px, 700), a truncating short name (9.5px uppercase), and a 3px flag tick — `enamel-600` for a clear leaf, cinnabar at 55% for a flagged one. The current leaf inverts to a sulphur fill with `enamel-900` text. Below 640px it wraps to roughly four per row. Each button carries a full `aria-label` naming the leaf, its title and its QC flag.
+#### The Cachet (signature)
+The officer's mark, struck over the top-right corner of the plate at `rotate(-7deg)`: a 2px `currentColor` border with an inset rule, a paper fill at 84%, machine-set data lines above and below a heavy condensed word, all displaced by `#ink-bite`. Its shape is its verdict — oval clears, ruled rectangle refers, heavy barred box refuses, dashed is idle. Below 1000px it comes off the image and is struck under the caption at `-3.5deg`, where a stamp on a small document actually lands.
 
-#### Witness Column (signature)
-The right third of the first viewport: `enamel-850` ground, 1px left rule, a 2px-ruled head pairing a sulphur "Witness" label with the leaf counter, then five ruled ledger rows (confluency, QC flag, recommended action, rationale, audit record) in a scrollable body. Each row is a Martian Mono field label over its value; the last row drops its bottom rule. Rows snap in on a 90ms stagger with an overshoot curve. A visually-hidden `role="status"` live region announces the whole reading — leaf, confluency, flag, confidence, action — on every step.
+#### The Visa Panel (signature)
+The leaf a document gives you to act on, beside the plate: its own tinted stock (a rose-to-green gradient, separable from the ground), a paper-4 rule, a 3px page corner, and a paper inset highlight. Inside, a ruled field head of machine-set key/value pairs, then the machine-readable zone, then the page's actions stacked full-bleed and centred — on a grant page the actions are ruled fields the width of the leaf, not two buttons that happened to wrap.
 
-#### Verdict Block
-An 11px square dot with a 2px `currentColor` border and a 45% `color-mix` fill, the verdict name at `wdth` 76 uppercase, and the confidence right-aligned in mono. Below it, four probability rows (name / 74px track / value) where only the predicted row is `.on` — it takes `currentColor` for its 4px fill and turns its label and value bone; the other three stay `enamel-600` on `enamel-700`. The action badge below is hard-cornered, 1px `currentColor` border on a 13% `color-mix` fill. Colour on all of these comes from `data-v="normal|amber|red"` and is the quoted verdict trio.
+#### The Machine-Readable Zone (signature)
+Two fixed 44-character lines built from the record's own fields — document type and cell line, then the digest, schema version and analysis date — uppercase, `<` as filler, machine-set, ruled top and bottom in ink on a recessed paper fill, with a machine-set caption above. Nothing in it is decorative: it is a second rendering of the same data the page states in words. **The filler is a hazard:** `<` is a tag opener to an HTML parser. React escapes it; the OG renderer must escape it by hand, and failing to do so once swallowed the rest of the document. The line clips rather than wraps, because an MRZ is a fixed-width field.
 
 #### Plate (signature)
-A matted specimen: an `enamel-750`→`enamel-900` radial-gradient mat with a 1px border and a second 1px rule inset 7px, holding a JS-measured frame outlined in `enamel-500` over an `enamel-900` backing. Layers, bottom to top: the specimen (`filter: contrast(1.04)`), the cell mask at 32% opacity revealed by a `clip-path: inset()` wipe, the evidence-box layer, and the scan line. The caption bar beneath carries the toggle pair on the left and a Martian Mono specimen line on the right (`Huh7 · real field, contamination composited in · 704×520`).
+A tipped-in specimen: an ink mat with a damped-gold hairline inset 5px, holding a frame with `aspect-ratio` from the image's intrinsic dimensions, outlined in gold over a near-black backing. Layers bottom to top: the specimen at `contrast(1.05)`, the cell mask at 34% revealed by a `clip-path: inset()` wipe over 760ms, the evidence-box layer, and the scan line. Beneath it the caption bar takes its own full-width line, flush left at every width — a plate caption that changes alignment with the viewport is three captions — with the layer toggles and the named layer state on the row above.
 
 #### Evidence Box
-2px cinnabar stroke, no fill, with the evidence halo behind it, striking on at an 80ms per-box stagger (`opacity .16s linear` + `transform .3s` on the snap curve, from `scale(1.06)`). Each box carries a cinnabar serial chip above its top-left corner (`E01`, `E02`) which, on any field larger than 256px, also names the analysed region: `E01 · analysed region, centre 256×256`.
+2px lifted-red stroke, no fill, with the evidence halo behind it, striking on at a per-box stagger from `scale(1.06)`. Each box carries a lifted-red serial chip above its top-left corner which, on any field larger than the classifier's input, also names the analysed region (`E01 · analysed region, centre 256×256`). The chip wraps rather than clips: a clipped label is a label that lies about what was analysed.
 
-#### Chain Record (signature)
-One ruled row per record: a Sulphur Deep index, the record's short name with its flag and confluency, a truncated prev/this hash pair in mono, and a right-aligned state cell. State is driven by `data-s`: `idle` ("Not checked"), `run` (sulphur), `ok` (verdict green + check), `bad` (verdict red + cross, with a 7% red row wash). Verification walks the list at 110ms per row, replacing each displayed digest with the one recomputed in the browser. The tamper control mutates one field of one record's canonical JSON, annotates that row in cinnabar with the exact edit, re-runs verification, and toggles its own label to "Restore leaf 05."
+#### Layer Toggles (signature)
+Two label-wrapped checkboxes sharing one paper-4 enclosure over a recessed fill, with an internal divider; a `solo` variant closes the border on all four sides so a single toggle or a plain button can stand alone with the same chrome. Machine-set 11px uppercase with an 8px square dot that fills ink when checked, and the whole cell fills gold. Disabled drops to 45% opacity and keeps its words. Below 640px the strip becomes a ruled column with each state word right-aligned, because two layer names and their states cannot hold one 390px line.
 
-#### Fore-Edge Index (signature)
-A fixed 30px right strip: a dark gradient with a horizontal hairline hatch overlay at 55%, divided into one full-height button per section. Each carries its label in Martian Mono at the 11px `--micro` floor, rotated 90°. Hover grows a 6px sulphur bar from the left edge; the current section fills sulphur entirely and turns its label `enamel-900` at 700. Current section is tracked by an `IntersectionObserver` with a `-45% / -50%` root margin, and clicks scroll smoothly — or instantly under reduced motion. Hidden below 900px; hidden in print.
+#### Verdict Block
+A 13px dot with a 2px `currentColor` border and a 22% fill, whose shape is set by the verdict; the verdict name engraved at 700; the confidence right-aligned in machine type. Below it, four probability rows (name / 74px track / value) where only the predicted row is `on` — it takes `currentColor` for its fill and turns its label and value ink; the other three stay paper-4 on paper-3. The action badge sits below, struck at `-1.6deg`, with its own `data-v`.
 
-#### View Tabs (signature)
-The rail's `role="tablist"`. Each tab is a Martian Mono 11px uppercase label preceded by its gathering number in sulphur (`01`, `02`), with a 2px sulphur underline that scales in from the left on the snap curve when selected. Unselected tabs sit at `bone-3`, hover fills `enamel-750`. Roving `tabindex` so only the open gathering is in the tab sequence; arrow keys, Home and End move between them; the fore-edge index is rebuilt on every switch. The rail is opaque `enamel-800` — **never** a translucent blur, which the No-Elevation Rule forbids. Below 520px the tab bar drops to its own full-width row beneath the wordmark.
+#### Leaf Stepper (signature)
+One enclosure of equal-width buttons, one per record, each carrying a zero-padded leaf number, a truncating short name and a 3px flag tick — paper-4 for a clear leaf, verdict red at 60% for a flagged one. The current leaf inverts to a stamp-navy fill with paper text and a gold tick. Below 640px it wraps to three rows of three, so nine leaves never land as two rows and an orphan.
+
+#### Witness Column (signature)
+The right third of the analysis instrument: paper ground, a paper-4 left rule, an ink-ruled head pairing a damped-gold "Witness" label with the leaf counter, then ruled ledger rows (confluency, QC flag, action, rationale, record) whose last row drops its bottom rule. Each row is a machine-set field label over its value; rows snap in on a stagger with the snap curve. The confluency figure is engraved at fixed decimal places and lands with a single `struck` press — one compression, then stillness.
 
 #### Ingest Mat (signature)
-The dropzone is the specimen mat with nothing on it — a **sibling** of `.mat`, not a copy of it. It shares the mat's construction (a radial darkening from the top, a 1px outer border, a second 1px `enamel-700` rule inset exactly 7px) but is set one step lighter and one step tighter, because it is an empty stage waiting for stock rather than a plate holding a specimen: border `enamel-600` (the mat's is `enamel-650`), gradient `enamel-750` → `enamel-850` at 82% (the mat's runs to `enamel-900` at 78%). A dashed stroke would make it a generic uploader, so the inset rule stays solid. It is a `<label for>` wrapping the real file input, so click and keyboard activation are native and the focus ring lands on the visible chrome via `:has(input:focus-visible)`; hover warms both rules to `sulphur-2`/`sulphur-3`, and drop state (`[data-drag="on"]`) turns both rules full sulphur and floods the field `enamel-700`. The headline inside is Archivo at `wdth` 80 uppercase; the instruction beneath is the one place mono gives way — the format list stays in Martian Mono, the sentence does not (see The Clerical Hand Rule).
+The dropzone is the visa panel's stock with nothing on it: a rose-and-green tint, a paper-4 rule at the page corner, and a dashed damped-gold rule inset 6px. Hover warms both rules to gold; drop state turns them burgundy, makes the inner rule solid and floods the field rose. It is a `<label for>` wrapping the real file input, so click and keyboard activation are native and the ring lands on the visible chrome. The headline inside is engraved; the instruction beneath is machine-set but sentence-cased — an instruction, not a label.
 
 #### Connection Panel
-The endpoint control beside the mat: one 1px `enamel-650` enclosure on `enamel-850`, `16px 18px`. Inside, a connection dot and a mono state name, a `.note`-register sentence naming the endpoint in `sulphur-2` code, then a bare endpoint field and a mini button on one row. The field is `enamel-900` inside a 1px `enamel-600` rule, mono at 11px, no radius; the mini button is a transparent 1px `enamel-500` rule that turns sulphur on hover. It is the one input on the page, and it is built like every other enclosure — ruled, not boxed.
+The port of entry, beside the mat: one paper-4 enclosure on a recessed fill at the page corner. A 9px connection dot and a machine-set state name — a reachable module fills the dot **stamp green** and turns the label stamp green at 700, an unreachable one is a hollow Ink 3 square, probing is a gold disc on a 1.1s pulse — then a sentence naming the endpoint in damped-gold code, then a bare endpoint field and a mini button on one row. It never uses the verdict trio: a reachable socket is not the product's reading of an image.
 
-#### Manifest Schedule (signature)
-The batch summary is a ruled schedule, not cards: a 2px `enamel-600` top rule over an auto-fitting track (`repeat(auto-fit, minmax(min(100%, 140px), 1fr))`) with `clamp(16px, 3vw, 44px)` gutters and no boxes, matching the construction of `#sec-outputs`. Each cell is a Martian Mono key over a width-narrow figure. Progress is a 3px `enamel-700` track with a sulphur fill driven by `transform: scaleX()`, never `width`, under a mono status line in a `role="status"` live region.
+#### Chain Record (signature)
+One ruled row per record: a stamp-purple serial, the record's short name with its flag and confluency, a truncated prev/this digest pair, and a right-aligned state cell — all machine-set. State is driven by `data-s`: idle in Ink 3, running in damped gold, verified in verdict green, broken in verdict red at 700 with an 8% row wash and a red serial. A tampered row annotates the exact edit in verdict red inside its name line. The chain is capped to a 1020px ledger measure, because the officer's mark belongs beside its entry, not stranded at the far edge of a 1440px page.
 
-Below it the manifest is a real table inside a focusable scroll region: mono column heads over a 2px `enamel-600` rule, 1px `enamel-700` row rules, numeric columns right-aligned with `tabular-nums`, file and name columns left. Flagged rows sort to the top and carry a 5% verdict-red row wash — the trio quoting the pipeline's own reading, not decoration. Each row carries a 38px **square** thumbnail on `enamel-900` inside a hairline, or a `NO PREVIEW` tile for a format the browser cannot decode; never a broken image.
-
-#### Connection State
-A 9px **square** dot with a 2px border beside a mono label, driven by `data-s` on the panel: `on` fills sulphur and turns the label sulphur, `off` is a hollow `bone-3` outline, `probing` is a filled sulphur dot on a 1.1s opacity pulse. It never uses the verdict trio — a reachable socket is not the product's reading of an image (see The Colour Quarantine Rule) — it is never a circle, and it carries no halo (see The No-Elevation Rule).
+#### Provenance Disclosure (signature)
+A ruled list of `<details>` rows: a machine-set key in a fixed 15ch column, the claim in prose beside it, and a CSS chevron drawn from two damped-gold borders that rotates on open. The body indents to the claim's column and caps at 74ch. It is a permanent part of the page, never a modal or a dismissible banner, and below 720px the key wraps above the claim.
 
 #### Named Rules
-**The Primary-Slot Rule.** The sulphur primary always names something that works right now. With no module reachable, **Verify manifest** takes the primary and Analyse drops to a disabled secondary reading "Analyse — needs the module"; connected, they swap back. A primary button must never name its own failure, and the empty-verdict copy tracks the same state — "not yet analysed" when a module is connected, "awaiting the module" only when one is not.
+**The Named State Rule.** Every layer state is written in words beside the control that sets it — shown/hidden on each toggle, and a machine-set line naming the combination — including the state where the mask and the evidence layers coincide, which takes ink at 700 with a damped-gold underline rather than being left for the visitor to notice. No layer state is communicated by a fill colour alone.
 
-**The Reveal-Is-Decoration Rule.** Scroll reveal may never be the reason a visitor faces empty ground. The `IntersectionObserver` owns the staggered entrance, but a scroll-idle sweep 220ms after scrolling settles promotes anything on screen unconditionally, and `setView` re-observes a freshly shown panel whose elements had zero rects while hidden. Any future reveal mechanism must be able to fail open the same way.
+**The Recomputed-vs-Stated Rule.** The page distinguishes two kinds of number and never lets them blur. **Recomputed:** the nine bound records, whose SHA-256 digests the browser recomputes with WebCrypto over the same canonical JSON the Python writer hashed, and whose chain the visitor can break on the spot. **Stated:** the five evaluation results (2.3 pp, 31 pp, "thirteen times", 98% test accuracy, 100% contamination recall), which are evaluation findings, not per-record output. Every stated figure carries the `stated` mark — machine-set, damped gold, uppercase, with an underlined link to the disclosure — and the page's provenance section says plainly that the browser does not recompute them. A future number belongs in one bucket or the other before it is set; nothing on this page may imply the pipeline produced a figure on this machine that it did not.
 
-**The Snap Rule.** Motion snaps, it never glides. Entrances use the overshoot curve `cubic-bezier(.2,1.35,.35,1)`; settles use `cubic-bezier(.16,1,.3,1)`; nothing eases linearly into place over a long duration. A leaf is one orchestrated moment and then stillness: a 760ms scan sweep, the mask wiping at 560ms, boxes striking at 900ms on an 80ms stagger, witness rows snapping in from 340ms at 90ms intervals, and the confluency figure counting in **15 discrete increments** rather than continuously — a counter stepping, not a value gliding. No parallax, no perpetual loop, no scroll-linked animation.
+**The No-Guessed-Verdict Rule.** There is no model in the browser, so an uploaded file gets only what a browser can honestly compute: its real SHA-256, its dimensions, and a place in a hash-chained ingest manifest. Confluency, QC flag and action stay visibly **empty** — an Ink 3 machine-set pending mark, never a placeholder value — until the analysis service answers.
 
-**The Reduced-Motion Endpoint Rule.** Under `prefers-reduced-motion: reduce`, all animation and transition durations collapse to 0.001ms, reveal elements start visible, smooth scrolling becomes instant, the number is written directly instead of stepping, and the auto-step is cancelled — so the page **opens on the flagged leaf**, the endpoint of the story, rather than on a truncated beginning. A reduced-motion visitor gets the destination, never a partial state.
+**The Snap Rule.** A stamp lands and stops dead: the world's entrance curve is `cubic-bezier(.2,.9,.25,1)` and there is **no overshoot anywhere**. Settles use `cubic-bezier(.16,1,.3,1)`. A leaf is one orchestrated moment then stillness — a 760ms scan sweep, the mask wiping over 760ms, boxes striking on a stagger, witness rows snapping in, the confluency figure landing with a single 260ms press. No parallax, no loop, no scroll-linked animation.
 
-**The Resting Frame Rule.** On a flagged leaf the cell mask defaults **off** and the evidence boxes default **on**; on a clean leaf the mask defaults **on** and the box toggle is disabled. This is not symmetry for its own sake: on a contaminated field the segmenter counts bacterial rods as cells, and the resting frame must not teach that reading. Any new specimen state must be checked against the same test — does the default overlay assert something the model did not actually establish?
+**The Reduced-Motion Endpoint Rule.** Under `prefers-reduced-motion: reduce` every animation and transition collapses to 0.001ms, reveal elements and witness rows start visible, the badge stops rotating, the struck press and the leader draw are cancelled with the leaders left drawn. A reduced-motion visitor gets the endpoint of the story, never a partial state.
 
-**The One Deliberate Step Rule.** The leaf view auto-advances exactly once — from the clean Huh7 field to the same Huh7 field with contamination composited in — and only if the visitor has not touched anything and does not prefer reduced motion. Any interaction (stepper click, re-run) permanently cancels it. One step is a demonstration; two would be a carousel.
-
-**The Labelled Demonstration Rule.** Every demonstration image states what it actually is, in the caption, in the `alt` text, and in the provenance section: `real field`, `real field, contamination composited in`, `challenge tile`. An evidence box on a field larger than the classifier's input names the analysed region rather than implying the whole frame was read. A number on this page is a number the shipped pipeline produced on this machine, or it does not appear.
-
-**The No-Guessed-Verdict Rule.** This is the Labelled Demonstration Rule extended to the visitor's own files. There is no model in the browser, so an uploaded image gets only what a browser can honestly compute: its real SHA-256 via WebCrypto — the same digest `culture/records.py::hash_file` writes — its dimensions, and a place in a hash-chained ingest manifest the visitor can verify on the spot. Confluency, QC flag and action stay **empty** until the analysis service answers and the real pipeline fills them. Estimating them in JavaScript would undercut the one argument the page exists to make; a reimplementation of the threshold baseline was considered for this slot and rejected on exactly that ground.
-
-**The Absent-Plumbing Rule.** A control the visitor's machine cannot possibly satisfy is not rendered disabled, greyed, or explained — it is not in the document. The pipeline endpoint exists only for whoever opened the page from `localhost` or from disk; served from a public host with no `ANALYSIS_API`, the whole connection panel is removed, the Analyse button is withdrawn rather than disabled, and no string in the shipped copy mentions an endpoint, a port, or a Python file to run. What remains is written as a finished state, not a waiting one: `hashed · not analysed`, and a footnote that owns the limit in the page's own voice ("the models do not run in a browser") instead of deferring to a connection that is never coming. The corollary is that the honest state must stay honest in reverse — the dropzone's promise that files stay in the browser is rewritten the moment an endpoint is connected and they no longer do.
-
-**The Same-Ruler Rule.** Two numbers in a comparison are a claim; the same two numbers drawn on one shared axis are evidence. Where the page pits its own figure against a baseline it draws both to scale on a single labelled domain, so the reader sees the ratio rather than computing it — and the caption names what that domain actually measures, because a bar silently mixing two benchmarks is worse than no bar. Mean absolute error and method-to-method disagreement are separate measurements on this page and are never plotted on the same ruler.
-
-**The Clerical Hand Rule.** Martian Mono carries serials, hashes, field labels, addresses and figures — the clerk's hand. If a line of it runs longer than about eight words it is prose, and prose is Archivo. Long instructional copy is never set in mono, and never in uppercase: the 11px `--micro` floor applies to every functional label, and word-shape matters more than texture once a line becomes a sentence.
-
-**The Micro Floor Rule.** Every label and every line of functional copy sits at or above `--micro` (11px), and the label role uses the token itself rather than a hand-typed size — forty-one declarations at 9 / 9.5 / 10 / 10.5px collapsed into that one token, and the token is now cited 42 times. Mono labels differentiate by colour, weight and letterspacing, never by half-pixel size steps: a 9.5px and a 10.5px label are not a hierarchy, they are two illegible sizes. The floor governs text you read; a relative unit mark riding a figure (the `%` set at `.4em` on the confluency readout) is a typographic superscript, not a label, and is out of scope.
+**The Browser-Surface Rule.** The parts we did not draw still carry the document: selection is gold on ink, the caret is stamp navy, the focus ring is stamp navy at 3px offset, both scrollbar syntaxes are themed in paper with a damped-gold thumb on hover, links are underlined with a damped-gold decoration at a 3px offset, and every numeric column and figure carries `tabular-nums`. A default blue highlight or a default scrollbar breaks the world as surely as a wrong hex.
 
 ## Do's and Don'ts
 
@@ -654,35 +640,36 @@ A 9px **square** dot with a 2px border beside a mono label, driven by `data-s` o
 - **Don't** treat the image-loading scrim's "previous frame visible underneath" as a guarantee when building on this pattern elsewhere.
 - **Don't** assume a non-`normal` QC flag and its action badge always share a status color (see The Two-Axis Status Rule).
 
-### The Witness Book
+### The Travel Document
 
 #### Do:
-- **Do** keep the three colour families in their lanes: sulphur acts, cinnabar marks, the verdict trio quotes (The Colour Quarantine Rule).
-- **Do** carry hierarchy on Archivo's width axis, narrowing as size grows — `wdth` 63 at poster scale, 106 at prose (The Width-Axis Rule).
-- **Do** give every section a Martian Mono document address beside — never above — its headline.
-- **Do** size any specimen image by measuring its container and fitting the image's intrinsic dimensions into it, with a CSS `aspect-ratio` fallback beneath (The Measured Plate Rule).
-- **Do** make any sideways-scrolling element a real focusable region — `tabindex="0"`, `role="region"`, an `aria-label`, a visible scroll note under 900px, and its caption outside the scroll box.
-- **Do** theme the browser's own surfaces: `::selection` in sulphur on enamel, thin sulphur-free scrollbars in enamel, the sulphur focus ring, `font-variant-numeric: tabular-nums` on every figure and table, a sulphur skip link that appears on focus, and a print stylesheet that drops the fore-edge and grain and inverts to black on white.
-- **Do** label every demonstration image with what it actually is, and keep the provenance-and-limits section on the page rather than in a footnote (The Labelled Demonstration Rule).
-- **Do** give the first viewport a `min-height` tied to `100svh` and let the plate take the larger share of the split (≈64%), so the specimen fills the fold without the page being trapped at exactly one screen.
-- **Do** author every icon as inline SVG on `currentColor`, marked `aria-hidden` — never an icon font, a glyph, an emoji or an icon package.
-- **Do** give a new grouped control one ruled enclosure rather than a card: 1px rule, internal 1px dividers, optionally one enamel step of fill.
-- **Do** keep every label at the `--micro` token rather than typing a size, and give a reveal mechanism a fail-open sweep (The Reveal-Is-Decoration Rule).
-- **Do** put the working control in the sulphur primary slot and let the broken one drop to a disabled secondary (The Primary-Slot Rule).
+- **Do** keep the two colour systems quarantined: stamp inks are chrome, the verdict trio is the product reading an image (The Colour Quarantine Rule). If a new mark is not a reading of a specimen, it takes a stamp ink.
+- **Do** give every verdict a shape and a word as well as an ink, and keep the selector form right — the action badge owns its own `[data-v]` and takes compound selectors; the verdict dot inherits from its container (The Shape-and-Word Rule).
+- **Do** compose the ground once, as security paper — guilloché, fibre and intaglio wash on one fixed multiplied layer (The Security Stock Rule).
+- **Do** mount specimen imagery on ink inside a gold hairline, and size its frame from the image's own intrinsic dimensions (The Plate-on-Ink Rule, The Measured Plate Rule).
+- **Do** rule a leader line from a printed reading back to the pixels it was measured on where the layout allows it, measured off the live layout, and suppress it where it would cross empty space.
+- **Do** displace a struck mark's perimeter with the shared ink-bite filter and let the badge multiply into the stock.
+- **Do** mark every stated evaluation figure as stated, and keep the provenance disclosure on the page (The Recomputed-vs-Stated Rule).
+- **Do** keep functional text at the 11px `--micro` token and cite the token rather than typing a size (The Micro Floor Rule).
+- **Do** set the document address beside the headline, never above it, stacking below at ≤760px (The Document Address Rule).
+- **Do** build a grouped control as one ruled enclosure with internal dividers, not as a card.
+- **Do** theme the browser's own surfaces — selection, caret, both scrollbar syntaxes with a hover state, the focus ring, underline offsets and `tabular-nums` (The Browser-Surface Rule).
+- **Do** make any sideways-scrolling element a real focusable region with its caption outside the scroll box (The Real Region Rule).
 
 #### Don't:
-- **Don't** round a corner. There is no non-zero `border-radius` on this surface (The Square Corner Rule).
-- **Don't** add a second inverted section. `#sec-outputs` is the only tipped-in pale leaf in the volume (The One Inverted Leaf Rule).
-- **Don't** cast a shadow, blur a backdrop, or float a panel. The only permissible `box-shadow` is a centred glow on a mark that emits light (The No-Elevation Rule).
-- **Don't** add a second display family, or set a poster figure wide, or set prose narrow — that inverts the whole ramp.
-- **Don't** set prose, a headline, or a long sentence in Martian Mono (The Clerical Hand Rule).
-- **Don't** put a sulphur fill on something you cannot click, or a verdict colour on anything that is not the product reading an image.
-- **Don't** add `overflow-x: hidden` to `body`. It masked a genuine 547px overflow once; it stays off so the next one is visible.
-- **Don't** add a second auto-advance, a carousel, a loop, or scroll-linked motion (The Snap Rule, The One Deliberate Step Rule).
-- **Don't** default the cell mask on for a flagged specimen — the segmenter miscounts bacterial rods as cells there (The Resting Frame Rule).
-- **Don't** put a claim, customer, price, logo or capability on this page that the pipeline on this machine did not produce or the brief did not supply.
-- **Don't** compute a verdict, a confluency or an action in the browser to fill an empty column (The No-Guessed-Verdict Rule).
-- **Don't** let a primary button name its own failure, and don't let the empty-state copy say "awaiting the module" when a module is in fact connected.
+- **Don't** flatten the ground to a plain fill, re-apply grain per section, or raise the stock's opacity to make the texture read.
+- **Don't** state a verdict with a stamp ink, or use a verdict colour on anything that is not the product reading an image.
+- **Don't** collapse the verdict shapes back onto colour, and don't turn the badge's `[data-v]` into a descendant selector — that silently disables the shape channel.
+- **Don't** cast an offset shadow, blur a backdrop or float a panel. The only sanctioned shadows are the plate's contact pair, the two emitters, and the inset rule inside a struck mark.
+- **Don't** add a radius beyond the 3px page corner, and don't round something for softness — round and oval on this surface mean *cleared*.
+- **Don't** set a heading in the machine face, a digest in the didone, or a long instruction in uppercase mono (The Three Hands Rule).
+- **Don't** type a functional size below 11px; the label role has a token.
+- **Don't** put an eyebrow or kicker above a headline; the document address goes beside it.
+- **Don't** lighten `doc-ink-3` — the hex is a measured 5.0:1 on the paper ground and its lighter predecessor failed at 4.20:1.
+- **Don't** let an unescaped `<` reach an HTML or SVG renderer from the machine-readable zone; the filler is a tag opener and has swallowed a document once.
+- **Don't** compute a confluency, flag or action in the browser to fill an empty column, and don't present an evaluation figure as pipeline output.
+- **Don't** add overshoot to any curve, a second auto-advance, a loop, or scroll-linked motion (The Snap Rule).
+- **Don't** add `overflow-x: hidden` to `body`; the mask would hide the next real overflow.
 
 ---
 

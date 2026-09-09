@@ -1,4 +1,4 @@
-# cultureQC landing page
+# cultureQC workspace
 
 React 18 on Vite. `npm run build` emits `site/dist`, which is what Vercel serves.
 
@@ -14,8 +14,9 @@ npm run data     # regenerate src/data.json + public/img from pipeline output
 
 | Path | What it is |
 |---|---|
-| `src/App.jsx` | the hash router and both view panels |
-| `src/components/` | `Plate`, `Hero`, `Leaf`, `Upload`, `Chain`, `Ladder`, `Rail`, … |
+| `src/App.jsx` | the hash router, persistent sidebar, and seven workspace views |
+| `src/components/Workspace.jsx` | dataset overview, specimen explorer, and results inspector |
+| `src/components/` | shared microscopy viewer, upload, audit chain, benchmarks, and provenance |
 | `src/lib/` | `hash.js` (SHA-256 + canonical JSON), `zip.js`, `labels.js` |
 | `src/styles.css` | the whole visual world, one file |
 | `src/config.js` | `ANALYSIS_API` and the deployment-state constants |
@@ -28,7 +29,7 @@ you about:
 
 **`styles.css` drives state through attributes, not classes alone.**
 `[data-mask]`, `[data-boxes]`, `[data-s]`, `[data-v]`, `[data-flagged]`, and the
-`--rail-h` / `--nw` / `--nh` custom properties. Components set those exact
+`--nw` / `--nh` custom properties. Components set those exact
 attributes. Rename one and the design breaks silently — the markup still renders,
 it just stops being styled.
 
@@ -37,22 +38,29 @@ pipeline output in `assets/pipeline-output/` and `assets/ladder/`. Hand-editing
 the JSON would make the page display records the pipeline never wrote, which is
 the one thing this page cannot do. CI re-runs the script and fails on any diff.
 
-## Two views
+## Workspace views
 
-Two tab-switched views, hash-routed and deep-linkable:
+Seven views share a persistent sidebar and a responsive application shell. The
+redesign references and decisions are in `docs/FRONTEND_REDESIGN.md` at the repo root.
 
 | Route | View | What it is for |
 |---|---|---|
-| `#/overview` (default) | **Overview** | The argument: what it does, the 2.3 pp vs 31 pp head-to-head, 100% early recall, software-not-an-instrument. A compact plate runs the scan-and-verdict animation in the first viewport. |
-| `#/analysis` | **Analysis** | The evidence: the nine-specimen instrument, **your own uploads**, the confluency table, the full severity matrix, the audit chain and the provenance disclosures. |
+| `#/overview` (default) | **Overview** | Dataset counts, quality breakdown, an interactive microscopy preview, and searchable/filterable specimen records. |
+| `#/analysis` | **Specimen explorer** | Searchable specimen library, microscopy overlays, results inspector, original JSON record, hash copy, and record export. |
+| `#/upload` | **Your images** | Image and ZIP intake, hashing, analysis connection, batch processing, and manifest verification. |
+| `#/benchmarks` | **Benchmarks** | Evaluation comparison, recorded confluency table, and interactive severity matrix. |
+| `#/audit` | **Audit trail** | Browser-side SHA-256 verification and tamper/restore demonstration. |
+| `#/provenance` | **Models & provenance** | Training sources, model limits, and evaluation disclosures. |
+| `#/integration` | **Integration** | Python integration and record-schema explanation. |
 
-Browser back/forward work, `aria-selected` tracks the tab, arrow keys move
-between tabs, and the fore-edge index rebuilds itself per view. Both panels stay
-mounted and one is `hidden`, so a batch you uploaded survives a tab switch.
+Browser back/forward work, and `aria-current` identifies the current route.
+Pages mount on their first visit and remain mounted while hidden, so uploads,
+filters, and audit verification survive navigation. Mobile navigation opens from
+the header menu and closes on selection, Escape, or the backdrop.
 
 ## Running your own images
 
-The Analysis view accepts a single image, many images, or a `.zip` (parsed in the
+The Your images view accepts a single image, many images, or a `.zip` (parsed in the
 browser with `DecompressionStream`, no library — stored and deflated entries, no
 ZIP64).
 
@@ -189,7 +197,9 @@ disclosed in its own section, matching the console's permanent footer disclosure
 
 ## Fonts
 
-Archivo (variable, weight + width axes) and Martian Mono (variable), latin
-subset, in `src/assets/fonts/` and fingerprinted by Vite. Archivo's width axis
-carries the hierarchy — condensed for display, expanded for reading. Both have
-real fallback stacks.
+Two registers, the way the working software of this field is set: **Archivo**
+(variable, weight + width axes) is the language voice — headings, figures, prose, controls and the
+wordmark; **IBM Plex Mono** (400/600) is the machine hand — canonical record
+fields, hashes, field labels, table headers and anything else a machine wrote.
+Both latin subset, in `src/assets/fonts/`, fingerprinted by Vite, each with a
+real fallback stack.

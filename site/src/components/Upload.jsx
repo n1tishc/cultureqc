@@ -402,7 +402,7 @@ export default function Upload() {
   return (
     <section className="sec" id="sec-upload">
       <div className="sechead rv">
-        <h2>Run your own field.</h2>
+        <h2>Upload your microscopy images</h2>
         <span className="docaddr">Upload &middot; batch</span>
       </div>
       <p className="lede rv">

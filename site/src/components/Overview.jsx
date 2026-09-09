@@ -90,7 +90,8 @@ export function Measure({ onGo }) {
       <figure className="errscale rv">
         <figcaption>
           Mean absolute confluency error, zero-shot across morphologies &middot;
-          same benchmark, same images &middot; bars to scale
+          same benchmark, same images &middot; bars to scale &middot;{" "}
+          <b className="stated">evaluation figure, not recomputed here</b>
         </figcaption>
         <div className="esrow">
           <span className="esname">cultureQC</span>
@@ -153,7 +154,11 @@ export function Recall({ ladder, onGo }) {
         <strong>
           98% test accuracy, 100% contamination recall at every severity
           including early.
-        </strong>
+        </strong>{" "}
+        <span className="stated">
+          Evaluation figures, not recomputed on this page &mdash; see{" "}
+          <a href="#/analysis">provenance</a>.
+        </span>
       </p>
       <div className="ladstrip rv" id="ladstrip">
         {["clean", "early", "mid", "late"].map((sev) => (

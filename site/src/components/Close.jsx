@@ -37,6 +37,13 @@ export default function Close({ leaves, onGo }) {
           See it run
         </a>
 
+        {/* An unanswered address is marked pending, not silently dropped: a
+            missing entry on a document is a visible blank, never an absence. */}
+        {!REPO_URL && (
+          <span className="cta2 pending" aria-disabled="true">
+            Source &mdash; address not yet issued
+          </span>
+        )}
         {REPO_URL && (
           <a className="cta2" href={REPO_URL} target="_blank" rel="noopener">
             <svg
@@ -56,6 +63,11 @@ export default function Close({ leaves, onGo }) {
           </a>
         )}
 
+        {!CONTACT && (
+          <span className="cta2 pending" aria-disabled="true">
+            Contact &mdash; address not yet issued
+          </span>
+        )}
         {CONTACT && (
           <a className="cta2" href={"mailto:" + CONTACT}>
             <svg

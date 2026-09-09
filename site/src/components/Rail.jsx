@@ -36,10 +36,27 @@ export function Rail({ view, onGo, leafCount }) {
           onGo("overview");
         }}
       >
+        {/* The logomark. Authored, one stroke weight: a dish of cells, ruled
+            like the field the pipeline measures. */}
+        <svg className="logomark" viewBox="0 0 96 96" aria-hidden="true">
+          <g fill="none" stroke="currentColor" strokeWidth="2.4">
+            <circle cx="48" cy="48" r="43" />
+            <circle cx="48" cy="48" r="25" strokeWidth="1.4" />
+          </g>
+          <g fill="currentColor">
+            <ellipse cx="39" cy="37" rx="5.2" ry="2.5" transform="rotate(-28 39 37)" />
+            <ellipse cx="52" cy="34" rx="4.1" ry="2.2" transform="rotate(64 52 34)" />
+            <ellipse cx="61" cy="44" rx="5.6" ry="2.4" transform="rotate(-12 61 44)" />
+            <ellipse cx="36" cy="52" rx="4.4" ry="2.3" transform="rotate(18 36 52)" />
+            <ellipse cx="49" cy="59" rx="5.8" ry="2.6" transform="rotate(-46 49 59)" />
+            <ellipse cx="60" cy="60" rx="3.9" ry="2.1" transform="rotate(30 60 60)" />
+            <ellipse cx="47" cy="46" rx="3.2" ry="1.9" transform="rotate(78 47 46)" />
+          </g>
+        </svg>
         culture<b>QC</b>
       </a>
       <div className="tabs" role="tablist" aria-label="Views">
-        {VIEWS.map((v, i) => (
+        {VIEWS.map((v) => (
           <button
             className="tab"
             key={v}
@@ -53,13 +70,16 @@ export function Rail({ view, onGo, leafCount }) {
             onClick={() => onGo(v)}
             onKeyDown={onKeyDown}
           >
-            <span className="tnum">{"0" + (i + 1)}</span>
+            {/* No 01 / 02 here: numbering two items carries nothing. The
+                booklet's real numbering — 9 leaves, Leaf 05 / 09 — is where a
+                figure actually tells the reader something. */}
             {LABEL[v]}
           </button>
         ))}
       </div>
       <p className="railmeta">
-        Schema 0.2 &middot; <i id="railleaves">{leafCount} leaves</i>
+        Schema 0.2
+        <i id="railleaves">{leafCount} records</i>
       </p>
     </header>
   );
@@ -89,6 +109,7 @@ const SECTIONS = {
    Placed after the primary nav in the DOM so the tab bar is not buried behind
    seven section jumps for a keyboard or screen-reader user. */
 export function ForeEdge({ view }) {
+  const navRef = useRef(null);
   const list = SECTIONS[view];
   const [here, setHere] = useState(list[0][0]);
 
@@ -109,8 +130,21 @@ export function ForeEdge({ view }) {
     return () => io.disconnect();
   }, [view, list]);
 
+  // Keep the current section discoverable in the narrow-screen index without
+  // moving the page or stealing keyboard focus.
+  useEffect(() => {
+    const nav = navRef.current;
+    const active = nav?.querySelector('[aria-current="true"]');
+    if (!active) return;
+    const left = active.offsetLeft - nav.offsetLeft;
+    if (left < nav.scrollLeft)
+      nav.scrollLeft = left;
+    else if (left + active.offsetWidth > nav.scrollLeft + nav.clientWidth)
+      nav.scrollLeft = left + active.offsetWidth - nav.clientWidth;
+  }, [here]);
+
   return (
-    <nav className="foreedge" aria-label="Sections on this page">
+    <nav ref={navRef} className="foreedge" aria-label="Sections on this page">
       {list.map(([id, name]) => (
         <button
           className="fe-link"

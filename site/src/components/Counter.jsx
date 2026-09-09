@@ -32,7 +32,14 @@ export default function Counter({ to, ms = 680, delay = 0, runKey, className }) 
           node.textContent = (to * q).toFixed(1);
         }
         if (p < 1) raf = requestAnimationFrame(tick);
-        else node.textContent = to.toFixed(1);
+        else {
+          node.textContent = to.toFixed(1);
+          /* The reading does not merely stop rising: it lands. One press, the
+             way a figure is struck into a document, then stillness. */
+          node.classList.remove("struck");
+          void node.offsetWidth;
+          node.classList.add("struck");
+        }
       };
       raf = requestAnimationFrame(tick);
     }, delay);

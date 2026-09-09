@@ -59,14 +59,16 @@ export function useReveals(view) {
   }, [view]);
 }
 
-/* Publish the rail's real height so scroll-margin-top can clear it. It wraps at
-   narrow widths, so this is measured rather than guessed, and re-measured on
-   resize and after the fonts land (which changes the wrap point). Without it,
-   an anchored heading lands underneath the sticky rail on a phone. */
+/* Publish the cover's real height so scroll-margin-top can clear it. Below
+   1080px the cover is a sticky top bar that wraps, so this is measured rather
+   than guessed, and re-measured on resize and after the fonts land (which
+   changes the wrap point). Without it, an anchored heading lands underneath the
+   bar on a phone. On desktop the cover is a fixed left column and the CSS
+   ignores this value. */
 export function useRailHeight() {
   useEffect(() => {
     const measure = () => {
-      const r = document.querySelector(".rail");
+      const r = document.querySelector(".cover");
       if (r)
         document.documentElement.style.setProperty(
           "--rail-h",

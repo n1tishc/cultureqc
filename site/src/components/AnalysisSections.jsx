@@ -18,7 +18,7 @@ export function MeasureTable({ leaves }) {
         <span className="docaddr">Confluency &middot; head to head</span>
       </div>
       <p className="tblcap rv">
-        Run on this machine. Disagreement is the gap between the two methods on
+        Recorded pipeline results. Disagreement is the gap between the two methods on
         the same field, not a labelled error.
       </p>
       <p className="scrollnote rv">Table scrolls sideways &rarr;</p>
@@ -126,7 +126,7 @@ export function Ladder({ ladder }) {
         <p className="note">
           Built from a library of 2,351 bacterial sprites at their source optical
           scale, larger than a real objective would show. See{" "}
-          <a href="#sec-provenance">provenance</a>, below.
+          <a href="#/provenance">model provenance</a>.
         </p>
       </div>
     </section>
@@ -192,16 +192,40 @@ export function Provenance() {
         ))}
         <details className="dline">
           <summary>
-            <span className="dkey">This page</span>
+            <span className="dkey">The nine records</span>
             <span className="dclaim">
-              Every number here came out of the shipped pipeline.
+              Every number in them came out of the shipped pipeline.
             </span>
           </summary>
           <p>
             Four real phase-contrast fields (A172, BT474, BV2, Huh7), one with
             contamination composited in at full resolution, and four 256&times;256
             challenge tiles. Every mask, box and hash was produced by the pipeline
-            on the author&rsquo;s machine, not mocked up.
+            on the author&rsquo;s machine, not mocked up, and this page recomputes
+            each digest in your browser rather than asking you to take it on
+            trust.
+          </p>
+        </details>
+        <details className="dline">
+          <summary>
+            <span className="dkey">Evaluation figures</span>
+            <span className="dclaim">
+              The comparison and recall numbers come from the model&rsquo;s
+              evaluation run, not from the nine records above.
+            </span>
+          </summary>
+          <p>
+            Five figures on this site are evaluation results rather than
+            per-record output: <b>2.3 pp</b> and <b>31 pp</b> mean absolute
+            confluency error and the <b>thirteen times</b> that follows from
+            them, <b>98%</b> test accuracy, and <b>100%</b> contamination recall
+            at every severity. The browser does not recompute these the way it
+            recomputes the record digests &mdash; they are stated, not
+            demonstrated, and the honest boundary on the recall figure is the
+            sprite-scale limit described above. The head-to-head table in{" "}
+            <i>Two methods, four real fields</i> is a different thing again: it
+            is disagreement between the two methods on the same field, run on
+            this machine, not labelled error.
           </p>
         </details>
       </div>
