@@ -11,6 +11,7 @@ import { Integrate, Measure } from "./components/Overview";
 import { Dashboard, Explorer, Icon } from "./components/Workspace";
 import { FLAGGED_LEAF } from "./lib/labels";
 import Home from "./components/Home";
+import "./refinements.css";
 
 const NAV = [
   ["home", "Home", "grid"],

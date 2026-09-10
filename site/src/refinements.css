@@ -1,0 +1,447 @@
+/* Scientific imaging UI: readable controls, explicit workflow and image priority. */
+.clean-shell {
+  --ink-3: #526976;
+  --paper-4: #dce5e8;
+}
+.clean-shell .page,
+.home-page {
+  max-width: 1600px;
+}
+.clean-shell .button {
+  font-size: 14px;
+}
+.clean-shell .topbar {
+  height: 64px;
+}
+.clean-shell .breadcrumb {
+  font-size: 12px;
+}
+.clean-shell .home-page {
+  padding-top: 40px;
+}
+.home-copy h1 {
+  font-size: clamp(38px, 3.8vw, 58px);
+  line-height: 1.09;
+  letter-spacing: -1.9px;
+  text-wrap: balance;
+}
+.home-copy .home-description {
+  font-size: 17px;
+  line-height: 1.75;
+  max-width: 430px;
+}
+.home-capabilities {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  margin-top: 30px;
+  max-width: 410px;
+}
+.home-capabilities span {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+.home-capabilities svg {
+  width: 16px;
+  height: 16px;
+  color: var(--acc);
+}
+.home-note {
+  font-size: 12px;
+  line-height: 1.7;
+}
+.workflow-cards {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+.workflow-cards .start-card {
+  flex-direction: column;
+  padding: 24px;
+  gap: 16px;
+}
+.workflow-cards .start-card h3 {
+  font-size: 20px;
+}
+.workflow-cards .start-card p {
+  font-size: 15px;
+  line-height: 1.7;
+}
+.workflow-cards .start-card > div {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.workflow-cards .start-link {
+  margin-top: auto;
+  padding-top: 10px;
+  min-height: 44px;
+}
+.home-start {
+  padding-block: 32px;
+}
+.micro-topline {
+  font-size: 11px;
+  letter-spacing: 0.6px;
+}
+.micro-topline > span:last-child {
+  font-size: 10px;
+  color: #b3ced3;
+}
+.micro-stage-note,
+.micro-scale {
+  font-size: 11px;
+  color: #bed6db;
+}
+.micro-layer-tabs button {
+  font-size: 13px;
+}
+.micro-layer-tabs button > span {
+  font-size: 10px;
+}
+.micro-explanation {
+  font-size: 13px;
+  min-height: 65px;
+}
+.micro-specimens button {
+  font-size: 12px;
+}
+.micro-disclosure {
+  font-size: 11px;
+}
+.spot-copy > p:not(.eyebrow) {
+  font-size: 15px;
+}
+.spot-options button,
+.spot-result p,
+.spot-evidence {
+  font-size: 13px;
+}
+.spot-copy .spot-caveat {
+  font-size: 12px !important;
+}
+.demo-context {
+  padding-top: 16px;
+}
+.demo-context nav {
+  margin-top: 6px;
+}
+.demo-context nav a {
+  font-size: 14px;
+  padding-block: 12px;
+}
+.clean-shell .explorer-page {
+  padding-top: 24px;
+}
+.specimen-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #eef4f5;
+  border: 1px solid var(--paper-4);
+  border-bottom: 0;
+  border-radius: 10px 10px 0 0;
+}
+.specimen-toolbar > div:first-child {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.specimen-toolbar strong {
+  font-size: 14px;
+}
+.specimen-toolbar > div > span {
+  font-size: 12px;
+  color: var(--ink-3);
+}
+.specimen-pager {
+  display: flex;
+  gap: 8px;
+}
+.specimen-pager button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  border: 1px solid #b8cbd1;
+  border-radius: 6px;
+  background: white;
+  padding: 8px 12px;
+  font-size: 12px;
+}
+.specimen-pager button:hover:not(:disabled) {
+  border-color: var(--acc);
+  background: var(--acc-soft);
+}
+.specimen-pager button:first-child svg {
+  transform: rotate(180deg);
+}
+.clean-shell .explorer-layout {
+  border-radius: 0 0 10px 10px;
+  grid-template-columns: 208px minmax(0, 1fr) 310px;
+}
+.library-field-label {
+  display: block;
+  font-size: 12px;
+  color: var(--ink-2);
+  margin: 16px 0 8px;
+}
+.library-heading input {
+  font-size: 13px;
+  min-width: 0;
+}
+.library-heading .search-field {
+  min-height: 44px;
+}
+.library-heading select {
+  min-height: 44px;
+  font-size: 12px;
+}
+.library-heading h2 {
+  font-size: 14px;
+}
+.library-item {
+  padding: 10px 8px;
+}
+.library-item strong {
+  font-size: 13px;
+}
+.library-item small,
+.library-status {
+  font-size: 11px;
+  line-height: 1.6;
+}
+.viewer-heading h2 {
+  font-size: 18px;
+}
+.viewer-heading > div > span {
+  font-size: 12px;
+  line-height: 1.6;
+}
+.status-pill {
+  font-size: 12px;
+  white-space: normal;
+}
+.inspector-tabs button {
+  font-size: 13px;
+  min-height: 48px;
+}
+.section-label {
+  font-size: 12px;
+}
+.inspect-section h3 {
+  font-size: 16px;
+}
+.inspect-section p,
+.inspect-section .confidence-caption {
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.inspect-section .confluency-value {
+  font-size: 44px;
+}
+.metric-caption,
+.probability-row,
+.probability-row code {
+  font-size: 11px;
+}
+.probability-row {
+  grid-template-columns: 94px minmax(0, 1fr) 44px;
+  gap: 8px;
+  margin-block: 12px;
+}
+.action-callout strong {
+  font-size: 14px;
+}
+.record-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 12px;
+}
+.image-note {
+  font-size: 12px;
+  line-height: 1.7;
+}
+.plate .checks label {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+.supporting .lede {
+  font-size: 16px;
+  line-height: 1.75;
+  max-width: 760px;
+}
+.upload-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  list-style: none;
+  padding: 0;
+  margin: 24px 0 16px;
+  border: 1px solid var(--paper-4);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.upload-steps li {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px;
+  background: #fff;
+}
+.upload-steps li + li {
+  border-left: 1px solid var(--paper-4);
+}
+.upload-steps li > span {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border: 1px solid var(--paper-4);
+  border-radius: 50%;
+  color: var(--ink-3);
+  font: 12px var(--mono);
+}
+.upload-steps li[aria-current] {
+  background: var(--acc-soft);
+}
+.upload-steps li[aria-current] > span {
+  background: var(--acc);
+  color: white;
+  border-color: var(--acc);
+}
+.upload-steps strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+}
+.upload-steps small {
+  display: block;
+  font-size: 12px;
+  color: var(--ink-3);
+  margin-top: 4px;
+}
+.upload-expectation {
+  font-size: 13px;
+  color: var(--ink-2);
+  line-height: 1.75;
+  max-width: 920px;
+  margin-bottom: 28px;
+}
+.upload-expectation strong {
+  margin-right: 10px;
+  color: var(--ink);
+}
+.dzsub,
+.conntext,
+.progtext,
+.statk {
+  font-size: 13px;
+}
+.connname {
+  font-size: 14px;
+}
+.clean-shell input,
+.clean-shell select {
+  border-radius: 6px;
+}
+.clean-shell button:focus-visible,
+.clean-shell a:focus-visible {
+  outline: 3px solid var(--acc);
+  outline-offset: 3px;
+}
+.micro-controls button:focus-visible {
+  outline-color: #b8f0df;
+}
+@media (max-width: 1250px) {
+  .clean-shell .explorer-layout {
+    grid-template-columns: 180px minmax(0, 1fr);
+  }
+  .clean-shell .inspector {
+    grid-column: 2;
+    border-left: 0;
+    border-top: 1px solid var(--paper-4);
+  }
+  .clean-shell .specimen-library {
+    grid-row: 1 / 3;
+  }
+  .workflow-cards .start-card {
+    padding: 20px;
+  }
+}
+@media (max-width: 1000px) {
+  .workflow-cards {
+    grid-template-columns: 1fr;
+  }
+  .workflow-cards .start-card {
+    flex-direction: row;
+  }
+  .upload-steps li {
+    padding: 16px 12px;
+    gap: 8px;
+  }
+  .upload-steps small {
+    display: none;
+  }
+}
+@media (max-width: 760px) {
+  .home-copy h1 {
+    font-size: 40px;
+  }
+  .home-copy .home-description {
+    font-size: 16px;
+  }
+  .clean-shell .home-page {
+    padding-top: 28px;
+  }
+  .clean-shell .explorer-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .clean-shell .specimen-library {
+    grid-row: auto;
+  }
+  .clean-shell .inspector {
+    grid-column: auto;
+  }
+  .library-field-label {
+    margin-top: 8px;
+  }
+  .clean-shell input,
+  .clean-shell select {
+    font-size: 16px;
+  }
+  .micro-layer-tabs button {
+    font-size: 12px;
+  }
+  .micro-specimens button {
+    font-size: 11px;
+  }
+  .micro-topline {
+    font-size: 10px;
+  }
+  .micro-topline > span:last-child {
+    font-size: 9px;
+  }
+  .upload-steps strong {
+    font-size: 12px;
+  }
+  .upload-steps li {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 14px 10px;
+  }
+  .specimen-toolbar {
+    padding: 12px;
+  }
+  .specimen-pager {
+    margin-left: auto;
+  }
+}

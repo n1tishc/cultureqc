@@ -10,14 +10,13 @@ export default function Home({ leaves, onInspect }) {
             <Icon name="cells" /> CELL CULTURE QUALITY CONTROL
           </p>
           <h1>
-            A closer look at
-            <br />
-            your cell cultures.
+            Your images.
+            <br />A clearer view of culture quality.
           </h1>
           <p className="home-description">
-            Measure confluency, review quality flags, and inspect the image
-            evidence behind each result. A focused workspace for microscopy
-            analysis.
+            Measure cell coverage, inspect quality signals, and trace each
+            result back to the microscopy image. Explore the layers, then try
+            your own sample.
           </p>
           <div className="home-actions">
             <a className="button primary" href="#/upload">
@@ -30,24 +29,38 @@ export default function Home({ leaves, onInspect }) {
             </a>
           </div>
           <p className="home-note">
-            Start with a sample dataset or bring your own images.
+            {leaves.length} sample images · Interactive evidence · Research use
           </p>
+          <div className="home-capabilities" aria-label="Analysis capabilities">
+            <span>
+              <Icon name="scan" />
+              Confluency
+            </span>
+            <span>
+              <Icon name="layers" />
+              Quality review
+            </span>
+            <span>
+              <Icon name="shield" />
+              Traceable records
+            </span>
+          </div>
         </div>
         <MicroscopyPlayground leaves={leaves} onInspect={onInspect} />
       </section>
       <section className="home-start" aria-labelledby="start-title">
         <div className="home-section-heading">
-          <p className="eyebrow">GET STARTED</p>
-          <h2 id="start-title">Choose your workspace</h2>
+          <p className="eyebrow">FROM IMAGE TO EVIDENCE</p>
+          <h2 id="start-title">A focused workflow. At every step.</h2>
         </div>
-        <div className="start-grid">
+        <div className="start-grid workflow-cards">
           <a href="#/demo" className="start-card">
             <span className="start-icon">
               <Icon name="scan" />
             </span>
             <div>
-              <span className="eyebrow">SAMPLE DATA</span>
-              <h3>Explore a complete analysis</h3>
+              <span className="eyebrow">01 / EXPLORE</span>
+              <h3>Start with the evidence</h3>
               <p>
                 Browse {leaves.length} recorded specimens. Compare images,
                 toggle segmentation overlays, and inspect quality scores.
@@ -63,14 +76,31 @@ export default function Home({ leaves, onInspect }) {
               <Icon name="upload" />
             </span>
             <div>
-              <span className="eyebrow">YOUR DATA</span>
-              <h3>Analyse your own cultures</h3>
+              <span className="eyebrow">02 / ANALYSE</span>
+              <h3>Bring your own images</h3>
               <p>
                 Add microscopy images or a batch, run the analysis, and review
                 results in your own workspace.
               </p>
               <span className="start-link">
                 Upload images
+                <Icon name="arrow" />
+              </span>
+            </div>
+          </a>
+          <a href="#/audit" className="start-card">
+            <span className="start-icon">
+              <Icon name="shield" />
+            </span>
+            <div>
+              <span className="eyebrow">03 / VERIFY</span>
+              <h3>Follow the record</h3>
+              <p>
+                Review the analysis record and verify the sample audit trail
+                directly in your browser.
+              </p>
+              <span className="start-link">
+                Explore traceability
                 <Icon name="arrow" />
               </span>
             </div>

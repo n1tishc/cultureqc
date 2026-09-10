@@ -50,7 +50,10 @@ async function rechain(list) {
 export default function Upload() {
   const [files, setFiles] = useState([]);
   const [error, setError] = useState("");
-  const [prog, setProg] = useState({ bar: 0, text: "Manifest built — not yet analysed" });
+  const [prog, setProg] = useState({
+    bar: 0,
+    text: "Manifest built — not yet analysed",
+  });
   const [analysing, setAnalysing] = useState(false);
   const [drag, setDrag] = useState(false);
   const [endpoint, setEndpoint] = useState(START_ENDPOINT);
@@ -58,7 +61,11 @@ export default function Upload() {
   const [conn, setConn] = useState({
     s: "probing",
     name: "Looking for the pipeline…",
-    text: <>Checking <code>{START_ENDPOINT}</code></>,
+    text: (
+      <>
+        Checking <code>{START_ENDPOINT}</code>
+      </>
+    ),
   });
   const cancelled = useRef(false);
   const warmTimer = useRef(0);
@@ -81,7 +88,11 @@ export default function Upload() {
       setConn({
         s: "probing",
         name: "Looking for the pipeline…",
-        text: <>Checking <code>{base}</code></>,
+        text: (
+          <>
+            Checking <code>{base}</code>
+          </>
+        ),
       });
     try {
       const ctl = new AbortController();
@@ -92,7 +103,8 @@ export default function Upload() {
       const r = await fetch(base + "/health", { signal: ctl.signal });
       clearTimeout(to);
       const j = await r.json();
-      if (j.status !== "ok") throw new Error("service replied but is not ready");
+      if (j.status !== "ok")
+        throw new Error("service replied but is not ready");
       setEndpoint(base);
       if (j.models_loaded) {
         setConn({
@@ -100,8 +112,8 @@ export default function Upload() {
           name: "Analysis ready",
           text: (
             <>
-              Uploads are analysed by the real pipeline &mdash; the same{" "}
-              <code>analyze()</code> an automation platform would call.
+              The models are ready. Add your images, then select Analyse to
+              measure confluency and review culture quality.
             </>
           ),
         });
@@ -253,7 +265,11 @@ export default function Upload() {
     setProg({
       bar: 0,
       text: p
-        ? "Manifest built — " + p + " file" + (p === 1 ? "" : "s") + " not yet analysed"
+        ? "Manifest built — " +
+          p +
+          " file" +
+          (p === 1 ? "" : "s") +
+          " not yet analysed"
         : "Manifest built",
     });
   }
@@ -303,13 +319,16 @@ export default function Upload() {
           const j = await r.json().catch(() => ({}));
           if (!r.ok) throw new Error(j.detail || "HTTP " + r.status);
           if (j.record?.image_hash !== f.hash)
-            throw new Error("Analysis response does not match the uploaded image");
+            throw new Error(
+              "Analysis response does not match the uploaded image",
+            );
           if (j.record_canonical) {
             const { record_hash, ...body } = j.record;
             if (
               (await sha256(j.record_canonical)) !== record_hash ||
               canonJSON(JSON.parse(j.record_canonical)) !== canonJSON(body)
-            ) throw new Error("Analysis record failed integrity verification");
+            )
+              throw new Error("Analysis record failed integrity verification");
           }
           outcomes.set(f, { result: j });
         } catch (e) {
@@ -415,9 +434,36 @@ export default function Upload() {
         <span className="docaddr">Upload &middot; batch</span>
       </div>
       <p className="lede rv">
-        Drop one image, a folder&rsquo;s worth, or a <code>.zip</code>. Every
-        file is hashed in your browser and linked into a manifest you can verify
-        on the spot.
+        Add a microscopy image or a ZIP batch, run the analysis, and review
+        confluency and quality flags. Each result stays linked to its source
+        image.
+      </p>
+      <ol className="upload-steps" aria-label="Analysis progress">
+        {[
+          ["Add images", "Choose files or drop a batch"],
+          ["Run analysis", "Measure confluency and assess QC"],
+          ["Review results", "Inspect verdicts and verify records"],
+        ].map(([title, detail], i) => (
+          <li
+            key={title}
+            aria-current={
+              (analysing ? 1 : done.length ? 2 : files.length ? 1 : 0) === i
+                ? "step"
+                : undefined
+            }
+          >
+            <span>{String(i + 1).padStart(2, "0")}</span>
+            <div>
+              <strong>{title}</strong>
+              <small>{detail}</small>
+            </div>
+          </li>
+        ))}
+      </ol>
+      <p className="upload-expectation">
+        <strong>Before you begin</strong> Phase-contrast / brightfield images ·
+        Up to 64 MB per file. CPU analysis typically takes about a minute for
+        small images; larger fields and batches take longer.
       </p>
 
       <div className={"upgrid rv" + (CAN_ANALYSE ? "" : " solo")}>
@@ -589,8 +635,7 @@ export default function Upload() {
                   k="Confluency range"
                   v={
                     <>
-                      {confs[0].toFixed(1)}–
-                      {confs[confs.length - 1].toFixed(1)}
+                      {confs[0].toFixed(1)}–{confs[confs.length - 1].toFixed(1)}
                       <small>%</small>
                     </>
                   }
@@ -600,16 +645,14 @@ export default function Upload() {
                   cls="q"
                   k="Actions"
                   v={
-                    Object.keys(actions).length ? (
-                      Object.keys(actions).map((a, i) => (
-                        <span key={a}>
-                          {i > 0 && <br />}
-                          {(ACTION_LABEL[a] || a) + " " + actions[a]}
-                        </span>
-                      ))
-                    ) : (
-                      "—"
-                    )
+                    Object.keys(actions).length
+                      ? Object.keys(actions).map((a, i) => (
+                          <span key={a}>
+                            {i > 0 && <br />}
+                            {(ACTION_LABEL[a] || a) + " " + actions[a]}
+                          </span>
+                        ))
+                      : "—"
                   }
                 />
               </>
@@ -704,11 +747,18 @@ export default function Upload() {
           <div className="prog" aria-hidden="true">
             <i id="prog-bar" style={{ transform: `scaleX(${prog.bar})` }}></i>
           </div>
-          <p className="progtext" id="prog-text" role="status" aria-live="polite">
+          <p
+            className="progtext"
+            id="prog-text"
+            role="status"
+            aria-live="polite"
+          >
             {prog.text}
           </p>
 
-          <p className="scrollnote scrollnote-hi">Table scrolls sideways &rarr;</p>
+          <p className="scrollnote scrollnote-hi">
+            Table scrolls sideways &rarr;
+          </p>
           <div
             className="scrollx manifestwrap"
             tabIndex={0}
@@ -795,7 +845,9 @@ export default function Upload() {
                         </>
                       ) : (
                         <td className="pend" colSpan={3}>
-                          {connected ? "not yet analysed" : "hashed · not analysed"}
+                          {connected
+                            ? "not yet analysed"
+                            : "hashed · not analysed"}
                         </td>
                       )}
                       <td className="mono">{f.hash.slice(0, 16)}…</td>
@@ -811,8 +863,8 @@ export default function Upload() {
           <p className="foot" id="batch-foot">
             {done.length ? (
               <>
-                Verdicts came from the pipeline at <code>{endpoint}</code>. Every
-                row is one line in that endpoint&rsquo;s hash-chained log.
+                Verdicts came from the pipeline at <code>{endpoint}</code>.
+                Every row is one line in that endpoint&rsquo;s hash-chained log.
               </>
             ) : connected ? (
               "Each row is a manifest line: the file's real SHA-256, linked to the line before it. Press Analyse to fill the verdict columns from the pipeline."
@@ -820,8 +872,8 @@ export default function Upload() {
               <>
                 Each row is a manifest line: the file&rsquo;s real SHA-256
                 &mdash; the same digest <code>records.py</code> writes &mdash;
-                linked to the line before it. Press Verify to recompute the whole
-                chain here in your browser.{" "}
+                linked to the line before it. Press Verify to recompute the
+                whole chain here in your browser.{" "}
                 {CAN_ANALYSE
                   ? "Connect the pipeline to fill the verdict columns as well."
                   : "The verdicts are the one thing this page will not do: the models do not run in a browser, and a guessed confluency is exactly the error the page is about."}

@@ -396,6 +396,7 @@ export function Explorer({ leaves, selected, onSelect }) {
       `${l.id} ${l.title}`.toLowerCase().includes(query.toLowerCase()) &&
       (filter === "all" || l.flag !== "normal"),
   );
+  const position = visible.indexOf(leaf);
   return (
     <div className="page explorer-page">
       <PageHeading
@@ -410,12 +411,42 @@ export function Explorer({ leaves, selected, onSelect }) {
           Export record
         </button>
       </PageHeading>
+      <div className="specimen-toolbar">
+        <div>
+          <Icon name="scan" />
+          <strong>{leaf.record.cell_line}</strong>
+          <span>
+            {position < 0
+              ? "Selected sample outside current filter"
+              : `Sample ${position + 1} of ${visible.length}`}
+          </span>
+        </div>
+        <div className="specimen-pager">
+          <button
+            aria-label="Previous specimen"
+            disabled={position <= 0}
+            onClick={() => onSelect(leaves.indexOf(visible[position - 1]))}
+          >
+            <Icon name="chevron" />
+            <span>Previous</span>
+          </button>
+          <button
+            aria-label="Next specimen"
+            disabled={!visible.length || position === visible.length - 1}
+            onClick={() => onSelect(leaves.indexOf(visible[position + 1]))}
+          >
+            <span>Next</span>
+            <Icon name="chevron" />
+          </button>
+        </div>
+      </div>
       <div className="explorer-layout">
         <section className="specimen-library" aria-label="Choose specimen">
           <div className="library-heading">
             <h2>
               Specimens <span>{leaves.length}</span>
             </h2>
+            <span className="library-field-label">Find a sample</span>
             <label className="search-field">
               <Icon name="search" />
               <input
