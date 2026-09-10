@@ -160,6 +160,9 @@ def health() -> dict:
 # the dev server serves the page during development and proxies here for the API.
 _SITE = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(
     os.path.abspath(__file__)))), "site", "dist")
+_BUNDLED_SITE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "frontend")
+if os.path.isfile(os.path.join(_BUNDLED_SITE, "index.html")):
+    _SITE = _BUNDLED_SITE
 _PAGE = os.path.join(_SITE, "index.html")
 if os.path.isdir(_SITE):
     from fastapi.staticfiles import StaticFiles
@@ -186,15 +189,7 @@ if os.path.isdir(_SITE):
 
 @app.get("/")
 def root():
-    """The API in the Space; the built page too when running from a checkout.
-
-    site/ is not copied into the Space (see deploy/sync_space.py), so in
-    production this stays JSON and Vercel serves the page. Locally it means one
-    command gives you the page and the pipeline on one origin, which is the only
-    way to exercise the real CORS-free path before deploying — but it serves the
-    *build*, so `npm run build` has to have run. For day-to-day frontend work,
-    `npm run dev` proxies /health and /analyze here instead.
-    """
+    """Serve the bundled frontend, or API metadata for an API-only deployment."""
     if os.path.isfile(_PAGE):
         from fastapi.responses import FileResponse
         return FileResponse(_PAGE, media_type="text/html")
@@ -281,11 +276,12 @@ def _run(body: bytes, name: str, cell_line: str, target_confluency: float,
     from culture.pipeline import analyze
     from culture.qc import qc_classify
     from culture.rules import LineConfig
+    from culture.records import _canonical_json
 
     # analyze() records os.path.abspath(image_path) as image_ref, so the file has
     # to exist while the record is written. Nothing here is durable, so the temp
-    # directory is cleaned up on the way out and image_ref is reduced to the
-    # filename in the response rather than a path that resolves nowhere.
+    # directory is cleaned up on the way out. Supply the public filename before
+    # signing so the response and persisted record remain byte-identical.
     with tempfile.TemporaryDirectory() as td:
         path = os.path.join(td, name)
         with open(path, "wb") as fh:
@@ -317,12 +313,10 @@ def _run(body: bytes, name: str, cell_line: str, target_confluency: float,
                     cell_line=cell_line,
                     line_config=cfg,
                     log_path=LOG_PATH,
+                    image_ref=name,
                 )
                 qc = qc_classify(tile, run_gradcam=True)
             boxes = _boxes_normalised(qc, w, h)
-
-            record = dict(record)
-            record["image_ref"] = name
 
             return {
                 "confluency_pct": record["confluency_pct"],
@@ -340,6 +334,10 @@ def _run(body: bytes, name: str, cell_line: str, target_confluency: float,
                 "action_reason": record["action_reason"],
                 "overlay_image_base64": _overlay_png(path, boxes) if include_overlay else None,
                 "record": record,
+                # Preserve Python float serialization through JS/JSON clients.
+                "record_canonical": _canonical_json({
+                    key: value for key, value in record.items() if key != "record_hash"
+                }),
             }
         except HTTPException:
             raise

@@ -1,5 +1,37 @@
 # Deploying cultureQC
 
+## Current working deployment
+
+The complete application is hosted at
+https://longgrainrice-cultureqc-api.hf.space/#/home. The Space serves the built
+React frontend and FastAPI on the same origin. The previously documented
+`cultureqc.vercel.app` URL returned `DEPLOYMENT_NOT_FOUND` during verification
+on September 9, 2026. The separate Vercel topology below remains optional.
+
+Publish from the repository with your existing Hugging Face login:
+
+```bash
+python deploy/sync_space.py
+npm run build
+.venv/bin/python -m pytest deploy/hf-space/test_api.py -q
+.venv/bin/python deploy/publish_space.py
+# Wait for /health to report models_loaded: true, then run real inference:
+.venv/bin/python deploy/smoke_space.py
+```
+
+The publisher stages only Space source files and the built frontend. Model
+weights continue to load from their existing repositories. The smoke test runs
+four synthetic QC fixtures and verifies classes, output ranges, evidence boxes,
+input hashes, and returned record hashes. It is a deployment regression check,
+not a measurement of real-world detection accuracy. CPU inference takes minutes
+for larger fields; a healthy endpoint alone does not prove inference works.
+
+API records now receive their public image filename before signing. Rewriting
+`image_ref` after signing invalidated the returned hash in the previous version.
+Responses also include `record_canonical`, the exact signed JSON text, because
+JavaScript normalizes Python values such as `80.0` to `80`. The upload UI checks
+the image digest and, when supplied, the canonical record before accepting it.
+
 ```
 Browser ──► Vercel (React + Vite)    ──►  HuggingFace Space (Docker + FastAPI)
             site/ ──► site/dist           deploy/hf-space/

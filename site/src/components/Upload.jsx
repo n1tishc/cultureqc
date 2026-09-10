@@ -302,6 +302,15 @@ export default function Upload() {
           });
           const j = await r.json().catch(() => ({}));
           if (!r.ok) throw new Error(j.detail || "HTTP " + r.status);
+          if (j.record?.image_hash !== f.hash)
+            throw new Error("Analysis response does not match the uploaded image");
+          if (j.record_canonical) {
+            const { record_hash, ...body } = j.record;
+            if (
+              (await sha256(j.record_canonical)) !== record_hash ||
+              canonJSON(JSON.parse(j.record_canonical)) !== canonJSON(body)
+            ) throw new Error("Analysis record failed integrity verification");
+          }
           outcomes.set(f, { result: j });
         } catch (e) {
           outcomes.set(f, { error: String(e.message || e).slice(0, 80) });

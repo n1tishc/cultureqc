@@ -29,6 +29,7 @@ def analyze(
     log_path: str = "events.jsonl",
     protocol_stage: str | None = None,
     pixel_size_um: float | None = None,
+    image_ref: str | None = None,
 ) -> dict:
     """
     Full pipeline: confluency + QC + rules -> hash-chained record.
@@ -92,7 +93,7 @@ def analyze(
         "cell_line": cell_line,
         "protocol_stage": protocol_stage,
         "captured_at": now,  # in a real system this comes from the microscope
-        "image_ref": os.path.abspath(image_path),
+        "image_ref": image_ref if image_ref is not None else os.path.abspath(image_path),
         "image_hash": hash_file(image_path),
         "pixel_size_um": pixel_size_um,
         "confluency_pct": conf_result.pct,

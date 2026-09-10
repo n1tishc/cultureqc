@@ -64,7 +64,7 @@ def client(monkeypatch):
     monkeypatch.setitem(api._state, "error", None)
 
     fake_pipeline = types.ModuleType("culture.pipeline")
-    fake_pipeline.analyze = lambda *a, **k: dict(RECORD)
+    fake_pipeline.analyze = lambda *a, **k: {**RECORD, "image_ref": k["image_ref"]}
     fake_qc = types.ModuleType("culture.qc")
     fake_qc.qc_classify = lambda *a, **k: FakeQC()
     fake_rules = types.ModuleType("culture.rules")
@@ -260,6 +260,7 @@ def test_concurrent_uploads_do_not_break_the_hash_chain(tmp_path, monkeypatch):
         rec.pop("prev_record_hash", None)
         rec.pop("record_hash", None)
         rec["flask_id"] = kw.get("flask_id", "x")
+        rec["image_ref"] = kw.get("image_ref", os.path.abspath(path))
         # the real writer, and therefore the real race
         return RecordWriter(kw["log_path"]).append(rec)
 
@@ -284,6 +285,17 @@ def test_concurrent_uploads_do_not_break_the_hash_chain(tmp_path, monkeypatch):
         assert sum(1 for line in fh if line.strip()) == 12
     intact, bad_line = verify_chain(log)
     assert intact, f"chain broken under concurrency, first bad record at line {bad_line}"
+    import json
+    with open(log) as fh:
+        stored = {r["record_hash"]: r for r in map(json.loads, fh)}
+    for result in results:
+        record = result["record"]
+        assert record == stored[record["record_hash"]], "API mutated a signed record"
+        import hashlib
+        assert hashlib.sha256(result["record_canonical"].encode()).hexdigest() == record["record_hash"]
+        assert json.loads(result["record_canonical"]) == {
+            k: v for k, v in record.items() if k != "record_hash"
+        }
 
 
 # ── CORS ───────────────────────────────────────────────────────────────────

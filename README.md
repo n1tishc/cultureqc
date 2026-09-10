@@ -2,7 +2,7 @@
 
 **One brightfield image in. Four bound outputs, and a record you can verify.**
 
-[Live demo](https://cultureqc.vercel.app) · [API](https://longgrainrice-cultureqc-api.hf.space/docs)
+[Live demo](https://longgrainrice-cultureqc-api.hf.space/#/home) · [API](https://longgrainrice-cultureqc-api.hf.space/docs)
 
 [![tests](https://github.com/n1tishc/cultureqc/actions/workflows/tests.yml/badge.svg)](https://github.com/n1tishc/cultureqc/actions/workflows/tests.yml)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
