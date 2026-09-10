@@ -79,7 +79,12 @@ export default function App() {
       key={id}
       href={"#/" + id}
       className="nav-link"
-      aria-current={view === id || (id === "demo" && DEMO_NAV.some(([route]) => route === view)) ? "page" : undefined}
+      aria-current={
+        view === id ||
+        (id === "demo" && DEMO_NAV.some(([route]) => route === view))
+          ? "page"
+          : undefined
+      }
       onClick={() => setMenu(false)}
     >
       <Icon name={icon} />
@@ -150,7 +155,11 @@ export default function App() {
           </div>
           <span className="reference-badge">
             <span />
-            {view === "upload" ? "Your workspace" : view === "home" ? "Cell analysis" : "Demo data"}
+            {view === "upload"
+              ? "Your workspace"
+              : view === "home"
+                ? "Cell analysis"
+                : "Demo data"}
           </span>
           <a className="button primary top-upload" href="#/upload">
             <Icon name="plus" />
@@ -158,10 +167,54 @@ export default function App() {
           </a>
         </header>
         <main id="main" tabIndex={-1}>
-          {!["home", "overview", "analysis", "demo"].includes(view) && <h1 className="sr">{title}</h1>}
-          {visited.has("home") && <div hidden={view !== "home"}><Home leaves={DATA.leaves} /></div>}
-          {["demo", ...DEMO_NAV.map(([id]) => id)].includes(view) && <div className="demo-context"><div><strong>Demo workspace</strong><span>Sample images · precomputed results · {DATA.leaves.length} specimens</span></div><nav aria-label="Demo views">{[["demo", "Image explorer"], ["overview", "Dataset summary"], ["benchmarks", "Benchmarks"], ["audit", "Audit trail"]].map(([id,label]) => <a key={id} href={"#/" + id} aria-current={view === id || (id === "demo" && view === "analysis") ? "page" : undefined}>{label}</a>)}</nav></div>}
-          {visited.has("demo") && <div hidden={view !== "demo"}><Explorer leaves={DATA.leaves} selected={selected} onSelect={setSelected} /></div>}
+          {!["home", "overview", "analysis", "demo"].includes(view) && (
+            <h1 className="sr">{title}</h1>
+          )}
+          {visited.has("home") && (
+            <div hidden={view !== "home"}>
+              <Home leaves={DATA.leaves} onInspect={inspect} />
+            </div>
+          )}
+          {["demo", ...DEMO_NAV.map(([id]) => id)].includes(view) && (
+            <div className="demo-context">
+              <div>
+                <strong>Demo workspace</strong>
+                <span>
+                  Sample images · precomputed results · {DATA.leaves.length}{" "}
+                  specimens
+                </span>
+              </div>
+              <nav aria-label="Demo views">
+                {[
+                  ["demo", "Image explorer"],
+                  ["overview", "Dataset summary"],
+                  ["benchmarks", "Benchmarks"],
+                  ["audit", "Audit trail"],
+                ].map(([id, label]) => (
+                  <a
+                    key={id}
+                    href={"#/" + id}
+                    aria-current={
+                      view === id || (id === "demo" && view === "analysis")
+                        ? "page"
+                        : undefined
+                    }
+                  >
+                    {label}
+                  </a>
+                ))}
+              </nav>
+            </div>
+          )}
+          {visited.has("demo") && (
+            <div hidden={view !== "demo"}>
+              <Explorer
+                leaves={DATA.leaves}
+                selected={selected}
+                onSelect={setSelected}
+              />
+            </div>
+          )}
           {visited.has("overview") && (
             <div hidden={view !== "overview"}>
               <Dashboard leaves={DATA.leaves} onInspect={inspect} onGo={go} />
