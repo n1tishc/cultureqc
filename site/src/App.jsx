@@ -12,6 +12,8 @@ import { Dashboard, Explorer, Icon } from "./components/Workspace";
 import { FLAGGED_LEAF } from "./lib/labels";
 import Home from "./components/Home";
 import "./refinements.css";
+import "./instrument.css";
+import Instrument from "./components/Instrument";
 
 const NAV = [
   ["home", "Home", "grid"],
@@ -209,6 +211,7 @@ export default function App() {
           )}
           {visited.has("demo") && (
             <div hidden={view !== "demo"}>
+              <Instrument demo />
               <Explorer
                 leaves={DATA.leaves}
                 selected={selected}

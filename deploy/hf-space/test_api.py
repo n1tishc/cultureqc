@@ -338,3 +338,64 @@ def test_file_and_localhost_origins_are_refused_in_the_space(monkeypatch):
     finally:
         monkeypatch.delenv("SPACE_ID", raising=False)
         importlib.reload(api)
+
+
+def test_stream_orders_stages_before_final_record(client, monkeypatch):
+    import json
+    def run(*args):
+        emit = args[-1]
+        emit({"stage": "segmentation", "status": "running"})
+        emit({"stage": "segmentation", "status": "complete", "confluency_pct": 42.5})
+        emit({"stage": "qc", "status": "running"})
+        return {"record": RECORD}
+    monkeypatch.setattr(api, "_run", run)
+    response = post(client, stream="true")
+    assert response.headers['content-type'].startswith('application/x-ndjson')
+    events = [json.loads(line) for line in response.text.splitlines()]
+    assert [e['stage'] for e in events] == ['queued', 'segmentation', 'segmentation', 'qc', 'result']
+    assert events[-1]['result']['record'] == RECORD
+
+
+def test_stream_reports_failure_without_final_record(client, monkeypatch):
+    import json
+    def fail(*args):
+        raise RuntimeError('Model execution failed')
+    monkeypatch.setattr(api, '_run', fail)
+    events = [json.loads(line) for line in post(client, stream='true').text.splitlines()]
+    assert events[-1] == {'stage': 'error', 'detail': 'Model execution failed'}
+    assert not any(e['stage'] == 'result' for e in events)
+
+
+def test_stream_readiness_still_uses_http_status(client, monkeypatch):
+    monkeypatch.setitem(api._state, 'models_loaded', False)
+    assert post(client, stream='true').status_code == 503
+
+
+def test_visuals_preserve_crop_and_threshold():
+    import base64
+    import cv2
+    from culture.visuals import segmentation_visuals, qc_visual
+    def decode(uri):
+        return cv2.imdecode(np.frombuffer(base64.b64decode(uri.split(',')[1]), np.uint8), cv2.IMREAD_UNCHANGED)
+    score = np.array([[-2, 0], [1, 3]], np.float32)
+    visuals = segmentation_visuals(np.zeros((2, 2), np.uint8), score, score > 0)
+    mask = decode(visuals['mask'])
+    assert (mask[..., 3] > 0).tolist() == [[False, False], [True, True]]
+    heat = decode(qc_visual(np.ones((256,256), np.float32), 704, 520))
+    assert heat.shape == (520, 704, 4)
+    assert np.count_nonzero(heat[...,3]) == 256 * 256
+    assert heat[132,224,3] == 200
+    assert heat[131,224,3] == 0
+
+
+def test_pipeline_qc_details_avoid_duplicate_classifier(client, monkeypatch):
+    def analyze(*args, **kwargs):
+        kwargs['details'].update(qc=FakeQC(), visuals={'mask': 'actual-mask'})
+        return {**RECORD, 'image_ref': kwargs['image_ref']}
+    def duplicate(*args, **kwargs):
+        raise AssertionError('Classifier must not run a second time')
+    monkeypatch.setattr(sys.modules['culture.pipeline'], 'analyze', analyze)
+    monkeypatch.setattr(sys.modules['culture.qc'], 'qc_classify', duplicate)
+    result = post(client).json()
+    assert result['visuals'] == {'mask': 'actual-mask'}
+    assert result['per_class_probs'] == FakeQC.per_class_probs

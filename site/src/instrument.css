@@ -1,0 +1,571 @@
+:root {
+  color-scheme: dark;
+  --paper: #101916;
+  --paper-2: #0a110e;
+  --paper-3: #1b2922;
+  --paper-4: #33473b;
+  --ink: #edf3ee;
+  --ink-2: #bdcdc1;
+  --ink-3: #a0b3a5;
+  --acc: #a8deb7;
+  --acc-2: #c4efd0;
+  --acc-soft: #203b2b;
+  --acc-lift: #b7edc6;
+  --nav: #0b130e;
+  --idx: #a3b8a9;
+  --svc: #a7d8b4;
+  --v-green: #b0e4bc;
+  --v-amber: #edc887;
+  --v-red: #f5a7a2;
+  --evi: #efba69;
+  --instrument-border: #405749;
+}
+body {
+  background: var(--paper-2);
+  color: var(--ink);
+}
+.app-sidebar,
+.app-header,
+.app-footer {
+  background: var(--paper);
+  border-color: var(--paper-4);
+}
+.button.primary,
+.cta {
+  background: var(--acc);
+  color: #102016;
+  border-color: var(--acc);
+}
+.button.secondary,
+.cta2 {
+  background: var(--paper-3);
+  color: var(--ink);
+  border-color: var(--instrument-border);
+}
+.home-intro {
+  gap: 40px;
+}
+.home-copy h1 {
+  font-size: clamp(36px, 4.4vw, 64px);
+  line-height: 1.04;
+  letter-spacing: -0.04em;
+}
+.home-description {
+  color: var(--ink-2);
+}
+.hero-micrograph {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--instrument-border);
+  border-radius: 8px;
+  min-width: 0;
+}
+.hero-micrograph img {
+  display: block;
+  width: 100%;
+  filter: sepia(0.2) hue-rotate(65deg);
+  aspect-ratio: 1.4;
+  object-fit: cover;
+}
+.hero-micrograph span {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  font: 11px var(--mono);
+  background: #0b130ee8;
+  padding: 8px;
+  color: var(--ink);
+}
+.instrument {
+  margin: 32px 0;
+  border: 1px solid var(--instrument-border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--paper);
+  color: var(--ink);
+  min-width: 0;
+  grid-column: 1/-1;
+}
+.instrument-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  padding: 24px 28px;
+}
+.instrument h2 {
+  font-size: 22px;
+  margin: 6px 0;
+}
+.instrument-status {
+  font: 12px var(--mono);
+  color: var(--acc);
+  border: 1px solid var(--instrument-border);
+  padding: 8px 12px;
+  border-radius: 4px;
+}
+.pipeline-stages {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  margin: 0;
+  padding: 0;
+  border-block: 1px solid var(--paper-4);
+}
+.pipeline-stages li {
+  min-width: 0;
+}
+.pipeline-stages button {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-right: 1px solid var(--paper-4);
+  border-radius: 0;
+  background: var(--paper);
+  color: var(--ink-2);
+  padding: 16px;
+  text-align: left;
+  font: 14px var(--sans);
+  cursor: pointer;
+  min-height: 80px;
+}
+.pipeline-stages button[aria-pressed="true"] {
+  background: var(--acc-soft);
+  box-shadow: inset 0 -2px var(--acc);
+  color: var(--ink);
+}
+.pipeline-stages button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.pipeline-stages span {
+  font: 12px var(--mono);
+  display: block;
+  color: var(--acc);
+  margin-bottom: 6px;
+}
+.pipeline-stages small {
+  display: block;
+  font-size: 11px;
+  margin-top: 5px;
+}
+.instrument-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+}
+.instrument-image {
+  position: relative;
+  background: #040806;
+  align-self: center;
+  overflow: hidden;
+  min-width: 0;
+  min-height: 260px;
+}
+.raw-field {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 620px;
+  object-fit: contain;
+}
+.evidence-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+.mask-reveal {
+  animation: mask-paint 1s ease-out both;
+}
+.cam-reveal {
+  animation: cam-fade 0.8s ease-out both;
+}
+.image-caption {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  right: 12px;
+  width: fit-content;
+  max-width: calc(100% - 24px);
+  padding: 6px 10px;
+  background: #08100de8;
+  color: #edf3ee;
+  font: 11px var(--mono);
+}
+.instrument-empty {
+  padding: 60px 30px;
+  color: var(--ink-2);
+  display: grid;
+  gap: 16px;
+}
+.instrument-readout {
+  padding: 24px;
+  background: var(--paper-2);
+  border-left: 1px solid var(--paper-4);
+}
+.confluency-readout {
+  font: 58px var(--mono);
+  letter-spacing: -0.06em;
+  color: var(--acc);
+  font-variant-numeric: tabular-nums;
+}
+.confluency-readout > span:last-child {
+  font-size: 26px;
+}
+.instrument-readout p {
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.instrument fieldset {
+  padding: 16px 0;
+  margin: 24px 0;
+  border: 0;
+  border-block: 1px solid var(--paper-4);
+}
+.instrument legend {
+  font: 12px var(--mono);
+  padding: 0 4px 0 0;
+}
+.instrument fieldset label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  font-size: 14px;
+  cursor: pointer;
+}
+.instrument input {
+  accent-color: var(--acc);
+  width: 18px;
+  height: 18px;
+}
+.verdict strong {
+  display: block;
+  font-size: 20px;
+  margin: 8px 0;
+  text-transform: capitalize;
+}
+.instrument-readout .button {
+  width: 100%;
+  margin-top: 20px;
+  min-height: 44px;
+}
+.instrument-note {
+  padding: 16px 28px;
+  margin: 0;
+  border-top: 1px solid var(--paper-4);
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+.instrument-log {
+  padding: 24px 28px;
+  border-top: 1px solid var(--paper-4);
+  background: var(--paper-2);
+}
+.instrument-log > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.instrument-log a {
+  color: var(--acc);
+  font-size: 13px;
+}
+.hash-link {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 24px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0;
+}
+.hash-link code {
+  padding: 16px;
+  border: 1px solid var(--instrument-border);
+  background: var(--paper);
+  font-size: 11px;
+  overflow-wrap: anywhere;
+  color: var(--acc);
+}
+.hash-link small {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--ink-2);
+}
+.instrument-log p,
+.instrument-log > small {
+  font-size: 12px;
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+.instrument-log summary {
+  padding: 12px 0;
+  cursor: pointer;
+  font-size: 14px;
+}
+.instrument-log pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+}
+.negative-results {
+  margin: 64px 0;
+}
+.negative-results h2 {
+  font-size: 36px;
+  margin: 8px 0;
+}
+.negative-results > p {
+  color: var(--ink-2);
+}
+.negative-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 24px;
+}
+.negative-grid article {
+  border-top: 1px solid var(--instrument-border);
+  padding: 24px 0;
+}
+.negative-grid article > span {
+  font: 12px var(--mono);
+  color: var(--acc);
+}
+.negative-grid h3 {
+  font-size: 23px;
+}
+.negative-grid p {
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--ink-2);
+  max-width: 65ch;
+}
+.negative-grid strong,
+.negative-grid a {
+  display: block;
+  font-size: 13px;
+  margin-top: 16px;
+}
+.negative-grid a {
+  color: var(--acc);
+}
+.crec {
+  position: relative;
+}
+.crec:not(:last-child):after {
+  content: "↓";
+  position: absolute;
+  left: 18px;
+  bottom: -14px;
+  color: var(--acc);
+  z-index: 1;
+}
+.chain {
+  display: grid;
+  gap: 16px;
+}
+.crec {
+  border: 1px solid var(--instrument-border);
+  background: var(--paper);
+}
+button:focus-visible,
+a:focus-visible,
+summary:focus-visible,
+input:focus-visible {
+  outline: 3px solid var(--acc);
+  outline-offset: 4px;
+}
+button,
+a,
+input {
+  touch-action: manipulation;
+}
+.eyebrow {
+  color: var(--acc);
+}
+@keyframes mask-paint {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0);
+  }
+}
+@keyframes cam-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@media (max-width: 1000px) {
+  .instrument-body {
+    grid-template-columns: minmax(0, 1fr) 240px;
+  }
+  .instrument-head {
+    padding: 20px;
+  }
+  .pipeline-stages button {
+    padding: 12px 8px;
+    font-size: 12px;
+  }
+  .instrument-readout {
+    padding: 16px;
+  }
+  .confluency-readout {
+    font-size: 48px;
+  }
+}
+@media (max-width: 650px) {
+  .instrument-head {
+    display: block;
+  }
+  .instrument-status {
+    display: inline-block;
+    margin-top: 12px;
+  }
+  .instrument-body {
+    grid-template-columns: 1fr;
+  }
+  .instrument-readout {
+    border-left: 0;
+    border-top: 1px solid var(--paper-4);
+  }
+  .pipeline-stages {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+  .pipeline-stages button {
+    font-size: 11px;
+    padding: 10px 5px;
+    overflow-wrap: anywhere;
+  }
+  .pipeline-stages small {
+    display: none;
+  }
+  .instrument-head h2 {
+    font-size: 18px;
+  }
+  .instrument-log,
+  .instrument-note {
+    padding: 18px;
+  }
+  .hash-link {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .hash-link > span {
+    transform: rotate(90deg);
+    justify-self: center;
+  }
+  .negative-grid {
+    grid-template-columns: 1fr;
+  }
+  .instrument {
+    margin: 24px 0;
+  }
+  .hero-micrograph {
+    margin-top: 12px;
+  }
+  .instrument-image {
+    min-height: 0;
+  }
+  .instrument-image:has(.instrument-empty) {
+    min-height: 240px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mask-reveal,
+  .cam-reveal {
+    animation: none;
+  }
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+  }
+}
+.clean-shell {
+  --paper-2: #0a110e;
+  --paper-4: #33473b;
+}
+.clean-shell .topbar,
+.upload-steps li,
+.review-panel {
+  background: var(--paper);
+}
+.specimen-toolbar,
+.records-table th,
+.dropzone {
+  background: var(--paper-3);
+}
+.records-table tbody tr:hover,
+.start-card:hover {
+  background: var(--acc-soft);
+}
+.btable tr[data-flagged="true"],
+.crec[data-s="bad"] {
+  background: #302320;
+}
+.records-table td {
+  border-color: var(--paper-4);
+}
+.app-main > div > .instrument {
+  margin: 24px 32px;
+}
+.completed-fields {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 16px 0;
+}
+.completed-fields button {
+  min-height: 44px;
+  background: var(--paper-3);
+  color: var(--ink);
+  border: 1px solid var(--instrument-border);
+  border-radius: 6px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+@media (max-width: 650px) {
+  .app-main > div > .instrument {
+    margin: 16px;
+  }
+}
+.start-card,
+.workflow-cards .start-card {
+  background: var(--paper);
+  border-color: var(--instrument-border);
+}
+.home-note,
+.home-limitation,
+.app-footer,
+.workspace-label small,
+.nav-section-label,
+.page-heading p,
+.service-state {
+  color: var(--ink-3);
+}
+.specimen-step {
+  background: var(--paper-3);
+}
+.upload-steps li[aria-current="step"] > span {
+  color: #102016;
+}
+.instrument-log .button {
+  min-height: 44px;
+}
+.specimen-pager button {
+  background: var(--paper-3);
+  color: var(--ink);
+  border-color: var(--instrument-border);
+}
+
+.clean-shell {
+  --ink-3: #a0b3a5;
+}

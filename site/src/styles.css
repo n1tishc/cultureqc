@@ -285,7 +285,7 @@ a svg {
 .nav-count {
   margin-left: auto;
   font-size: 10px;
-  background: white;
+  background: var(--paper);
   border: 1px solid #cce5e2;
   border-radius: 4px;
   min-width: 21px;
@@ -317,7 +317,7 @@ a svg {
 .topbar {
   height: 72px;
   border-bottom: 1px solid var(--paper-4);
-  background: white;
+  background: var(--paper);
   display: flex;
   align-items: center;
   gap: 22px;
@@ -417,7 +417,7 @@ a svg {
   font-size: 12px;
   font-weight: 550;
   text-decoration: none;
-  background: white;
+  background: var(--paper);
   color: var(--ink-2);
   white-space: nowrap;
   transition:
@@ -477,7 +477,7 @@ a svg {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: white;
+  background: var(--paper);
 }
 .actions {
   display: flex;
@@ -489,7 +489,7 @@ a svg {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: white;
+  background: var(--paper);
   border: 1px solid var(--paper-4);
   border-radius: 6px;
   padding: 8px 10px;
@@ -532,7 +532,7 @@ input::placeholder {
   color: var(--ink-3);
 }
 .segmented button[aria-pressed="true"] {
-  background: white;
+  background: var(--paper);
   color: var(--ink);
   box-shadow: 0 1px 3px #17313d12;
 }
@@ -604,7 +604,7 @@ input::placeholder {
   padding: 14px 17px;
   border: 1px solid var(--paper-4);
   border-radius: 8px 8px 0 0;
-  background: white;
+  background: var(--paper);
 }
 .dataset-icon {
   display: flex;
@@ -637,7 +637,7 @@ input::placeholder {
   border: 1px solid var(--paper-4);
   border-top: 0;
   border-radius: 0 0 8px 8px;
-  background: white;
+  background: var(--paper);
   margin-bottom: 24px;
 }
 .summary-item {
@@ -690,7 +690,7 @@ input::placeholder {
 .records-panel {
   border: 1px solid var(--paper-4);
   border-radius: 9px;
-  background: white;
+  background: var(--paper);
   min-width: 0;
   overflow: hidden;
 }
@@ -964,7 +964,7 @@ input::placeholder {
   align-items: start;
   border: 1px solid var(--paper-4);
   border-radius: 9px;
-  background: white;
+  background: var(--paper);
   overflow: hidden;
 }
 .specimen-library {
@@ -998,7 +998,7 @@ input::placeholder {
   padding: 8px 0;
   width: 100%;
   margin-top: 8px;
-  background: white;
+  background: var(--paper);
   color: var(--ink-3);
 }
 .specimen-list {
@@ -1014,7 +1014,7 @@ input::placeholder {
   text-align: left;
   padding: 10px 7px;
   border: 1px solid transparent;
-  background: white;
+  background: var(--paper);
   border-radius: 6px;
   margin: 3px 0;
 }
@@ -1117,7 +1117,7 @@ input::placeholder {
 .inspector-tabs button {
   border: 0;
   border-bottom: 2px solid transparent;
-  background: white;
+  background: var(--paper);
   color: var(--ink-3);
   padding: 18px 0;
   font-size: 11px;
@@ -1409,7 +1409,7 @@ input::placeholder {
 }
 .sec {
   padding: 25px;
-  background: white;
+  background: var(--paper);
   border: 1px solid var(--paper-4);
   border-radius: 9px;
   margin-bottom: 24px;
@@ -1567,7 +1567,7 @@ input::placeholder {
   border: 1px solid var(--paper-4);
   border-radius: 5px;
   font-size: 10px;
-  background: white;
+  background: var(--paper);
 }
 .minibtn {
   font-size: 10px;
@@ -2613,7 +2613,7 @@ input::placeholder {
 .home-description { max-width: 480px; font-size: 16px; line-height: 1.75; color: var(--ink-2); }
 .home-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
 .home-note { font-size: 12px; color: var(--ink-3); margin: 16px 0 0; }
-.home-specimen { margin: 0; background: white; border: 1px solid var(--paper-4); border-radius: 10px; overflow: hidden; }
+.home-specimen { margin: 0; background: var(--paper); border: 1px solid var(--paper-4); border-radius: 10px; overflow: hidden; }
 .home-image-heading { display: flex; justify-content: space-between; gap: 12px; padding: 16px; font-size: 11px; color: var(--ink-2); }
 .home-image-heading span:first-child { display: flex; align-items: center; gap: 8px; }
 .home-image-heading span:last-child { font-family: var(--mono); font-size: 10px; }
@@ -2626,7 +2626,7 @@ input::placeholder {
 .home-section-heading h2 { font-size: 24px; letter-spacing: -.6px; font-weight: 550; margin-bottom: 24px; }
 .home-section-heading .eyebrow { margin-bottom: 10px; }
 .start-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-.start-card { display: flex; gap: 20px; padding: 28px; background: white; border: 1px solid var(--paper-4); border-radius: 8px; color: var(--ink); text-decoration: none; transition: border-color .2s, background .2s; }
+.start-card { display: flex; gap: 20px; padding: 28px; background: var(--paper); border: 1px solid var(--paper-4); border-radius: 8px; color: var(--ink); text-decoration: none; transition: border-color .2s, background .2s; }
 .start-card:hover { border-color: var(--acc); background: #f3faf9; color: var(--ink); }
 .start-icon { background: var(--acc-soft); color: var(--acc-2); display: grid; place-items: center; width: 44px; height: 44px; border-radius: 8px; flex-shrink: 0; }
 .start-card h3 { font-size: 20px; font-weight: 550; margin: 10px 0; }
@@ -2638,7 +2638,7 @@ input::placeholder {
 .home-method p { color: var(--ink-2); font-size: 13px; max-width: 280px; line-height: 1.7; }
 .home-limitation { border-top: 1px solid var(--paper-4); padding-top: 24px; font-size: 12px; color: var(--ink-3); line-height: 1.8; }
 .home-limitation a { display: inline-flex; align-items: center; gap: 6px; }
-.demo-context { padding: 24px 32px 0; background: white; border-bottom: 1px solid var(--paper-4); }
+.demo-context { padding: 24px 32px 0; background: var(--paper); border-bottom: 1px solid var(--paper-4); }
 .demo-context > div { display: flex; align-items: baseline; flex-wrap: wrap; gap: 16px; }
 .demo-context strong { font-size: 16px; }
 .demo-context span { font-size: 12px; color: var(--ink-3); }

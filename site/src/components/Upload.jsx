@@ -1,3 +1,5 @@
+import Instrument from "./Instrument";
+import { readAnalysis } from "../lib/analysisStream";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ANALYSIS_API,
@@ -49,6 +51,7 @@ async function rechain(list) {
 
 export default function Upload() {
   const [files, setFiles] = useState([]);
+  const [live, setLive] = useState(null);
   const [error, setError] = useState("");
   const [prog, setProg] = useState({
     bar: 0,
@@ -175,6 +178,7 @@ export default function Upload() {
 
   /* ── ingest ── */
   async function ingest(list) {
+    if (analysing) return;
     setError("");
     let incoming = [];
     try {
@@ -251,6 +255,14 @@ export default function Upload() {
             bmp.height * s,
           );
           rec.thumb = c.toDataURL("image/webp", 0.7);
+          c.width = Math.round(
+            bmp.width * Math.min(1, 1024 / Math.max(bmp.width, bmp.height)),
+          );
+          c.height = Math.round(
+            bmp.height * Math.min(1, 1024 / Math.max(bmp.width, bmp.height)),
+          );
+          g.drawImage(bmp, 0, 0, c.width, c.height);
+          rec.preview = c.toDataURL("image/png");
           bmp.close();
         } catch {
           /* undecodable in this browser; the hash still stands */
@@ -274,11 +286,7 @@ export default function Upload() {
     });
   }
 
-  /* ── analysis ──
-     Three workers pull from one queue; each returns its outcome rather than
-     writing into the record, and the whole batch is folded in and re-chained
-     once at the end. Mutating a file object in place would leave React with the
-     same array it already rendered. */
+  /* Stream one field at a time and re-chain completed outcomes after each field. */
   async function analyseBatch() {
     if (analysing || !connected) return;
     setAnalysing(true);
@@ -303,21 +311,33 @@ export default function Upload() {
     const worker = async () => {
       while (queue.length && !cancelled.current) {
         const f = queue.shift();
+        setLive({
+          name: f.name,
+          event: { stage: "queued", visuals: { raw: f.preview } },
+        });
         try {
           const fd = new FormData();
           fd.append("image", f.file, f.name);
           fd.append("cell_line", "unknown");
           fd.append("target_confluency", "80");
+          fd.append("stream", "true");
           /* Cellpose-SAM on CPU is tens of seconds per field, and a sleeping
              Space adds a cold boot on top. No timeout here beyond the abort the
-             Cancel button already owns: a short one would read as a failure when
-             the answer was simply still coming. */
+             model is computing. Stop after current image skips pending files. */
           const r = await fetch(endpoint + "/analyze", {
             method: "POST",
             body: fd,
           });
-          const j = await r.json().catch(() => ({}));
-          if (!r.ok) throw new Error(j.detail || "HTTP " + r.status);
+          const j = await readAnalysis(r, (event) =>
+            setLive((previous) => ({
+              name: f.name,
+              event: {
+                ...previous?.event,
+                ...event,
+                visuals: { ...previous?.event?.visuals, ...event.visuals },
+              },
+            })),
+          );
           if (j.record?.image_hash !== f.hash)
             throw new Error(
               "Analysis response does not match the uploaded image",
@@ -331,15 +351,21 @@ export default function Upload() {
               throw new Error("Analysis record failed integrity verification");
           }
           outcomes.set(f, { result: j });
+          setLive({ name: f.name, result: j });
         } catch (e) {
-          outcomes.set(f, { error: String(e.message || e).slice(0, 80) });
+          outcomes.set(f, { error: String(e.message || e).slice(0, 160) });
+          setLive({ name: f.name, error: String(e.message || e) });
         }
         done++;
+        const partial = files.map((item) =>
+          outcomes.has(item) ? { ...item, ...outcomes.get(item) } : item,
+        );
+        setFiles(await rechain(partial));
         tick();
       }
     };
-    /* three at a time: the models are single-writer behind a lock anyway */
-    await Promise.all([worker(), worker(), worker()]);
+    // The server serializes inference; submit sequentially so stages belong to one field.
+    await worker();
 
     const merged = files.map((f) =>
       outcomes.has(f) ? { ...f, ...outcomes.get(f) } : f,
@@ -466,6 +492,33 @@ export default function Upload() {
         small images; larger fields and batches take longer.
       </p>
 
+      {!analysing && files.some((f) => f.error) && (
+        <button
+          className="button secondary"
+          type="button"
+          onClick={() => {
+            setFiles((list) => list.map((f) => ({ ...f, error: null })));
+            setLive(null);
+          }}
+        >
+          Reset failed images for retry
+        </button>
+      )}
+      {done.length > 0 && (
+        <div className="completed-fields" aria-label="Inspect completed fields">
+          {done.map((f, i) => (
+            <button
+              type="button"
+              key={i}
+              disabled={analysing}
+              onClick={() => setLive({ name: f.name, result: f.result })}
+            >
+              Inspect {f.name}
+            </button>
+          ))}
+        </div>
+      )}
+      {live && <Instrument {...live} />}
       <div className={"upgrid rv" + (CAN_ANALYSE ? "" : " solo")}>
         <div>
           <label
@@ -529,6 +582,7 @@ export default function Upload() {
             <input
               type="file"
               id="filein"
+              disabled={analysing}
               ref={fileInput}
               multiple
               aria-describedby="dz-help"
@@ -727,14 +781,16 @@ export default function Upload() {
               >
                 <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />
               </svg>
-              Cancel
+              Stop after current image
             </button>
             <button
               className="cta2"
               id="clear-btn"
+              disabled={analysing}
               type="button"
               onClick={() => {
                 setFiles([]);
+                setLive(null);
                 setError("");
                 setProg({ bar: 0, text: "Manifest built — not yet analysed" });
                 if (fileInput.current) fileInput.current.value = "";

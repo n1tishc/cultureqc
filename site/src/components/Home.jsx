@@ -1,5 +1,5 @@
+import Instrument, { NegativeResults } from "./Instrument";
 import { Icon } from "./Workspace";
-import MicroscopyPlayground, { SpotCheck } from "./MicroscopyPlayground";
 
 export default function Home({ leaves, onInspect }) {
   return (
@@ -10,8 +10,9 @@ export default function Home({ leaves, onInspect }) {
             <Icon name="cells" /> CELL CULTURE QUALITY CONTROL
           </p>
           <h1>
-            Your images.
-            <br />A clearer view of culture quality.
+            See the field.
+            <br />
+            Follow the evidence.
           </h1>
           <p className="home-description">
             Measure cell coverage, inspect quality signals, and trace each
@@ -46,8 +47,15 @@ export default function Home({ leaves, onInspect }) {
             </span>
           </div>
         </div>
-        <MicroscopyPlayground leaves={leaves} onInspect={onInspect} />
+        <div className="hero-micrograph">
+          <img
+            src="/img/Huh7contam.webp"
+            alt="Huh7 microscopy field with synthetic contamination"
+          />
+          <span>HUH7 / PHASE CONTRAST / RESEARCH SPECIMEN</span>
+        </div>
       </section>
+      <Instrument demo />
       <section className="home-start" aria-labelledby="start-title">
         <div className="home-section-heading">
           <p className="eyebrow">FROM IMAGE TO EVIDENCE</p>
@@ -107,7 +115,7 @@ export default function Home({ leaves, onInspect }) {
           </a>
         </div>
       </section>
-      <SpotCheck leaves={leaves} onInspect={onInspect} />
+      <NegativeResults />
       <p className="home-limitation">
         For research use. QC models are trained on synthetic data; review
         predictions alongside your images.{" "}

@@ -30,6 +30,8 @@ def analyze(
     protocol_stage: str | None = None,
     pixel_size_um: float | None = None,
     image_ref: str | None = None,
+    observer=None,
+    details: dict | None = None,
 ) -> dict:
     """
     Full pipeline: confluency + QC + rules -> hash-chained record.
@@ -44,7 +46,16 @@ def analyze(
         raise FileNotFoundError(f"Could not read image: {image_path}")
 
     # ── Confluency ──
-    conf_result = cpsam_confluency(img, method="probmap")
+    emit = observer or (lambda event: None)
+    from culture.visuals import segmentation_visuals, qc_visual
+    emit({"stage": "segmentation", "status": "running"})
+    visuals = {}
+    def segmentation_ready(prob, mask):
+        visuals.update(segmentation_visuals(img, prob, mask))
+    conf_result = cpsam_confluency(img, method="probmap", **(
+        {"on_visual": segmentation_ready} if observer or details is not None else {}))
+    emit({"stage": "segmentation", "status": "complete", "visuals": dict(visuals),
+          "confluency_pct": conf_result.pct})
 
     # ── QC classification ──
     # The classifier expects ~256x256 tiles. For a full flask image,
@@ -58,7 +69,14 @@ def analyze(
     else:
         tile = cv2.resize(img, (tile_size, tile_size))
 
-    qc_result = qc_classify(tile, run_gradcam=True)
+    emit({"stage": "qc", "status": "running"})
+    def cam_ready(cam):
+        visuals["heatmap"] = qc_visual(cam, w, h)
+    qc_result = qc_classify(tile, run_gradcam=True, **(
+        {"on_visual": cam_ready} if observer or details is not None else {}))
+    if details is not None:
+        details.update(qc=qc_result, visuals=visuals)
+    emit({"stage": "qc", "status": "complete", "visuals": dict(visuals)})
 
     # ── Rules ──
     cfg = line_config or DEFAULT_CONFIG

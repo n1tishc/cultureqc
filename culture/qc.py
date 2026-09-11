@@ -104,7 +104,7 @@ def _preprocess(img: np.ndarray) -> "torch.Tensor":
     return torch.tensor(img3, dtype=torch.float32)
 
 def _gradcam_bboxes(img_tensor, target_class: int, threshold: float = 0.3,
-                    min_area_frac: float = 0.005, max_boxes: int = 8):
+                    min_area_frac: float = 0.005, max_boxes: int = 8, on_visual=None):
     """
     Multiple bounding boxes from Grad-CAM, one per activated region.
     Like object detection: each distinct hot spot gets its own box.
@@ -121,6 +121,9 @@ def _gradcam_bboxes(img_tensor, target_class: int, threshold: float = 0.3,
     cam_obj = _get_cam()
     targets = [ClassifierOutputTarget(target_class)]
     grayscale_cam = cam_obj(input_tensor=img_tensor.unsqueeze(0), targets=targets)[0]
+
+    if on_visual is not None:
+        on_visual(grayscale_cam)
 
     binary = (grayscale_cam > threshold).astype(np.uint8)
     tile_area = binary.shape[0] * binary.shape[1]
@@ -147,7 +150,7 @@ def _gradcam_bboxes(img_tensor, target_class: int, threshold: float = 0.3,
 # Public API
 # ---------------------------------------------------------------------------
 
-def qc_classify(img: np.ndarray, run_gradcam: bool = True) -> QCResult:
+def qc_classify(img: np.ndarray, run_gradcam: bool = True, on_visual=None) -> QCResult:
     """
     Classify a brightfield tile as normal / contamination_suspected /
     detachment / image_quality, with an optional Grad-CAM evidence bbox
@@ -171,7 +174,7 @@ def qc_classify(img: np.ndarray, run_gradcam: bool = True) -> QCResult:
     bboxes = []
     if run_gradcam:
         try:
-            bboxes = _gradcam_bboxes(img_tensor, pred_idx)
+            bboxes = _gradcam_bboxes(img_tensor, pred_idx, on_visual=on_visual)
         except Exception:
             bboxes = []
 

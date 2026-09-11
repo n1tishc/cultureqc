@@ -105,6 +105,7 @@ def cpsam_confluency(
     method: Literal["probmap", "instance"] = "probmap",
     thr: float = 0.0,
     band: float = 1.0,
+    on_visual=None,
 ) -> ConfluencyResult:
     """
     Confluency from Cellpose-SAM cpsam_v2.
@@ -145,6 +146,9 @@ def cpsam_confluency(
         pct = float(fg.mean() * 100)
         confidence = 0.7                                     # no calibrated confidence for instance
         extra = {"n_instances": int(masks.max())}
+
+    if on_visual is not None:
+        on_visual(flows[2], fg)
 
     return ConfluencyResult(
         pct=round(pct, 2),

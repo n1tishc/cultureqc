@@ -26,6 +26,9 @@ which states this rather than leaving it implied.
 
 from __future__ import annotations
 
+import asyncio
+import json
+import queue
 import base64
 import logging
 import os
@@ -38,6 +41,7 @@ import numpy as np
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.concurrency import run_in_threadpool
+from starlette.responses import StreamingResponse
 
 log = logging.getLogger("cultureqc.api")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s  %(message)s")
@@ -243,7 +247,8 @@ async def analyze_endpoint(
     target_confluency: float = Form(80.0),
     flask_id: str = Form(""),
     include_overlay: bool = Form(False),
-) -> dict:
+    stream: bool = Form(False),
+):
     name = os.path.basename(image.filename or "upload.png")
     ext = os.path.splitext(name)[1].lower()
     if ext not in ALLOWED_EXT:
@@ -267,12 +272,47 @@ async def analyze_endpoint(
     # coroutine would occupy the event loop for the whole inference and make the
     # server unresponsive to everything else, /health included, which is exactly
     # the signal the frontend's warming state depends on.
+    if stream:
+        events = queue.Queue()
+        stopped = threading.Event()
+        def emit(event):
+            if not stopped.is_set():
+                events.put(event)
+        def work():
+            try:
+                emit({"stage": "queued", "status": "waiting"})
+                result = _run(body, name, cell_line, target_confluency, flask_id, include_overlay, emit)
+                emit({"stage": "result", "result": result})
+            except Exception as exc:
+                emit({"stage": "error", "detail": str(getattr(exc, "detail", exc))})
+            finally:
+                emit(None)
+        async def chunks():
+            threading.Thread(target=work, daemon=True).start()
+            last_heartbeat = time.monotonic()
+            try:
+                while True:
+                    try:
+                        event = events.get_nowait()
+                    except queue.Empty:
+                        if time.monotonic() - last_heartbeat > 10:
+                            yield json.dumps({"stage": "heartbeat"}) + "\n"
+                            last_heartbeat = time.monotonic()
+                        await asyncio.sleep(0.1)
+                        continue
+                    if event is None:
+                        break
+                    yield json.dumps(event) + "\n"
+            finally:
+                stopped.set()
+        return StreamingResponse(chunks(), media_type="application/x-ndjson",
+                                 headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
     return await run_in_threadpool(
         _run, body, name, cell_line, target_confluency, flask_id, include_overlay)
 
 
 def _run(body: bytes, name: str, cell_line: str, target_confluency: float,
-         flask_id: str, include_overlay: bool) -> dict:
+         flask_id: str, include_overlay: bool, observer=None) -> dict:
     from culture.pipeline import analyze
     from culture.qc import qc_classify
     from culture.rules import LineConfig
@@ -296,16 +336,16 @@ def _run(body: bytes, name: str, cell_line: str, target_confluency: float,
                 raise HTTPException(400, "could not decode that image")
             h, w = img.shape[:2]
 
-            # analyze() keeps one evidence bbox; re-run on the same centre tile to
-            # recover the full per-class distribution and every box.
+            # Center-tile fallback for alternate pipeline adapters. The standard
+            # pipeline returns all QC details from its single classifier pass.
             if h >= TILE and w >= TILE:
                 cy, cx = h // 2, w // 2
                 tile = img[cy - TILE // 2: cy + TILE // 2, cx - TILE // 2: cx + TILE // 2]
             else:
                 tile = cv2.resize(img, (TILE, TILE))
 
-            # Both model calls under one lock: the chain write must not interleave,
-            # and the two of them are one logical analysis of the same image.
+            # Keep shared Grad-CAM hooks and the record-chain write serialized.
+            details = {}
             with _pipeline_lock:
                 record = analyze(
                     path,
@@ -314,11 +354,16 @@ def _run(body: bytes, name: str, cell_line: str, target_confluency: float,
                     line_config=cfg,
                     log_path=LOG_PATH,
                     image_ref=name,
+                    details=details,
+                    observer=observer,
                 )
-                qc = qc_classify(tile, run_gradcam=True)
+                qc = details.get("qc")
+                if qc is None:  # compatibility with alternate pipeline adapters
+                    qc = qc_classify(tile, run_gradcam=True)
             boxes = _boxes_normalised(qc, w, h)
 
             return {
+                "visuals": details.get("visuals", {}),
                 "confluency_pct": record["confluency_pct"],
                 "confluency_confidence": record["confluency_confidence"],
                 "confluency_method": record["confluency_method"],

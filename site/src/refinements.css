@@ -171,7 +171,7 @@
   min-height: 44px;
   border: 1px solid #b8cbd1;
   border-radius: 6px;
-  background: white;
+  background: var(--paper);
   padding: 8px 12px;
   font-size: 12px;
 }
