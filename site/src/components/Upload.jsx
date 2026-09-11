@@ -315,6 +315,12 @@ export default function Upload() {
           name: f.name,
           event: { stage: "queued", visuals: { raw: f.preview } },
         });
+        if (done === 0)
+          requestAnimationFrame(() => {
+            document
+              .getElementById("live-instrument")
+              ?.scrollIntoView({ block: "start", behavior: "instant" });
+          });
         try {
           const fd = new FormData();
           fd.append("image", f.file, f.name);
@@ -518,7 +524,11 @@ export default function Upload() {
           ))}
         </div>
       )}
-      {live && <Instrument {...live} />}
+      {live && (
+        <div id="live-instrument" style={{ scrollMarginTop: 80 }}>
+          <Instrument {...live} />
+        </div>
+      )}
       <div className={"upgrid rv" + (CAN_ANALYSE ? "" : " solo")}>
         <div>
           <label
