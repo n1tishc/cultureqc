@@ -1,4 +1,5 @@
 import Instrument, { NegativeResults } from "./Instrument";
+import MicroscopyPlayground from "./MicroscopyPlayground";
 import { Icon } from "./Workspace";
 
 export default function Home({ leaves, onInspect }) {
@@ -61,57 +62,17 @@ export default function Home({ leaves, onInspect }) {
           <p className="eyebrow">FROM IMAGE TO EVIDENCE</p>
           <h2 id="start-title">A focused workflow. At every step.</h2>
         </div>
-        <div className="start-grid workflow-cards">
-          <a href="#/demo" className="start-card">
-            <span className="start-icon">
-              <Icon name="scan" />
-            </span>
-            <div>
-              <span className="eyebrow">01 / EXPLORE</span>
-              <h3>Start with the evidence</h3>
-              <p>
-                Browse {leaves.length} recorded specimens. Compare images,
-                toggle segmentation overlays, and inspect quality scores.
-              </p>
-              <span className="start-link">
-                Open demo
-                <Icon name="arrow" />
-              </span>
-            </div>
+        <MicroscopyPlayground leaves={leaves} onInspect={onInspect} />
+        <div className="home-start-links">
+          <a href="#/upload" className="text-button">
+            <Icon name="upload" />
+            Bring your own images
+            <Icon name="arrow" />
           </a>
-          <a href="#/upload" className="start-card">
-            <span className="start-icon">
-              <Icon name="upload" />
-            </span>
-            <div>
-              <span className="eyebrow">02 / ANALYSE</span>
-              <h3>Bring your own images</h3>
-              <p>
-                Add microscopy images or a batch, run the analysis, and review
-                results in your own workspace.
-              </p>
-              <span className="start-link">
-                Upload images
-                <Icon name="arrow" />
-              </span>
-            </div>
-          </a>
-          <a href="#/audit" className="start-card">
-            <span className="start-icon">
-              <Icon name="shield" />
-            </span>
-            <div>
-              <span className="eyebrow">03 / VERIFY</span>
-              <h3>Follow the record</h3>
-              <p>
-                Review the analysis record and verify the sample audit trail
-                directly in your browser.
-              </p>
-              <span className="start-link">
-                Explore traceability
-                <Icon name="arrow" />
-              </span>
-            </div>
+          <a href="#/audit" className="text-button">
+            <Icon name="shield" />
+            Follow and verify the record
+            <Icon name="arrow" />
           </a>
         </div>
       </section>

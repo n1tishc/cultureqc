@@ -11,6 +11,10 @@ import { Integrate, Measure } from "./components/Overview";
 import { Dashboard, Explorer, Icon } from "./components/Workspace";
 import { FLAGGED_LEAF } from "./lib/labels";
 import Home from "./components/Home";
+import NotFound from "./components/NotFound";
+import EngineeringNotes from "./components/EngineeringNotes";
+import useUploadWorkspace from "./hooks/useUploadWorkspace";
+import { CONTACT, LINKEDIN_URL, REPO_URL } from "./config";
 import "./refinements.css";
 import "./instrument.css";
 import Instrument from "./components/Instrument";
@@ -29,24 +33,91 @@ const DEMO_NAV = [
 const INFO = [
   ["provenance", "Models & provenance", "layers"],
   ["integration", "Integration", "code"],
+  ["notes", "Engineering notes", "code"],
 ];
 const ROUTES = [...NAV, ...DEMO_NAV, ...INFO];
+
+/* Per-route <title>/description, restored on the way back to Home (F4, F14). */
+const HOME_TITLE =
+  "cultureQC — brightfield image analysis for automated cell culture";
+const HOME_DESCRIPTION =
+  "cultureQC reads one phase-contrast image and returns a confluency estimate, a QC flag with visual evidence, a recommended action, and a hash-chained record built for GMP traceability. Vendor-neutral software, not an instrument.";
+const TITLE_META = {
+  home: { label: "Home", title: HOME_TITLE, description: HOME_DESCRIPTION },
+  demo: {
+    label: "Image explorer",
+    title: "Image explorer · cultureQC",
+    description:
+      "Browse recorded specimens, toggle segmentation overlays, and inspect confluency and QC results.",
+  },
+  overview: {
+    label: "Dataset summary",
+    title: "Dataset summary · cultureQC",
+    description:
+      "Summary of the sample images in the demo dataset and their recorded analysis results.",
+  },
+  benchmarks: {
+    label: "Benchmarks",
+    title: "Benchmarks · cultureQC",
+    description:
+      "Confluency and contamination-recall benchmarks, and the honest limits behind them.",
+  },
+  audit: {
+    label: "Audit trail",
+    title: "Audit trail · cultureQC",
+    description:
+      "Recompute and verify the SHA-256 hash chain behind every analysed record, in your browser.",
+  },
+  upload: {
+    label: "Upload your data",
+    title: "Upload your data · cultureQC",
+    description:
+      "Analyse your own microscopy images and review confluency and quality flags.",
+  },
+  integration: {
+    label: "Integration",
+    title: "Integration · cultureQC",
+    description:
+      "Vendor-neutral integration: API shape, record schema, and a code sample.",
+  },
+  provenance: {
+    label: "Models & provenance",
+    title: "Models & provenance · cultureQC",
+    description:
+      "Model versions, training-data limitations, and the record schema behind every result.",
+  },
+  notes: {
+    label: "Engineering notes",
+    title: "Engineering notes · cultureQC",
+    description:
+      "Test suite, CI, training data, and the record schema behind cultureQC.",
+  },
+  notfound: {
+    label: "Not found",
+    title: "Page not found · cultureQC",
+    description: "This page does not exist.",
+  },
+};
+const NO_GENERIC_H1 = ["home", "overview", "analysis", "demo", "notfound", "notes"];
+
 function readRoute() {
   const value = location.hash.replace(/^#\/?/, "").split("?")[0];
   if (value === "analysis") return "demo";
-  return ROUTES.some(([id]) => id === value) ? value : "home";
+  if (value === "") return "home";
+  return ROUTES.some(([id]) => id === value) ? value : "notfound";
 }
 export default function App() {
   const [view, setView] = useState(readRoute);
   const [selected, setSelected] = useState(FLAGGED_LEAF);
   const [menu, setMenu] = useState(false);
-  // Visited pages stay mounted so uploads and verification survive navigation.
-  const [visited, setVisited] = useState(() => new Set([readRoute()]));
+  /* Upload/analysis state lives here, one level above every route, so the
+     Upload route can safely unmount on navigation (F2) without losing an
+     in-progress batch, and so the Audit route can fold analysed uploads into
+     the chain it displays (F8). */
+  const workspace = useUploadWorkspace();
   useEffect(() => {
     const sync = () => {
-      const next = readRoute();
-      setView(next);
-      setVisited((old) => new Set([...old, next]));
+      setView(readRoute());
       setMenu(false);
       window.scrollTo(0, 0);
       requestAnimationFrame(() =>
@@ -67,6 +138,18 @@ export default function App() {
     window.addEventListener("keydown", onEscape);
     return () => window.removeEventListener("keydown", onEscape);
   }, [menu]);
+  /* Per-route title, meta description, and OG tags (F4, F14). Home restores
+     the site's default descriptive title rather than leaving a stale one. */
+  useEffect(() => {
+    const meta = TITLE_META[view] || TITLE_META.home;
+    document.title = meta.title;
+    const setContent = (selector, value) => {
+      document.querySelector(selector)?.setAttribute("content", value);
+    };
+    setContent('meta[name="description"]', meta.description);
+    setContent('meta[property="og:title"]', meta.title);
+    setContent('meta[property="og:description"]', meta.description);
+  }, [view]);
   const go = (next) => {
     setMenu(false);
     if (view === next) window.scrollTo(0, 0);
@@ -76,7 +159,7 @@ export default function App() {
     setSelected(index);
     go("demo");
   };
-  const title = ROUTES.find(([id]) => id === view)[1];
+  const title = (TITLE_META[view] || TITLE_META.home).label;
   const navItem = ([id, label, icon]) => (
     <a
       key={id}
@@ -162,7 +245,9 @@ export default function App() {
               ? "Your workspace"
               : view === "home"
                 ? "Cell analysis"
-                : "Demo data"}
+                : view === "notes" || view === "notfound"
+                  ? "cultureQC"
+                  : "Demo data"}
           </span>
           <a className="button primary top-upload" href="#/upload">
             <Icon name="plus" />
@@ -170,14 +255,10 @@ export default function App() {
           </a>
         </header>
         <main id="main" tabIndex={-1}>
-          {!["home", "overview", "analysis", "demo"].includes(view) && (
+          {!NO_GENERIC_H1.includes(view) && (
             <h1 className="sr">{title}</h1>
           )}
-          {visited.has("home") && (
-            <div hidden={view !== "home"}>
-              <Home leaves={DATA.leaves} onInspect={inspect} />
-            </div>
-          )}
+          {view === "home" && <Home leaves={DATA.leaves} onInspect={inspect} />}
           {["demo", ...DEMO_NAV.map(([id]) => id)].includes(view) && (
             <div className="demo-context">
               <div>
@@ -209,52 +290,76 @@ export default function App() {
               </nav>
             </div>
           )}
-          {visited.has("demo") && (
-            <div hidden={view !== "demo"}>
+          {view === "demo" && (
+            <>
               <Instrument demo />
               <Explorer
                 leaves={DATA.leaves}
                 selected={selected}
                 onSelect={setSelected}
               />
+            </>
+          )}
+          {view === "overview" && (
+            <Dashboard leaves={DATA.leaves} onInspect={inspect} onGo={go} />
+          )}
+          {view === "upload" && (
+            <div className="page supporting">
+              <Upload workspace={workspace} />
             </div>
           )}
-          {visited.has("overview") && (
-            <div hidden={view !== "overview"}>
-              <Dashboard leaves={DATA.leaves} onInspect={inspect} onGo={go} />
-            </div>
-          )}
-          {visited.has("upload") && (
-            <div hidden={view !== "upload"} className="page supporting">
-              <Upload />
-            </div>
-          )}
-          {visited.has("benchmarks") && (
-            <div hidden={view !== "benchmarks"} className="page supporting">
+          {view === "benchmarks" && (
+            <div className="page supporting">
               <Measure onGo={go} />
               <MeasureTable leaves={DATA.leaves} />
               <Ladder ladder={DATA.ladder} />
             </div>
           )}
-          {visited.has("audit") && (
-            <div hidden={view !== "audit"} className="page supporting">
-              <Chain leaves={DATA.leaves} />
+          {view === "audit" && (
+            <div className="page supporting">
+              <Chain leaves={DATA.leaves} sessionFiles={workspace.files} />
             </div>
           )}
-          {visited.has("provenance") && (
-            <div hidden={view !== "provenance"} className="page supporting">
+          {view === "provenance" && (
+            <div className="page supporting">
               <Provenance />
             </div>
           )}
-          {visited.has("integration") && (
-            <div hidden={view !== "integration"} className="page supporting">
+          {view === "integration" && (
+            <div className="page supporting">
               <Integrate />
             </div>
           )}
+          {view === "notes" && (
+            <div className="page supporting">
+              <EngineeringNotes />
+            </div>
+          )}
+          {view === "notfound" && <NotFound />}
         </main>
         <footer className="app-footer">
           <span>cultureQC · Image to evidence.</span>
+          <a href="#/notes">Engineering notes</a>
           <a href="#/integration">Integration</a>
+          {REPO_URL ? (
+            <a href={REPO_URL} target="_blank" rel="noopener">
+              Source
+            </a>
+          ) : (
+            <span className="footer-pending">Source &mdash; pending</span>
+          )}
+          {LINKEDIN_URL ? (
+            <a href={LINKEDIN_URL} target="_blank" rel="noopener">
+              LinkedIn
+            </a>
+          ) : (
+            <span className="footer-pending">LinkedIn &mdash; pending</span>
+          )}
+          {CONTACT ? (
+            <a href={"mailto:" + CONTACT}>Contact</a>
+          ) : (
+            <span className="footer-pending">Contact &mdash; pending</span>
+          )}
           <a href="#/provenance">
             QC trained on synthetic data. View model limitations
             <Icon name="arrow" />

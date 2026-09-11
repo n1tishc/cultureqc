@@ -1,5 +1,7 @@
-/** Parse NDJSON across arbitrary network chunk boundaries; legacy JSON supported. */
-export async function readAnalysis(response, onEvent) {
+/** Parse NDJSON across arbitrary network chunk boundaries; legacy JSON supported.
+    `onAny`, if given, fires on every parsed line including heartbeats — the
+    caller's stall detector needs those to tell a slow server from a dead one. */
+export async function readAnalysis(response, onEvent, onAny) {
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
     throw Error(body.detail || `HTTP ${response.status}`);
@@ -13,6 +15,7 @@ export async function readAnalysis(response, onEvent) {
   function line(value) {
     if (!value.trim()) return;
     const event = JSON.parse(value);
+    onAny?.(event);
     if (event.stage === "error") throw Error(event.detail || "Analysis failed");
     if (event.stage === "result") result = event.result;
     else if (event.stage !== "heartbeat") onEvent(event);

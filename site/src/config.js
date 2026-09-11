@@ -2,7 +2,8 @@
 
 /* ─── swap these when the links exist ─── */
 export const DEMO_VIDEO = ""; /* URL of the console screen recording */
-export const REPO_URL = ""; /* public GitHub repository */
+export const REPO_URL = "https://github.com/n1tishc/cultureqc"; /* public GitHub repository */
+export const LINKEDIN_URL = ""; /* public LinkedIn profile */
 export const CONTACT = ""; /* contact email address, no mailto: prefix */
 
 /* Public analysis API, e.g. "https://api.example.org". Empty means none exists,

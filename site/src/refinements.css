@@ -445,3 +445,113 @@
     margin-left: auto;
   }
 }
+
+/* Engineering notes page */
+#sec-notes h2 {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  margin: 28px 0 10px;
+}
+#sec-notes h2:first-of-type {
+  margin-top: 8px;
+}
+#sec-notes p {
+  font-size: 13px;
+  line-height: 1.75;
+  color: var(--ink-2);
+  max-width: 80ch;
+}
+.notes-list {
+  margin: 0 0 4px;
+  padding-left: 20px;
+  font-size: 13px;
+  line-height: 1.75;
+  color: var(--ink-2);
+  max-width: 80ch;
+}
+.notes-list li + li {
+  margin-top: 8px;
+}
+.colophon {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border: 1px solid var(--paper-4);
+  border-radius: 8px;
+  margin: 20px 0 8px;
+}
+.colophon > div {
+  padding: 16px 18px;
+}
+.colophon > div + div {
+  border-left: 1px solid var(--paper-4);
+}
+.colophon h3 {
+  font-size: 11px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-weight: 600;
+  margin: 0 0 8px;
+}
+.colophon p {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--ink-2);
+  margin: 0;
+}
+@media (max-width: 700px) {
+  .colophon {
+    grid-template-columns: 1fr;
+  }
+  .colophon > div + div {
+    border-left: 0;
+    border-top: 1px solid var(--paper-4);
+  }
+}
+
+/* Not-found route */
+.not-found {
+  text-align: center;
+  padding: 60px 25px;
+}
+.not-found h1 {
+  font-size: 28px;
+  letter-spacing: -0.5px;
+  margin-bottom: 12px;
+}
+.not-found .lede {
+  margin: 0 auto 28px;
+}
+.not-found .actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+}
+
+.home-start-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 28px;
+  margin-top: 18px;
+}
+
+/* Session chain appended to the audit trail (F8) */
+.session-chain {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px dashed var(--paper-4);
+}
+.session-chain-label {
+  margin-bottom: 10px;
+}
+.crec[data-session="true"] {
+  background: var(--acc-soft, var(--paper-2));
+}
+
+/* Footer identity links (F6) */
+.app-footer .footer-pending {
+  color: var(--ink-3);
+  opacity: 0.6;
+}

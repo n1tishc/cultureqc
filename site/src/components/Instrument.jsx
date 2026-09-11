@@ -311,7 +311,8 @@ export default function Instrument({
       </div>
       {issue && (
         <p role="alert">
-          {issue} Retry the image using the upload controls below.
+          {issue} Retry the image using the upload controls below, or{" "}
+          <a href="#/demo">explore the demo dataset</a> instead.
         </p>
       )}
       <p className="instrument-note">

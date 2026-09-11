@@ -25,6 +25,18 @@ test("handles fragmented stage and final records, ignoring heartbeats", async ()
   assert.deepEqual(events, [{ stage: "segmentation", status: "running" }]);
   assert.deepEqual(result, { value: 42 });
 });
+test("onAny sees heartbeats so a caller can use them as a stall-timer reset", async () => {
+  const any = [];
+  await readAnalysis(
+    response([
+      '{"stage":"queued"}\n{"stage":"heartbeat"}\n',
+      '{"stage":"result","result":{"value":1}}',
+    ]),
+    () => {},
+    (e) => any.push(e.stage),
+  );
+  assert.deepEqual(any, ["queued", "heartbeat", "result"]);
+});
 test("rejects an interrupted stream instead of displaying a verdict", async () => {
   await assert.rejects(
     readAnalysis(response(['{"stage":"segmentation"}\n']), () => {}),
