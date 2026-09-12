@@ -70,15 +70,19 @@ either Space.
 ## Backend — HuggingFace Space
 
 Create a Space: **SDK Docker**, hardware **CPU Basic**, visibility **Public**
-(the frontend calls it without credentials). Then:
+(the frontend calls it without credentials). Then push it — `deploy/hf-space/`
+is tracked directly in this repo (no nested `.git`), so publishing goes through
+the Hub API rather than a git remote:
 
 ```bash
 python deploy/sync_space.py
-cd deploy/hf-space
-git init && git remote add origin https://huggingface.co/spaces/LongGrainRice/cultureqc-api
-git add -A && git commit -m "cultureQC API"
-git push -u origin main
+.venv/bin/python deploy/publish_space.py
 ```
+
+`publish_space.py` uploads `deploy/hf-space/` via `HfApi().upload_folder`,
+ignoring `.git`/`__pycache__`. Don't `git init` inside `deploy/hf-space/` —
+that would create a nested repo the main checkout can no longer track (this
+happened to `deploy/hf-space-demo/` and had to be undone).
 
 The image builds locally, which is worth doing before pushing — a failed Space
 build is a slow way to find a dependency problem:
@@ -125,14 +129,12 @@ for why it is a separate Space rather than the same one repurposed.
 Create a Space: **SDK Gradio**, hardware **ZeroGPU** (a repo setting you choose
 on the Space's own Settings page after creating it — ZeroGPU needs a signed-in
 HF account and, per Hugging Face, works best on a Pro account; plain CPU Basic
-also runs it, just without the GPU burst). Then:
+also runs it, just without the GPU burst). Then push it the same way as the
+API Space — `deploy/hf-space-demo/` is tracked directly in this repo too, so:
 
 ```bash
 python deploy/sync_space.py
-cd deploy/hf-space-demo
-git init && git remote add origin https://huggingface.co/spaces/LongGrainRice/cultureqc-demo
-git add -A && git commit -m "cultureQC raw model demo"
-git push -u origin main
+.venv/bin/python deploy/publish_demo_space.py
 ```
 
 Test locally first — `@spaces.GPU` is a documented no-op outside a real

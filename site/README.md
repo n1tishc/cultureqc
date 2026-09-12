@@ -14,11 +14,11 @@ npm run data     # regenerate src/data.json + public/img from pipeline output
 
 | Path | What it is |
 |---|---|
-| `src/App.jsx` | the hash router, persistent sidebar, and seven workspace views |
+| `src/App.jsx` | the hash router, persistent sidebar, and the workspace views |
 | `src/components/Workspace.jsx` | dataset overview, specimen explorer, and results inspector |
 | `src/components/` | shared microscopy viewer, upload, audit chain, benchmarks, and provenance |
 | `src/lib/` | `hash.js` (SHA-256 + canonical JSON), `zip.js`, `labels.js` |
-| `src/styles.css` | the whole visual world, one file |
+| `src/styles.css` | the base visual world; `refinements.css` and `instrument.css` layer on top (both imported by `App.jsx`, `instrument.css` last so its dark-theme tokens win) |
 | `src/config.js` | `ANALYSIS_API` and the deployment-state constants |
 | `src/data.json` | **generated** — real pipeline output the page renders |
 | `assets/` | source images, fonts, and the scripts that produce them |
@@ -40,23 +40,31 @@ the one thing this page cannot do. CI re-runs the script and fails on any diff.
 
 ## Workspace views
 
-Seven views share a persistent sidebar and a responsive application shell. The
-redesign references and decisions are in `docs/FRONTEND_REDESIGN.md` at the repo root.
+A persistent sidebar (Home, Demo, Upload your data) and a responsive
+application shell wrap the routes below. `#/demo` carries its own sub-nav
+(dataset summary, image explorer, benchmarks, audit trail); provenance,
+integration and engineering notes sit in the footer. The redesign references
+and decisions are in `docs/FRONTEND_REDESIGN.md` at the repo root.
 
 | Route | View | What it is for |
 |---|---|---|
-| `#/overview` (default) | **Overview** | Dataset counts, quality breakdown, an interactive microscopy preview, and searchable/filterable specimen records. |
-| `#/analysis` | **Specimen explorer** | Searchable specimen library, microscopy overlays, results inspector, original JSON record, hash copy, and record export. |
+| `#/home` (default) | **Home** | Full-bleed hero over a real specimen field, the product pitch, and entry points into the demo and upload flows. |
+| `#/demo` (`#/analysis` redirects here) | **Image explorer** | The interactive microscopy viewer plus a searchable specimen library, overlays, results inspector, original JSON record, hash copy, and record export. |
+| `#/overview` | **Dataset summary** | Dataset counts, quality breakdown, and an interactive microscopy preview. |
 | `#/upload` | **Your images** | Image and ZIP intake, hashing, analysis connection, batch processing, and manifest verification. |
 | `#/benchmarks` | **Benchmarks** | Evaluation comparison, recorded confluency table, and interactive severity matrix. |
 | `#/audit` | **Audit trail** | Browser-side SHA-256 verification and tamper/restore demonstration. |
 | `#/provenance` | **Models & provenance** | Training sources, model limits, and evaluation disclosures. |
 | `#/integration` | **Integration** | Python integration and record-schema explanation. |
+| `#/notes` | **Engineering notes** | Test suite, CI, training data, and the record schema behind the project. |
 
 Browser back/forward work, and `aria-current` identifies the current route.
-Pages mount on their first visit and remain mounted while hidden, so uploads,
-filters, and audit verification survive navigation. Mobile navigation opens from
-the header menu and closes on selection, Escape, or the backdrop.
+Views mount and unmount on navigation rather than staying alive off-screen —
+what has to survive a route change (an in-progress upload batch, analysed
+records for the audit chain) is lifted into `useUploadWorkspace`, one level
+above every route, instead of being kept via a hidden-but-mounted page. Mobile
+navigation opens from the header menu and closes on selection, Escape, or the
+backdrop.
 
 ## Running your own images
 
@@ -108,14 +116,17 @@ lives for a visitor.
 `src/config.js`:
 
 ```js
-export const DEMO_VIDEO = "";   /* URL of the console screen recording */
-export const REPO_URL   = "";   /* public GitHub repository */
-export const CONTACT    = "";   /* contact email address, no mailto: prefix */
+export const DEMO_VIDEO   = "";   /* URL of the console screen recording */
+export const REPO_URL     = "https://github.com/n1tishc/cultureqc";
+export const LINKEDIN_URL = "";   /* public LinkedIn profile */
+export const CONTACT      = "";   /* contact email address, no mailto: prefix */
 ```
 
-While a value is empty the page does not render a dead link: the Source and
-Get-in-touch buttons are omitted entirely, and the primary **See it run** action
-falls back to the analysis view. Fill any of the three and its link appears.
+`REPO_URL` is already set, so the footer's **Source** link renders. While
+`LINKEDIN_URL` or `CONTACT` stays empty the page does not render a dead link:
+the LinkedIn and Contact footer links are omitted entirely. Fill either and its
+link appears. (`DEMO_VIDEO` is currently unused by any component — grep before
+relying on it.)
 
 `ANALYSIS_API` in the same file is the one switch between "hosted visitors get a
 verifiable manifest" and "hosted visitors get real verdicts". Anything answering
