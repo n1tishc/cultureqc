@@ -1,0 +1,9 @@
+# Per-line decision thresholds for A172
+# Place in configs/lines/A172.yaml
+
+cell_line: A172
+target_confluency: 80.0
+min_hours_since_passage: 24.0
+feed_interval_h: 24.0
+qc_review_threshold: 0.7
+confluency_confidence_floor: 0.3

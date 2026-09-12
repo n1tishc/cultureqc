@@ -1,0 +1,28 @@
+# ZeroGPU accepts a fixed set of torch builds: 2.8.0, 2.9.1, 2.10.0, 2.11.0 (CUDA
+# wheels only). This is pinned exactly rather than lower-bounded like
+# hf-space/requirements.txt — a resolver picking anything outside that set fails
+# ZeroGPU allocation outright, so it is not something to leave to chance. No
+# --extra-index-url here: the plain PyPI wheel already ships CUDA support, and
+# is a no-op on CPU (torch.cuda.is_available() just returns False locally).
+torch==2.9.1
+torchvision==0.24.1
+
+# Deliberately not listing gradio here: this is a Gradio-SDK Space, so
+# `sdk_version` in README.md's frontmatter already pins a matched
+# gradio+gradio_client pair in the base image. Adding an unpinned `gradio`
+# constraint here let pip upgrade gradio to a newer release than the
+# preinstalled gradio_client on a real deploy, and the two diverged enough to
+# break the server's own /info schema endpoint (breaks gradio_client.predict()
+# and the "Use via API" tab, though not the interactive Blocks UI). Bump the
+# gradio version by bumping sdk_version instead, so both move together.
+spaces>=0.30          # the @spaces.GPU decorator / ZeroGPU runtime shim
+
+cellpose>=4.0             # Cellpose-SAM (cpsam) — culture/seg.py
+timm>=1.0                 # EfficientNet-B0 backbone — culture/qc.py
+grad-cam>=1.5              # imports as pytorch_grad_cam; the evidence boxes
+huggingface_hub>=0.20      # pulls the QC checkpoint at startup
+scikit-image>=0.22         # threshold_otsu, the baseline in culture/seg.py
+opencv-python-headless>=4.8
+Pillow>=10.0
+numpy>=1.26
+PyYAML>=6.0
