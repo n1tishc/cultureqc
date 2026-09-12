@@ -79,6 +79,11 @@ def _get_model():
         _model = timm.create_model("efficientnet_b0", pretrained=False, num_classes=len(CLASS_NAMES))
         _model.load_state_dict(ckpt["model_state"])
         _model.eval()
+        # Same device-selection idiom culture/seg.py uses for Cellpose-SAM: True
+        # on real GPU hardware, and — inside an @spaces.GPU call on a ZeroGPU
+        # Space — also True there, since `import spaces` makes that check succeed
+        # for the duration of the call. False (CPU) everywhere else.
+        _model = _model.to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
     return _model
 
 
@@ -162,7 +167,7 @@ def qc_classify(img: np.ndarray, run_gradcam: bool = True, on_visual=None) -> QC
     import torch
 
     model = _get_model()
-    img_tensor = _preprocess(img)
+    img_tensor = _preprocess(img).to(next(model.parameters()).device)
 
     with torch.no_grad():
         logits = model(img_tensor.unsqueeze(0))

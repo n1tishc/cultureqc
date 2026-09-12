@@ -2,24 +2,25 @@
 
 ## Current working deployment
 
-The complete application is hosted at
-https://longgrainrice-cultureqc-api.hf.space/#/home. The Space serves the built
-React frontend and FastAPI on the same origin. The previously documented
-`cultureqc.vercel.app` URL returned `DEPLOYMENT_NOT_FOUND` during verification
-on September 9, 2026. The separate Vercel topology below remains optional.
+The product frontend is hosted at https://cultureqc.vercel.app, confirmed live
+again as of September 11, 2026 (the `DEPLOYMENT_NOT_FOUND` noted here on
+September 9 has resolved). It talks cross-origin to the Space, which is the
+model and the `/analyze` API — nothing else. The Space briefly also served the
+built frontend as a same-origin fallback while Vercel was down; that fallback
+has been removed now that Vercel is back, so a visitor opening the Space URL
+directly sees API metadata (or the Gradio demo below), not the product site.
 
 Publish from the repository with your existing Hugging Face login:
 
 ```bash
 python deploy/sync_space.py
-npm run build
 .venv/bin/python -m pytest deploy/hf-space/test_api.py -q
 .venv/bin/python deploy/publish_space.py
 # Wait for /health to report models_loaded: true, then run real inference:
 .venv/bin/python deploy/smoke_space.py
 ```
 
-The publisher stages only Space source files and the built frontend. Model
+The publisher stages only Space source files — no frontend build. Model
 weights continue to load from their existing repositories. The smoke test runs
 four synthetic QC fixtures and verifies classes, output ranges, evidence boxes,
 input hashes, and returned record hashes. It is a deployment regression check,
@@ -46,22 +47,25 @@ manifest — even when the API is asleep or gone.
 
 | Path | What it is |
 |---|---|
-| `deploy/hf-space/` | the Space, pushable as-is |
+| `deploy/hf-space/` | the product's backend Space, pushable as-is |
 | `deploy/hf-space/api.py` | the FastAPI app; the only entrypoint |
-| `deploy/hf-space/culture/`, `config/` | **generated** — see sync, below |
-| `deploy/sync_space.py` | copies the pipeline into the Space |
+| `deploy/hf-space-demo/` | a separate Gradio + ZeroGPU demo Space |
+| `deploy/hf-space-demo/app.py` | the Gradio Blocks app; the only entrypoint |
+| `*/culture/`, `*/config/` | **generated** in both Spaces — see sync, below |
+| `deploy/sync_space.py` | copies the pipeline into both Spaces |
 | `vercel.json` | builds `site/` with Vite and serves `site/dist` |
 
-`culture/` and `config/` inside the Space are copies. Keeping a second
+`culture/` and `config/` inside each Space are copies. Keeping a second
 hand-edited copy of the analysis code is how a deployed pipeline quietly stops
 being the one in the repo, so they are generated:
 
 ```bash
-python deploy/sync_space.py            # refresh the copies
+python deploy/sync_space.py            # refresh the copies in both Spaces
 python deploy/sync_space.py --check    # report drift, exit 1 if any
 ```
 
-Run the sync after any change under `culture/` or `config/`, before pushing.
+Run the sync after any change under `culture/` or `config/`, before pushing
+either Space.
 
 ## Backend — HuggingFace Space
 
@@ -107,6 +111,53 @@ rather than queueing, which is what the page's warming state reads.
 No weights need uploading. `culture/qc.py` already pulls its checkpoint from
 `LongGrainRice/cultureqc-qc-effnetb0-v1` via `hf_hub_download`, and Cellpose-SAM
 downloads itself on first construction.
+
+## Demo — Gradio + ZeroGPU
+
+`deploy/hf-space-demo/` is a second, separate Space: a Gradio UI over the same
+`culture.pipeline.analyze()`, for sending a link to one person so they can see
+the raw model output — the field, the mask, the Grad-CAM heatmap, the
+confluency estimate, the QC verdict, the full signed record — without the
+product's UI in front of it. It does not carry the product's `/analyze`
+contract and the product does not call it; see `deploy/hf-space-demo/README.md`
+for why it is a separate Space rather than the same one repurposed.
+
+Create a Space: **SDK Gradio**, hardware **ZeroGPU** (a repo setting you choose
+on the Space's own Settings page after creating it — ZeroGPU needs a signed-in
+HF account and, per Hugging Face, works best on a Pro account; plain CPU Basic
+also runs it, just without the GPU burst). Then:
+
+```bash
+python deploy/sync_space.py
+cd deploy/hf-space-demo
+git init && git remote add origin https://huggingface.co/spaces/LongGrainRice/cultureqc-demo
+git add -A && git commit -m "cultureQC raw model demo"
+git push -u origin main
+```
+
+Test locally first — `@spaces.GPU` is a documented no-op outside a real
+ZeroGPU Space, so this exercises every code path except the actual GPU
+attachment:
+
+```bash
+cd deploy/hf-space-demo
+../../.venv/bin/pip install -r requirements.txt   # adds gradio + spaces to .venv
+../../.venv/bin/python app.py                      # http://127.0.0.1:7860
+```
+
+Two things worth knowing before relying on this for speed:
+
+- **ZeroGPU quota is per visitor**, not a budget a backend can draw against on
+  every request — which is the reason this is not how the product's own
+  `/analyze` gets faster. It suits "a link I send to someone," not automated
+  traffic.
+- **The `@spaces.GPU(duration=...)` on `_run_analysis` in `app.py` is a
+  starting guess (60s)**, not a measured number — this repo has no real
+  ZeroGPU timing yet. `hf-space/README.md`'s CPU figures (21.8s for a 256×256
+  tile in the Docker image) are the closest reference. Watch the first few
+  real runs and adjust; too generous a duration fails a low-quota visitor with
+  `quota exceeded` before the call even starts, too small risks the run being
+  cut off.
 
 ## Frontend — Vercel
 
