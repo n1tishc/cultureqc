@@ -34,7 +34,7 @@ export default function MicroscopyPlayground({ leaves, onInspect }) {
   );
   const scene = useRef(null);
   const drag = useRef(null);
-  const angles = useRef({ x: 48, z: -26 });
+  const angles = useRef({ x: 44, z: -18 });
   const introTimer = useRef(null);
   const leaf = leaves[selected];
   const paint = () => {
@@ -64,7 +64,7 @@ export default function MicroscopyPlayground({ leaves, onInspect }) {
   }, []);
   const reset = () => {
     cancelIntro();
-    angles.current = { x: 48, z: -26 };
+    angles.current = { x: 44, z: -18 };
     paint();
   };
   /* A brief, one-time nudge on load signals "this rotates" without turning
@@ -104,7 +104,7 @@ export default function MicroscopyPlayground({ leaves, onInspect }) {
           <i />
           The image, unpacked
         </span>
-        <span>INTERACTIVE DEMO</span>
+        <span>Interactive demo</span>
       </div>
       <div
         className="micro-stage"

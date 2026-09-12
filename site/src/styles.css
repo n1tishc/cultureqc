@@ -1224,8 +1224,10 @@ input::placeholder {
   display: flex;
   gap: 8px;
   align-items: center;
+  width: 100%;
   background: color-mix(in srgb, currentColor 7%, white);
-  padding: 10px 12px;
+  border-left: 3px solid currentColor;
+  padding: 12px 14px;
   border-radius: 6px;
   margin-top: 10px;
 }
@@ -2608,13 +2610,11 @@ input::placeholder {
 .clean-shell .page-heading p { font-size: 14px; }
 .clean-shell .button { min-height: 44px; font-size: 13px; }
 .home-page { max-width: 1440px; margin: auto; padding: 56px 48px 24px; }
-.home-intro { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: center; padding-bottom: 56px; }
 .eyebrow { font-size: 11px; letter-spacing: 1.4px; font-weight: 600; color: var(--acc-2); }
 .home-copy > .eyebrow { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; }
 .home-copy h1 { font-size: clamp(34px, 3.5vw, 54px); letter-spacing: -1.8px; font-weight: 560; line-height: 1.12; margin-bottom: 24px; }
 .home-description { max-width: 480px; font-size: 16px; line-height: 1.75; color: var(--ink-2); }
 .home-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
-.home-note { font-size: 12px; color: var(--ink-3); margin: 16px 0 0; }
 .home-specimen { margin: 0; background: var(--paper); border: 1px solid var(--paper-4); border-radius: 10px; overflow: hidden; }
 .home-image-heading { display: flex; justify-content: space-between; gap: 12px; padding: 16px; font-size: 11px; color: var(--ink-2); }
 .home-image-heading span:first-child { display: flex; align-items: center; gap: 8px; }
@@ -2649,7 +2649,6 @@ input::placeholder {
 .demo-context nav a[aria-current] { color: var(--acc-2); border-color: var(--acc); }
 @media (max-width: 1100px) {
  .home-page { padding: 32px 28px; }
- .home-intro { gap: 28px; }
  .home-specimen > img { height: 240px; }
  .home-specimen figcaption { padding: 14px; gap: 8px; }
  .start-card { padding: 22px; gap: 14px; }
@@ -2657,7 +2656,6 @@ input::placeholder {
 @media (max-width: 760px) {
  .clean-shell .app-body { margin-left: 0; }
  .home-page { padding: 32px 20px 16px; }
- .home-intro { grid-template-columns: 1fr; padding-bottom: 32px; }
  .home-copy h1 { font-size: 40px; }
  .home-description { font-size: 15px; }
  .start-grid { grid-template-columns: 1fr; }

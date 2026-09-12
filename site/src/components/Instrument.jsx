@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Counter from "./Counter";
 import { RM } from "../lib/motion";
 import { sha256, canonJSON } from "../lib/hash";
+import { FLAG_TONE } from "../lib/labels";
 
 const stages = [
   "Raw field",
@@ -33,7 +34,7 @@ export function RecordLink({ record, canonical }) {
   return (
     <div className="instrument-log">
       <div>
-        <span className="eyebrow">INSTRUMENT LOG / SHA-256</span>
+        <span className="kicker">Instrument log · SHA-256</span>
         <a href="#/audit">Verify sample chain →</a>
       </div>
       <div className="hash-link">
@@ -286,7 +287,7 @@ export default function Instrument({
           </span>
         </div>
         <aside className="instrument-readout">
-          <p className="eyebrow">FIELD COVERAGE</p>
+          <p className="kicker">Field coverage</p>
           <div className="confluency-readout">
             {current >= 2 && pct != null ? (
               <>
@@ -319,6 +320,13 @@ export default function Instrument({
                     setLayers((l) => ({ ...l, [key]: e.target.checked }))
                   }
                 />
+                {visuals[key] && (
+                  <span
+                    className="layer-swatch"
+                    style={{ backgroundImage: `url(${visuals[key]})` }}
+                    aria-hidden="true"
+                  />
+                )}
                 {label}
               </label>
             ))}
@@ -326,7 +334,10 @@ export default function Instrument({
           {current >= 3 && !visuals.heatmap && (
             <p>Grad-CAM heatmap unavailable for this run.</p>
           )}
-          <div className="verdict">
+          <div
+            className="verdict"
+            data-v={current === 4 && record ? FLAG_TONE[record.qc_flag] : undefined}
+          >
             <span className="kicker">QC verdict</span>
             <strong>
               {current === 4 && record
