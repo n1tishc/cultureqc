@@ -25,6 +25,20 @@ const IDLE_TIMEOUT_MS = 45000;
 const IDLE_MESSAGE =
   "No response from the analysis service for a while — it may be stuck.";
 
+/* The server analyses one image at a time by design (deploy/hf-space/api.py's
+   _pipeline_lock — concurrent calls would race on the chain's tail hash and
+   share mutable Grad-CAM hook state across a singleton model). Sending
+   requests in parallel from here wouldn't make inference faster on that
+   hardware, so the honest lever is visibility: a real per-item queue and an
+   ETA once the first image has actually finished. */
+function fmtDuration(ms) {
+  const s = Math.round(ms / 1000);
+  if (s < 60) return s + "s";
+  const m = Math.floor(s / 60);
+  const r = s % 60;
+  return r ? m + "m " + r + "s" : m + "m";
+}
+
 /* One hash chain across the whole batch, built in the browser. Returns a new
    array — every worker's result is folded in before this runs, so nothing here
    is mutating a record another async task still holds. */
@@ -63,6 +77,13 @@ export default function useUploadWorkspace() {
     text: "Manifest built — not yet analysed",
   });
   const [analysing, setAnalysing] = useState(false);
+  /* Three stages the visitor actually moves through: pick images, watch them
+     get analysed, review what came back. Kept in this hook (not in Upload.jsx)
+     so a mid-run visitor who navigates away and back — or who lands on the
+     Audit route while a batch runs — doesn't get dropped back to "collect" by
+     the Upload route unmounting (F2/F8). */
+  const [phase, setPhase] = useState("collect");
+  const [analysingHash, setAnalysingHash] = useState(null);
   const [endpoint, setEndpoint] = useState(START_ENDPOINT);
   const [epField, setEpField] = useState(START_ENDPOINT);
   const [conn, setConn] = useState({
@@ -119,7 +140,7 @@ export default function useUploadWorkspace() {
           name: "Analysis ready",
           text: (
             <>
-              The connected pipeline is warm. Add your images, then select
+              Pipeline ready. Add your images, then select
               Analyse — each image is sent to <code>{base}</code> for
               confluency and QC scoring; hashing and manifesting always happen
               here in your browser.
@@ -300,13 +321,23 @@ export default function useUploadWorkspace() {
   async function analyseBatch() {
     if (analysing || !connected) return;
     setAnalysing(true);
+    setPhase("processing");
     cancelled.current = false;
 
     const todo = files.filter((f) => !f.result && !f.error);
     const queue = todo.slice();
     const outcomes = new Map();
+    const durations = [];
     let done = 0;
-    const tick = () =>
+    const tick = () => {
+      const avg = durations.length
+        ? durations.reduce((a, b) => a + b, 0) / durations.length
+        : null;
+      const remaining = todo.length - done;
+      const eta =
+        avg && remaining > 0
+          ? " · ~" + fmtDuration(avg * remaining) + " remaining"
+          : "";
       setProg({
         bar: done / Math.max(todo.length, 1),
         text:
@@ -314,13 +345,16 @@ export default function useUploadWorkspace() {
           done +
           " of " +
           todo.length +
-          (cancelled.current ? " — cancelled" : "…"),
+          (cancelled.current ? " — cancelled" : "…" + eta),
       });
+    };
     tick();
 
     const worker = async () => {
       while (queue.length && !cancelled.current) {
         const f = queue.shift();
+        const itemStart = Date.now();
+        setAnalysingHash(f.hash);
         setLive({
           name: f.name,
           event: { stage: "queued", visuals: { raw: f.preview } },
@@ -382,6 +416,7 @@ export default function useUploadWorkspace() {
           }
           outcomes.set(f, { result: j });
           setLive({ name: f.name, result: j });
+          durations.push(Date.now() - itemStart);
         } catch (e) {
           clearTimeout(idleTimer);
           /* A user-initiated stop is not a failure of this field — it is left
@@ -393,10 +428,12 @@ export default function useUploadWorkspace() {
               e.name === "AbortError" ? IDLE_MESSAGE : String(e.message || e);
             outcomes.set(f, { error: message.slice(0, 160) });
             setLive({ name: f.name, error: message });
+            durations.push(Date.now() - itemStart);
           }
         } finally {
           inFlight.current = null;
         }
+        setAnalysingHash(null);
         done++;
         const partial = files.map((item) =>
           outcomes.has(item) ? { ...item, ...outcomes.get(item) } : item,
@@ -424,6 +461,13 @@ export default function useUploadWorkspace() {
           " analysed · manifest re-chained with the verdicts",
     });
     setAnalysing(false);
+    /* Always land on Results, even a cancelled or all-pending run: it shows
+       what actually happened (including "Cancelled — 0 of N analysed" with
+       the row still pending) rather than the run silently vanishing back to
+       Collect the instant Stop is pressed. Returning to Collect is then a
+       deliberate act — Upload more images — never an automatic side effect
+       of cancelling. */
+    setPhase("results");
   }
 
   /* Used to only flip a flag the loop checked between images — if the current
@@ -469,7 +513,14 @@ export default function useUploadWorkspace() {
     setLive(null);
     setError("");
     setProg({ bar: 0, text: "Manifest built — not yet analysed" });
+    setPhase("collect");
     if (fileInput?.current) fileInput.current.value = "";
+  }
+
+  /* Returning to Collect never touches files or results — it only brings the
+     dropzone back so a visitor can add more, exactly where they left off. */
+  function backToCollect() {
+    setPhase("collect");
   }
 
   return {
@@ -479,6 +530,8 @@ export default function useUploadWorkspace() {
     error,
     prog,
     analysing,
+    phase,
+    analysingHash,
     endpoint,
     epField,
     setEpField,
@@ -492,6 +545,7 @@ export default function useUploadWorkspace() {
     cancelAnalysis,
     retryFailed,
     clearAll,
+    backToCollect,
     ANALYSIS_API,
     LOCAL_TOOLING,
     DEFAULT_ENDPOINT,

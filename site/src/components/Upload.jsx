@@ -1,4 +1,5 @@
 import Instrument from "./Instrument";
+import { Icon } from "./Workspace";
 import { useRef, useState } from "react";
 import {
   ANALYSIS_API,
@@ -15,6 +16,8 @@ import {
   pad2,
 } from "../lib/labels";
 
+const PHASE_STEP = { collect: 0, processing: 1, results: 2 };
+
 export default function Upload({ workspace }) {
   const {
     files,
@@ -23,6 +26,8 @@ export default function Upload({ workspace }) {
     error,
     prog,
     analysing,
+    phase,
+    analysingHash,
     endpoint,
     epField,
     setEpField,
@@ -36,6 +41,7 @@ export default function Upload({ workspace }) {
     cancelAnalysis,
     retryFailed,
     clearAll,
+    backToCollect,
   } = workspace;
   const [drag, setDrag] = useState(false);
   const fileInput = useRef(null);
@@ -104,11 +110,7 @@ export default function Upload({ workspace }) {
         ].map(([title, detail], i) => (
           <li
             key={title}
-            aria-current={
-              (analysing ? 1 : done.length ? 2 : files.length ? 1 : 0) === i
-                ? "step"
-                : undefined
-            }
+            aria-current={PHASE_STEP[phase] === i ? "step" : undefined}
           >
             <span>{String(i + 1).padStart(2, "0")}</span>
             <div>
@@ -152,98 +154,172 @@ export default function Upload({ workspace }) {
           <Instrument {...live} />
         </div>
       )}
+      {phase === "collect" && (
       <div className={"upgrid rv" + (CAN_ANALYSE ? "" : " solo")}>
         <div>
-          <label
-            className="dropzone"
-            id="dropzone"
-            htmlFor="filein"
-            data-drag={drag ? "on" : "off"}
-            onDragEnter={(e) => {
-              e.preventDefault();
-              setDrag(true);
-            }}
-            onDragOver={(e) => {
-              e.preventDefault();
-              setDrag(true);
-            }}
-            onDragLeave={(e) => {
-              e.preventDefault();
-              if (!e.currentTarget.contains(e.relatedTarget)) setDrag(false);
-            }}
-            onDrop={(e) => {
-              e.preventDefault();
-              setDrag(false);
-              const list = [...(e.dataTransfer.files || [])];
-              if (list.length) ingest(list);
-            }}
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              aria-hidden="true"
-            >
-              <path
-                d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+          {files.length === 0 ? (
+            <>
+              <label
+                className="dropzone"
+                id="dropzone"
+                htmlFor="filein"
+                data-drag={drag ? "on" : "off"}
+                onDragEnter={(e) => {
+                  e.preventDefault();
+                  setDrag(true);
+                }}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setDrag(true);
+                }}
+                onDragLeave={(e) => {
+                  e.preventDefault();
+                  if (!e.currentTarget.contains(e.relatedTarget)) setDrag(false);
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setDrag(false);
+                  const list = [...(e.dataTransfer.files || [])];
+                  if (list.length) ingest(list);
+                }}
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M3 15v3.5A1.5 1.5 0 0 0 4.5 20h15a1.5 1.5 0 0 0 1.5-1.5V15"
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <p className="dzmain">Drop images or a .zip</p>
+                <p className="dzsub" id="dz-help">
+                  or click to choose &middot; <b>png jpg tif bmp webp zip</b>
+                  <br />
+                  up to <b id="dz-cap">{MAX_FILES}</b> files &middot;{" "}
+                  <span id="dz-privacy">
+                    {/* The privacy line has to track reality: once an endpoint is
+                        connected the bytes really do leave, and the dropzone must
+                        not still promise they don't. */}
+                    {connected
+                      ? "analysed files are sent to the endpoint you connected"
+                      : "your files stay in this browser"}
+                  </span>
+                </p>
+                {/* The zone is a <label for=filein>: click and keyboard activation
+                    are native, and the real file input carries focus and the
+                    accessible name. No JS needed. */}
+                <input
+                  type="file"
+                  id="filein"
+                  disabled={analysing}
+                  ref={fileInput}
+                  multiple
+                  aria-describedby="dz-help"
+                  aria-label="Choose images or a ZIP archive to analyse"
+                  accept=".png,.jpg,.jpeg,.tif,.tiff,.bmp,.webp,.zip,image/*,application/zip"
+                  onChange={(e) => {
+                    if (e.target.files.length) ingest([...e.target.files]);
+                  }}
+                />
+              </label>
+              <p className="foot" id="dz-error" role="alert">
+                {error}
+              </p>
+              <p className="foot" id="data-handling">
+                <strong>What happens to your files</strong> Hashing and
+                manifest chaining always happen locally, in this browser.{" "}
+                {CAN_ANALYSE ? (
+                  <>
+                    When connected, each image is also sent to{" "}
+                    <code>{endpoint}</code> for confluency and QC analysis;
+                    the service discards the file right after processing it
+                    and keeps only the resulting record, in a log that resets
+                    when the service restarts.
+                  </>
+                ) : (
+                  "This build has no analysis endpoint configured, so nothing ever leaves your browser."
+                )}
+              </p>
+            </>
+          ) : (
+            <div className="upload-preview" id="upload-preview">
+              <input
+                type="file"
+                id="filein"
+                disabled={analysing}
+                ref={fileInput}
+                multiple
+                className="sr"
+                aria-label="Choose more images or a ZIP archive to analyse"
+                accept=".png,.jpg,.jpeg,.tif,.tiff,.bmp,.webp,.zip,image/*,application/zip"
+                onChange={(e) => {
+                  if (e.target.files.length) ingest([...e.target.files]);
+                }}
               />
-              <path
-                d="M3 15v3.5A1.5 1.5 0 0 0 4.5 20h15a1.5 1.5 0 0 0 1.5-1.5V15"
-                strokeLinecap="round"
-              />
-            </svg>
-            <p className="dzmain">Drop images or a .zip</p>
-            <p className="dzsub" id="dz-help">
-              or click to choose &middot; <b>png jpg tif bmp webp zip</b>
-              <br />
-              up to <b id="dz-cap">{MAX_FILES}</b> files &middot;{" "}
-              <span id="dz-privacy">
-                {/* The privacy line has to track reality: once an endpoint is
-                    connected the bytes really do leave, and the dropzone must
-                    not still promise they don't. */}
-                {connected
-                  ? "analysed files are sent to the endpoint you connected"
-                  : "your files stay in this browser"}
-              </span>
-            </p>
-            {/* The zone is a <label for=filein>: click and keyboard activation
-                are native, and the real file input carries focus and the
-                accessible name. No JS needed. */}
-            <input
-              type="file"
-              id="filein"
-              disabled={analysing}
-              ref={fileInput}
-              multiple
-              aria-describedby="dz-help"
-              aria-label="Choose images or a ZIP archive to analyse"
-              accept=".png,.jpg,.jpeg,.tif,.tiff,.bmp,.webp,.zip,image/*,application/zip"
-              onChange={(e) => {
-                if (e.target.files.length) ingest([...e.target.files]);
-              }}
-            />
-          </label>
-          <p className="foot" id="dz-error" role="alert">
-            {error}
-          </p>
-          <p className="foot" id="data-handling">
-            <strong>What happens to your files</strong> Hashing and manifest
-            chaining always happen locally, in this browser.{" "}
-            {CAN_ANALYSE ? (
-              <>
-                When connected, each image is also sent to{" "}
-                <code>{endpoint}</code> for confluency and QC analysis; the
-                service discards the file right after processing it and keeps
-                only the resulting record, in a log that resets when the
-                service restarts.
-              </>
-            ) : (
-              "This build has no analysis endpoint configured, so nothing ever leaves your browser."
-            )}
-          </p>
+              <div className="stats">
+                <Stat k="Files" v={String(files.length)} />
+                <Stat
+                  k="Total size"
+                  v={fmtBytes(files.reduce((a, f) => a + f.size, 0))}
+                />
+                <Stat
+                  cls="q"
+                  k="Ready"
+                  v={pending ? pending + " not yet analysed" : "All analysed"}
+                />
+              </div>
+              <p className="foot" id="dz-error" role="alert">
+                {error}
+              </p>
+              <div className="actions batchacts">
+                {CAN_ANALYSE && (
+                  <button
+                    className={primaryIsAnalyse ? "cta" : "cta2"}
+                    id="analyse-btn"
+                    type="button"
+                    disabled={analyseDisabled}
+                    onClick={analyseBatch}
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      aria-hidden="true"
+                    >
+                      <path d="M6 4l14 8-14 8V4z" strokeLinejoin="round" />
+                    </svg>
+                    {analyseLabel}
+                  </button>
+                )}
+                <button
+                  className="cta2"
+                  type="button"
+                  onClick={() => fileInput.current?.click()}
+                >
+                  <Icon name="plus" />
+                  Add more images
+                </button>
+                <button
+                  className="cta2"
+                  id="clear-btn"
+                  type="button"
+                  onClick={() => clearAll(fileInput)}
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Not hidden — absent, so nothing can reveal it. To a visitor with no
@@ -295,8 +371,9 @@ export default function Upload({ workspace }) {
           </div>
         )}
       </div>
+      )}
 
-      {files.length > 0 && (
+      {files.length > 0 && phase !== "collect" && (
         <div id="batch">
           <div className="batchhead rv">
             <h3 id="batch-title">
@@ -438,6 +515,17 @@ export default function Upload({ workspace }) {
             >
               Clear
             </button>
+            {phase === "results" && (
+              <button
+                className="cta2"
+                id="upload-more-btn"
+                type="button"
+                onClick={backToCollect}
+              >
+                <Icon name="plus" />
+                Upload more images
+              </button>
+            )}
           </div>
 
           <div className="prog" aria-hidden="true">
@@ -540,10 +628,18 @@ export default function Upload({ workspace }) {
                           </td>
                         </>
                       ) : (
-                        <td className="pend" colSpan={3}>
-                          {connected
-                            ? "not yet analysed"
-                            : "hashed · not analysed"}
+                        <td
+                          className="pend"
+                          colSpan={3}
+                          data-state={
+                            f.hash === analysingHash ? "analysing" : "queued"
+                          }
+                        >
+                          {f.hash === analysingHash
+                            ? "analysing…"
+                            : connected
+                              ? "not yet analysed"
+                              : "hashed · not analysed"}
                         </td>
                       )}
                       <td className="mono">{f.hash.slice(0, 16)}…</td>

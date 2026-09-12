@@ -88,6 +88,9 @@
   transition: transform 0.5s ease;
   pointer-events: none;
 }
+.micro-stage[data-intro="true"] .micro-stack {
+  transition: transform 3s ease-out;
+}
 .micro-stage:active .micro-stack {
   transition: none;
 }
@@ -288,6 +291,7 @@
   border: 1px solid var(--paper-4);
   border-radius: 6px;
   background: #fff;
+  color: #172d3e;
   padding: 5px;
   min-height: 44px;
   font-size: 11px;
@@ -295,12 +299,14 @@
 .micro-specimens button[aria-pressed="true"] {
   border-color: var(--acc);
   background: var(--acc-soft);
+  color: var(--ink);
 }
 .micro-specimens img {
   width: 30px;
   height: 30px;
   border-radius: 3px;
-  object-fit: cover;
+  object-fit: none;
+  object-position: center;
 }
 .micro-readout {
   display: flex;

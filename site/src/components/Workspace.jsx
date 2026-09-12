@@ -550,7 +550,7 @@ function Inspector({ leaf }) {
               <span style={{ left: "80%" }} />
             </div>
             <div className="metric-caption">
-              <span>{leaf.method}</span>
+              <span>Cell coverage (Cellpose-SAM)</span>
               <span>Target 80%</span>
             </div>
           </section>

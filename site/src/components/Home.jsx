@@ -1,15 +1,37 @@
+import { useEffect, useRef, useState } from "react";
 import Instrument, { NegativeResults } from "./Instrument";
 import MicroscopyPlayground from "./MicroscopyPlayground";
 import { Icon } from "./Workspace";
+import { FLAGGED_LEAF } from "../lib/labels";
+import { RM } from "../lib/motion";
 
 export default function Home({ leaves, onInspect }) {
+  const heroLeaf = leaves[FLAGGED_LEAF];
+  const heroRef = useRef(null);
+  const [overlayVisible, setOverlayVisible] = useState(RM.matches);
+  /* Fade the segmentation mask in once the hero is actually on screen, rather
+     than the instant it mounts — the reveal is the point, so it should read
+     as a reveal even when the section loads already scrolled into view. */
+  useEffect(() => {
+    if (RM.matches) return undefined;
+    const node = heroRef.current;
+    if (!node) return undefined;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setOverlayVisible(true);
+          io.disconnect();
+        }
+      },
+      { threshold: 0.3 },
+    );
+    io.observe(node);
+    return () => io.disconnect();
+  }, []);
   return (
     <div className="home-page">
       <section className="home-intro">
         <div className="home-copy">
-          <p className="eyebrow">
-            <Icon name="cells" /> CELL CULTURE QUALITY CONTROL
-          </p>
           <h1>
             See the field.
             <br />
@@ -48,18 +70,23 @@ export default function Home({ leaves, onInspect }) {
             </span>
           </div>
         </div>
-        <div className="hero-micrograph">
+        <div className="hero-micrograph" ref={heroRef}>
           <img
-            src="/img/Huh7contam.webp"
+            src={heroLeaf.img}
             alt="Huh7 microscopy field with synthetic contamination"
+          />
+          <img
+            className={"hero-overlay" + (overlayVisible ? " visible" : "")}
+            src={heroLeaf.mask}
+            alt=""
+            aria-hidden="true"
           />
           <span>HUH7 / PHASE CONTRAST / RESEARCH SPECIMEN</span>
         </div>
       </section>
-      <Instrument demo />
       <section className="home-start" aria-labelledby="start-title">
         <div className="home-section-heading">
-          <p className="eyebrow">FROM IMAGE TO EVIDENCE</p>
+          <p className="kicker">From image to evidence</p>
           <h2 id="start-title">A focused workflow. At every step.</h2>
         </div>
         <MicroscopyPlayground leaves={leaves} onInspect={onInspect} />
@@ -76,6 +103,7 @@ export default function Home({ leaves, onInspect }) {
           </a>
         </div>
       </section>
+      <Instrument demo />
       <NegativeResults />
       <p className="home-limitation">
         For research use. QC models are trained on synthetic data; review

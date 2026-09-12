@@ -298,13 +298,13 @@ a svg {
   display: flex;
   gap: 8px;
   align-items: center;
-  font-size: 10px;
+  font-size: 11px;
   color: var(--ink-2);
 }
 .sidebar-foot small {
   display: block;
-  font-size: 9px;
-  color: var(--ink-3);
+  font-size: 10px;
+  color: var(--ink-2);
   margin-top: 3px;
 }
 .sidebar-foot svg {
@@ -895,7 +895,8 @@ input::placeholder {
 .specimen-link img {
   width: 35px;
   height: 35px;
-  object-fit: cover;
+  object-fit: none;
+  object-position: center;
   border-radius: 5px;
 }
 .specimen-link strong {
@@ -1029,7 +1030,8 @@ input::placeholder {
   width: 42px;
   height: 48px;
   border-radius: 4px;
-  object-fit: cover;
+  object-fit: none;
+  object-position: center;
 }
 .library-item > span {
   min-width: 0;

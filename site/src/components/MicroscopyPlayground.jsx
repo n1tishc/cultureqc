@@ -35,12 +35,21 @@ export default function MicroscopyPlayground({ leaves, onInspect }) {
   const scene = useRef(null);
   const drag = useRef(null);
   const angles = useRef({ x: 48, z: -26 });
+  const introTimer = useRef(null);
   const leaf = leaves[selected];
   const paint = () => {
     scene.current?.style.setProperty("--rx", `${angles.current.x}deg`);
     scene.current?.style.setProperty("--rz", `${angles.current.z}deg`);
   };
+  const cancelIntro = () => {
+    if (introTimer.current) {
+      clearTimeout(introTimer.current);
+      introTimer.current = null;
+    }
+    scene.current?.removeAttribute("data-intro");
+  };
   const rotate = (amount) => {
+    cancelIntro();
     angles.current.z = Math.max(-65, Math.min(65, angles.current.z + amount));
     paint();
   };
@@ -54,9 +63,36 @@ export default function MicroscopyPlayground({ leaves, onInspect }) {
     return () => query.removeEventListener("change", sync);
   }, []);
   const reset = () => {
+    cancelIntro();
     angles.current = { x: 48, z: -26 };
     paint();
   };
+  /* A brief, one-time nudge on load signals "this rotates" without turning
+     the demo into a spinning toy. Any interaction cancels it outright. */
+  useEffect(() => {
+    if (reduced || !separated) return undefined;
+    const el = scene.current;
+    if (!el) return undefined;
+    const original = angles.current.z;
+    el.setAttribute("data-intro", "true");
+    angles.current.z = Math.max(-65, Math.min(65, original + 8));
+    paint();
+    introTimer.current = setTimeout(() => {
+      introTimer.current = null;
+      el.removeAttribute("data-intro");
+    }, 3000);
+    /* Undoes the nudge on cleanup, not just on unmount — React 18 Strict Mode
+       runs this effect twice in development, and without a full rewind the
+       second pass compounds the nudge on top of the first. */
+    return () => {
+      clearTimeout(introTimer.current);
+      introTimer.current = null;
+      angles.current.z = original;
+      el.removeAttribute("data-intro");
+      paint();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <section
@@ -66,7 +102,7 @@ export default function MicroscopyPlayground({ leaves, onInspect }) {
       <div className="micro-topline">
         <span>
           <i />
-          THE IMAGE, UNPACKED
+          The image, unpacked
         </span>
         <span>INTERACTIVE DEMO</span>
       </div>
@@ -86,6 +122,7 @@ export default function MicroscopyPlayground({ leaves, onInspect }) {
         }}
         onPointerDown={(event) => {
           if (!separated || reduced || event.button !== 0) return;
+          cancelIntro();
           drag.current = { x: event.clientX, z: angles.current.z };
           event.currentTarget.setPointerCapture(event.pointerId);
         }}

@@ -249,6 +249,17 @@ export default function App() {
                   ? "cultureQC"
                   : "Demo data"}
           </span>
+          {workspace.analysing && view !== "upload" && (
+            <a
+              className="analysing-pill"
+              href="#/upload"
+              role="status"
+              aria-live="polite"
+            >
+              <i aria-hidden="true" />
+              {workspace.prog.text}
+            </a>
+          )}
           <a className="button primary top-upload" href="#/upload">
             <Icon name="plus" />
             New analysis
@@ -348,18 +359,12 @@ export default function App() {
           ) : (
             <span className="footer-pending">Source &mdash; pending</span>
           )}
-          {LINKEDIN_URL ? (
+          {LINKEDIN_URL && (
             <a href={LINKEDIN_URL} target="_blank" rel="noopener">
               LinkedIn
             </a>
-          ) : (
-            <span className="footer-pending">LinkedIn &mdash; pending</span>
           )}
-          {CONTACT ? (
-            <a href={"mailto:" + CONTACT}>Contact</a>
-          ) : (
-            <span className="footer-pending">Contact &mdash; pending</span>
-          )}
+          {CONTACT && <a href={"mailto:" + CONTACT}>Contact</a>}
           <a href="#/provenance">
             QC trained on synthetic data. View model limitations
             <Icon name="arrow" />

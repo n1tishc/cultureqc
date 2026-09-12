@@ -82,6 +82,17 @@
 .home-start {
   padding-block: 32px;
 }
+/* Sentence-case section kickers: same role as .eyebrow, without the
+   tracked-out all-caps treatment — reserved for genuine instrument/data
+   headers (INSTRUMENT LOG, FIELD COVERAGE, hashes, timestamps). */
+.kicker {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: normal;
+  color: var(--ink-2);
+  margin-bottom: 8px;
+}
 .micro-topline {
   font-size: 11px;
   letter-spacing: 0.6px;
@@ -554,4 +565,58 @@
 .app-footer .footer-pending {
   color: var(--ink-3);
   opacity: 0.6;
+}
+
+/* Collect-phase preview: files added, not yet analysed (F-flow) */
+.upload-preview {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--paper-4);
+}
+.upload-preview .stats {
+  margin-bottom: 16px;
+}
+.pend[data-state="analysing"] {
+  color: var(--acc);
+  font-style: italic;
+}
+
+/* Persistent "Analysing N of M" pill, visible from any route (F1) */
+.analysing-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--acc);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 260px;
+}
+.analysing-pill i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--acc);
+  flex-shrink: 0;
+  animation: pill-pulse 1.4s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .analysing-pill i {
+    animation: none;
+  }
+}
+@keyframes pill-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+@media (max-width: 900px) {
+  .analysing-pill {
+    display: none;
+  }
 }

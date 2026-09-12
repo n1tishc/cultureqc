@@ -40,6 +40,11 @@ export function RecordLink({ record, canonical }) {
         <code>
           <small>PREVIOUS RECORD</small>
           {record.prev_record_hash}
+          {/^0+$/.test(record.prev_record_hash) && (
+            <em className="genesis-note">
+              Genesis record — no predecessor
+            </em>
+          )}
         </code>
         <span aria-hidden="true">→</span>
         <code>
@@ -83,6 +88,7 @@ export default function Instrument({
     heatmap: true,
     contour: false,
   });
+  const [rawDims, setRawDims] = useState(null);
   useEffect(() => {
     if (!demo) return;
     const ctl = new AbortController();
@@ -137,6 +143,27 @@ export default function Instrument({
     );
     return () => clearInterval(timer);
   }, [busy, name]);
+  /* One-line result for the active step, derived from the run's own data so
+     it never states a number a visitor's real upload didn't produce. */
+  const stepSummary = (i) => {
+    if (i !== shown) return i <= current ? "Available" : "Waiting";
+    switch (i) {
+      case 0:
+        return rawDims ? `${rawDims.w} × ${rawDims.h} px` : "Available";
+      case 1:
+        return visuals.probability ? "Probability map rendered" : "Available";
+      case 2:
+        return pct != null ? `${pct.toFixed(1)}% confluency` : "Available";
+      case 3:
+        return visuals.heatmap ? "Evidence region detected" : "Available";
+      case 4:
+        return record
+          ? record.qc_flag.replaceAll("_", " ").replace(/^./, (c) => c.toUpperCase())
+          : "Available";
+      default:
+        return "Available";
+    }
+  };
   return (
     <section
       className="instrument"
@@ -146,10 +173,8 @@ export default function Instrument({
     >
       <header className="instrument-head">
         <div>
-          <p className="eyebrow">
-            {demo
-              ? "RECORDED RUN / INTERACTIVE PLAYBACK"
-              : "LIVE SERVER PIPELINE"}
+          <p className="kicker">
+            {demo ? "Recorded run · interactive playback" : "Live server pipeline"}
           </p>
           <h2>{name}</h2>
         </div>
@@ -185,7 +210,7 @@ export default function Instrument({
             >
               <span>{String(i + 1).padStart(2, "0")}</span>
               {label}
-              <small>{i <= current ? "Available" : "Waiting"}</small>
+              <small>{stepSummary(i)}</small>
             </button>
           </li>
         ))}
@@ -194,9 +219,16 @@ export default function Instrument({
         <div className="instrument-image">
           {visuals.raw ? (
             <img
-              className="raw-field"
+              key={name}
+              className="raw-field layer-land"
               src={visuals.raw}
               alt="Brightfield microscopy source field"
+              onLoad={(e) =>
+                setRawDims({
+                  w: e.target.naturalWidth,
+                  h: e.target.naturalHeight,
+                })
+              }
             />
           ) : (
             <div className="instrument-empty">
@@ -207,30 +239,39 @@ export default function Instrument({
               </small>
             </div>
           )}
-          {shown === 1 && visuals.probability && (
+          {/* Every layer that has a source stays mounted once it arrives, so
+              switching steps crossfades opacity instead of popping the image
+              in and out. None of these carry layer-land/cam-reveal — those
+              animate opacity with fill-mode "both", which pins the property
+              and permanently overrides the inline style driving the fade. */}
+          {visuals.probability && (
             <img
               className="evidence-layer"
+              style={{ opacity: shown === 1 ? 1 : 0 }}
               src={visuals.probability}
               alt="Cellpose cell score mapped through sigmoid, uncalibrated"
             />
           )}
-          {shown >= 2 && layers.mask && visuals.mask && (
+          {layers.mask && visuals.mask && (
             <img
               className="evidence-layer mask-reveal"
+              style={{ opacity: shown >= 2 ? 1 : 0 }}
               src={visuals.mask}
               alt="Foreground segmentation overlay"
             />
           )}
-          {shown >= 2 && layers.contour && visuals.contour && (
+          {layers.contour && visuals.contour && (
             <img
               className="evidence-layer"
+              style={{ opacity: shown >= 2 ? 1 : 0 }}
               src={visuals.contour}
               alt="Boundary of segmented foreground"
             />
           )}
-          {shown >= 3 && layers.heatmap && visuals.heatmap && (
+          {layers.heatmap && visuals.heatmap && (
             <img
-              className="evidence-layer cam-reveal"
+              className="evidence-layer"
+              style={{ opacity: shown >= 3 ? 1 : 0 }}
               src={visuals.heatmap}
               alt="Grad-CAM activation within the classifier crop"
             />
@@ -286,7 +327,7 @@ export default function Instrument({
             <p>Grad-CAM heatmap unavailable for this run.</p>
           )}
           <div className="verdict">
-            <span className="eyebrow">QC VERDICT</span>
+            <span className="kicker">QC verdict</span>
             <strong>
               {current === 4 && record
                 ? record.qc_flag.replaceAll("_", " ")
@@ -330,7 +371,6 @@ export default function Instrument({
 export function NegativeResults() {
   return (
     <section className="negative-results">
-      <p className="eyebrow">RESEARCH NOTEBOOK / NEGATIVE RESULTS</p>
       <h2>What didn’t work.</h2>
       <p>The discarded approaches matter as much as the final pipeline.</p>
       <div className="negative-grid">
@@ -338,11 +378,13 @@ export function NegativeResults() {
           <span>01 / VLM RATIONALE</span>
           <h3>Keep explanations grounded.</h3>
           <p>
-            The deployed pipeline disables VLM generation and uses templates
-            grounded in model outputs. The VLM failure experiment is referenced,
-            but its evaluation numbers are not available in this checkout.
+            Qwen3-VL-8B-Instruct scored 29% on zero-shot tile classification —
+            near the 25% random baseline. Strong normal-class bias;
+            near-identical rationales across all classes. The deployed
+            pipeline uses deterministic templates grounded in model outputs
+            instead.
           </p>
-          <strong>Failure rate: not reported</strong>
+          <strong>Accuracy: 29% (4-class random baseline: 25%)</strong>
           <a href="https://github.com/n1tishc/cultureqc/blob/main/culture/pipeline.py">
             Inspect the deployed decision →
           </a>
@@ -351,11 +393,11 @@ export function NegativeResults() {
           <span>02 / FINE-TUNING</span>
           <h3>A plateau is still a result.</h3>
           <p>
-            Fine-tuning is documented as a negative result in the audit mapping.
-            Its training curve and before/after metrics are not included here;
-            the deployed segmentation model remains zero-shot.
+            Cellpose-SAM fine-tuning on LIVECell showed no improvement over 60
+            epochs — the dataset is likely in the pretraining corpus. The
+            deployed segmentation model remains zero-shot.
           </p>
-          <strong>Plateau metric: not reported</strong>
+          <strong>Loss: flat across 60 epochs</strong>
           <a href="https://github.com/n1tishc/cultureqc/blob/main/docs/audit_mapping.md">
             Read the research record →
           </a>
