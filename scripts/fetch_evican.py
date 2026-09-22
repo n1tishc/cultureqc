@@ -88,23 +88,21 @@ def main():
 
     zip_path = os.path.join(args.out, "EVICAN_eval2019.zip")
     images_dir = os.path.join(args.out, "eval2019_images")
-    if not os.path.isdir(images_dir):
+    n_jpgs_now = len([f for f in os.listdir(images_dir) if f.lower().endswith(".jpg")]) if os.path.isdir(images_dir) else 0
+    if n_jpgs_now < 98:
+        # The zip has NO top-level folder — its 98 .jpg files sit flat at the
+        # zip root (verified by listing it directly) — so extract straight
+        # into images_dir rather than into args.out and hunting for a
+        # subfolder to rename (there isn't one).
         print("Extracting EVICAN_eval2019.zip ...")
         import zipfile
+        os.makedirs(images_dir, exist_ok=True)
         with zipfile.ZipFile(zip_path) as zf:
-            zf.extractall(args.out)
-        # The zip's top-level folder name varies by upload; normalize to
-        # eval2019_images if it isn't already there.
-        if not os.path.isdir(images_dir):
-            for name in os.listdir(args.out):
-                candidate = os.path.join(args.out, name)
-                if os.path.isdir(candidate) and name != "eval2019_images":
-                    jpgs = [f for f in os.listdir(candidate) if f.lower().endswith(".jpg")]
-                    if len(jpgs) > 50:
-                        os.rename(candidate, images_dir)
-                        break
+            zf.extractall(images_dir)
 
     n_images = len([f for f in os.listdir(images_dir) if f.lower().endswith(".jpg")]) if os.path.isdir(images_dir) else 0
+    if n_images != 98:
+        raise SystemExit(f"expected 98 EVICAN eval2019 images, found {n_images} in {images_dir}")
     print(f"Done. {n_images} images in {images_dir}")
 
 
