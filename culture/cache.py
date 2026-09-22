@@ -438,7 +438,15 @@ class Cache:
             if not os.path.exists(patch_path):
                 _atomic_write_bytes(patch_path, lambda f: np.save(f, emb["patches"]))
 
-    def _write_manifest(self, shard_hashes: dict):
+    def _write_manifest(self, shard_hashes: dict = None):
+        """shard_hashes is accepted for backward compatibility but ignored:
+        it used to be this call's build()-local dict of ONLY the tables that
+        got new rows this run, which meant a no-op resume run (every image
+        already cached, nothing to flush) wiped shard_sha256 for every other
+        table wholesale, since this method replaces the field rather than
+        merging. Fixed the same way as the row_counts bug: always hash
+        every table's current file on disk, ground truth, not call-local
+        state — correct regardless of what did or didn't change this call."""
         manifest = {
             "cache_version": CACHE_VERSION,
             "written_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
@@ -447,11 +455,16 @@ class Cache:
                 "seg": "cpsam_v2", "qc": "qc_effnetb0_v1",
                 "quality": QUALITY_MODEL_VERSION, "dino": DINO_MODEL_VERSION,
             },
-            "shard_sha256": shard_hashes,
+            "shard_sha256": {},
         }
         for name in ["images.parquet", "confluency.parquet", "logits.parquet", "quality.parquet", "embeddings_cls.parquet"]:
             p = self._path(name)
             if os.path.exists(p):
+                h = hashlib.sha256()
+                with open(p, "rb") as f:
+                    for chunk in iter(lambda: f.read(1 << 16), b""):
+                        h.update(chunk)
+                manifest["shard_sha256"][name] = h.hexdigest()
                 # pd.read_parquet(p, columns=[]) looks like the cheap way to
                 # get a row count without loading data, but pandas/pyarrow
                 # return a genuinely empty (0, 0) frame for an empty column
