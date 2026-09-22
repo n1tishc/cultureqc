@@ -452,7 +452,15 @@ class Cache:
         for name in ["images.parquet", "confluency.parquet", "logits.parquet", "quality.parquet", "embeddings_cls.parquet"]:
             p = self._path(name)
             if os.path.exists(p):
-                manifest["row_counts"][name] = len(pd.read_parquet(p, columns=[]))
+                # pd.read_parquet(p, columns=[]) looks like the cheap way to
+                # get a row count without loading data, but pandas/pyarrow
+                # return a genuinely empty (0, 0) frame for an empty column
+                # list — len() is always 0 regardless of the file's real row
+                # count (verified directly: a 5-row file reads back as
+                # len 0). ParquetFile's own footer metadata has the row
+                # count without reading any column data either way.
+                import pyarrow.parquet as pq
+                manifest["row_counts"][name] = pq.ParquetFile(p).metadata.num_rows
         manifest_path = self._path("MANIFEST.json")
         _atomic_write_bytes(manifest_path, lambda f: f.write(json.dumps(manifest, indent=2).encode("utf-8")))
 
