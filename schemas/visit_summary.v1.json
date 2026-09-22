@@ -1,0 +1,112 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "cultureQC Visit Summary",
+  "description": "One summarized flask visit (cultureQC_upgrade.md §5.1) — one or more FOV images reduced to numbers, stored in culture/history.py's append-only lineage log (which adds its own record_id/prev_record_hash/record_hash chain fields at write time, per culture/records.py's convention — not part of this schema, which validates the content payload before chaining). Numbers only: no free text, no VLM output.",
+  "type": "object",
+  "required": [
+    "visit_id", "lineage_id", "segment_id", "flask_id", "timestamp",
+    "image_sha256", "fov_confluency", "confluency_mean", "confluency_sd", "n_fov",
+    "class_probs", "class_pred", "calibrated",
+    "anomaly_score", "anomaly_score_density_bin",
+    "quality", "model_versions", "config_hashes"
+  ],
+  "properties": {
+    "visit_id": {
+      "type": "string",
+      "description": "UUID v4 for this visit"
+    },
+    "lineage_id": {
+      "type": "string",
+      "description": "The flask's continuous lineage across passages — the hash-chaining boundary in culture/history.py"
+    },
+    "segment_id": {
+      "type": "string",
+      "description": "One growth segment within a lineage (between passage events)"
+    },
+    "flask_id": {
+      "type": "string"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC. When the FOV(s) were captured, not when this summary was computed."
+    },
+    "image_sha256": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+      "minItems": 1,
+      "description": "One SHA-256 per FOV, in the same order as fov_confluency"
+    },
+    "fov_confluency": {
+      "type": "array",
+      "items": {"type": "number", "minimum": 0, "maximum": 100},
+      "minItems": 1,
+      "description": "Confluency percentage per FOV, same order/length as image_sha256"
+    },
+    "confluency_mean": {"type": "number", "minimum": 0, "maximum": 100},
+    "confluency_sd": {
+      "type": "number", "minimum": 0,
+      "description": "Across this visit's FOVs — not the same thing as configs/noise.yaml's FOV-noise floor (that's the expected repositioning SD; this is what was actually observed this visit)"
+    },
+    "n_fov": {
+      "type": "integer", "minimum": 1,
+      "description": "len(image_sha256) == len(fov_confluency) == n_fov"
+    },
+    "class_probs": {
+      "type": ["object", "null"],
+      "additionalProperties": {"type": "number", "minimum": 0, "maximum": 1},
+      "description": "Per-class probability, keyed by class name. Raw softmax output until Slice 4b's calibration lands — see 'calibrated'."
+    },
+    "class_pred": {
+      "type": ["string", "null"],
+      "description": "argmax(class_probs), or null if class_probs is null"
+    },
+    "calibrated": {
+      "type": "boolean",
+      "description": "False until Slice 4b's temperature scaling (or equivalent) is applied to class_probs. Required so a consumer never mistakes raw softmax confidence for a calibrated one."
+    },
+    "anomaly_score": {
+      "type": ["number", "null"],
+      "description": "Null until Slice 4 (density-conditioned open-set anomaly scoring) is implemented"
+    },
+    "anomaly_score_density_bin": {
+      "type": ["string", "null"],
+      "description": "Which confluency-density bin anomaly_score was computed against. Null until Slice 4."
+    },
+    "quality": {
+      "type": "object",
+      "required": ["blur", "mean_intensity", "uniformity", "pass", "reasons"],
+      "description": "culture/quality.py's gate output — see §5.2. A failing visit gets pass:false, reasons populated, and does NOT enter trend computations (culture/history.py enforces this, not this schema).",
+      "properties": {
+        "blur": {"type": "number", "description": "Variance of Laplacian; higher = sharper"},
+        "mean_intensity": {"type": "number", "minimum": 0, "maximum": 255},
+        "uniformity": {"type": "number", "minimum": 0, "description": "Illumination uniformity metric; lower = more uniform"},
+        "pass": {"type": "boolean"},
+        "reasons": {
+          "type": "array", "items": {"type": "string"},
+          "description": "Empty if pass=true. One entry per failed check if pass=false, e.g. 'blur_below_threshold'."
+        }
+      }
+    },
+    "model_versions": {
+      "type": "object",
+      "description": "Every model that produced a number in this visit: name + weights SHA-256 (culture/model_versions.py). culture/history.py's trend functions refuse to mix visits whose model_versions differ (MODEL_VERSION_CHANGE) — see §5.3.",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["version", "weights_sha256"],
+        "properties": {
+          "version": {"type": "string"},
+          "weights_sha256": {
+            "type": ["string", "null"],
+            "description": "Null only if the model's weights file isn't resolvable on this machine right now (see culture/model_versions.py's 'note' field, not part of this schema) — never a fabricated hash."
+          }
+        }
+      }
+    },
+    "config_hashes": {
+      "type": "object",
+      "description": "SHA-256 of every configs/*.yaml file that influenced this visit's numbers (e.g. configs/quality.yaml's thresholds, configs/noise.yaml if used) — keyed by filename.",
+      "additionalProperties": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+    }
+  }
+}
