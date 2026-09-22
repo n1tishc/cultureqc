@@ -46,6 +46,7 @@ gradio>=4.0                # demo/app.py, the console surface
 matplotlib>=3.7
 scipy>=1.10
 tqdm>=4.65
+PyYAML>=6.0                # scripts/fov_noise.py writes configs/noise.yaml
 
 # ── Audit record ──
 jsonschema>=4.17           # schema validation for the output contract
