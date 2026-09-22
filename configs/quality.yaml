@@ -1,0 +1,22 @@
+blur_laplacian_var:
+  floor: 100.88
+exposure_mean:
+  low: 127.79
+  high: 129.22
+uniformity_block_std:
+  ceiling: 2.231
+calibration:
+  generated_at: '2026-09-22T23:48:35Z'
+  source: cache/quality.parquet joined with data/tiles/manifest.csv
+  percentile:
+  - 1.0
+  - 99.0
+  normal_false_positive_rate_pct: 3.5
+  image_quality_recall_pct: 71.9
+  n_normal: 1000
+  n_image_quality: 1000
+  note: blur alone barely separates the classes here -- data/tiles/'s 'image_quality'
+    class bundles several distinct defect types (dust, bubbles, scratches, blur, vignette
+    per scripts/synth_contamination.py), most of which don't move Laplacian variance;
+    exposure and uniformity are much cleaner single-metric separators. Recall is a
+    union-of-3-checks number.
