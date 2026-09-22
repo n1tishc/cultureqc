@@ -89,6 +89,44 @@ Try it yourself: the demo console (`python demo/app.py`) has a "Real images
 (EVICAN)" example row showing one accurate case and one real error case
 side by side, ground truth included.
 
+## Compute cache & FOV noise
+
+Slice 1b runs every model over every image the project needs once, on a
+Colab GPU, and stores raw outputs (prob maps, logits, embeddings, quality
+metrics) keyed by `(image_sha256, crop_spec, model_name, model_version)` —
+everything downstream (thresholds, calibration, crop choices) reads from
+this cache on CPU with zero recompute:
+
+| | |
+|---|---:|
+| Images cached | 4,246 (4,000 synthetic tiles + 98 EVICAN + 148 AutoQC-Bench test) |
+| Confluency rows (full-frame + FOV-noise crops) | 72,182 |
+| Full-pass wall time (Colab GPU) | 147.7 min |
+| Cache size (full / slim no-GPU Mac copy) | 0.30 GB / 0.06 GB |
+
+Before any GPU time was spent, a parity test confirmed the cache's numbers
+exactly match the live (unretuned) pipeline on the same images
+(`tests/test_cache_parity.py`, 4/4 pass) — the cache stores raw model
+output, never a retuned one. Full provenance, per-model budget-test timing,
+and the notebooks themselves: [`docs/DATASETS.md`](docs/DATASETS.md),
+`nb/00_download_datasets.ipynb`, `nb/02_compute_cache.ipynb`.
+
+**FOV noise floor** (§4.3): repositioning the same flask produces confluency
+swings even when nothing biologically different has happened — this is the
+measurement noise the temporal layer (Slices 2-5) must exceed before
+flagging a real change, computed entirely from cached crops (no separate
+GPU pass). On 246 real images (EVICAN + AutoQC-Bench test):
+
+| crop size (frac of FOV) | mean noise (pp) | fit |
+|---:|---:|---|
+| 0.25 | 6.1 | `sigma_fov = 0.27 + 1.06 × confluency_pct` (R²=0.73) |
+| 0.5 | 2.9 | `sigma_fov = 0.51 + 0.42 × confluency_pct` (R²=0.53) |
+
+Smaller crops are noisier (expected — less area per estimate), and noise
+rises with confluency in both cases. Full numbers, plot, and fit details:
+[`results/fov_noise_summary.md`](results/fov_noise_summary.md). Model saved
+to `configs/noise.yaml` for later slices to import directly.
+
 ## Layout
 
 ```
@@ -121,8 +159,14 @@ test-data/        real phase-contrast tiles + synthetic challenge cases
 
 docs/
   DATA.md           training data: what it is, how to regenerate it
+  DATASETS.md       real-data license/overlap verification (EVICAN, LIVECell, AutoQC-Bench, ...)
+  REPO_MAP.md       repo recon: what's where, as of the v2.1 upgrade's start
   audit_mapping.md  record fields mapped to audit requirements
   PRODUCT.md, DESIGN.md, UI_PLAN.md   working documents for the demo surfaces
+
+nb/               Colab notebooks (thin runners around culture/ + scripts/)
+  00_download_datasets.ipynb   fetch/regenerate real + synthetic image sets
+  02_compute_cache.ipynb       the batched GPU pass (Slice 1b)
 ```
 
 Training data is not tracked — it is downloaded and derived, and regenerating it

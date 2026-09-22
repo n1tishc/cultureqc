@@ -1,0 +1,18 @@
+model: sigma_fov(confluency_pct) = intercept + slope * confluency_pct, fit per crop_frac
+source_cache: cache
+generated_at: '2026-09-22T23:34:10Z'
+crop_fracs:
+  '0.25':
+    slope: 1.05642
+    intercept: 0.27377
+    n_points: 246
+    r2: 0.729
+    mean_sd_pct: 6.115
+    max_sd_pct: 51.278
+  '0.5':
+    slope: 0.4238
+    intercept: 0.51155
+    n_points: 246
+    r2: 0.527
+    mean_sd_pct: 2.908
+    max_sd_pct: 31.277
