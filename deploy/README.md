@@ -261,7 +261,7 @@ single combined path is genuinely only proven once the Space is live.
 python -m pytest deploy/hf-space/test_api.py -q
 ```
 
-23 contract tests: readiness semantics, input validation, response shape, the
+28 contract tests: readiness semantics, input validation, response shape, the
 evidence-box arithmetic, the CORS allowlist in both Space and local modes, that
 the inference is off the event loop, and that twelve concurrent uploads leave
 the hash chain intact.

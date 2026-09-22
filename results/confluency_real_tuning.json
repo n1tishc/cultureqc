@@ -1,0 +1,20 @@
+{
+  "local_contrast_halo_threshold": 0.08,
+  "tuning_image_ids": [
+    "57_MDAMB.jpg",
+    "72_RAW.jpg",
+    "9_ACHN.jpg",
+    "59_MDAMB.jpg",
+    "4_786O.jpg",
+    "33_HCT116.jpg"
+  ],
+  "eval_subset_n": 33,
+  "eval_subset_by_tier": {
+    "easy": 12,
+    "medium": 11,
+    "difficult": 10
+  },
+  "estimated_seg_time_s": 2371.5786160000002,
+  "size_cutoff_px": 500000,
+  "seed": 0
+}

@@ -27,9 +27,17 @@ timm>=0.9                  # EfficientNet / ViT backbones
 grad-cam>=1.5              # imports as pytorch_grad_cam; culture/qc.py needs it
                            # at runtime for the evidence boxes, so it is not optional
 
-# ── VLM rationale (evening 5, optional) ──
-# transformers>=4.40       # uncomment when you get to the VLM
+# ── DINOv2 embeddings (Slice 1b compute cache, Slice 4 anomaly scoring) ──
+# transformers over torch.hub: pinned/versioned (rule 7/8) instead of a
+# runtime git-clone, and this is the same loading path the live per-visit
+# anomaly step (spec §1) will eventually use on the Space.
+transformers>=4.40
+
+# ── VLM rationale (evening 5, optional; rejected — kept pinned-out) ──
 # accelerate>=0.27
+
+# ── Compute cache (Slice 1b) ──
+pyarrow>=14.0               # parquet shards for culture/cache.py
 
 # ── Service / demo ──
 gradio>=4.0                # demo/app.py, the console surface

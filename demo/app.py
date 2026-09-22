@@ -37,6 +37,17 @@ DEFAULT_HOURS_SINCE_PASSAGE = 48.0
 DEFAULT_HOURS_SINCE_FEED = 12.0
 CELL_LINES = ["A172", "BT474", "BV2", "Huh7", "MCF7", "SHSY5Y", "SKOV3", "SkBr3", "unknown"]
 
+# Real images (EVICAN, CC BY 4.0) with known ground truth, for Slice 1 of
+# cultureQC_upgrade.md's real-image validation (results/confluency_real_summary.md
+# has the full write-up). One low-error case, one high-error case — shown
+# side by side rather than cherry-picking the flattering one, per this
+# project's own "check it, don't take the record's word for it" stance.
+# GT confluency = union of the dataset's COCO "Cell" masks / image area.
+EVICAN_EXAMPLES = [
+    ("test-data/evican_66_PC3.jpg", 5.50, 5.13),
+    ("test-data/evican_48_HT29.jpg", 51.60, 29.35),
+]
+
 STATUS_COLORS = {"green": "#22c55e", "amber": "#f59e0b", "red": "#ef4444"}
 
 FLAG_META = {
@@ -452,6 +463,24 @@ with gr.Blocks(
 
         with gr.Column(scale=38, min_width=0, elem_classes="results-pane"):
             results_html = gr.HTML('<div class="rc-empty">Upload an image to begin analysis.</div>')
+
+    with gr.Row(elem_classes="real-examples-row"):
+        gr.Markdown(
+            "**Real images (EVICAN, CC BY 4.0)** — ground truth from the dataset's own "
+            "expert masks, not this pipeline. Left: cultureQC close to GT "
+            f"(GT {EVICAN_EXAMPLES[0][1]:.1f}%, predicted {EVICAN_EXAMPLES[0][2]:.1f}%). "
+            f"Right: a real error case (GT {EVICAN_EXAMPLES[1][1]:.1f}%, predicted "
+            f"{EVICAN_EXAMPLES[1][2]:.1f}%) — see `results/confluency_real_summary.md` "
+            "for why. Click either to analyse it live."
+        )
+        real_examples = gr.Examples(
+            examples=[[path] for path, _, _ in EVICAN_EXAMPLES],
+            inputs=[image_view],
+            outputs=[view_toggle, results_html, original_state, overlay_state, image_view],
+            fn=on_upload,
+            run_on_click=True,
+            label="",
+        )
 
     gr.HTML(
         '<div class="app-footer">cultureQC v0.1 &middot; Cellpose-SAM &middot; EfficientNet-B0 '
