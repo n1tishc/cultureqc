@@ -21,6 +21,10 @@ site/dist-*/
 data/
 bacteria_sprites.zip
 
+# ── Compute cache (Slice 1b; regenerable via nb/00 + nb/02, see docs/DATASETS.md) ──
+cache/
+cache_slim/
+
 # ── Runtime output ──
 demo/uploads/
 demo/events_web.jsonl
