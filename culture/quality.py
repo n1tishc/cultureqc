@@ -70,28 +70,38 @@ class QualityResult:
         }
 
 
+def evaluate_thresholds(
+    blur: float, exposure: float, uniformity: float, config_path: str = _DEFAULT_CONFIG_PATH
+) -> QualityResult:
+    """The gate's decision logic alone, on already-computed metrics — reused
+    by quality_gate() (raw pixels -> quality_metrics() -> here) and by
+    culture/replay.py (cached quality.parquet numbers -> here directly, no
+    pixels touched, no recompute), so there's exactly one place "pass or
+    fail, and why" is decided."""
+    t = _load_thresholds(config_path)
+
+    reasons = []
+    if blur < t["blur_laplacian_var"]["floor"]:
+        reasons.append("blur_below_threshold")
+    lo, hi = t["exposure_mean"]["low"], t["exposure_mean"]["high"]
+    if not (lo <= exposure <= hi):
+        reasons.append("exposure_out_of_range")
+    if uniformity > t["uniformity_block_std"]["ceiling"]:
+        reasons.append("uniformity_above_threshold")
+
+    return QualityResult(
+        blur=blur, mean_intensity=exposure, uniformity=uniformity,
+        passed=(len(reasons) == 0), reasons=reasons,
+    )
+
+
 def quality_gate(img: np.ndarray, config_path: str = _DEFAULT_CONFIG_PATH) -> QualityResult:
     """Deterministic pass/fail + reason codes for one FOV image."""
     from culture.cache import quality_metrics
 
-    t = _load_thresholds(config_path)
     m = quality_metrics(img)
-
-    reasons = []
-    if m["blur_laplacian_var"] < t["blur_laplacian_var"]["floor"]:
-        reasons.append("blur_below_threshold")
-    lo, hi = t["exposure_mean"]["low"], t["exposure_mean"]["high"]
-    if not (lo <= m["exposure_mean"] <= hi):
-        reasons.append("exposure_out_of_range")
-    if m["uniformity_block_std"] > t["uniformity_block_std"]["ceiling"]:
-        reasons.append("uniformity_above_threshold")
-
-    return QualityResult(
-        blur=m["blur_laplacian_var"],
-        mean_intensity=m["exposure_mean"],
-        uniformity=m["uniformity_block_std"],
-        passed=(len(reasons) == 0),
-        reasons=reasons,
+    return evaluate_thresholds(
+        m["blur_laplacian_var"], m["exposure_mean"], m["uniformity_block_std"], config_path
     )
 
 
