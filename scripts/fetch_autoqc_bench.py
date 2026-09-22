@@ -51,7 +51,7 @@ def fetch_manifest() -> list[dict]:
         return json.load(resp)
 
 
-def download_file(path: str, expected_size: int, out_dir: str, retries: int = 3) -> None:
+def download_file(path: str, expected_size: int, out_dir: str, retries: int = 5) -> None:
     dest = os.path.join(out_dir, path)
     if os.path.exists(dest) and os.path.getsize(dest) == expected_size:
         return  # already fetched correctly; resumable across runs
@@ -65,11 +65,18 @@ def download_file(path: str, expected_size: int, out_dir: str, retries: int = 3)
             with _get(url, timeout=60) as resp, open(tmp, "wb") as f:
                 f.write(resp.read())
             break
-        except urllib.error.HTTPError as e:
+        except (urllib.error.URLError, OSError) as e:
+            # Covers HTTPError (4xx/5xx — a subclass of URLError), plain
+            # URLError (DNS/connection refused), and lower-level connection
+            # drops that urllib doesn't wrap into URLError, e.g.
+            # http.client.RemoteDisconnected ("Remote end closed connection
+            # without response") — observed in practice against EBI's server
+            # under sequential load, a transient server-side hiccup, not a
+            # bad URL. Retry all of it the same way.
             last_err = e
             time.sleep(1.5 * (attempt + 1))
     else:
-        raise IOError(f"{path}: HTTP {last_err.code} after {retries} attempts") from last_err
+        raise IOError(f"{path}: {last_err!r} after {retries} attempts") from last_err
 
     got = os.path.getsize(tmp)
     if got != expected_size:
