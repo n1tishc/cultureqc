@@ -46,6 +46,13 @@ _DEFAULT_CONFIG_PATH = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "configs", "replay.yaml"
 )
 
+# Fixed namespace for deriving visit_id deterministically (uuid.uuid4() would
+# make "deterministic given a seed" false for the one field every downstream
+# consumer -- History's hash chain included -- treats as a stable key).
+# uuid.uuid5(uuid.NAMESPACE_URL, "https://cultureqc/replay/visit_id"), pinned
+# as a literal so it never changes across runs/versions.
+_VISIT_ID_NAMESPACE = uuid.UUID("86f1bd44-dc64-5e8e-a831-455e06fc9a68")
+
 
 def _load_config(config_path: str) -> dict:
     with open(config_path) as f:
@@ -148,7 +155,16 @@ def build_replay_visits(
 ) -> list[dict]:
     """Deterministic given `seed` (and the underlying cache's contents, which
     don't change): the same inputs always produce the same visit stream —
-    same sampled timestamps, same sampled crops. Returns a list of
+    same sampled timestamps, same sampled crops, same visit_id (uuid5, not
+    uuid4 — derived from sequence_id/segment_id/timestamp/seed, not random,
+    specifically so this determinism claim holds for the one field every
+    downstream consumer, History's hash chain included, treats as a stable
+    key). Only exception: the caller's History.append_visit() call assigns
+    its own fresh record_id/record_hash on every append (RecordWriter's own
+    audit-log semantics — "when this was written", not "what was replayed"
+    — see culture/records.py), so two separate append runs of an identical
+    visit stream produce different record_hash values even though every
+    visit_summary field above is byte-identical. Returns a list of
     visit_summary dicts (schemas/visit_summary.v1.json-shaped, plus a
     'provenance' field the schema permits but doesn't require)."""
     config = _load_config(config_path)
@@ -172,12 +188,15 @@ def build_replay_visits(
         class_probs, class_pred = _class_probs_and_pred(cache, sha)
         quality = _quality_for_frame(cache, sha)
 
+        timestamp = visit_time.tz_localize("UTC").isoformat() if visit_time.tzinfo is None else visit_time.isoformat()
+        visit_id = str(uuid.uuid5(_VISIT_ID_NAMESPACE, f"{sequence_id}|{segment_id}|{timestamp}|{seed}"))
+
         visits.append({
-            "visit_id": str(uuid.uuid4()),
+            "visit_id": visit_id,
             "lineage_id": lineage_id,
             "segment_id": segment_id,
             "flask_id": flask_id,
-            "timestamp": visit_time.tz_localize("UTC").isoformat() if visit_time.tzinfo is None else visit_time.isoformat(),
+            "timestamp": timestamp,
             "image_sha256": [sha] * n_fov,  # all sampled crops are sub-regions of this one cached frame
             "fov_confluency": fov_confluency,
             "confluency_mean": float(np.mean(fov_confluency)) if fov_confluency else 0.0,

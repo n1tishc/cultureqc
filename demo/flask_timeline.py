@@ -234,24 +234,28 @@ def _rows_to_table(rows: list[dict]) -> pd.DataFrame:
 def _summary_markdown(rows: list[dict], chain_ok: bool, bad_line: int | None) -> str:
     n_visits = sum(1 for r in rows if r.get("row_type") == "visit")
     n_events = sum(1 for r in rows if r.get("row_type") == "event")
+    n_segments = len({r["segment_id"] for r in rows if r.get("segment_id")})
     n_failed = sum(
         1 for r in rows if r.get("row_type") == "visit" and not r.get("quality", {}).get("pass", True)
     )
     chain_note = "hash chain intact" if chain_ok else f"hash chain **BROKEN at line {bad_line}**"
     return (
-        f"**{n_visits} visits** across 2 segments &middot; **{n_events} events** &middot; "
-        f"**{n_failed} quality-gate failure(s)** excluded from trend computations &middot; {chain_note}"
+        f"**{n_visits} visits** across {n_segments} segment{'s' if n_segments != 1 else ''} &middot; "
+        f"**{n_events} events** &middot; **{n_failed} quality-gate failure(s)** excluded from trend "
+        f"computations &middot; {chain_note}"
     )
 
 
 def build_demo_timeline(work_dir: str, seed: int = 0):
-    """Builds (once per (work_dir, seed), cached after that) a fixture cache,
-    replays it through culture.replay into a culture.history.History, and
-    returns (fig, history_dataframe, summary_markdown). Deterministic given
-    seed, same guarantee culture.replay.build_replay_visits already makes."""
+    """Builds (once per (work_dir, seed) -- the History/Cache I/O and replay
+    are cached after that, see below) a fixture cache, replays it through
+    culture.replay into a culture.history.History, and returns
+    (fig, history_dataframe, summary_markdown). Deterministic given seed,
+    same guarantee culture.replay.build_replay_visits already makes."""
     key = (work_dir, seed)
     if key in _cache_by_key:
-        return _cache_by_key[key]
+        chain_ok, bad_line, rows = _cache_by_key[key]
+        return _plot_timeline(rows), _rows_to_table(rows), _summary_markdown(rows, chain_ok, bad_line)
 
     rng = np.random.default_rng(seed)
     cache_dir = os.path.join(work_dir, f"flask_timeline_cache_{seed}")
@@ -291,6 +295,14 @@ def build_demo_timeline(work_dir: str, seed: int = 0):
     chain_ok, bad_line = h.verify_lineage(LINEAGE_ID)
     rows = h.get_lineage(LINEAGE_ID)
 
-    result = (_plot_timeline(rows), _rows_to_table(rows), _summary_markdown(rows, chain_ok, bad_line))
-    _cache_by_key[key] = result
-    return result
+    # Cache the raw rows, not the rendered (fig, df, summary) tuple: fig is a
+    # matplotlib Figure and _plot_timeline() opens with plt.close("all") on
+    # every call, which would close a *previously cached* Figure the next
+    # time a different seed's build reuses this code path -- e.g. seed 2
+    # (cached) -> seed 3 (built, cached) -> seed 2 again (cache hit) would
+    # hand Gradio seed 2's now-closed Figure. Rebuilding fig/table/summary
+    # fresh from cached rows on every call avoids that entirely, at the cost
+    # of a cheap re-render instead of a real rebuild (History/Cache I/O and
+    # get_model_versions() only happen once per (work_dir, seed)).
+    _cache_by_key[key] = (chain_ok, bad_line, rows)
+    return _plot_timeline(rows), _rows_to_table(rows), _summary_markdown(rows, chain_ok, bad_line)

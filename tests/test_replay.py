@@ -158,6 +158,9 @@ def test_replay_deterministic_given_seed(fixture_cache):
     assert [v["timestamp"] for v in v1] == [v["timestamp"] for v in v2]
     assert [v["fov_confluency"] for v in v1] == [v["fov_confluency"] for v in v2]
     assert [v["crop_specs"] for v in v1] == [v["crop_specs"] for v in v2]
+    # visit_id is derived (uuid5), not random (uuid4) -- must be stable too,
+    # since History's hash chain and any UI table key off it.
+    assert [v["visit_id"] for v in v1] == [v["visit_id"] for v in v2]
 
 
 def test_replay_different_seed_differs(fixture_cache):
