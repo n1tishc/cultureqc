@@ -44,9 +44,12 @@ import numpy as np
 import pandas as pd
 
 from culture.cache import Cache
+from culture.growth import GrowthResult, fit_growth
 from culture.history import History
 from culture.replay import build_replay_lineage_with_passage
 from demo.theme import ACCENT, BG_CARD, BORDER, TEXT_PRIMARY, TEXT_SECONDARY
+
+TARGET_PCT = 80.0  # §6.3 default "time to target" confluency shown in the tab
 
 LINEAGE_ID = "demo-flask-01"
 PARENT_SEGMENT_ID = "demo-flask-01-seg-A"
@@ -144,8 +147,14 @@ def _write_sequence(
     _append_parquet(cache_dir, "quality.parquet", quality_rows)
 
 
-def _plot_timeline(rows: list[dict]) -> "plt.Figure":
+def _plot_timeline(rows: list[dict], growth_results: dict[str, GrowthResult] | None = None) -> "plt.Figure":
+    """§6.3: 'fitted curve + band, target line, ... per segment' layered onto
+    the existing raw-visit plot. growth_results is {segment_id: GrowthResult}
+    (see _fit_segment_growth) — only OK results with a t_grid get an overlay;
+    INSUFFICIENT_DATA/FIT_FAILED segments show raw visits only, same as
+    before growth fitting existed."""
     plt.close("all")
+    growth_results = growth_results or {}
     visits = [r for r in rows if r.get("row_type") == "visit"]
     events = [r for r in rows if r.get("row_type") == "event"]
 
@@ -156,6 +165,7 @@ def _plot_timeline(rows: list[dict]) -> "plt.Figure":
     seg_colors = {PARENT_SEGMENT_ID: ACCENT, CHILD_SEGMENT_ID: CHILD_SEGMENT_COLOR}
     seg_labels = {PARENT_SEGMENT_ID: "Segment A (parent)", CHILD_SEGMENT_ID: "Segment B (post-passage)"}
 
+    any_fit_ok = False
     for seg_id, color in seg_colors.items():
         seg_visits = sorted((v for v in visits if v["segment_id"] == seg_id), key=lambda v: v["timestamp"])
         if not seg_visits:
@@ -165,6 +175,15 @@ def _plot_timeline(rows: list[dict]) -> "plt.Figure":
         sds = [v["confluency_sd"] for v in seg_visits]
         ax.plot(times, means, "-", color=color, linewidth=1.5, alpha=0.8, label=seg_labels[seg_id])
         ax.errorbar(times, means, yerr=sds, fmt="none", ecolor=color, alpha=0.3, capsize=2)
+
+        result = growth_results.get(seg_id)
+        if result is not None and result.status == "OK" and result.t_grid_hours:
+            any_fit_ok = True
+            t0 = pd.Timestamp(result.t0_timestamp)
+            grid_times = t0 + pd.to_timedelta(result.t_grid_hours, unit="h")
+            ax.plot(grid_times, result.y_grid["mean"], "--", color=color, linewidth=1.2, alpha=0.9, zorder=2)
+            if result.y_grid["lo"] is not None:
+                ax.fill_between(grid_times, result.y_grid["lo"], result.y_grid["hi"], color=color, alpha=0.13, linewidth=0, zorder=1)
 
         for v, t, m in zip(seg_visits, times, means):
             passed = v.get("quality", {}).get("pass", True)
@@ -185,6 +204,11 @@ def _plot_timeline(rows: list[dict]) -> "plt.Figure":
                 ax.axvline(t, color=TEXT_SECONDARY, linestyle="--", linewidth=1.1, alpha=0.7)
                 ax.annotate("PASSAGED", xy=(t, 96), xytext=(4, 0), textcoords="offset points",
                             color=TEXT_SECONDARY, fontsize=8.5)
+
+    if any_fit_ok:
+        ax.axhline(TARGET_PCT, color=TEXT_SECONDARY, linestyle=":", linewidth=1.0, alpha=0.55, zorder=0)
+        ax.annotate(f"target {TARGET_PCT:.0f}%", xy=(1.0, TARGET_PCT), xycoords=("axes fraction", "data"),
+                    xytext=(4, 2), textcoords="offset points", color=TEXT_SECONDARY, fontsize=7.5)
 
     ax.set_ylim(0, 100)
     ax.set_ylabel("Confluency (%)", color=TEXT_PRIMARY, fontsize=9.5)
@@ -231,6 +255,60 @@ def _rows_to_table(rows: list[dict]) -> pd.DataFrame:
     return pd.DataFrame(out)
 
 
+def _segment_trend_visits(rows: list[dict], segment_id: str) -> list[dict]:
+    """Same filter culture.history.History.trend_windows() applies (quality-
+    passing visits only) — growth.py itself does not re-filter (see its
+    docstring), so the caller must, same as any other caller would against a
+    real History."""
+    return sorted(
+        (r for r in rows if r.get("row_type") == "visit" and r.get("segment_id") == segment_id
+         and r.get("quality", {}).get("pass", True)),
+        key=lambda r: r["timestamp"],
+    )
+
+
+def _fit_segment_growth(rows: list[dict], segment_id: str, seed: int) -> GrowthResult:
+    visits = _segment_trend_visits(rows, segment_id)
+    return fit_growth(visits, target_pct=TARGET_PCT, seed=seed)
+
+
+def _growth_summary_markdown(growth_results: dict[str, GrowthResult]) -> str:
+    """§6.3: 'T* with interval, chosen model + AIC, area doubling time, per
+    segment' as text alongside the plot's overlay."""
+    seg_labels = {PARENT_SEGMENT_ID: "Segment A (parent)", CHILD_SEGMENT_ID: "Segment B (post-passage)"}
+    lines = [f"**Growth model** (fabricated demo data; target {TARGET_PCT:.0f}% confluency):"]
+    for seg_id, label in seg_labels.items():
+        result = growth_results.get(seg_id)
+        if result is None or result.status != "OK":
+            status = result.status if result is not None else "NO_DATA"
+            lines.append(f"- **{label}**: `{status}` — not enough trend-eligible visits yet to fit a growth curve.")
+            continue
+
+        aic_bits = ", ".join(f"{m} AIC={f['aic']:.1f}" for m, f in result.fits.items())
+        if result.t_star_status == "REACHED":
+            if result.t_star_interval_hours is not None:
+                lo, hi = result.t_star_interval_hours
+                t_star_str = f"T* = {result.t_star_hours:.0f}h, 90% CI [{lo:.0f}h, {hi:.0f}h]"
+            else:
+                t_star_str = f"T* = {result.t_star_hours:.0f}h (interval unavailable — too few successful bootstrap refits)"
+        else:
+            t_star_str = f"T* = `NOT_REACHED` (fitted carrying capacity below {TARGET_PCT:.0f}%)"
+        doubling_str = (
+            f"{result.area_doubling_time_hours:.1f}h" if result.area_doubling_time_hours is not None
+            else "n/a (non-growing at start of window)"
+        )
+        lines.append(
+            f"- **{label}**: **{result.chosen_model}** chosen ({aic_bits}) &middot; {t_star_str} "
+            f"&middot; area doubling time (early phase) {doubling_str}"
+        )
+    lines.append(
+        "\n*T*'s interval covers residual-bootstrap uncertainty within the chosen model only, "
+        "not uncertainty in logistic-vs-Gompertz model selection itself — see culture/growth.py's "
+        "docstring and scripts/backtest_growth.py.*"
+    )
+    return "\n".join(lines)
+
+
 def _summary_markdown(rows: list[dict], chain_ok: bool, bad_line: int | None) -> str:
     n_visits = sum(1 for r in rows if r.get("row_type") == "visit")
     n_events = sum(1 for r in rows if r.get("row_type") == "event")
@@ -247,15 +325,20 @@ def _summary_markdown(rows: list[dict], chain_ok: bool, bad_line: int | None) ->
 
 
 def build_demo_timeline(work_dir: str, seed: int = 0):
-    """Builds (once per (work_dir, seed) -- the History/Cache I/O and replay
-    are cached after that, see below) a fixture cache, replays it through
-    culture.replay into a culture.history.History, and returns
-    (fig, history_dataframe, summary_markdown). Deterministic given seed,
-    same guarantee culture.replay.build_replay_visits already makes."""
+    """Builds (once per (work_dir, seed) -- the History/Cache I/O, replay,
+    and growth fit are cached after that, see below) a fixture cache,
+    replays it through culture.replay into a culture.history.History, fits
+    culture.growth per segment, and returns (fig, history_dataframe,
+    summary_markdown, growth_markdown). Deterministic given seed, same
+    guarantee culture.replay.build_replay_visits and culture.growth.fit_growth
+    already make."""
     key = (work_dir, seed)
     if key in _cache_by_key:
-        chain_ok, bad_line, rows = _cache_by_key[key]
-        return _plot_timeline(rows), _rows_to_table(rows), _summary_markdown(rows, chain_ok, bad_line)
+        chain_ok, bad_line, rows, growth_results = _cache_by_key[key]
+        return (
+            _plot_timeline(rows, growth_results), _rows_to_table(rows),
+            _summary_markdown(rows, chain_ok, bad_line), _growth_summary_markdown(growth_results),
+        )
 
     rng = np.random.default_rng(seed)
     cache_dir = os.path.join(work_dir, f"flask_timeline_cache_{seed}")
@@ -294,15 +377,26 @@ def build_demo_timeline(work_dir: str, seed: int = 0):
 
     chain_ok, bad_line = h.verify_lineage(LINEAGE_ID)
     rows = h.get_lineage(LINEAGE_ID)
+    growth_results = {
+        seg_id: _fit_segment_growth(rows, seg_id, seed)
+        for seg_id in (PARENT_SEGMENT_ID, CHILD_SEGMENT_ID)
+    }
 
-    # Cache the raw rows, not the rendered (fig, df, summary) tuple: fig is a
-    # matplotlib Figure and _plot_timeline() opens with plt.close("all") on
-    # every call, which would close a *previously cached* Figure the next
-    # time a different seed's build reuses this code path -- e.g. seed 2
-    # (cached) -> seed 3 (built, cached) -> seed 2 again (cache hit) would
-    # hand Gradio seed 2's now-closed Figure. Rebuilding fig/table/summary
-    # fresh from cached rows on every call avoids that entirely, at the cost
-    # of a cheap re-render instead of a real rebuild (History/Cache I/O and
-    # get_model_versions() only happen once per (work_dir, seed)).
-    _cache_by_key[key] = (chain_ok, bad_line, rows)
-    return _plot_timeline(rows), _rows_to_table(rows), _summary_markdown(rows, chain_ok, bad_line)
+    # Cache the raw rows + growth results, not the rendered (fig, df, ...)
+    # tuple: fig is a matplotlib Figure and _plot_timeline() opens with
+    # plt.close("all") on every call, which would close a *previously
+    # cached* Figure the next time a different seed's build reuses this code
+    # path -- e.g. seed 2 (cached) -> seed 3 (built, cached) -> seed 2 again
+    # (cache hit) would hand Gradio seed 2's now-closed Figure. Rebuilding
+    # fig/table/summary fresh from cached rows on every call avoids that
+    # entirely. growth_results ARE safe to cache directly (plain
+    # dataclasses/dicts, nothing closable) -- refitting them (curve_fit +
+    # 500-resample bootstrap, twice per segment) is real compute, not a
+    # cheap re-render, so caching that (not just the rows) keeps a
+    # cache-hit fast. History/Cache I/O and get_model_versions() also only
+    # happen once per (work_dir, seed).
+    _cache_by_key[key] = (chain_ok, bad_line, rows, growth_results)
+    return (
+        _plot_timeline(rows, growth_results), _rows_to_table(rows),
+        _summary_markdown(rows, chain_ok, bad_line), _growth_summary_markdown(growth_results),
+    )

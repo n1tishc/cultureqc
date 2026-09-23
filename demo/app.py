@@ -507,6 +507,7 @@ with gr.Blocks(
                 timeline_regen_btn = gr.Button("Regenerate replay", elem_classes=["analyze-btn"])
             timeline_summary = gr.Markdown()
             timeline_plot = gr.Plot(show_label=False, container=False)
+            timeline_growth_md = gr.Markdown()
             timeline_table = gr.Dataframe(
                 label="Raw history (hash-chained JSONL, one row per visit/event, per lineage)",
                 wrap=True,
@@ -544,19 +545,19 @@ with gr.Blocks(
     )
 
     def on_generate_timeline(seed):
-        fig, df, summary = build_demo_timeline(WORK_DIR, int(seed))
-        return fig, df, summary
+        fig, df, summary, growth_md = build_demo_timeline(WORK_DIR, int(seed))
+        return fig, df, summary, growth_md
 
     demo.load(
         fn=on_generate_timeline,
         inputs=[timeline_seed],
-        outputs=[timeline_plot, timeline_table, timeline_summary],
+        outputs=[timeline_plot, timeline_table, timeline_summary, timeline_growth_md],
         show_progress="hidden",
     )
     timeline_regen_btn.click(
         fn=on_generate_timeline,
         inputs=[timeline_seed],
-        outputs=[timeline_plot, timeline_table, timeline_summary],
+        outputs=[timeline_plot, timeline_table, timeline_summary, timeline_growth_md],
         show_progress="hidden",
     )
 

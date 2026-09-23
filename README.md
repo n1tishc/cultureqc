@@ -127,6 +127,69 @@ rises with confluency in both cases. Full numbers, plot, and fit details:
 [`results/fov_noise_summary.md`](results/fov_noise_summary.md). Model saved
 to `configs/noise.yaml` for later slices to import directly.
 
+## Per-flask history, replay & growth model
+
+**History (§5.3, `culture/history.py`):** append-only, hash-chained
+lineage → segments → visits + events (SEEDED/FED/PASSAGED/HARVESTED/NOTE),
+one JSONL file per lineage. Trend functions refuse to mix visits across a
+`model_versions` change (`MODEL_VERSION_CHANGE`, a new trend window) rather
+than silently averaging across a retrain.
+
+**Replay (§5.4, `culture/replay.py`):** builds realistic visit streams —
+irregular jittered timestamps, simulated FOV repositioning, simulated
+passage — entirely from the compute cache, no model inference at replay
+time. **Real C2C12/CTC sequences aren't cached yet**: the real Slice 1b
+cache has `sequence_id`/`frame_idx` unset for all 4,246 rows (none of its
+three datasets are sequences), so replay currently only runs against a
+fixture cache (`tests/test_replay.py`, `demo/flask_timeline.py`,
+`scripts/backtest_growth.py`) — real sequences need `nb/00` + a cache pass
+that sets those fields. Every replayed visit is labeled
+`"provenance": "replay_simulated"`; the app's Flask Timeline tab shows this
+explicitly.
+
+**Growth model (§6.1, `culture/growth.py`):** fits each segment's
+trend-eligible visits with a logistic and a Gompertz curve (weighted by
+`1/(confluency_sd² + sigma_fov²)`, `sigma_fov` from the measured FOV-noise
+fit above — not re-guessed), picks by AIC, and predicts time to target
+confluency (`T*`, default 80%) in closed form. `NOT_REACHED` when the
+fitted carrying capacity never reaches the target, `INSUFFICIENT_DATA`
+below 5 visits / 12h span — both real, distinct outcomes, never a
+fabricated crossing time. Uncertainty on `T*` and the prediction band come
+from one shared, seeded residual bootstrap (500 resamples).
+
+**Growth model backtest (§6.2, SYNTHETIC — no real C2C12 cached yet, see
+above):** `scripts/backtest_growth.py` replays hand-generated synthetic
+growth curves (some exactly logistic — an optimistic ceiling; some an
+asymmetric Richards curve that is neither of the two candidate models — the
+fairer check) through the real replay + growth code path, fits on the
+prefix up to 40/50/60% observed confluency, and compares the predicted 80%
+crossing to the curve's own true crossing:
+
+| family | repositioning | n_windows | median abs error (h) | 90% interval coverage |
+|---|---|---:|---:|---:|
+| off_model | with_repositioning | 3 | 17.5 | 100% |
+| off_model | without_repositioning | 1 | 2.2 | 100% |
+| on_model | with_repositioning | 21 | 19.7 | 48% |
+| on_model | without_repositioning | 20 | 4.8 | 100% |
+
+**This table is a harness-correctness check, not a real prediction-accuracy
+claim** — it must not be quoted as the claims-policy backtest sentence
+(§12) until re-run on real cached sequences. The `on_model` +
+`with_repositioning` coverage sitting well below 90% is a known limitation,
+not a bug: the bootstrap resamples residuals *within* the AIC-chosen model
+only, so it misses model-selection uncertainty — exactly what dominates on
+sparse, noisy early prefixes where logistic-vs-Gompertz AIC is close to a
+tie. Full numbers: [`results/growth_backtest.md`](results/growth_backtest.md),
+[`results/growth_backtest.csv`](results/growth_backtest.csv). Three
+labeled example segments (good/poor/plateau):
+[`results/growth_examples.png`](results/growth_examples.png),
+[`results/growth_examples.md`](results/growth_examples.md).
+
+The app's Flask Timeline tab overlays the fitted curve + prediction band +
+target line on the replayed visit plot, and shows chosen model, AIC, `T*` +
+interval, and area doubling time (`ln2 / r`, early phase — never "cell
+doubling time") per segment.
+
 ## Layout
 
 ```
@@ -252,6 +315,14 @@ a fast laptop. A GPU changes this by about an order of magnitude, and
 offset the origin only — the box's own width and height stay in tile pixels. The
 console still multiplies them by the full-image factor, drawing a box far wider
 than the region actually read. `deploy/hf-space/api.py` has the correct mapping.
+
+**The growth model's `T*` interval doesn't cover model-selection
+uncertainty.** `culture/growth.py`'s residual bootstrap refits only the
+AIC-chosen model on each resample; a resample is never allowed to prefer
+the other model. This understates the interval specifically when logistic
+and Gompertz AIC are close — see `scripts/backtest_growth.py`'s own
+backtest table above, where exactly this case shows well-below-nominal
+coverage.
 
 **The hosted audit chain is per-boot.** HuggingFace Space storage is wiped on
 restart, so `prev_record_hash` links within one boot only. Records stay

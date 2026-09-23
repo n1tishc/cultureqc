@@ -1,0 +1,38 @@
+# Growth model config (cultureQC_upgrade.md §6.1).
+#
+# sigma_fov itself is NOT duplicated here -- it's measured in
+# configs/noise.yaml (scripts/fov_noise.py, real cached repositioning crops).
+# culture/growth.py reads it from there for the fit weights, the same
+# "exactly one implementation of what X means" convention culture/quality.py
+# uses for blur/exposure/uniformity.
+
+minimum_data:
+  min_visits: 5      # §6.1: "Minimum data: >= N visits ... (config; start N=5, M=12)"
+  min_hours: 12       # ... "spanning >= M hours"
+
+target:
+  default_pct: 80.0   # default "time to target" T* confluency
+
+bootstrap:
+  n_resamples: 500     # §6.1: "residual bootstrap (>= 500)"
+  interval_pct: 90      # "90% interval on T* and a prediction band"
+
+# curve_fit bounds. Not calibrated against real growth data (no real C2C12
+# cached yet -- see culture/replay.py's docstring); chosen to be permissive
+# enough not to bias the fit while still keeping curve_fit numerically well
+# behaved (unbounded rate/shape params can run away on noisy synthetic data).
+bounds:
+  logistic:
+    r_min: 0.0001   # per-hour growth-rate parameter
+    r_max: 1.0
+  gompertz:
+    b_min: 0.001    # shape parameter (dimensionless)
+    b_max: 50.0
+    c_min: 0.0001   # per-hour rate parameter
+    c_max: 1.0
+
+# Used only when a visit's crop_specs don't parse to a crop_frac present in
+# configs/noise.yaml (e.g. a single "full"-frame fallback reading, which has
+# no measured repositioning-noise entry at all) -- see
+# culture/growth.py:_sigma_fov_for_visit for exactly how/why.
+fallback_crop_frac: 0.5
