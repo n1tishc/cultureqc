@@ -26,6 +26,7 @@ from culture.qc import qc_classify
 from culture.rules import decide, LineConfig
 from culture.records import RecordWriter, verify_chain, hash_file
 from culture.rationale import generate_rationale
+from demo.flask_timeline import build_demo_timeline
 from demo.theme import CultureQCTheme
 
 WORK_DIR = tempfile.mkdtemp(prefix="cultureqc_demo_")
@@ -437,50 +438,79 @@ with gr.Blocks(
 
     with gr.Row(elem_classes="topbar"):
         gr.HTML('<div class="wordmark"><span class="wordmark-dot"></span>cultureQC</div>')
-        with gr.Row(elem_classes="topbar-controls"):
-            with gr.Row(elem_classes="control-cluster"):
-                cell_line = gr.Dropdown(
-                    choices=CELL_LINES, value="A172", show_label=False, container=False,
-                    elem_classes=["topbar-field", "cell-line-field"],
+
+    with gr.Tabs():
+        with gr.Tab("Analyze"):
+            with gr.Row(elem_classes="topbar-controls"):
+                with gr.Row(elem_classes="control-cluster"):
+                    cell_line = gr.Dropdown(
+                        choices=CELL_LINES, value="A172", show_label=False, container=False,
+                        elem_classes=["topbar-field", "cell-line-field"],
+                    )
+                    target_conf = gr.Number(
+                        value=80, minimum=0, maximum=100, step=5, show_label=False, container=False,
+                        elem_classes=["topbar-field", "target-field"],
+                    )
+                analyze_btn = gr.Button("Analyze", variant="primary", elem_classes=["analyze-btn"])
+
+            with gr.Row(elem_classes="main-row"):
+                with gr.Column(scale=62, min_width=0, elem_classes="image-pane"):
+                    view_toggle = gr.Radio(
+                        ["Original", "Overlay"], value="Overlay", visible=False, show_label=False,
+                        container=False, elem_classes="view-toggle",
+                    )
+                    loading_overlay = gr.HTML('<div class="image-loading-overlay"></div>', visible=False)
+                    image_view = gr.Image(
+                        type="filepath", show_label=False, container=False, elem_classes="hero-image",
+                        sources=["upload"], buttons=[], height="100%",
+                    )
+
+                with gr.Column(scale=38, min_width=0, elem_classes="results-pane"):
+                    results_html = gr.HTML('<div class="rc-empty">Upload an image to begin analysis.</div>')
+
+            with gr.Row(elem_classes="real-examples-row"):
+                gr.Markdown(
+                    "**Real images (EVICAN, CC BY 4.0)** — ground truth from the dataset's own "
+                    "expert masks, not this pipeline. Left: cultureQC close to GT "
+                    f"(GT {EVICAN_EXAMPLES[0][1]:.1f}%, predicted {EVICAN_EXAMPLES[0][2]:.1f}%). "
+                    f"Right: a real error case (GT {EVICAN_EXAMPLES[1][1]:.1f}%, predicted "
+                    f"{EVICAN_EXAMPLES[1][2]:.1f}%) — see `results/confluency_real_summary.md` "
+                    "for why. Click either to analyse it live."
                 )
-                target_conf = gr.Number(
-                    value=80, minimum=0, maximum=100, step=5, show_label=False, container=False,
-                    elem_classes=["topbar-field", "target-field"],
+                real_examples = gr.Examples(
+                    examples=[[path] for path, _, _ in EVICAN_EXAMPLES],
+                    inputs=[image_view],
+                    outputs=[view_toggle, results_html, original_state, overlay_state, image_view],
+                    fn=on_upload,
+                    run_on_click=True,
+                    label="",
                 )
-            analyze_btn = gr.Button("Analyze", variant="primary", elem_classes=["analyze-btn"])
 
-    with gr.Row(elem_classes="main-row"):
-        with gr.Column(scale=62, min_width=0, elem_classes="image-pane"):
-            view_toggle = gr.Radio(
-                ["Original", "Overlay"], value="Overlay", visible=False, show_label=False,
-                container=False, elem_classes="view-toggle",
+        with gr.Tab("Flask Timeline"):
+            gr.HTML(
+                '<div class="rc-card" style="border-left:3px solid var(--accent);'
+                'padding:12px 16px;margin-bottom:10px;">'
+                '<strong style="color:var(--text-primary)">Replay of recorded time-lapse '
+                '(simulated visits)</strong><br>'
+                '<span style="color:var(--text-secondary);font-size:0.85em;line-height:1.5">'
+                "Demo data: this flask&rsquo;s images are a synthetic placeholder sequence &mdash; "
+                "no real time-lapse is cached yet (see docs/DATASETS.md). Confluency, QC class, "
+                "and quality-gate numbers below are fabricated to exercise the replay/history "
+                "pipeline end-to-end, not measurements. Visit timestamps and FOV repositioning "
+                "are sampled by culture/replay.py exactly as they would be against a real cached "
+                "sequence.</span></div>"
             )
-            loading_overlay = gr.HTML('<div class="image-loading-overlay"></div>', visible=False)
-            image_view = gr.Image(
-                type="filepath", show_label=False, container=False, elem_classes="hero-image",
-                sources=["upload"], buttons=[], height="100%",
+            with gr.Row(elem_classes="topbar-controls"):
+                timeline_seed = gr.Number(
+                    value=2, precision=0, minimum=0, label="Replay seed",
+                )
+                timeline_regen_btn = gr.Button("Regenerate replay", elem_classes=["analyze-btn"])
+            timeline_summary = gr.Markdown()
+            timeline_plot = gr.Plot(show_label=False, container=False)
+            timeline_table = gr.Dataframe(
+                label="Raw history (hash-chained JSONL, one row per visit/event, per lineage)",
+                wrap=True,
             )
-
-        with gr.Column(scale=38, min_width=0, elem_classes="results-pane"):
-            results_html = gr.HTML('<div class="rc-empty">Upload an image to begin analysis.</div>')
-
-    with gr.Row(elem_classes="real-examples-row"):
-        gr.Markdown(
-            "**Real images (EVICAN, CC BY 4.0)** — ground truth from the dataset's own "
-            "expert masks, not this pipeline. Left: cultureQC close to GT "
-            f"(GT {EVICAN_EXAMPLES[0][1]:.1f}%, predicted {EVICAN_EXAMPLES[0][2]:.1f}%). "
-            f"Right: a real error case (GT {EVICAN_EXAMPLES[1][1]:.1f}%, predicted "
-            f"{EVICAN_EXAMPLES[1][2]:.1f}%) — see `results/confluency_real_summary.md` "
-            "for why. Click either to analyse it live."
-        )
-        real_examples = gr.Examples(
-            examples=[[path] for path, _, _ in EVICAN_EXAMPLES],
-            inputs=[image_view],
-            outputs=[view_toggle, results_html, original_state, overlay_state, image_view],
-            fn=on_upload,
-            run_on_click=True,
-            label="",
-        )
 
     gr.HTML(
         '<div class="app-footer">cultureQC v0.1 &middot; Cellpose-SAM &middot; EfficientNet-B0 '
@@ -510,6 +540,23 @@ with gr.Blocks(
         fn=switch_view,
         inputs=[view_toggle, original_state, overlay_state],
         outputs=[image_view],
+        show_progress="hidden",
+    )
+
+    def on_generate_timeline(seed):
+        fig, df, summary = build_demo_timeline(WORK_DIR, int(seed))
+        return fig, df, summary
+
+    demo.load(
+        fn=on_generate_timeline,
+        inputs=[timeline_seed],
+        outputs=[timeline_plot, timeline_table, timeline_summary],
+        show_progress="hidden",
+    )
+    timeline_regen_btn.click(
+        fn=on_generate_timeline,
+        inputs=[timeline_seed],
+        outputs=[timeline_plot, timeline_table, timeline_summary],
         show_progress="hidden",
     )
 
