@@ -149,10 +149,12 @@ def _write_sequence(
 
 def _plot_timeline(rows: list[dict], growth_results: dict[str, GrowthResult] | None = None) -> "plt.Figure":
     """§6.3: 'fitted curve + band, target line, ... per segment' layered onto
-    the existing raw-visit plot. growth_results is {segment_id: GrowthResult}
-    (see _fit_segment_growth) — only OK results with a t_grid get an overlay;
-    INSUFFICIENT_DATA/FIT_FAILED segments show raw visits only, same as
-    before growth fitting existed."""
+    the existing raw-visit plot. "band" here is a 90% fit uncertainty band on
+    the fitted mean curve, not a prediction band (see culture/growth.py).
+    growth_results is {segment_id: GrowthResult} (see _fit_segment_growth) —
+    only OK results with a t_grid get an overlay; INSUFFICIENT_DATA/
+    FIT_FAILED segments show raw visits only, same as before growth fitting
+    existed."""
     plt.close("all")
     growth_results = growth_results or {}
     visits = [r for r in rows if r.get("row_type") == "visit"]
@@ -302,9 +304,10 @@ def _growth_summary_markdown(growth_results: dict[str, GrowthResult]) -> str:
             f"&middot; area doubling time (early phase) {doubling_str}"
         )
     lines.append(
-        "\n*T*'s interval covers residual-bootstrap uncertainty within the chosen model only, "
-        "not uncertainty in logistic-vs-Gompertz model selection itself — see culture/growth.py's "
-        "docstring and scripts/backtest_growth.py.*"
+        "\n*The shaded band is a 90% fit uncertainty band on the fitted curve (bootstrap), not a "
+        "prediction band for a single future reading. T*'s interval covers residual-bootstrap "
+        "uncertainty within the chosen model only, not uncertainty in logistic-vs-Gompertz model "
+        "selection itself — see culture/growth.py's docstring and scripts/backtest_growth.py.*"
     )
     return "\n".join(lines)
 

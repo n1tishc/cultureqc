@@ -154,8 +154,15 @@ fit above — not re-guessed), picks by AIC, and predicts time to target
 confluency (`T*`, default 80%) in closed form. `NOT_REACHED` when the
 fitted carrying capacity never reaches the target, `INSUFFICIENT_DATA`
 below 5 visits / 12h span — both real, distinct outcomes, never a
-fabricated crossing time. Uncertainty on `T*` and the prediction band come
-from one shared, seeded residual bootstrap (500 resamples).
+fabricated crossing time. Uncertainty on `T*` and the plotted band come from
+one shared, seeded residual bootstrap (500 resamples) — the band is a 90%
+**fit uncertainty band** on the fitted mean curve, narrower than a true
+prediction band for a single future reading would be (which would also add
+per-point `sigma_fov` observation noise; §6.1 calls it a "prediction band",
+`culture/growth.py`'s docstring explains the more precise term used here).
+CPU runtime, 2 candidate fits + 500-resample bootstrap, one ~20-visit
+segment: **0.32 s median of 5 calls** (M1 Pro, single `fit_growth()` call,
+`results/growth_runtime.txt`) — well inside an interactive app callback.
 
 **Growth model backtest (§6.2, SYNTHETIC — no real C2C12 cached yet, see
 above):** `scripts/backtest_growth.py` replays hand-generated synthetic
@@ -168,9 +175,11 @@ crossing to the curve's own true crossing:
 | family | repositioning | n_windows | median abs error (h) | 90% interval coverage |
 |---|---|---:|---:|---:|
 | off_model | with_repositioning | 3 | 17.5 | 100% |
-| off_model | without_repositioning | 1 | 2.2 | 100% |
 | on_model | with_repositioning | 21 | 19.7 | 48% |
 | on_model | without_repositioning | 20 | 4.8 | 100% |
+
+(`off_model` + `without_repositioning` had only 1 resolved window — omitted here as too few to
+summarize, not hidden: it's in `results/growth_backtest.csv`.)
 
 **This table is a harness-correctness check, not a real prediction-accuracy
 claim** — it must not be quoted as the claims-policy backtest sentence
@@ -185,10 +194,16 @@ labeled example segments (good/poor/plateau):
 [`results/growth_examples.png`](results/growth_examples.png),
 [`results/growth_examples.md`](results/growth_examples.md).
 
-The app's Flask Timeline tab overlays the fitted curve + prediction band +
-target line on the replayed visit plot, and shows chosen model, AIC, `T*` +
-interval, and area doubling time (`ln2 / r`, early phase — never "cell
-doubling time") per segment.
+The app's Flask Timeline tab overlays the fitted curve + fit uncertainty
+band + target line on the replayed visit plot, and shows chosen model, AIC,
+`T*` + interval, and area doubling time (`ln2 / r`, early phase — never
+"cell doubling time") per segment. Area doubling time is the model's
+specific growth rate at the segment's first visit — a **rate**, independent
+of whether/when the segment ultimately reaches the target: the "plateau"
+example below shows a *faster* early doubling time than "poor" even though
+it never reaches 80%, because its generating curve rises steeply to a low
+ceiling while "poor"'s rises slowly throughout to a higher one — two
+different axes (rate vs. ceiling), not a contradiction.
 
 ## Layout
 

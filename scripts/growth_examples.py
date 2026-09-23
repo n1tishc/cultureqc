@@ -134,6 +134,16 @@ def main():
         plot_example(ax, example, visits, result)
         md_lines.append(f"- **{example['tag']}** ({example['title']}): {status_line(result)}")
 
+    md_lines += [
+        "",
+        "Note the doubling-time pair above: **plateau** reports a *faster* early doubling time than",
+        "**poor** even though plateau never reaches the target and poor eventually does. That's",
+        "expected, not a bug — doubling time is a rate (how fast growth is happening right now),",
+        "independent of the fitted ceiling K (how high it will ever get). Plateau's generating curve",
+        "rises steeply to a low ceiling; poor's rises slowly throughout to a much higher one. See",
+        "culture/growth.py:_area_doubling_time's docstring.",
+    ]
+
     fig.tight_layout()
     png_path = os.path.join(RESULTS_DIR, "growth_examples.png")
     fig.savefig(png_path, facecolor=BG_CARD)

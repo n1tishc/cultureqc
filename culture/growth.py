@@ -18,13 +18,21 @@ fits; both are reported, never just the winner.
 the fitted carrying capacity K never reaches the target, status is
 `NOT_REACHED` — a real, distinct outcome, never a fabricated crossing time.
 
-**Uncertainty on T*** and the prediction band both come from one shared
+**Uncertainty on T*** and the plotted band both come from one shared
 residual bootstrap (>= 500 resamples, seeded via `seed`): resample fit
 residuals with replacement, refit the chosen model to each resampled series,
 and use the resulting parameter sets both for percentiles of T* (a 90%
-interval) and for percentiles of the fitted curve itself over a time grid (a
-prediction band) — not two separate, possibly-inconsistent uncertainty
-computations.
+interval) and for percentiles of the fitted *curve itself* over a time grid
+— not two separate, possibly-inconsistent uncertainty computations.
+
+Call that curve band a **fit uncertainty band**, not a "prediction band":
+it's the 90% spread of the fitted mean curve across resampled refits, which
+is narrower than a true prediction band for a *future single observation*
+would be (a real prediction band would also add each point's own
+`sigma_fov`-scale observation noise on top, which this does not). §6.1 says
+"prediction band"; this module (and the UI, and the README) intentionally
+say the more precise thing instead so the plotted band isn't read as wider
+than it is.
 
 **"Area doubling time"** (`ln2 / r`, early phase — never "cell doubling
 time": this is FOV-area growth, not a mitotic count) is reported
@@ -277,7 +285,16 @@ def _area_doubling_time(model_name: str, params: dict, t_ref: float) -> float | 
     """`ln2 / mu`, early phase. None if the early-phase specific growth rate
     is non-positive (e.g. fit already past inflection at the first visit) —
     "doubling time" isn't meaningful there, so this returns None rather than
-    a negative or infinite number."""
+    a negative or infinite number.
+
+    This is a RATE, independent of the fitted carrying capacity K — a
+    segment can have a fast early doubling time and still be NOT_REACHED
+    (rises steeply to a low ceiling), while a segment with a much slower
+    doubling time can still reach a high target eventually (rises slowly
+    throughout, to a higher ceiling). Rate and ceiling are different axes;
+    don't read a short doubling time as "this segment is doing well" without
+    also checking t_star_status/K. See scripts/growth_examples.py's "poor"
+    vs "plateau" pair for a concrete instance of this."""
     mu = _specific_growth_rate(model_name, params, t_ref)
     if mu <= 0:
         return None
@@ -295,7 +312,10 @@ def _t_star_interval(model_name: str, boot_params: list[dict], target: float) ->
     return (float(lo), float(hi)), len(t_stars)
 
 
-def _prediction_band(model_name: str, boot_params: list[dict], t_grid: np.ndarray) -> tuple[list[float] | None, list[float] | None]:
+def _fit_band(model_name: str, boot_params: list[dict], t_grid: np.ndarray) -> tuple[list[float] | None, list[float] | None]:
+    """90% spread of the fitted *mean curve* across bootstrap refits — a fit
+    uncertainty band, not a prediction band for a future single observation
+    (see module docstring's 'Call that curve band...' note)."""
     if not boot_params:
         return None, None
     fn = MODEL_FNS[model_name]
@@ -324,7 +344,7 @@ class GrowthResult:
     area_doubling_time_hours: float | None = None
     t0_timestamp: str | None = None  # ISO timestamp the t=0 hour axis is relative to
     t_grid_hours: list | None = None
-    y_grid: dict | None = None  # {"mean": [...], "lo": [...]|None, "hi": [...]|None}
+    y_grid: dict | None = None  # {"mean": [...], "lo": [...]|None, "hi": [...]|None} -- lo/hi is a 90% FIT uncertainty band, not a prediction band (see module docstring)
 
 
 def fit_growth(
@@ -388,7 +408,7 @@ def fit_growth(
     t_grid = np.linspace(float(t.min()), grid_end, 60)
     fn = MODEL_FNS[chosen_model]
     y_mean = fn(t_grid, *[params[k] for k in PARAM_NAMES[chosen_model]]).tolist()
-    y_lo, y_hi = _prediction_band(chosen_model, boot_params, t_grid)
+    y_lo, y_hi = _fit_band(chosen_model, boot_params, t_grid)
 
     return GrowthResult(
         segment_id=segment_id,

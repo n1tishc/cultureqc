@@ -1,0 +1,11 @@
+culture.growth.fit_growth() CPU runtime -- 20-visit synthetic segment,
+2 candidate models (logistic + Gompertz) + 500-resample residual bootstrap,
+5 calls on the same input (first call after one untimed warmup call):
+
+  run 1: 0.320 s
+  run 2: 0.318 s
+  run 3: 0.318 s
+  run 4: 0.318 s
+  run 5: 0.319 s
+
+median: 0.318 s

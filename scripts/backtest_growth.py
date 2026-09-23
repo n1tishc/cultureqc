@@ -63,6 +63,13 @@ from culture.replay import build_replay_visits
 
 RESULTS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "results")
 
+# A group's median/coverage isn't a meaningful summary statistic below this
+# many resolved windows (one window IS one data point) -- such groups stay
+# in the full CSV but are dropped from the printed/README summary table so a
+# single lucky-or-unlucky sample doesn't sit next to a real distribution and
+# invite the same misread the surrounding caveats exist to prevent.
+MIN_WINDOWS_FOR_SUMMARY_TABLE = 3
+
 TARGET = 80.0
 REACH_THRESHOLDS = [40.0, 50.0, 60.0]
 N_FRAMES = 30
@@ -241,6 +248,8 @@ def main():
     df.to_csv(os.path.join(RESULTS_DIR, "growth_backtest.csv"), index=False)
 
     summary = summarize(df)
+    table_summary = summary[summary["n_windows"] >= MIN_WINDOWS_FOR_SUMMARY_TABLE]
+    omitted = summary[summary["n_windows"] < MIN_WINDOWS_FOR_SUMMARY_TABLE]
 
     lines = [
         "# Growth model backtest (SYNTHETIC — harness correctness check, not real prediction accuracy)",
@@ -268,15 +277,25 @@ def main():
         "whichever wins can extrapolate the same short prefix to a meaningfully different T*. See",
         "culture/growth.py's own docstring for the same caveat.",
         "",
+        f"Groups with fewer than {MIN_WINDOWS_FOR_SUMMARY_TABLE} resolved windows are omitted from this",
+        "table (one window is one data point -- a median/coverage % over 1-2 of them isn't a summary",
+        "statistic); they're still in the CSV, not hidden, just not presented as if they were.",
+        "",
         "| family | repositioning | n_windows | median abs error (h) | 90% interval coverage |",
         "|---|---|---|---|---|",
     ]
-    for _, r in summary.iterrows():
+    for _, r in table_summary.iterrows():
         lines.append(
             f"| {r['family']} | {r['repositioning']} | {int(r['n_windows'])} | "
             f"{r['median_abs_error_hours']:.1f} | {r['coverage_pct']:.0f}% |"
         )
     lines.append("")
+    if len(omitted):
+        lines.append(
+            f"Omitted for n_windows < {MIN_WINDOWS_FOR_SUMMARY_TABLE} (see growth_backtest.csv for the raw rows): "
+            + "; ".join(f"{r['family']}/{r['repositioning']} (n={int(r['n_windows'])})" for _, r in omitted.iterrows())
+        )
+        lines.append("")
 
     md_path = os.path.join(RESULTS_DIR, "growth_backtest.md")
     with open(md_path, "w") as f:

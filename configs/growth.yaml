@@ -15,7 +15,7 @@ target:
 
 bootstrap:
   n_resamples: 500     # §6.1: "residual bootstrap (>= 500)"
-  interval_pct: 90      # "90% interval on T* and a prediction band"
+  interval_pct: 90      # 90% interval on T* and on the fitted curve's fit-uncertainty band (§6.1 calls this a "prediction band"; culture/growth.py's docstring explains why we call it a fit uncertainty band instead)
 
 # curve_fit bounds. Not calibrated against real growth data (no real C2C12
 # cached yet -- see culture/replay.py's docstring); chosen to be permissive

@@ -23,9 +23,14 @@ what dominates here -- on sparse, noisy early-reach prefixes, logistic vs Gomper
 whichever wins can extrapolate the same short prefix to a meaningfully different T*. See
 culture/growth.py's own docstring for the same caveat.
 
+Groups with fewer than 3 resolved windows are omitted from this
+table (one window is one data point -- a median/coverage % over 1-2 of them isn't a summary
+statistic); they're still in the CSV, not hidden, just not presented as if they were.
+
 | family | repositioning | n_windows | median abs error (h) | 90% interval coverage |
 |---|---|---|---|---|
 | off_model | with_repositioning | 3 | 17.5 | 100% |
-| off_model | without_repositioning | 1 | 2.2 | 100% |
 | on_model | with_repositioning | 21 | 19.7 | 48% |
 | on_model | without_repositioning | 20 | 4.8 | 100% |
+
+Omitted for n_windows < 3 (see growth_backtest.csv for the raw rows): off_model/without_repositioning (n=1)
