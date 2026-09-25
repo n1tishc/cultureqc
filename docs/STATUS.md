@@ -15,7 +15,7 @@ Nothing is merged to `main`.
 | 3 Growth model + T* + timeline | Done, **backtest synthetic only** | `culture/growth.py`, `tests/test_growth.py`, `results/growth_backtest.md`, `results/growth_examples.*`, `results/growth_runtime.txt` | Backtest is a harness check; don't quote it until A1 reruns it on real sequences. Missing one §6.1 item, see below |
 | 4, 4b, 5, 5b, 6, 7, 8 | Not started | — | Minimal versions in Phase A |
 
-Tests: `pytest tests` → 56 passed, 1 xfailed (2026-09-25, after A0.2).
+Tests: `pytest tests` → 81 passed, 1 xfailed (2026-09-25, after A2, A5 and the one-step prediction).
 
 ## Phase A progress
 
@@ -24,8 +24,11 @@ Tests: `pytest tests` → 56 passed, 1 xfailed (2026-09-25, after A0.2).
 | A0.1 This file | Done |
 | A0.2 `Cache.build()` flush fix | Done: flushes all tables every `flush_every` records (default 100) and at the end; `tests/test_cache_resume.py` (kill mid-build → flushed rows on disk → rerun computes only the rest, no duplicates, same result as an uninterrupted build). Checked that the key test fails with periodic flushing disabled. |
 | A0.3 Commit the `nb/03` files | Done in `544861c` (the files arrived in `files/`); `nb/03` is pinned to `2f8b5d0`, which adds a stop-before-download check for colliding frame numbers and runs the GPU pass as a single `build()` call. Read against the repo: git remote, `requirements.txt`, `download_sources.py` / `extract_sprites.py` arguments, `synth_contamination.add_bacteria` / `get_cell_mask` / `SEVERITY_RANGES`, `Cache.build()` and `replay._sequence_frames` all match. Ran locally at `2f8b5d0` on fake 12-bit sequences: fetch (mid-grey 8-bit PNGs, conditions parsed from folder names, 85 hourly frames / 84 h) → fault set (all three types) → `Cache.build()` (quality only) → replay on a cached sequence, with no unset `frame_idx`. Not testable here: OSF API calls and GPU inference (the notebook's checkpoints 1–3 cover those). |
-| A0.5 `nb/03` Colab run | **Ready for you to run** (Colab, GPU). Three checkpoints: OSF layout, sample frames, budget test |
-| A1–A8 | Not started. A1, A2's fleet, A4, A6, A7 and V2 need `nb/03` output. Work that can start without it: A2's adapter (fixture test), A5 calibration (cached val logits exist), A8 latency, the §6.1 one-step-ahead prediction |
+| A0.5 `nb/03` Colab run | **Running** (started by you, 2026-09-25, at pinned `2f8b5d0`) |
+| A2 adapter | Done (`0807b65`). `build_replay_visits(..., frames=)` replays one fault sequence from its `fault_manifest.parquet` rows, ordered by timestamp, and copies each frame's ground truth into `visit["fault"]`. Tables load once per call (`ReplayTables`, shareable across a fleet). Per-call overrides for cadence, `n_fov` and `crop_frac`, recorded in `visit["replay_params"]`. Frames without cached seg rows raise instead of reading 0%. `split_sequences()` / `fault_split()` give a seeded 40/60 split by base sequence, with fault twins following their base. Default outputs are identical to the old code (152 fixture visits, 10 seeds). The fleet run itself needs `nb/03` output |
+| A5 calibration | Done (`fb37afe`). T = **1.5536**, fit on synthetic val (n=645). Top-label ECE: val 0.0102 → **0.0057** (in-sample; V8 ≤ 0.05 passes, and passed before scaling too); test 0.0187 → 0.0139 (held out). Per-class ECE is in `results/calibration_summary.md`. Provenance: synthetic, so it says little about C2C12. Replay applies T when the logits' model_version matches `configs/calibration.yaml`. **`culture/qc.py` (live app) does not apply it yet** (Phase B) |
+| §6.1 one-step-ahead | Done. `culture/growth.py`: `predict_next()`, `one_step_ahead_series()`; `predictive_sd = sqrt(fit_sd² + obs_sd²)`, with obs_sd = σ_fov at the *expected* confluency / √n_fov (config `one_step_ahead.fov_scaling`). Synthetic check with the model correct and a test noise model: SD(z) = **1.23**, mean 0.15, n=285 (fit_sd alone: 2.14; obs_sd alone: 1.72). So z is slightly over-dispersed even when the curve shape is right; A6 must check the z scale on the tuning fleet. A stall shows in the one-step residual for about 4 visits, then the refit bends into a plateau and absorbs it, so SPC must accumulate early (CUSUM) |
+| A1, A3, A4, A6, A7, A8 | Not started. A1, A4, A6, A7 and V2 need `nb/03` output; A8 can run any time |
 
 ## Schedule
 
@@ -61,13 +64,13 @@ date that actually binds is the **code freeze on Sun Oct 4**. Each day
    already unlikely to reach 80% in ~85 h, will read lower still, so the
    higher targets may have few or no crossings. Report n per target, as A1
    says.
-4. **§6.1 one-step-ahead expected value isn't built.** `culture/growth.py`
-   has no per-visit prediction + predictive SD from prior visits. A6's growth
-   residual needs it. Small addition to `growth.py`, no rewrite.
+4. ~~§6.1 one-step-ahead expected value isn't built.~~ Built (see Phase A
+   table).
 5. **Replay default cadence doesn't fit C2C12.** `configs/replay.yaml` has
    `mean_interval_hours: 20`; on ~85 h sequences that's ≤ 4 visits, below the
    growth model's minimum of 5. A2 validates at 6 h and 12 h instead, passed
-   per run rather than by changing the config default.
+   per call (`mean_interval_hours=`, `jitter_hours=`) rather than by
+   changing the config default.
 6. **`cache_slim/` doesn't exist locally.** Phase A scripts read the slim
    cache; locally that is `cache/`. Scripts should take `--cache-dir`
    (e.g. `scripts/fov_noise.py` defaults to `cache_slim`).
@@ -91,7 +94,23 @@ date that actually binds is the **code freeze on Sun Oct 4**. Each day
     from the full frame, so a tile's local density can differ from its bin.
     Worth checking when V4's result comes in.
 
+12. **`configs/noise.yaml` is measured almost entirely below 10%
+    confluency.** It was fit on EVICAN/AutoQC-Bench crops whose predicted
+    confluency has median 3.2% and 75th percentile 5.5%
+    (`results/fov_noise.csv`). At 30–80%, where growth matters, the linear
+    fit is extrapolated: for 0.25-frac crops σ_fov ≈ 0.27 + 1.06 × pct,
+    i.e. about 40 pp at 37%. That affects the growth fit weights, the
+    one-step obs_sd, and V2's denominator. **Re-measure σ_fov on C2C12
+    frames** (8 cached crops per frame across the whole growth range) with
+    `scripts/fov_noise.py` once `nb/03` is on the Mac, before A1/V2/A6.
+13. **Calibration (A5) only covers replay.** The live app path
+    (`culture/qc.py`) still reports raw softmax. Apply T there in Phase B.
+
 ## Open questions for the human
+
+Both were unanswered when `nb/03` started, so unless you stopped the run
+the defaults hold: no shifted tiles (B3's shift test is scoped out) and
+CLS-only for V5(a).
 
 - Shifted tiles: fold into `nb/03`, or drop B3's shift test?
 - `scripts/cache_tile_embeddings.py` only embeds the paths it's given (in

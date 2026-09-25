@@ -61,9 +61,33 @@ quality-failing visits or re-split on `model_versions` changes; that
 enforcement point stays in `culture/history.py` (see its own docstring), not
 duplicated here.
 
+**One-step-ahead expected value** (§6.1, for Slice 5 / A6 SPC):
+`predict_next(prior_visits, new_visit)` fits the prior visits of the segment
+(same two models, AIC choice, weights) and evaluates the chosen curve at the
+new visit's time. Its predictive SD combines two parts, both returned:
+  - `fit_sd`: SD of the bootstrap refits' curves at that time (parameter
+    uncertainty given the chosen model; same model-selection limit as T*);
+  - `obs_sd`: sigma_fov from configs/noise.yaml at the *expected* confluency
+    (not the observed one: a contaminated or stalled reading must not shrink
+    its own SD), divided by sqrt(n_fov) when `one_step_ahead.fov_scaling` is
+    "sqrt_n". That assumes a visit's FOVs are independent positions, which
+    is what a real visit samples; replayed crops all come from one frame, so
+    on replay it may be optimistic. "none" uses one FOV's sigma.
+The visit's own confluency_sd is not used (it is 0 at 1 FOV).
+`predictive_sd = sqrt(fit_sd^2 + obs_sd^2)`; `z = (observed - expected) /
+predictive_sd`. Neither part covers the curve itself being the wrong shape
+for real data; A6 checks the z scale on the tuning fleet.
+`one_step_ahead_series(visits)` does this for every visit of one segment
+window, in time order. Unlike fit_growth() it skips quality-failed visits
+itself (status QUALITY_FAILED, not used as priors), since replayed streams
+reach it without going through History.
+
 Usage:
     from culture.growth import fit_growth
     result = fit_growth(visits, target_pct=80.0, seed=0)
+
+    from culture.growth import one_step_ahead_series
+    preds = one_step_ahead_series(visits, seed=0)   # one OneStepPrediction per visit
 """
 
 from __future__ import annotations
@@ -113,7 +137,7 @@ def growth_config_hash(config_path: str = _DEFAULT_CONFIG_PATH) -> str:
 
 # -- weighting -----------------------------------------------------------
 
-def _sigma_fov_for_visit(visit: dict, noise_cfg: dict, fallback_frac: float) -> float:
+def _sigma_fov_for_visit(visit: dict, noise_cfg: dict, fallback_frac: float, pct: float | None = None) -> float:
     """configs/noise.yaml's measured `sigma_fov(confluency_pct) = intercept +
     slope*pct`, per crop_frac (scripts/fov_noise.py, real cached
     repositioning crops) — not re-measured or guessed here. Parses the
@@ -123,7 +147,10 @@ def _sigma_fov_for_visit(visit: dict, noise_cfg: dict, fallback_frac: float) -> 
     spec (e.g. a single "full"-frame fallback reading — see
     culture/replay.py:_sample_crops_for_frame — which has no measured
     crop-repositioning-noise entry at all; the fallback frac is the closest
-    available proxy, not a measurement of the full-frame case)."""
+    available proxy, not a measurement of the full-frame case).
+
+    `pct` evaluates sigma_fov at that confluency instead of the visit's own
+    confluency_mean (one-step-ahead prediction uses the *expected* value)."""
     fracs = set()
     for spec in visit.get("crop_specs") or []:
         m = _CROP_FRAC_RE.search(spec)
@@ -133,7 +160,7 @@ def _sigma_fov_for_visit(visit: dict, noise_cfg: dict, fallback_frac: float) -> 
         fracs = {str(fallback_frac)}
 
     available = {float(k): v for k, v in noise_cfg["crop_fracs"].items()}
-    pct = visit["confluency_mean"]
+    pct = visit["confluency_mean"] if pct is None else pct
     sigmas = []
     for frac in fracs:
         entry = noise_cfg["crop_fracs"].get(frac)
@@ -428,3 +455,146 @@ def fit_growth(
         t_grid_hours=t_grid.tolist(),
         y_grid={"mean": y_mean, "lo": y_lo, "hi": y_hi},
     )
+
+
+# -- one-step-ahead expected value (§6.1, for SPC) -------------------------
+
+@dataclass
+class OneStepPrediction:
+    visit_id: str | None
+    timestamp: str
+    status: str  # "OK" | "INSUFFICIENT_DATA" | "FIT_FAILED" | "QUALITY_FAILED"
+    n_prior: int
+    hours_ahead: float | None = None  # new visit's time minus the last prior visit's
+    chosen_model: str | None = None
+    observed: float | None = None
+    expected: float | None = None
+    fit_sd: float | None = None
+    obs_sd: float | None = None
+    predictive_sd: float | None = None
+    z: float | None = None
+    n_bootstrap_success: int | None = None
+
+
+def _one_step_settings(cfg: dict, n_boot: int | None, fov_scaling: str | None) -> tuple[int, str]:
+    osa = cfg.get("one_step_ahead", {})
+    n_boot = osa.get("n_resamples", 200) if n_boot is None else n_boot
+    fov_scaling = osa.get("fov_scaling", "sqrt_n") if fov_scaling is None else fov_scaling
+    if fov_scaling not in ("sqrt_n", "none"):
+        raise ValueError(f"fov_scaling must be 'sqrt_n' or 'none', got {fov_scaling!r}")
+    return int(n_boot), fov_scaling
+
+
+def _check_one_segment(visits: list[dict]) -> None:
+    segs = {v.get("segment_id") for v in visits}
+    if len(segs) > 1:
+        raise ValueError(f"visits span more than one segment: {sorted(map(str, segs))}")
+
+
+def _predict_next(prior: list[dict], new_visit: dict, cfg: dict, noise_cfg: dict, n_boot: int,
+                  fov_scaling: str, rng: np.random.Generator) -> OneStepPrediction:
+    pred = OneStepPrediction(visit_id=new_visit.get("visit_id"), timestamp=new_visit["timestamp"],
+                             status="INSUFFICIENT_DATA", n_prior=len(prior),
+                             observed=float(new_visit["confluency_mean"]))
+    if not prior:
+        return pred
+    times = pd.to_datetime(pd.Series([v["timestamp"] for v in prior] + [new_visit["timestamp"]]), format="ISO8601")
+    hours = ((times - times.iloc[:-1].min()).dt.total_seconds() / 3600.0).to_numpy()
+    t, t_new = hours[:-1], float(hours[-1])
+    if t_new <= t.max():
+        raise ValueError(f"new visit at {new_visit['timestamp']} is not after the prior visits")
+    pred.hours_ahead = float(t_new - t.max())
+
+    md = cfg["minimum_data"]
+    if len(prior) < md["min_visits"] or float(t.max() - t.min()) < md["min_hours"]:
+        return pred
+
+    y = np.array([v["confluency_mean"] for v in prior], dtype=np.float64)
+    fallback_frac = cfg["fallback_crop_frac"]
+    weights = _weights(prior, noise_cfg, fallback_frac)
+    fits = {}
+    for model_name in ("logistic", "gompertz"):
+        fit = _fit_one(model_name, t, y, weights, cfg["bounds"])
+        if fit is not None:
+            fits[model_name] = fit
+    if not fits:
+        pred.status = "FIT_FAILED"
+        return pred
+    model = min(fits, key=lambda m: fits[m]["aic"])
+    params = fits[model]["params"]
+    boot = _bootstrap_refit(model, params, t, y, weights, cfg["bounds"], n_boot, rng)
+    pred.chosen_model, pred.n_bootstrap_success = model, len(boot)
+    if len(boot) < max(10, 0.5 * n_boot):
+        pred.status = "FIT_FAILED"
+        return pred
+
+    fn, names = MODEL_FNS[model], PARAM_NAMES[model]
+    t_arr = np.array([t_new])
+    expected = float(fn(t_arr, *[params[k] for k in names])[0])
+    fit_sd = float(np.std([fn(t_arr, *[p[k] for k in names])[0] for p in boot], ddof=1))
+    sigma = _sigma_fov_for_visit(new_visit, noise_cfg, fallback_frac, pct=float(np.clip(expected, 0.0, 100.0)))
+    n_fov = max(int(new_visit.get("n_fov") or len(new_visit.get("crop_specs") or []) or 1), 1)
+    obs_sd = float(sigma / np.sqrt(n_fov)) if fov_scaling == "sqrt_n" else float(sigma)
+    pred_sd = float(np.sqrt(fit_sd**2 + obs_sd**2))
+
+    pred.status = "OK"
+    pred.expected, pred.fit_sd, pred.obs_sd, pred.predictive_sd = expected, fit_sd, obs_sd, pred_sd
+    pred.z = float((pred.observed - expected) / pred_sd) if pred_sd > 0 else None
+    return pred
+
+
+def _passes_quality(v: dict) -> bool:
+    q = v.get("quality")
+    return not (isinstance(q, dict) and q.get("pass") is False)
+
+
+def predict_next(
+    prior_visits: list[dict],
+    new_visit: dict,
+    seed: int = 0,
+    config_path: str = _DEFAULT_CONFIG_PATH,
+    noise_config_path: str = _NOISE_CONFIG_PATH,
+    n_boot: int | None = None,
+    fov_scaling: str | None = None,
+) -> OneStepPrediction:
+    """§6.1 one-step-ahead expected value + predictive SD for `new_visit`,
+    from a fit on `prior_visits` (same segment, already trend-filtered, all
+    earlier than `new_visit`). See the module docstring for what the SD
+    contains. Deterministic given `seed`."""
+    cfg = _load_yaml(config_path)
+    noise_cfg = _load_yaml(noise_config_path)
+    n_boot, fov_scaling = _one_step_settings(cfg, n_boot, fov_scaling)
+    _check_one_segment(prior_visits + [new_visit])
+    prior = sorted(prior_visits, key=lambda v: pd.Timestamp(v["timestamp"]))
+    return _predict_next(prior, new_visit, cfg, noise_cfg, n_boot, fov_scaling, np.random.default_rng(seed))
+
+
+def one_step_ahead_series(
+    visits: list[dict],
+    seed: int = 0,
+    config_path: str = _DEFAULT_CONFIG_PATH,
+    noise_config_path: str = _NOISE_CONFIG_PATH,
+    n_boot: int | None = None,
+    fov_scaling: str | None = None,
+) -> list[OneStepPrediction]:
+    """One OneStepPrediction per visit of one segment window, in time order:
+    visit i is predicted from the quality-passing visits before it. The
+    bootstrap for visit i is seeded from (seed, i), so a prediction doesn't
+    depend on how many were made before it. Compute this once per replayed
+    stream and keep it: SPC parameter sweeps only need the z values."""
+    cfg = _load_yaml(config_path)
+    noise_cfg = _load_yaml(noise_config_path)
+    n_boot, fov_scaling = _one_step_settings(cfg, n_boot, fov_scaling)
+    _check_one_segment(visits)
+
+    ordered = sorted(visits, key=lambda v: pd.Timestamp(v["timestamp"]))
+    out, prior = [], []
+    for i, v in enumerate(ordered):
+        if not _passes_quality(v):
+            out.append(OneStepPrediction(visit_id=v.get("visit_id"), timestamp=v["timestamp"],
+                                         status="QUALITY_FAILED", n_prior=len(prior),
+                                         observed=float(v["confluency_mean"])))
+            continue
+        out.append(_predict_next(prior, v, cfg, noise_cfg, n_boot, fov_scaling, np.random.default_rng([seed, i])))
+        prior.append(v)
+    return out

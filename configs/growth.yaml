@@ -17,6 +17,11 @@ bootstrap:
   n_resamples: 500     # §6.1: "residual bootstrap (>= 500)"
   interval_pct: 90      # 90% interval on T* and on the fitted curve's fit-uncertainty band (§6.1 calls this a "prediction band"; culture/growth.py's docstring explains why we call it a fit uncertainty band instead)
 
+# One-step-ahead expected value for SPC (§6.1; culture/growth.py predict_next).
+one_step_ahead:
+  n_resamples: 200     # bootstrap refits per prediction (one prediction per visit, so fewer than T*'s 500)
+  fov_scaling: sqrt_n  # obs noise = sigma_fov / sqrt(n_fov), i.e. independent FOV positions; "none" = one FOV's sigma_fov
+
 # curve_fit bounds. Not calibrated against real growth data (no real C2C12
 # cached yet -- see culture/replay.py's docstring); chosen to be permissive
 # enough not to bias the fit while still keeping curve_fit numerically well
