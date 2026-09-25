@@ -410,7 +410,8 @@ def fetch(out_dir: str, inventory: str | None = None, local_src: str | None = No
     print(f"selected {len(selected)} of {len(seqs)} sequences "
           f"({per_experiment}/experiment across {len(by_exp)} experiments)")
 
-    # -- list + download selected frames (raw) --
+    # -- list + check every selected sequence first, so a naming problem stops
+    # the run before anything is downloaded --
     for s in selected:
         if s["frames"] is None:
             entries = [e for e in _list_full(s["listing"]) if e["name"].lower().endswith(TIFF_EXT)]
@@ -418,10 +419,23 @@ def fetch(out_dir: str, inventory: str | None = None, local_src: str | None = No
                 [{"name": e["name"], "frame_idx": frame_index(e["name"]), "download": e["download"]} for e in entries],
                 key=lambda x: x["frame_idx"],
             )
+        idx = [fr["frame_idx"] for fr in s["frames"]]
+        if len(set(idx)) != len(idx):
+            # frame_index() takes the LAST number in the filename. If the frame
+            # number sits elsewhere (e.g. "t0300_f01.tif"), every frame gets the
+            # same index and the whole sequence collapses onto one raw path.
+            raise SystemExit(
+                f"{s['seq_path']}: {len(idx)} frames but only {len(set(idx))} distinct frame numbers "
+                f"(e.g. {[fr['name'] for fr in s['frames'][:3]]}). Fix frame_index() for this naming "
+                "before downloading."
+            )
         s["n_frames_total"] = len(s["frames"])
         s["kept"] = s["frames"][::stride]
         s["sequence_id"] = f"c2c12_{s['experiment']}_{slug(s['leaf'])}"
         s["condition"] = cond_override.get(s["leaf"], parse_condition(s["leaf"]))
+
+    # -- download selected frames (raw) --
+    for s in selected:
         for fr in s["kept"]:
             raw_path = os.path.join(raw_dir, s["sequence_id"], f"{fr['frame_idx']:05d}.tif")
             if "local" in fr:
