@@ -23,16 +23,16 @@ Tests: `pytest tests` → 56 passed, 1 xfailed (2026-09-25, after A0.2).
 |---|---|
 | A0.1 This file | Done |
 | A0.2 `Cache.build()` flush fix | Done: flushes all tables every `flush_every` records (default 100) and at the end; `tests/test_cache_resume.py` (kill mid-build → flushed rows on disk → rerun computes only the rest, no duplicates, same result as an uninterrupted build). Checked that the key test fails with periodic flushing disabled. |
-| A0.3 Commit the `nb/03` files | **Blocked: the files are not in the repo.** `scripts/fetch_c2c12.py`, `scripts/make_fault_set.py`, `scripts/cache_tile_embeddings.py`, `nb/03_cache_additions.ipynb` and `HANDOFF_nb03.md` are described as "provided" but aren't in the repo, `~/Downloads`, `~/Desktop` or `~/Documents`. |
-| A0.5 `nb/03` Colab run | Blocked on A0.3 |
+| A0.3 Commit the `nb/03` files | Done in `544861c` (the files arrived in `files/`); `PINNED_SHA = '544861c'` in `nb/03`. Read against the repo: git remote, `requirements.txt`, `download_sources.py` / `extract_sprites.py` arguments, `synth_contamination.add_bacteria` / `get_cell_mask` / `SEVERITY_RANGES`, `Cache.build()` and `replay._sequence_frames` all match. Ran locally at `544861c` on fake 12-bit sequences: fetch (mid-grey 8-bit PNGs, conditions parsed from folder names, 85 hourly frames / 84 h) → fault set (all three types) → `Cache.build()` (quality only) → replay on a cached sequence, with no unset `frame_idx`. Not testable here: OSF API calls and GPU inference (the notebook's checkpoints 1–3 cover those). |
+| A0.5 `nb/03` Colab run | **Ready for you to run** (Colab, GPU). Three checkpoints: OSF layout, sample frames, budget test |
 | A1–A8 | Not started. A1, A2's fleet, A4, A6, A7 and V2 need `nb/03` output. Work that can start without it: A2's adapter (fixture test), A5 calibration (cached val logits exist), A8 latency, the §6.1 one-step-ahead prediction |
 
 ## Schedule
 
 The spec's target review date (Sat Sep 26) **can't be met**. Phase A's timebox
-is "2 working days after `nb/03` completes"; `nb/03` hasn't run and its inputs
-don't exist yet. The date that actually binds is the **code freeze on Sun
-Oct 4**. Each day `nb/03` slips comes out of Phase B.
+is "2 working days after `nb/03` completes", and `nb/03` hasn't run yet. The
+date that actually binds is the **code freeze on Sun Oct 4**. Each day
+`nb/03` slips comes out of Phase B.
 
 ## Drift and gaps found (spec vs repo)
 
@@ -49,8 +49,8 @@ Oct 4**. Each day `nb/03` slips comes out of Phase B.
    AutoQC-Bench, but only in the Drive full cache. A4's patch-kNN needs
    patches: for C2C12 frames they come from `staged/c2c12_patch_embeddings.zip`
    (per `nb/03`); for the synthetic-tile side (V5a AUROC, optional bank
-   normals) the synthetic tile patches have to be copied from Drive, or
-   produced by `scripts/cache_tile_embeddings.py` once that file arrives.
+   normals) the synthetic tile patches have to be copied from Drive (see the
+   open question below).
    Also, `export_slim()` drops *all* patch embeddings, while §4A.3 says the
    slim copy should keep the replay/eval subsets.
 3. **V1 is only partly measured.** Held-out EVICAN MAE is **8.35 pp** (n=33,
@@ -78,11 +78,24 @@ Oct 4**. Each day `nb/03` slips comes out of Phase B.
 8. **Spec §0.3 names `app.py`;** the app is `demo/app.py`.
 9. **`docs/DATASETS.md` still lists C2C12 as deferred.** It needs the
    CC BY 4.0 attribution entry once `nb/03` brings the data in.
+10. **Dimmed frames at onset match the original frame byte for byte.** The
+    lamp-dimming factor ramps from exactly 1.0, so each dimming sequence's
+    first post-onset frame is identical to the original frame and is cached
+    once, under the original sequence's `sequence_id`. Its manifest row still
+    says `is_modified=True` (severity 1.0). Replay reads fault frames by hash
+    from the manifest, so nothing breaks, but V7 should treat severity 1.0 as
+    "not yet dimmed". The same happens for contamination if a frame gets 0
+    sprites (only possible on very small test images).
+11. **`qctile` is only the centre 256 px of each frame.** On a 1392x1040
+    frame that is about 4.5% of the area. The confluency bin for A4 comes
+    from the full frame, so a tile's local density can differ from its bin.
+    Worth checking when V4's result comes in.
 
 ## Open questions for the human
 
-- The five `nb/03` files: where are they? Otherwise they need writing,
-  which starts with checking OSF `ysaq2`'s actual layout.
 - Shifted tiles: fold into `nb/03`, or drop B3's shift test?
-- Does `scripts/cache_tile_embeddings.py` also cover synthetic-tile patch
-  embeddings, or only C2C12 / fault frames?
+- `scripts/cache_tile_embeddings.py` only embeds the paths it's given (in
+  `nb/03`, the C2C12 and fault frames). Synthetic-tile patch embeddings for
+  V5(a) come from the Drive full cache (`nb/02` kept them for `normal` tiles
+  only; V5(a) needs the anomaly classes too). Add synthetic test tiles to
+  `nb/03`'s qctile step, or accept CLS-only for V5(a)?
