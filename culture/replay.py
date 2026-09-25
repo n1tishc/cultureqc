@@ -374,6 +374,12 @@ def build_replay_visits(
         "crop_frac": repositioning.get("crop_frac"),
         "seed": seed,
     }
+    # Overrides join the visit_id key: the same sequence + seed at 1 vs 3
+    # FOVs, or 6 h vs 12 h, samples the same timestamps (e.g. t0) but makes
+    # different visits. Without overrides the key is unchanged.
+    overrides = {"mean_interval_hours": mean_interval_hours, "jitter_hours": jitter_hours,
+                 "n_fov": n_fov, "crop_frac": crop_frac}
+    id_suffix = "".join(f"|{k}={replay_params[k]}" for k, v in overrides.items() if v is not None)
 
     if frames is None:
         frames = _sequence_frames(tables, sequence_id)
@@ -405,7 +411,7 @@ def build_replay_visits(
         quality = _quality_for_frame(tables, sha)
 
         timestamp = visit_time.tz_localize("UTC").isoformat() if visit_time.tzinfo is None else visit_time.isoformat()
-        visit_id = str(uuid.uuid5(_VISIT_ID_NAMESPACE, f"{sequence_id}|{segment_id}|{timestamp}|{seed}"))
+        visit_id = str(uuid.uuid5(_VISIT_ID_NAMESPACE, f"{sequence_id}|{segment_id}|{timestamp}|{seed}{id_suffix}"))
 
         visit = {
             "visit_id": visit_id,

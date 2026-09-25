@@ -367,3 +367,17 @@ def test_split_by_sequence_is_seeded_and_fault_twins_follow_base():
     assert all(fs[f"{sid}__fault_{k}"] == split[sid] for sid in ids for k in ("dim", "contam"))
     with pytest.raises(ValueError, match="not in the split"):
         fault_split(man, {k: v for k, v in split.items() if k != "seq_00"})
+
+
+def test_visit_ids_differ_across_fov_and_cadence_variants(fixture_cache):
+    """Same sequence, segment and seed: the variants share sampled timestamps
+    (at least t0) but are different visits, so ids must not collide."""
+    run = lambda **kw: {v["visit_id"] for v in build_replay_visits(  # noqa: E731
+        fixture_cache, "fixture_seq_1", "L1", "S1", "flask-1", seed=0, **kw)}
+    variants = [run(mean_interval_hours=6, jitter_hours=1.5, n_fov=1),
+                run(mean_interval_hours=6, jitter_hours=1.5, n_fov=3),
+                run(mean_interval_hours=12, jitter_hours=3, n_fov=1),
+                run()]
+    for i in range(len(variants)):
+        for j in range(i + 1, len(variants)):
+            assert not variants[i] & variants[j], (i, j)
