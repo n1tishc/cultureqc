@@ -31,10 +31,17 @@ crop_spec is "full" for the whole image, or "crop_f<frac>_s<seed>_k<index>"
 for one of the K deterministic FOV-noise sub-crops (§4.3).
 
 Resumable + idempotent by design: `build()` reads the existing index for each
-output table before computing anything, and skips keys already present. Each
-shard is written to a temp path and atomically renamed into place, so a run
-killed mid-shard (Colab disconnect) leaves no partial/corrupt file — the
-worst case is redoing the one shard in flight, not the whole run.
+output table before computing anything, and skips keys already present.
+Parquet tables are flushed together every `flush_every` records (default
+FLUSH_EVERY) and once more at the end; each flush writes to a temp path and
+atomically renames into place, so a killed run (Colab disconnect) leaves no
+partial or corrupt file. A hard kill loses at most the table rows computed
+since the last flush (< flush_every records), which a rerun recomputes;
+everything before it is skipped. Sidecar files (probmaps/, embeddings/) are
+written per image as they're computed, so a kill never loses those.
+MANIFEST.json is only rewritten when a build() call completes: after a
+killed run it is stale (row counts, shard hashes) until the next completed
+run, which rehashes every table from disk.
 """
 
 from __future__ import annotations
@@ -55,6 +62,7 @@ QUALITY_MODEL_VERSION = "quality_v1"
 DINO_MODEL_NAME = "dinov2"
 DINO_MODEL_VERSION = "facebook/dinov2-small"
 PROBMAP_DOWNSAMPLE = 4  # store the cell-probability map at 1/4 resolution
+FLUSH_EVERY = 100  # build() flushes all parquet tables every N records (see module docstring)
 
 
 # ---------------------------------------------------------------------------
@@ -278,6 +286,7 @@ class Cache:
         crops_per_frac: int = 8,
         keep_full_patches_for: set[str] | None = None,
         progress: bool = True,
+        flush_every: int = FLUSH_EVERY,
     ) -> dict:
         """
         Process `records`, skipping any (image_sha256, crop_spec, model_name,
@@ -287,7 +296,13 @@ class Cache:
         `keep_full_patches_for`: set of image_sha256 to store full DINOv2
         patch embeddings for (bank-source normals, eval sets, replay frames).
         Every other image gets CLS-only, per §4A.3's storage budget.
+
+        `flush_every`: flush all tables to disk after every N records, so a
+        killed run keeps everything up to the last flush. Doesn't change any
+        output, only how much a kill can lose.
         """
+        if flush_every < 1:
+            raise ValueError(f"flush_every must be >= 1, got {flush_every}")
         import cv2
 
         keep_full_patches_for = keep_full_patches_for or set()
@@ -297,6 +312,14 @@ class Cache:
         logits_tbl = _Table(self._path("logits.parquet"), ["image_sha256", "crop_spec", "model_name", "model_version"])
         quality_tbl = _Table(self._path("quality.parquet"), ["image_sha256", "model_name", "model_version"])
         cls_tbl = _Table(self._path("embeddings_cls.parquet"), ["image_sha256", "crop_spec", "model_name", "model_version"])
+        tables = [images_tbl, conf_tbl, logits_tbl, quality_tbl, cls_tbl]
+
+        def flush_all():
+            # All five together, so the on-disk snapshot is consistent at
+            # every checkpoint (a partial set would still self-heal on rerun,
+            # since each table's skip check is independent).
+            for tbl in tables:
+                tbl.flush()
 
         timings = {m: 0.0 for m in models}
         n_processed, n_skipped_images = 0, 0
@@ -347,16 +370,11 @@ class Cache:
                 timings["dino"] += time.time() - t0
 
             n_processed += 1
+            if n_processed % flush_every == 0:
+                flush_all()
 
-        shard_hashes = {}
-        for name, tbl in [("images.parquet", images_tbl), ("confluency.parquet", conf_tbl),
-                           ("logits.parquet", logits_tbl), ("quality.parquet", quality_tbl),
-                           ("embeddings_cls.parquet", cls_tbl)]:
-            h = tbl.flush()
-            if h:
-                shard_hashes[name] = h
-
-        self._write_manifest(shard_hashes)
+        flush_all()
+        self._write_manifest()
 
         return {
             "n_images": n_processed,
