@@ -56,6 +56,7 @@ import numpy as np
 import pandas as pd
 import yaml
 
+from culture.calibration import DEFAULT_CALIBRATION_PATH, calibrated_probs, calibration_config_hash, load_calibration
 from culture.model_versions import get_model_versions
 from culture.quality import config_hash as quality_config_hash
 from culture.quality import evaluate_thresholds
@@ -256,18 +257,20 @@ def _sample_crops_for_frame(tables: ReplayTables, image_sha: str, repositioning:
     return crops.loc[idx]
 
 
-def _class_probs_and_pred(tables: ReplayTables, image_sha: str) -> tuple[dict | None, str | None]:
+def _class_probs_and_pred(tables: ReplayTables, image_sha: str,
+                          calibration: dict | None) -> tuple[dict | None, str | None, bool]:
+    """(class_probs, class_pred, calibrated). Temperature-scaled when
+    `calibration` was fit for the cached logits' model_version."""
     from culture.qc import CLASS_NAMES
 
     entry = tables.logits(image_sha)
     if entry is None:
-        return None, None
-    logits = np.array(entry[0], dtype=np.float64)
-    exp = np.exp(logits - logits.max())
-    probs = exp / exp.sum()
+        return None, None, False
+    logits, model_version = entry
+    probs, calibrated = calibrated_probs(np.array(logits, dtype=np.float64), calibration, model_version)
     class_probs = {name: float(p) for name, p in zip(CLASS_NAMES, probs)}
     class_pred = CLASS_NAMES[int(np.argmax(probs))]
-    return class_probs, class_pred
+    return class_probs, class_pred, calibrated
 
 
 def _quality_for_frame(tables: ReplayTables, image_sha: str) -> dict:
@@ -312,6 +315,7 @@ def build_replay_visits(
     jitter_hours: float | None = None,
     n_fov: int | None = None,
     crop_frac: float | None = None,
+    calibration_path: str = DEFAULT_CALIBRATION_PATH,
 ) -> list[dict]:
     """Deterministic given `seed` (and the underlying cache's contents, which
     don't change): the same inputs always produce the same visit stream —
@@ -341,7 +345,12 @@ def build_replay_visits(
     restricts them to one crop size (A2 runs 6 h / 12 h cadences at 1 and 3
     FOVs without changing the config defaults). Every visit records the
     values actually used in `replay_params`, since config_hashes alone would
-    no longer describe how it was made."""
+    no longer describe how it was made.
+
+    Class probabilities are temperature-scaled with configs/calibration.yaml
+    (A5) when it exists and was fit for the cached logits' qc model_version;
+    `calibrated` says whether they were, and the config's hash joins
+    config_hashes."""
     config = _load_config(config_path)
     rng = np.random.default_rng(seed)
     tables = ReplayTables.ensure(cache, tables)
@@ -378,6 +387,9 @@ def build_replay_visits(
     visit_times = _sample_visit_timestamps(frames, timing, rng, n_visits)
     model_versions = get_model_versions()
     cfg_hashes = {"quality.yaml": quality_config_hash(), "replay.yaml": replay_config_hash(config_path)}
+    calibration = load_calibration(calibration_path)
+    if calibration is not None:
+        cfg_hashes["calibration.yaml"] = calibration_config_hash(calibration_path)
 
     visits = []
     for visit_time in visit_times:
@@ -389,7 +401,7 @@ def build_replay_visits(
         crop_specs = list(sampled_crops["crop_spec"])
         n_fov_visit = len(fov_confluency)
 
-        class_probs, class_pred = _class_probs_and_pred(tables, sha)
+        class_probs, class_pred, calibrated = _class_probs_and_pred(tables, sha, calibration)
         quality = _quality_for_frame(tables, sha)
 
         timestamp = visit_time.tz_localize("UTC").isoformat() if visit_time.tzinfo is None else visit_time.isoformat()
@@ -408,7 +420,7 @@ def build_replay_visits(
             "n_fov": n_fov_visit,
             "class_probs": class_probs,
             "class_pred": class_pred,
-            "calibrated": False,
+            "calibrated": calibrated,
             "anomaly_score": None,
             "anomaly_score_density_bin": None,
             "quality": quality,
