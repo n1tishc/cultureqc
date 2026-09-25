@@ -21,16 +21,34 @@ sequence_id/frame_idx populated — a fixture for now (tests/test_replay.py),
 real C2C12/CTC sequences once nb/03 caches them with these fields set
 correctly (see docs/DATASETS.md).
 
+**Fault sequences** (Phase A2) aren't looked up in images.parquet: their
+pre-onset frames are the original sequence's frames (same sha), and
+images.parquet holds one sequence_id per sha. Pass that fault sequence's
+rows of `fault_manifest.parquet` as `frames=` instead. Every frame a stream
+uses must have cached seg rows, or build_replay_visits() raises.
+
+Tables are read once per call (ReplayTables). For a fleet, build one
+ReplayTables and pass it to every call.
+
 Usage:
     from culture.replay import build_replay_visits
     visits = build_replay_visits(cache, sequence_id="c2c12_seq_04",
                                   lineage_id="L1", segment_id="S1",
                                   flask_id="flask-1", seed=0)
+
+    man = pd.read_parquet("cache/sidecars/fault_manifest.parquet")
+    tables = ReplayTables(cache)
+    fid = "c2c12_seq_04__fault_contam"
+    visits = build_replay_visits(cache, fid, "L1", "S1", "flask-1", seed=0,
+                                  frames=man[man.fault_sequence_id == fid],
+                                  tables=tables, mean_interval_hours=6,
+                                  jitter_hours=1.5, n_fov=3)
 """
 
 from __future__ import annotations
 
 import os
+import re
 import uuid
 from datetime import datetime, timedelta, timezone
 
@@ -53,6 +71,8 @@ _DEFAULT_CONFIG_PATH = os.path.join(
 # as a literal so it never changes across runs/versions.
 _VISIT_ID_NAMESPACE = uuid.UUID("86f1bd44-dc64-5e8e-a831-455e06fc9a68")
 
+_CROP_FRAC_RE = re.compile(r"crop_f([0-9.]+)_")
+
 
 def _load_config(config_path: str) -> dict:
     with open(config_path) as f:
@@ -64,10 +84,65 @@ def replay_config_hash(config_path: str = _DEFAULT_CONFIG_PATH) -> str:
     return hash_file(config_path)
 
 
-def _sequence_frames(cache, sequence_id: str) -> pd.DataFrame:
+class ReplayTables:
+    """The cache tables replay reads, loaded once and indexed by image sha
+    (A2: 'load confluency/logits/quality tables once per stream, not per
+    visit'). build_replay_visits() builds one per call if none is given;
+    pass one in to share it across every stream of a fleet.
+
+    Row order within each sha is the table's file order, the same order the
+    old per-visit boolean filters returned, so crop sampling for a given
+    seed is unchanged."""
+
+    def __init__(self, cache):
+        self.dir = cache.dir
+        conf = cache.load_confluency()
+        seg = conf[conf.model_name == "seg"]
+        is_full = seg.crop_spec == "full"
+        self._crops = {sha: g for sha, g in seg[~is_full].groupby("image_sha256", sort=False)}
+        self._full = {sha: g for sha, g in seg[is_full].groupby("image_sha256", sort=False)}
+
+        logits = cache.load_logits()
+        qc = logits[logits.model_name == "qc"].drop_duplicates("image_sha256", keep="first")
+        self._logits = {r.image_sha256: (r.logits, r.model_version) for r in qc.itertuples()}
+
+        q = cache.load_quality().drop_duplicates("image_sha256", keep="first")
+        self._quality = {r["image_sha256"]: r for r in q.to_dict("records")}
+
+        self._images = None
+
+    @classmethod
+    def ensure(cls, cache, tables: "ReplayTables | None") -> "ReplayTables":
+        return tables if tables is not None else cls(cache)
+
+    def images(self) -> pd.DataFrame:
+        if self._images is None:
+            self._images = pd.read_parquet(os.path.join(self.dir, "images.parquet"))
+        return self._images
+
+    def crops(self, sha: str) -> pd.DataFrame:
+        return self._crops.get(sha, _EMPTY)
+
+    def full(self, sha: str) -> pd.DataFrame:
+        return self._full.get(sha, _EMPTY)
+
+    def has_seg(self, sha: str) -> bool:
+        return sha in self._crops or sha in self._full
+
+    def logits(self, sha: str):
+        return self._logits.get(sha)
+
+    def quality(self, sha: str):
+        return self._quality.get(sha)
+
+
+_EMPTY = pd.DataFrame(columns=["image_sha256", "crop_spec", "model_name", "model_version", "pct"])
+
+
+def _sequence_frames(tables: ReplayTables, sequence_id: str) -> pd.DataFrame:
     """The sequence's cached frames, ordered by frame_idx, with real
     timestamps (required — see module docstring)."""
-    images = pd.read_parquet(os.path.join(cache.dir, "images.parquet"))
+    images = tables.images()
     frames = images[images.sequence_id == sequence_id].copy()
     if len(frames) == 0:
         raise ValueError(f"no cached frames with sequence_id={sequence_id!r}")
@@ -79,53 +154,115 @@ def _sequence_frames(cache, sequence_id: str) -> pd.DataFrame:
     return frames.sort_values("frame_idx").reset_index(drop=True)
 
 
-def _sample_visit_timestamps(frames: pd.DataFrame, config: dict, rng: np.random.Generator, n_visits: int | None) -> list[pd.Timestamp]:
+_FRAMES_REQUIRED = ("image_sha256", "frame_idx", "timestamp")
+
+
+def _frames_from_table(frames: pd.DataFrame, sequence_id: str) -> pd.DataFrame:
+    """A2 adapter: an explicit frames table (the fault_manifest.parquet rows
+    of one fault_sequence_id) instead of an images.parquet lookup. Fault
+    sequences share their pre-onset frames, by sha, with the original
+    sequence, and images.parquet holds one sequence_id per sha, so a fault
+    sequence can't be found there.
+
+    Ordered by timestamp, not frame_idx: growth-stall rows carry a frame_idx
+    derived from the stalled clock, not a real frame number."""
+    missing = [c for c in _FRAMES_REQUIRED if c not in frames.columns]
+    if missing:
+        raise ValueError(f"frames table is missing columns {missing}")
+    if len(frames) == 0:
+        raise ValueError(f"frames table for {sequence_id!r} is empty")
+    if "fault_sequence_id" in frames.columns:
+        ids = frames["fault_sequence_id"].unique().tolist()
+        if ids != [sequence_id]:
+            raise ValueError(
+                f"frames table must hold exactly one fault_sequence_id equal to sequence_id={sequence_id!r}; "
+                f"got {ids}"
+            )
+    if frames["timestamp"].isna().any() or (frames["timestamp"].astype(str) == "").any():
+        raise ValueError(f"frames table for {sequence_id!r} has unset timestamps")
+    out = frames.copy()
+    out["_t"] = pd.to_datetime(out["timestamp"], format="ISO8601")
+    if out["_t"].duplicated().any():
+        raise ValueError(f"frames table for {sequence_id!r} has duplicate timestamps")
+    return out.sort_values("_t").drop(columns="_t").reset_index(drop=True)
+
+
+def _check_frames_cached(tables: ReplayTables, frames: pd.DataFrame, sequence_id: str) -> None:
+    """Every frame must have cached seg rows. Without them a visit would read
+    n_fov=0 and confluency 0.0, which in a fault stream looks exactly like a
+    growth crash (e.g. a slim cache missing the fault frames)."""
+    absent = sorted({sha for sha in frames["image_sha256"] if not tables.has_seg(sha)})
+    if absent:
+        raise ValueError(
+            f"{len(absent)} frame(s) of {sequence_id!r} have no cached seg confluency rows "
+            f"(first: {absent[0]}); is this the cache the frames were built into?"
+        )
+
+
+def _sample_visit_timestamps(frames: pd.DataFrame, timing: dict, rng: np.random.Generator, n_visits: int | None) -> list[pd.Timestamp]:
     """Irregular visit times (§5.4: 'sample visit times with jitter ...,
     not every frame'), within the sequence's actual time span."""
     frame_times = pd.to_datetime(frames["timestamp"])
     t0, t1 = frame_times.min(), frame_times.max()
-    mean_gap = timedelta(hours=config["timing"]["mean_interval_hours"])
-    jitter = timedelta(hours=config["timing"]["jitter_hours"])
 
     times = []
     t = t0
     while t <= t1 and (n_visits is None or len(times) < n_visits):
         times.append(t)
-        gap_hours = config["timing"]["mean_interval_hours"] + rng.uniform(-1, 1) * config["timing"]["jitter_hours"]
+        gap_hours = timing["mean_interval_hours"] + rng.uniform(-1, 1) * timing["jitter_hours"]
         t = t + timedelta(hours=max(0.1, gap_hours))
     return times
 
 
-def _nearest_frame(frames: pd.DataFrame, visit_time: pd.Timestamp) -> pd.Series:
-    frame_times = pd.to_datetime(frames["timestamp"])
+def _nearest_frame(frames: pd.DataFrame, frame_times: pd.Series, visit_time: pd.Timestamp) -> pd.Series:
     idx = (frame_times - visit_time).abs().idxmin()
     return frames.loc[idx]
 
 
-def _sample_crops_for_frame(cache, image_sha: str, config: dict, rng: np.random.Generator) -> pd.DataFrame:
+def _crop_frac(spec: str) -> float | None:
+    m = _CROP_FRAC_RE.search(spec)
+    return float(m.group(1)) if m else None
+
+
+def _sample_crops_for_frame(tables: ReplayTables, image_sha: str, repositioning: dict, rng: np.random.Generator) -> pd.DataFrame:
     """1..N of the frame's cached crops (§5.4: 'simulated repositioning:
-    each visit samples 1-N of the cached crops for that frame')."""
-    conf = cache.load_confluency()
-    crops = conf[(conf.image_sha256 == image_sha) & (conf.model_name == "seg") & (conf.crop_spec != "full")]
+    each visit samples 1-N of the cached crops for that frame').
+
+    `repositioning` may also fix `n_fov` (always sample exactly that many)
+    and `crop_frac` (only crops of that size). Either one set means the
+    caller wants that exact FOV design, so a frame that can't supply it
+    raises instead of falling back to the full-frame row."""
+    crops = tables.crops(image_sha)
+    crop_frac, n_fov = repositioning.get("crop_frac"), repositioning.get("n_fov")
+    if crop_frac is not None:
+        crops = crops[[_crop_frac(s) == float(crop_frac) for s in crops.crop_spec]]
+    if crop_frac is not None or n_fov is not None:
+        need = n_fov if n_fov is not None else 1
+        if len(crops) < need:
+            raise ValueError(
+                f"frame {image_sha} has {len(crops)} cached crops"
+                f"{f' at crop_frac={crop_frac}' if crop_frac is not None else ''}; n_fov={need} requested"
+            )
     if len(crops) == 0:
         # No crops cached for this frame (crop_fracs=() at build time) —
         # fall back to the full-frame row alone, one simulated "reposition."
-        full = conf[(conf.image_sha256 == image_sha) & (conf.model_name == "seg") & (conf.crop_spec == "full")]
-        return full.iloc[:1]
-    lo, hi = config["repositioning"]["min_crops_per_visit"], config["repositioning"]["max_crops_per_visit"]
-    n = int(rng.integers(lo, min(hi, len(crops)) + 1))
+        return tables.full(image_sha).iloc[:1]
+    if n_fov is not None:
+        n = int(n_fov)
+    else:
+        lo, hi = repositioning["min_crops_per_visit"], repositioning["max_crops_per_visit"]
+        n = int(rng.integers(lo, min(hi, len(crops)) + 1))
     idx = rng.choice(crops.index, size=n, replace=False)
     return crops.loc[idx]
 
 
-def _class_probs_and_pred(cache, image_sha: str) -> tuple[dict | None, str | None]:
+def _class_probs_and_pred(tables: ReplayTables, image_sha: str) -> tuple[dict | None, str | None]:
     from culture.qc import CLASS_NAMES
 
-    logits_df = cache.load_logits()
-    row = logits_df[(logits_df.image_sha256 == image_sha) & (logits_df.model_name == "qc")]
-    if len(row) == 0:
+    entry = tables.logits(image_sha)
+    if entry is None:
         return None, None
-    logits = np.array(row.iloc[0]["logits"], dtype=np.float64)
+    logits = np.array(entry[0], dtype=np.float64)
     exp = np.exp(logits - logits.max())
     probs = exp / exp.sum()
     class_probs = {name: float(p) for name, p in zip(CLASS_NAMES, probs)}
@@ -133,14 +270,31 @@ def _class_probs_and_pred(cache, image_sha: str) -> tuple[dict | None, str | Non
     return class_probs, class_pred
 
 
-def _quality_for_frame(cache, image_sha: str) -> dict:
-    q = cache.load_quality()
-    row = q[q.image_sha256 == image_sha]
-    if len(row) == 0:
+def _quality_for_frame(tables: ReplayTables, image_sha: str) -> dict:
+    r = tables.quality(image_sha)
+    if r is None:
         return {"blur": 0.0, "mean_intensity": 0.0, "uniformity": 0.0, "pass": False, "reasons": ["no_cached_quality_metrics"]}
-    r = row.iloc[0]
     result = evaluate_thresholds(r["blur_laplacian_var"], r["exposure_mean"], r["uniformity_block_std"])
     return result.to_dict()
+
+
+_FAULT_FIELDS = ("fault_type", "base_sequence_id", "onset_hours", "hours_since_start", "is_modified", "severity",
+                 "source_frame_idx", "provenance")
+
+
+def _fault_truth(frame: pd.Series) -> dict:
+    """Ground truth copied from a fault_manifest row, for detection-delay
+    scoring. Only fields the row actually has; NaN (e.g. source_frame_idx
+    on non-stall rows) is left out."""
+    out = {}
+    for k in _FAULT_FIELDS:
+        if k not in frame.index:
+            continue
+        v = frame[k]
+        if v is None or (isinstance(v, float) and np.isnan(v)):
+            continue
+        out[k] = v.item() if hasattr(v, "item") else v
+    return out
 
 
 def build_replay_visits(
@@ -152,6 +306,12 @@ def build_replay_visits(
     seed: int = 0,
     n_visits: int | None = None,
     config_path: str = _DEFAULT_CONFIG_PATH,
+    frames: pd.DataFrame | None = None,
+    tables: ReplayTables | None = None,
+    mean_interval_hours: float | None = None,
+    jitter_hours: float | None = None,
+    n_fov: int | None = None,
+    crop_frac: float | None = None,
 ) -> list[dict]:
     """Deterministic given `seed` (and the underlying cache's contents, which
     don't change): the same inputs always produce the same visit stream —
@@ -166,42 +326,86 @@ def build_replay_visits(
     visit stream produce different record_hash values even though every
     visit_summary field above is byte-identical. Returns a list of
     visit_summary dicts (schemas/visit_summary.v1.json-shaped, plus a
-    'provenance' field the schema permits but doesn't require)."""
+    'provenance' field the schema permits but doesn't require).
+
+    `frames` (A2): replay from this frames table (the fault_manifest.parquet
+    rows of one fault_sequence_id, which must equal `sequence_id`) instead of
+    looking `sequence_id` up in images.parquet. Each visit then also carries
+    a `fault` dict with that frame's ground truth (fault_type, onset_hours,
+    is_modified, severity, ...).
+
+    `tables`: a ReplayTables to reuse across streams; built here if None.
+
+    `mean_interval_hours` / `jitter_hours` override configs/replay.yaml's
+    timing, `n_fov` fixes the number of crops per visit and `crop_frac`
+    restricts them to one crop size (A2 runs 6 h / 12 h cadences at 1 and 3
+    FOVs without changing the config defaults). Every visit records the
+    values actually used in `replay_params`, since config_hashes alone would
+    no longer describe how it was made."""
     config = _load_config(config_path)
     rng = np.random.default_rng(seed)
+    tables = ReplayTables.ensure(cache, tables)
 
-    frames = _sequence_frames(cache, sequence_id)
-    visit_times = _sample_visit_timestamps(frames, config, rng, n_visits)
+    timing = dict(config["timing"])
+    if mean_interval_hours is not None:
+        timing["mean_interval_hours"] = float(mean_interval_hours)
+    if jitter_hours is not None:
+        timing["jitter_hours"] = float(jitter_hours)
+    repositioning = dict(config["repositioning"])
+    if n_fov is not None:
+        if n_fov < 1:
+            raise ValueError(f"n_fov must be >= 1, got {n_fov}")
+        repositioning["n_fov"] = int(n_fov)
+    if crop_frac is not None:
+        repositioning["crop_frac"] = float(crop_frac)
+    replay_params = {
+        "mean_interval_hours": timing["mean_interval_hours"],
+        "jitter_hours": timing["jitter_hours"],
+        "n_fov": repositioning.get("n_fov"),
+        "crop_frac": repositioning.get("crop_frac"),
+        "seed": seed,
+    }
+
+    if frames is None:
+        frames = _sequence_frames(tables, sequence_id)
+        is_fault = False
+    else:
+        frames = _frames_from_table(frames, sequence_id)
+        is_fault = True
+    _check_frames_cached(tables, frames, sequence_id)
+    frame_times = pd.to_datetime(frames["timestamp"])
+
+    visit_times = _sample_visit_timestamps(frames, timing, rng, n_visits)
     model_versions = get_model_versions()
     cfg_hashes = {"quality.yaml": quality_config_hash(), "replay.yaml": replay_config_hash(config_path)}
 
     visits = []
     for visit_time in visit_times:
-        frame = _nearest_frame(frames, visit_time)
+        frame = _nearest_frame(frames, frame_times, visit_time)
         sha = frame["image_sha256"]
 
-        sampled_crops = _sample_crops_for_frame(cache, sha, config, rng)
+        sampled_crops = _sample_crops_for_frame(tables, sha, repositioning, rng)
         fov_confluency = [float(p) for p in sampled_crops["pct"]]
         crop_specs = list(sampled_crops["crop_spec"])
-        n_fov = len(fov_confluency)
+        n_fov_visit = len(fov_confluency)
 
-        class_probs, class_pred = _class_probs_and_pred(cache, sha)
-        quality = _quality_for_frame(cache, sha)
+        class_probs, class_pred = _class_probs_and_pred(tables, sha)
+        quality = _quality_for_frame(tables, sha)
 
         timestamp = visit_time.tz_localize("UTC").isoformat() if visit_time.tzinfo is None else visit_time.isoformat()
         visit_id = str(uuid.uuid5(_VISIT_ID_NAMESPACE, f"{sequence_id}|{segment_id}|{timestamp}|{seed}"))
 
-        visits.append({
+        visit = {
             "visit_id": visit_id,
             "lineage_id": lineage_id,
             "segment_id": segment_id,
             "flask_id": flask_id,
             "timestamp": timestamp,
-            "image_sha256": [sha] * n_fov,  # all sampled crops are sub-regions of this one cached frame
+            "image_sha256": [sha] * n_fov_visit,  # all sampled crops are sub-regions of this one cached frame
             "fov_confluency": fov_confluency,
             "confluency_mean": float(np.mean(fov_confluency)) if fov_confluency else 0.0,
             "confluency_sd": float(np.std(fov_confluency)) if len(fov_confluency) > 1 else 0.0,
-            "n_fov": n_fov,
+            "n_fov": n_fov_visit,
             "class_probs": class_probs,
             "class_pred": class_pred,
             "calibrated": False,
@@ -215,8 +419,39 @@ def build_replay_visits(
             "source_sequence_id": sequence_id,
             "source_frame_idx": int(frame["frame_idx"]),
             "crop_specs": crop_specs,
-        })
+            "replay_params": replay_params,
+        }
+        if is_fault:
+            visit["fault"] = _fault_truth(frame)
+        visits.append(visit)
     return visits
+
+
+def split_sequences(sequence_ids, seed: int = 0, tuning_frac: float = 0.4) -> dict[str, str]:
+    """A2 fleet split: each base sequence goes to "tuning" (~tuning_frac) or
+    "heldout", seeded. Split by sequence, never by visit or frame.
+
+    Fault sequences must take their base sequence's side (fault_split()):
+    their pre-onset frames *are* the base sequence's frames, so splitting
+    them independently would put the same frames on both sides."""
+    ids = sorted(set(sequence_ids))
+    if not 0.0 < tuning_frac < 1.0:
+        raise ValueError(f"tuning_frac must be in (0, 1), got {tuning_frac}")
+    order = np.random.default_rng(seed).permutation(len(ids))
+    n_tuning = int(round(tuning_frac * len(ids)))
+    tuning = {ids[i] for i in order[:n_tuning]}
+    return {sid: ("tuning" if sid in tuning else "heldout") for sid in ids}
+
+
+def fault_split(manifest: pd.DataFrame, base_split: dict[str, str]) -> dict[str, str]:
+    """Each fault_sequence_id's split = its base_sequence_id's split."""
+    pairs = manifest[["fault_sequence_id", "base_sequence_id"]].drop_duplicates()
+    if pairs.fault_sequence_id.duplicated().any():
+        raise ValueError("a fault_sequence_id maps to more than one base_sequence_id")
+    unknown = sorted(set(pairs.base_sequence_id) - set(base_split))
+    if unknown:
+        raise ValueError(f"base sequences not in the split: {unknown[:5]}")
+    return {r.fault_sequence_id: base_split[r.base_sequence_id] for r in pairs.itertuples()}
 
 
 def build_replay_lineage_with_passage(

@@ -223,3 +223,147 @@ def test_replay_integrates_with_history(fixture_cache, tmp_path):
     assert ok, f"chain broken at line {bad_line}"
     assert len(h.get_segment("S1")) > 0
     assert len(h.get_segment("S2")) > 0
+
+
+# -- A2: fault-sequence adapter (frames=), load-once tables, overrides, split --
+
+from culture.replay import ReplayTables, fault_split, split_sequences
+
+_FAULT_ID = "fixture_seq_1__fault_contam"
+_ONSET_H = 48.0
+
+
+def _fault_manifest(tmp_path) -> pd.DataFrame:
+    """fixture_seq_1 (12 frames, 8 h apart) with frames from 48 h on replaced
+    by modified frames, cached under the fault sequence's id — the shape
+    scripts/make_fault_set.py + nb/03 produce."""
+    mod_shas = [_fake_sha(200 + i) for i in range(6)]
+    _build_fixture_cache(tmp_path, _FAULT_ID, 6, hours_apart=8.0, start="2026-01-03T00:00:00Z", shas=mod_shas)
+    base = pd.Timestamp("2026-01-01T00:00:00Z")
+    rows = []
+    for i in range(12):
+        h = 8.0 * i
+        modified = h >= _ONSET_H
+        rows.append({
+            "fault_sequence_id": _FAULT_ID, "base_sequence_id": "fixture_seq_1",
+            "fault_type": "contamination_onset", "onset_hours": _ONSET_H, "frame_idx": i,
+            "timestamp": (base + pd.Timedelta(hours=h)).isoformat(), "hours_since_start": h,
+            "image_sha256": mod_shas[i - 6] if modified else _fake_sha(i),
+            "is_modified": modified, "severity": 150.0 if modified else 0.0, "provenance": "simulated",
+        })
+    return pd.DataFrame(rows)
+
+
+def test_fault_replay_reads_frames_from_manifest(fixture_cache, tmp_path, schema):
+    man = _fault_manifest(tmp_path)
+    visits = build_replay_visits(fixture_cache, _FAULT_ID, "L1", "S1", "flask-1", seed=0, frames=man,
+                                 mean_interval_hours=6, jitter_hours=1.5)
+    assert len(visits) >= 10
+    pre, post = set(man.image_sha256[~man.is_modified]), set(man.image_sha256[man.is_modified])
+    for v in visits:
+        jsonschema.validate(v, schema)
+        assert v["source_sequence_id"] == _FAULT_ID
+        f = v["fault"]
+        assert f["fault_type"] == "contamination_onset" and f["onset_hours"] == _ONSET_H
+        assert f["provenance"] == "simulated"
+        assert (v["image_sha256"][0] in post) == f["is_modified"]
+        assert (v["image_sha256"][0] in pre) == (not f["is_modified"])
+        assert f["is_modified"] == (f["hours_since_start"] >= _ONSET_H)
+    assert any(v["fault"]["is_modified"] for v in visits) and not all(v["fault"]["is_modified"] for v in visits)
+
+
+def test_fault_stream_ids_differ_from_base_stream(fixture_cache, tmp_path):
+    man = _fault_manifest(tmp_path)
+    base = build_replay_visits(fixture_cache, "fixture_seq_1", "L1", "S1", "flask-1", seed=0)
+    fault = build_replay_visits(fixture_cache, _FAULT_ID, "L1", "S1", "flask-1", seed=0, frames=man)
+    assert not {v["visit_id"] for v in base} & {v["visit_id"] for v in fault}
+    assert all("fault" not in v for v in base)
+
+
+def test_frames_table_must_match_sequence_id(fixture_cache, tmp_path):
+    man = _fault_manifest(tmp_path)
+    with pytest.raises(ValueError, match="exactly one fault_sequence_id"):
+        build_replay_visits(fixture_cache, "fixture_seq_1", "L1", "S1", "flask-1", frames=man)
+    two = pd.concat([man, man.assign(fault_sequence_id="other")], ignore_index=True)
+    with pytest.raises(ValueError, match="exactly one fault_sequence_id"):
+        build_replay_visits(fixture_cache, _FAULT_ID, "L1", "S1", "flask-1", frames=two)
+
+
+def test_uncached_frame_raises_instead_of_reading_zero(fixture_cache, tmp_path):
+    man = _fault_manifest(tmp_path)
+    man.loc[man.index[-1], "image_sha256"] = _fake_sha(999)  # not in the cache
+    with pytest.raises(ValueError, match="no cached seg confluency rows"):
+        build_replay_visits(fixture_cache, _FAULT_ID, "L1", "S1", "flask-1", frames=man)
+
+
+def test_frames_ordered_by_time_not_frame_idx(fixture_cache, tmp_path):
+    """Growth-stall rows carry a frame_idx from the stalled clock; order must
+    come from timestamps."""
+    man = _fault_manifest(tmp_path)
+    man["frame_idx"] = man["frame_idx"].to_numpy()[::-1]
+    man["source_frame_idx"] = np.nan
+    man.loc[man.is_modified, "source_frame_idx"] = 3
+    man = man.sample(frac=1.0, random_state=0)
+    visits = build_replay_visits(fixture_cache, _FAULT_ID, "L1", "S1", "flask-1", seed=0, frames=man,
+                                 mean_interval_hours=8, jitter_hours=0)
+    hours = [v["fault"]["hours_since_start"] for v in visits]
+    assert hours == sorted(hours) and len(set(hours)) == len(hours)
+    for v in visits:
+        assert ("source_frame_idx" in v["fault"]) == v["fault"]["is_modified"]
+
+
+def test_cadence_and_fov_overrides_are_applied_and_recorded(fixture_cache):
+    visits = build_replay_visits(fixture_cache, "fixture_seq_1", "L1", "S1", "flask-1", seed=0,
+                                 mean_interval_hours=6, jitter_hours=1.5, n_fov=3, crop_frac=0.25)
+    ts = pd.to_datetime(pd.Series([v["timestamp"] for v in visits]), format="ISO8601")
+    gaps_h = ts.diff().dropna().dt.total_seconds() / 3600
+    assert gaps_h.between(4.5, 7.5).all()
+    assert all(v["n_fov"] == 3 and len(v["fov_confluency"]) == 3 for v in visits)
+    assert all(v["replay_params"] == {"mean_interval_hours": 6.0, "jitter_hours": 1.5, "n_fov": 3,
+                                      "crop_frac": 0.25, "seed": 0} for v in visits)
+
+
+def test_fov_design_the_cache_cannot_supply_raises(fixture_cache):
+    with pytest.raises(ValueError, match="crop_frac=0.5"):
+        build_replay_visits(fixture_cache, "fixture_seq_1", "L1", "S1", "flask-1", crop_frac=0.5)
+    with pytest.raises(ValueError, match="n_fov=5"):
+        build_replay_visits(fixture_cache, "fixture_seq_1", "L1", "S1", "flask-1", n_fov=5)
+
+
+def test_tables_loaded_once_per_stream_and_shareable(fixture_cache, monkeypatch):
+    calls = {"confluency": 0, "logits": 0, "quality": 0}
+    for name in calls:
+        orig = getattr(fixture_cache, f"load_{name}")
+
+        def counted(orig=orig, name=name):
+            calls[name] += 1
+            return orig()
+        monkeypatch.setattr(fixture_cache, f"load_{name}", counted)
+
+    visits = build_replay_visits(fixture_cache, "fixture_seq_1", "L1", "S1", "flask-1", seed=0,
+                                 mean_interval_hours=6, jitter_hours=1.5)
+    assert len(visits) > 5
+    assert calls == {"confluency": 1, "logits": 1, "quality": 1}
+
+    tables = ReplayTables(fixture_cache)
+    shared = build_replay_visits(fixture_cache, "fixture_seq_1", "L1", "S1", "flask-1", seed=0,
+                                 mean_interval_hours=6, jitter_hours=1.5, tables=tables)
+    build_replay_visits(fixture_cache, "fixture_seq_2", "L2", "S2", "flask-2", seed=0, tables=tables)
+    assert calls == {"confluency": 2, "logits": 2, "quality": 2}
+    assert shared == visits
+
+
+def test_split_by_sequence_is_seeded_and_fault_twins_follow_base():
+    ids = [f"seq_{i:02d}" for i in range(48)]
+    split = split_sequences(ids, seed=0)
+    assert split == split_sequences(list(reversed(ids)), seed=0)
+    assert split != split_sequences(ids, seed=1)
+    assert sum(s == "tuning" for s in split.values()) == round(0.4 * 48)
+
+    man = pd.DataFrame([{"fault_sequence_id": f"{sid}__fault_{k}", "base_sequence_id": sid}
+                        for sid in ids for k in ("dim", "contam") for _ in range(3)])
+    fs = fault_split(man, split)
+    assert len(fs) == 96
+    assert all(fs[f"{sid}__fault_{k}"] == split[sid] for sid in ids for k in ("dim", "contam"))
+    with pytest.raises(ValueError, match="not in the split"):
+        fault_split(man, {k: v for k, v in split.items() if k != "seq_00"})
