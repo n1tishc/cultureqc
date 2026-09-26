@@ -32,7 +32,7 @@ Why convert to 8-bit PNG here, with ONE fixed normalization for the whole datase
   identical across runs.
 
 Subcommands
-  discover   walk OSF (all storage providers + child components), write inventory.json
+  discover   walk OSF (all storage providers, every component at any depth), write inventory.json
   fetch      select sequences, download every Nth frame, write raw TIFFs + 8-bit PNGs,
              c2c12_sequences.csv, c2c12_frames.csv, c2c12_normalization.json
              (--local-src DIR instead of --inventory to use files you downloaded yourself)
@@ -162,26 +162,40 @@ def _walk_folder(listing_url: str, node: str, out: dict, probe_files: int, depth
         })
     for sf in subfolders:
         prev = out["_current_path"]
-        out["_current_path"] = sf["path"]
-        print(f"{'  ' * (depth + 1)}{sf['path']}")
+        out["_current_path"] = f"{prev.rstrip('/')}/{sf['name']}"
+        print(f"{'  ' * (depth + 1)}{out['_current_path']}")
         _walk_folder(sf["listing"], node, out, probe_files, depth + 1)
         out["_current_path"] = prev
 
 
+def _node_tree(node: str, title_path: str = "", depth: int = 0) -> list[tuple[str, str]]:
+    """[(node_id, title_path)] for `node` and every component below it.
+    ysaq2 is a project -> 3 experiment components ("090303-C2C12P15-FGF2,BMP2")
+    -> one component per sequence ("exp1_F0001 Data") holding that sequence's
+    TIFFs loose in its storage root. Folder paths inside a component don't carry
+    the experiment or sequence name, so the component titles are the path."""
+    out = [(node, title_path or "/")]
+    try:
+        children = list(_pages(f"{OSF_API}/nodes/{node}/children/"))
+    except Exception as e:  # noqa: BLE001
+        print(f"could not list children of {node} (continuing without them):", e)
+        return out
+    for child in children:
+        path = f"{title_path}/{child['attributes']['title']}"
+        print(f"{'  ' * depth}[{child['id']}] {path}")
+        out += _node_tree(child["id"], path, depth + 1)
+    return out
+
+
 def discover(inventory_path: str, node: str = OSF_NODE, probe_files: int = 20) -> dict:
     out = {"source": f"osf:{node}", "folders": [], "files": [], "tiff_folders": [], "_current_path": "/"}
-    nodes = [node]
-    try:
-        for child in _pages(f"{OSF_API}/nodes/{node}/children/"):
-            nodes.append(child["id"])
-    except Exception as e:  # noqa: BLE001
-        print("could not list child components (continuing with root only):", e)
-    for n in nodes:
+    for n, title_path in _node_tree(node):
         for prov in _pages(f"{OSF_API}/nodes/{n}/files/"):
             name = prov["attributes"]["name"]
             href = prov["relationships"]["files"]["links"]["related"]["href"]
-            print(f"[{n}] provider {name}")
-            out["_current_path"] = f"/{name}"
+            # osfstorage is every component's default store: leave it out of the
+            # path so a sequence component's root is ".../exp1_F0001 Data"
+            out["_current_path"] = title_path if name == "osfstorage" else f"{title_path.rstrip('/')}/{name}"
             _walk_folder(href, n, out, probe_files)
     out.pop("_current_path")
     archives = [f for f in out["files"] if f["name"].lower().endswith(ARCHIVE_EXT)]
@@ -333,8 +347,19 @@ def write_png(path: str, img8: np.ndarray) -> None:
 # fetch
 # ---------------------------------------------------------------------------
 
-def _list_full(listing_url: str) -> list[dict]:
-    return [_file_entry(it, "") for it in _pages(listing_url)]
+def _list_full(listing_url: str, attempts: int = 3) -> list[dict]:
+    """Every entry in a folder. OSF's default listing order isn't stable across
+    pages: unsorted, one C2C12 sequence came back with one frame 5 times and 4
+    frames missing (1013 rows, 1009 names). Sorting by name fixes the order; the
+    duplicate check stays as a guard."""
+    sep = "&" if "?" in listing_url else "?"
+    for attempt in range(attempts):
+        entries = [_file_entry(it, "") for it in _pages(f"{listing_url}{sep}sort=name")]
+        names = [e["name"] for e in entries]
+        if len(set(names)) == len(names):
+            return entries
+        print(f"  listing returned {len(names)} rows but {len(set(names))} names; relisting ({attempt + 1})")
+    raise RuntimeError(f"OSF listing of {listing_url} keeps returning duplicate entries")
 
 
 def _collect_sequences_from_inventory(inv: dict) -> list[dict]:
