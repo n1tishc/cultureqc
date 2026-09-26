@@ -30,6 +30,10 @@ Outputs:
     results/fov_noise_summary.md  — headline numbers + the fit
     results/fov_noise_plot.png    — mean vs SD scatter, one series per crop_frac, fit line overlaid
     configs/noise.yaml            — sigma_fov(confluency_pct) per crop_frac, for Slices 2-5 to import
+
+With --entry NAME (e.g. `--datasets c2c12 --entry c2c12`) the fit is written to
+noise.yaml's `entries.NAME` instead, leaving the top-level `crop_fracs` (what
+culture/growth.py reads) untouched, and the results files get a `_NAME` suffix.
 """
 
 from __future__ import annotations
@@ -48,7 +52,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # data/tiles/'s dataset tag (from nb/00 / nb/02's ImageRecord(dataset=...)) —
 # excluded because a 256x256 synthetic composite has no real "repositioning"
 # to simulate; only real acquisitions carry genuine FOV noise.
-SYNTHETIC_DATASETS = {"synth_tiles"}
+# The fault frames (scripts/make_fault_set.py) are simulated too.
+SYNTHETIC_DATASETS = {"synth_tiles", "c2c12_fault_dim", "c2c12_fault_contam"}
 
 
 def load_images_table(cache_dir: str) -> pd.DataFrame:
@@ -94,7 +99,7 @@ def collect_crop_stats(cache_dir: str, real_datasets: set[str] | None) -> pd.Dat
         .reset_index()
     )
     out = out[out.n_crops >= 3]  # SD off fewer than 3 crops isn't a real estimate
-    out = out.merge(images[["image_sha256", "dataset"]], on="image_sha256", how="left")
+    out = out.merge(images[["image_sha256", "dataset", "sequence_id"]], on="image_sha256", how="left")
     return out
 
 
@@ -146,14 +151,21 @@ def make_plot(df: pd.DataFrame, model: dict, out_path: str):
     plt.close(fig)
 
 
-def write_summary_md(df: pd.DataFrame, model: dict, cache_dir: str, out_path: str):
+def write_summary_md(df: pd.DataFrame, model: dict, cache_dir: str, out_path: str, entry: str | None = None):
     n_images = df["image_sha256"].nunique()
+    n_seq = df["sequence_id"].nunique()
+    sfx = f"_{entry}" if entry else ""
+    saved = (f"Saved to `configs/noise.yaml` under `entries.{entry}`; the top-level fit that "
+             "culture/growth.py reads is unchanged." if entry else
+             "Saved to `configs/noise.yaml` for Slices 2-5 to import directly.")
     datasets = sorted(df["dataset"].unique())
     lines = [
         "# FOV noise floor — Slice 1b (`cultureQC_upgrade.md` §4.3)",
         "",
         f"**Source:** cached crop confluency in `{cache_dir}`, no GPU/recompute. "
-        f"{n_images} real images ({', '.join(datasets)}), excluding synthetic tiles.",
+        f"{n_images} real images ({', '.join(datasets)}), excluding synthetic tiles."
+        + (f" They come from {n_seq} time-lapse sequences, so frames of one sequence are not "
+           "independent samples." if df["sequence_id"].notna().all() and n_seq < n_images else ""),
         "",
         "**Method:** for each image and each configured `crop_frac`, K deterministic "
         "random sub-crops simulate K repositions of the same FOV. Mean confluency "
@@ -177,11 +189,10 @@ def write_summary_md(df: pd.DataFrame, model: dict, cache_dir: str, out_path: st
         "(confluency, crop_frac). The cache only has two discrete crop_frac values "
         "by default (0.25, 0.5), not a continuous range, so a 2-parameter-per-frac "
         "linear model is the honest amount of structure this data supports — a "
-        "fancier joint model would be extrapolating past what's actually here. "
-        "Saved to `configs/noise.yaml` for Slices 2-5 to import directly.",
+        "fancier joint model would be extrapolating past what's actually here. " + saved,
         "",
-        "See `results/fov_noise_plot.png` for the scatter + fit lines, "
-        "`results/fov_noise.csv` for every (image, crop_frac) point.",
+        f"See `results/fov_noise{sfx}_plot.png` for the scatter + fit lines, "
+        f"`results/fov_noise{sfx}.csv` for every (image, crop_frac) point.",
     ]
     with open(out_path, "w") as f:
         f.write("\n".join(lines) + "\n")
@@ -197,6 +208,9 @@ def main():
     )
     parser.add_argument("--out", default="results")
     parser.add_argument("--configs-out", default="configs")
+    parser.add_argument("--entry", default=None,
+                        help="Write the fit to noise.yaml's entries.<ENTRY> and suffix the results files, "
+                        "instead of replacing the top-level crop_fracs.")
     args = parser.parse_args()
 
     t0 = time.time()
@@ -215,25 +229,42 @@ def main():
     os.makedirs(args.out, exist_ok=True)
     os.makedirs(args.configs_out, exist_ok=True)
 
-    df.to_csv(os.path.join(args.out, "fov_noise.csv"), index=False)
-    print(f"Wrote {args.out}/fov_noise.csv ({len(df)} rows)")
+    sfx = f"_{args.entry}" if args.entry else ""
+    df.to_csv(os.path.join(args.out, f"fov_noise{sfx}.csv"), index=False)
+    print(f"Wrote {args.out}/fov_noise{sfx}.csv ({len(df)} rows)")
 
-    make_plot(df, model, os.path.join(args.out, "fov_noise_plot.png"))
-    print(f"Wrote {args.out}/fov_noise_plot.png")
+    make_plot(df, model, os.path.join(args.out, f"fov_noise{sfx}_plot.png"))
+    print(f"Wrote {args.out}/fov_noise{sfx}_plot.png")
 
-    write_summary_md(df, model, args.cache_dir, os.path.join(args.out, "fov_noise_summary.md"))
-    print(f"Wrote {args.out}/fov_noise_summary.md")
+    write_summary_md(df, model, args.cache_dir, os.path.join(args.out, f"fov_noise{sfx}_summary.md"),
+                     args.entry)
+    print(f"Wrote {args.out}/fov_noise{sfx}_summary.md")
 
-    noise_yaml = {
-        "model": "sigma_fov(confluency_pct) = intercept + slope * confluency_pct, fit per crop_frac",
+    import yaml
+    fit = {
         "source_cache": args.cache_dir,
         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "datasets": sorted(df["dataset"].unique()),
+        "n_images": int(df["image_sha256"].nunique()),
+        "n_sequences": int(df["sequence_id"].nunique()),
         "crop_fracs": model,
     }
-    import yaml
-    with open(os.path.join(args.configs_out, "noise.yaml"), "w") as f:
+    path = os.path.join(args.configs_out, "noise.yaml")
+    prev = {}
+    if os.path.exists(path):
+        with open(path) as f:
+            prev = yaml.safe_load(f) or {}
+    if args.entry:
+        noise_yaml = prev
+        noise_yaml.setdefault("entries", {})[args.entry] = fit
+    else:
+        noise_yaml = {"model": "sigma_fov(confluency_pct) = intercept + slope * confluency_pct, fit per crop_frac",
+                      **fit}
+        if "entries" in prev:  # keep the separately measured entries
+            noise_yaml["entries"] = prev["entries"]
+    with open(path, "w") as f:
         yaml.safe_dump(noise_yaml, f, sort_keys=False)
-    print(f"Wrote {args.configs_out}/noise.yaml")
+    print(f"Wrote {path}" + (f" (entries.{args.entry})" if args.entry else ""))
 
 
 if __name__ == "__main__":

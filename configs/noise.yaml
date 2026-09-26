@@ -16,3 +16,26 @@ crop_fracs:
     r2: 0.527
     mean_sd_pct: 2.908
     max_sd_pct: 31.277
+entries:
+  c2c12:
+    source_cache: cache
+    generated_at: '2026-09-26T16:15:42Z'
+    datasets:
+    - c2c12
+    n_images: 2088
+    n_sequences: 24
+    crop_fracs:
+      '0.25':
+        slope: 0.20718
+        intercept: 2.82806
+        n_points: 2088
+        r2: 0.392
+        mean_sd_pct: 6.593
+        max_sd_pct: 28.736
+      '0.5':
+        slope: 0.08188
+        intercept: 1.3255
+        n_points: 2088
+        r2: 0.275
+        mean_sd_pct: 2.891
+        max_sd_pct: 16.638
