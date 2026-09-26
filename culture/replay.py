@@ -300,6 +300,21 @@ def _fault_truth(frame: pd.Series) -> dict:
     return out
 
 
+def _source_dataset(tables: ReplayTables, frames: pd.DataFrame, is_fault: bool) -> str | None:
+    """The dataset the stream's real frames were acquired in, for growth's
+    noise-model choice (configs/noise.yaml entries). A fault stream takes its
+    base sequence's dataset, so the noise model doesn't switch at onset when
+    the frames' own dataset tag changes to the simulated fault's."""
+    images = tables.images()
+    if is_fault:
+        if "base_sequence_id" not in frames.columns:
+            return None
+        found = images[images.sequence_id.isin(frames["base_sequence_id"].unique())].dataset.unique()
+    else:
+        found = frames["dataset"].unique() if "dataset" in frames.columns else []
+    return str(found[0]) if len(found) == 1 else None
+
+
 def build_replay_visits(
     cache,
     sequence_id: str,
@@ -337,6 +352,9 @@ def build_replay_visits(
     looking `sequence_id` up in images.parquet. Each visit then also carries
     a `fault` dict with that frame's ground truth (fault_type, onset_hours,
     is_modified, severity, ...).
+
+    Every visit carries `source_dataset` (a fault stream: its base sequence's
+    dataset), which culture/growth.py uses to pick a configs/noise.yaml entry.
 
     `tables`: a ReplayTables to reuse across streams; built here if None.
 
@@ -388,6 +406,7 @@ def build_replay_visits(
         frames = _frames_from_table(frames, sequence_id)
         is_fault = True
     _check_frames_cached(tables, frames, sequence_id)
+    source_dataset = _source_dataset(tables, frames, is_fault)
     frame_times = pd.to_datetime(frames["timestamp"])
 
     visit_times = _sample_visit_timestamps(frames, timing, rng, n_visits)
@@ -435,6 +454,7 @@ def build_replay_visits(
             # Extra, schema-permitted (not required) provenance fields:
             "provenance": "replay_simulated",
             "source_sequence_id": sequence_id,
+            "source_dataset": source_dataset,
             "source_frame_idx": int(frame["frame_idx"]),
             "crop_specs": crop_specs,
             "replay_params": replay_params,

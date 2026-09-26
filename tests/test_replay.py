@@ -56,14 +56,14 @@ class _FakeCache:
 
 
 def _build_fixture_cache(tmp_path, sequence_id: str, n_frames: int, hours_apart: float,
-                          start: str, shas: list[str]) -> None:
+                          start: str, shas: list[str], dataset: str = "fixture") -> None:
     rng = np.random.default_rng(0)
     base = pd.Timestamp(start)
 
     images_rows, conf_rows, logits_rows, quality_rows = [], [], [], []
     for i, sha in enumerate(shas):
         images_rows.append({
-            "image_sha256": sha, "dataset": "fixture", "source_path": f"/fake/{sha}.png",
+            "image_sha256": sha, "dataset": dataset, "source_path": f"/fake/{sha}.png",
             "sequence_id": sequence_id, "frame_idx": i,
             "timestamp": (base + pd.Timedelta(hours=hours_apart * i)).isoformat(),
             "height": 256, "width": 256, "bit_depth": "uint8", "normalization": "grayscale_imread",
@@ -238,7 +238,8 @@ def _fault_manifest(tmp_path) -> pd.DataFrame:
     by modified frames, cached under the fault sequence's id — the shape
     scripts/make_fault_set.py + nb/03 produce."""
     mod_shas = [_fake_sha(200 + i) for i in range(6)]
-    _build_fixture_cache(tmp_path, _FAULT_ID, 6, hours_apart=8.0, start="2026-01-03T00:00:00Z", shas=mod_shas)
+    _build_fixture_cache(tmp_path, _FAULT_ID, 6, hours_apart=8.0, start="2026-01-03T00:00:00Z", shas=mod_shas,
+                         dataset="fixture_fault")
     base = pd.Timestamp("2026-01-01T00:00:00Z")
     rows = []
     for i in range(12):
@@ -270,6 +271,19 @@ def test_fault_replay_reads_frames_from_manifest(fixture_cache, tmp_path, schema
         assert (v["image_sha256"][0] in pre) == (not f["is_modified"])
         assert f["is_modified"] == (f["hours_since_start"] >= _ONSET_H)
     assert any(v["fault"]["is_modified"] for v in visits) and not all(v["fault"]["is_modified"] for v in visits)
+
+
+def test_visits_record_the_real_source_dataset(fixture_cache, tmp_path):
+    """culture/growth.py picks the noise.yaml entry from source_dataset. A
+    fault stream takes its base sequence's dataset for every visit, so the
+    noise model doesn't switch at onset when the frames' own tag changes."""
+    base = build_replay_visits(fixture_cache, "fixture_seq_1", "L1", "S1", "flask-1", seed=0)
+    assert {v["source_dataset"] for v in base} == {"fixture"}
+    man = _fault_manifest(tmp_path)
+    fault = build_replay_visits(fixture_cache, _FAULT_ID, "L1", "S1", "flask-1", seed=0, frames=man,
+                                mean_interval_hours=6, jitter_hours=1.5)
+    assert any(v["fault"]["is_modified"] for v in fault)
+    assert {v["source_dataset"] for v in fault} == {"fixture"}
 
 
 def test_fault_stream_ids_differ_from_base_stream(fixture_cache, tmp_path):

@@ -19,7 +19,7 @@ from datetime import datetime, timedelta, timezone
 import numpy as np
 import yaml
 
-from culture.growth import GrowthResult, _sigma_fov_for_visit, fit_growth, growth_config_hash
+from culture.growth import GrowthResult, _sigma_fov_for_visit, fit_growth, growth_config_hash, noise_model_for_visit
 
 _NOISE_CONFIG_PATH = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "configs", "noise.yaml"
@@ -63,6 +63,16 @@ def test_sigma_fov_falls_back_for_unparseable_crop_spec():
     sigma = _sigma_fov_for_visit(visit, noise_cfg, fallback_frac=0.5)
     entry = noise_cfg["crop_fracs"]["0.5"]
     assert abs(sigma - (entry["intercept"] + entry["slope"] * 30.0)) < 1e-9
+
+
+def test_sigma_fov_uses_the_entry_measured_on_the_visits_dataset():
+    noise_cfg = yaml.safe_load(open(_NOISE_CONFIG_PATH))
+    c2c12 = noise_cfg["entries"]["c2c12"]["crop_fracs"]["0.25"]
+    visit = {"crop_specs": ["crop_f0.25_s1_k0"], "confluency_mean": 50.0, "source_dataset": "c2c12"}
+    assert noise_model_for_visit(visit, noise_cfg)["name"] == "c2c12"
+    assert abs(_sigma_fov_for_visit(visit, noise_cfg, 0.5) - (c2c12["intercept"] + c2c12["slope"] * 50.0)) < 1e-9
+    for ds in ("evican_eval2019", None):  # no entry of its own, or no dataset recorded -> top-level fit
+        assert noise_model_for_visit({**visit, "source_dataset": ds}, noise_cfg)["name"] == "default"
 
 
 # -- fit correctness --------------------------------------------------------

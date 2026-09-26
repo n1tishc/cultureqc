@@ -137,6 +137,18 @@ def growth_config_hash(config_path: str = _DEFAULT_CONFIG_PATH) -> str:
 
 # -- weighting -----------------------------------------------------------
 
+def noise_model_for_visit(visit: dict, noise_cfg: dict) -> dict:
+    """The configs/noise.yaml fit for this visit: the `entries` fit whose
+    `datasets` lists the visit's `source_dataset` (set by replay; C2C12 has
+    its own, measured on C2C12 frames), else the top-level fit. Returns a dict
+    with `crop_fracs` and `name` ("default" for the top level)."""
+    ds = visit.get("source_dataset")
+    for name, entry in (noise_cfg.get("entries") or {}).items():
+        if ds is not None and ds in entry.get("datasets", []):
+            return {"name": name, "crop_fracs": entry["crop_fracs"]}
+    return {"name": "default", "crop_fracs": noise_cfg["crop_fracs"]}
+
+
 def _sigma_fov_for_visit(visit: dict, noise_cfg: dict, fallback_frac: float, pct: float | None = None) -> float:
     """configs/noise.yaml's measured `sigma_fov(confluency_pct) = intercept +
     slope*pct`, per crop_frac (scripts/fov_noise.py, real cached
@@ -150,7 +162,8 @@ def _sigma_fov_for_visit(visit: dict, noise_cfg: dict, fallback_frac: float, pct
     available proxy, not a measurement of the full-frame case).
 
     `pct` evaluates sigma_fov at that confluency instead of the visit's own
-    confluency_mean (one-step-ahead prediction uses the *expected* value)."""
+    confluency_mean (one-step-ahead prediction uses the *expected* value).
+    Which fit is used comes from noise_model_for_visit()."""
     fracs = set()
     for spec in visit.get("crop_specs") or []:
         m = _CROP_FRAC_RE.search(spec)
@@ -159,11 +172,12 @@ def _sigma_fov_for_visit(visit: dict, noise_cfg: dict, fallback_frac: float, pct
     if not fracs:
         fracs = {str(fallback_frac)}
 
-    available = {float(k): v for k, v in noise_cfg["crop_fracs"].items()}
+    crop_fracs = noise_model_for_visit(visit, noise_cfg)["crop_fracs"]
+    available = {float(k): v for k, v in crop_fracs.items()}
     pct = visit["confluency_mean"] if pct is None else pct
     sigmas = []
     for frac in fracs:
-        entry = noise_cfg["crop_fracs"].get(frac)
+        entry = crop_fracs.get(frac)
         if entry is None:
             nearest = min(available, key=lambda k: abs(k - float(frac)))
             entry = available[nearest]
