@@ -29,6 +29,8 @@ scripts/fetch_c2c12.py produced. Every output row is labelled provenance="simula
       sequence's raw 16-bit frames are scaled by a factor ramping 1.0 -> min_factor,
       THEN passed through the SAME fixed normalization as the originals — so the
       8-bit frames get genuinely darker, as they would if the lamp dimmed.
+      At onset itself the factor is still 1.0: that row points at the original
+      frame with is_modified=False, and no new image is written for it.
 
 Outputs (in --out):
   png/<fault_sequence_id>/<frame_idx>.png   modified frames (contamination, dimming)
@@ -254,6 +256,12 @@ def build(c2c12_dir: str, out_dir: str, sprite_dir: str, repo_root: str, cfg: di
         post = []
         for _, r in _post_onset_grid(base, lc["onset_hours"], lc["stride_hours"]).iterrows():
             fac = _ramp(r.hours_since_start, lc["onset_hours"], lc["ramp_hours"], 1.0, lc["min_factor"])
+            if fac >= 1.0:
+                # the ramp starts at exactly 1.0, so the onset frame is the original byte for byte
+                post.append({"frame_idx": int(r.frame_idx), "timestamp": r.timestamp,
+                             "hours_since_start": float(r.hours_since_start), "image_sha256": r.image_sha256,
+                             "is_modified": False, "severity": float(fac)})
+                continue
             out_path = os.path.join(out_dir, "png", fault_id, f"{int(r.frame_idx):05d}.png")
             if not os.path.exists(out_path):
                 raw = read_raw(r.raw_path).astype(np.float32) * fac
