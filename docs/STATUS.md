@@ -16,7 +16,7 @@ Nothing is merged to `main`.
 | 3 Growth model + T* + timeline | Done, **backtest synthetic only** | `culture/growth.py`, `tests/test_growth.py`, `results/growth_backtest.md`, `results/growth_examples.*`, `results/growth_runtime.txt` | Backtest is a harness check; don't quote it until A1 reruns it on real sequences. Missing one §6.1 item, see below |
 | 4, 4b, 5, 5b, 6, 7, 8 | Not started | — | Minimal versions in Phase A |
 
-Tests: `pytest tests` → 91 passed, 1 xfailed (2026-09-26, after the A2 fleet).
+Tests: `pytest tests` → 94 passed, 1 xfailed (2026-09-26, after A1).
 
 ## Phase A progress
 
@@ -31,7 +31,8 @@ Tests: `pytest tests` → 91 passed, 1 xfailed (2026-09-26, after the A2 fleet).
 | A5 calibration | Done (`fb37afe`). T = **1.5536**, fit on synthetic val (n=645). Top-label ECE: val 0.0102 → **0.0057** (in-sample; V8 ≤ 0.05 passes, and passed before scaling too); test 0.0187 → 0.0139 (held out). Per-class ECE is in `results/calibration_summary.md`. Provenance: synthetic, so it says little about C2C12. Replay applies T when the logits' model_version matches `configs/calibration.yaml`. **`culture/qc.py` (live app) does not apply it yet** (Phase B) |
 | §6.1 one-step-ahead | Done. `culture/growth.py`: `predict_next()`, `one_step_ahead_series()`; `predictive_sd = sqrt(fit_sd² + obs_sd²)`, with obs_sd = σ_fov at the *expected* confluency / √n_fov (config `one_step_ahead.fov_scaling`). Synthetic check with the model correct and a test noise model: SD(z) = **1.23**, mean 0.15, n=285 (fit_sd alone: 2.14; obs_sd alone: 1.72). So z is slightly over-dispersed even when the curve shape is right; A6 must check the z scale on the tuning fleet. A stall shows in the one-step residual for about 4 visits, then the refit bends into a plateau and absorbs it, so SPC must accumulate early (CUSUM) |
 | A3 fault set | Done by `nb/03`. Lamp-dim onset frames are the originals, not modified (drift item 10, fixed) |
-| A1, A4, A6, A7, A8 | Not started |
+| A1 growth backtest | Done (2026-09-26), **thin**. `scripts/backtest_growth.py` (default `--source c2c12`) on the 14 held-out sequences, same streams as the A2 fleet. Truth = first crossing of the hourly full-frame Cellpose-SAM series. Held-out sequences reach at most 57.0%: **only the 50% target is testable (5 of 14 cross; 60/70/80%: 0)**, and 3 of the 5 cross by < 2 pp in their last 1–2 frames. At the target − 10 cut: median abs error 4.9 h (6 h, 1 crop), 9.0 h (6 h, 3 crops), 2.1 h (12 h, 1 crop, 3 predictions), 5.8 h (12 h, 3 crops); full frame 2.4 h / 1.9 h. **V3: no verdict at n=5.** `results/growth_backtest.md`; the synthetic harness check moved to `results/growth_backtest_synthetic.*` (CSV regenerated: same predictions, interval bounds changed by `a5dd140`'s bootstrap; summary unchanged) |
+| A4, A6, A7, A8 | Not started |
 
 ## Schedule
 

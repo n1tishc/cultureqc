@@ -47,6 +47,8 @@ from culture.replay import ReplayTables, build_replay_visits, fault_split, fault
 CADENCES = (6.0, 12.0)
 JITTER_FRAC = 0.25
 N_FOVS = (1, 3)
+CROP_FRAC = 0.25
+SEED = 0
 with open(os.path.join(REPO, "configs", "growth.yaml")) as _f:
     MIN_GROWTH_VISITS = yaml.safe_load(_f)["minimum_data"]["min_visits"]  # culture/growth.py's minimum for a fit
 
@@ -174,10 +176,10 @@ def write_summary(path, args, specs, streams, split_df, pairing, heldout_rates, 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--cache-dir", default="cache")
-    ap.add_argument("--seed", type=int, default=0, help="replay seed, same for every stream")
+    ap.add_argument("--seed", type=int, default=SEED, help="replay seed, same for every stream")
     ap.add_argument("--split-seed", type=int, default=0)
     ap.add_argument("--tuning-frac", type=float, default=0.4)
-    ap.add_argument("--crop-frac", type=float, default=0.25)
+    ap.add_argument("--crop-frac", type=float, default=CROP_FRAC)
     ap.add_argument("--visits-out", default=None, help="default: <cache-dir>/replay_fleet")
     ap.add_argument("--out", default=os.path.join(REPO, "results"))
     args = ap.parse_args()

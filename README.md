@@ -179,7 +179,7 @@ crossing to the curve's own true crossing:
 | on_model | without_repositioning | 20 | 4.8 | 100% |
 
 (`off_model` + `without_repositioning` had only 1 resolved window — omitted here as too few to
-summarize, not hidden: it's in `results/growth_backtest.csv`.)
+summarize, not hidden: it's in `results/growth_backtest_synthetic.csv`.)
 
 **This table is a harness-correctness check, not a real prediction-accuracy
 claim** — it must not be quoted as the claims-policy backtest sentence
@@ -188,8 +188,8 @@ claim** — it must not be quoted as the claims-policy backtest sentence
 not a bug: the bootstrap resamples residuals *within* the AIC-chosen model
 only, so it misses model-selection uncertainty — exactly what dominates on
 sparse, noisy early prefixes where logistic-vs-Gompertz AIC is close to a
-tie. Full numbers: [`results/growth_backtest.md`](results/growth_backtest.md),
-[`results/growth_backtest.csv`](results/growth_backtest.csv). Three
+tie. Full numbers: [`results/growth_backtest_synthetic.md`](results/growth_backtest_synthetic.md),
+[`results/growth_backtest_synthetic.csv`](results/growth_backtest_synthetic.csv). Three
 labeled example segments (good/poor/plateau):
 [`results/growth_examples.png`](results/growth_examples.png),
 [`results/growth_examples.md`](results/growth_examples.md).

@@ -1,8 +1,27 @@
 #!/usr/bin/env python3
 """
-culture/growth.py backtest (cultureQC_upgrade.md §6.2).
+culture/growth.py backtest (cultureQC_upgrade.md §6.2; A1 in
+cultureQC_upgrade_spec.md §2A.2).
 
-IMPORTANT — what this backtest actually measures: real C2C12 sequences
+Two modes:
+
+--source c2c12 (default, A1): the held-out C2C12 fleet (results/replay_fleet_split.csv,
+written by scripts/replay_fleet.py), replayed with exactly the fleet's
+cadences, jitter, crop size and seed. For each target in {50, 60, 70, 80}%,
+only sequences whose hourly full-frame confluency actually crosses it count.
+Truth = first crossing of that hourly series (linear interpolation between
+the two frames around it). Cut points: fit on the visits up to the first one
+whose observed confluency reaches target − 20 / target − 10. Three FOV
+settings per cadence: 1 and 3 repositioned 0.25 crops ("with repositioning"),
+and the full-frame reading at the same visit times ("without repositioning";
+the same measurement the truth comes from, so it is a ceiling: extrapolation
+error with perfect measurement). Every outcome is counted, none dropped.
+Outputs results/growth_backtest.{csv,md}.
+
+--source synthetic (Slice 3 harness check, below): outputs
+results/growth_backtest_synthetic.{csv,md}.
+
+The synthetic mode, as first written: real C2C12 sequences
 aren't cached yet (culture/replay.py's own docstring: the real Slice 1b
 cache has sequence_id/frame_idx unset for every row; nb/00 + a cache pass
 that sets them haven't run). This backtest therefore runs entirely on
@@ -36,16 +55,18 @@ true (numerically solved) 80% crossing time. Repeated "with repositioning"
 "shows the effect of FOV noise."
 
 Usage:
-    python scripts/backtest_growth.py [--seed 0] [--n-boot 200]
-Outputs:
-    results/growth_backtest.csv   — one row per (stream, reach_threshold, repositioning)
-    results/growth_backtest.md    — median abs error + 90% interval coverage table
+    python scripts/backtest_growth.py                       # A1, real C2C12 held-out fleet
+    python scripts/backtest_growth.py --source synthetic    # harness check [--seed 0] [--n-boot 200]
+Outputs (synthetic):
+    results/growth_backtest_synthetic.csv   — one row per (stream, reach_threshold, repositioning)
+    results/growth_backtest_synthetic.md    — median abs error + 90% interval coverage table
 """
 
 from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib.util
 import json
 import os
 import sys
@@ -59,9 +80,10 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from culture.cache import Cache
 from culture.growth import fit_growth
-from culture.replay import build_replay_visits
+from culture.replay import ReplayTables, build_replay_visits
 
-RESULTS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "results")
+REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+RESULTS_DIR = os.path.join(REPO, "results")
 
 # A group's median/coverage isn't a meaningful summary statistic below this
 # many resolved windows (one window IS one data point) -- such groups stay
@@ -234,18 +256,12 @@ def summarize(df: pd.DataFrame) -> pd.DataFrame:
     )
 
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--work-dir", default=None)
-    ap.add_argument("--seed", type=int, default=0)
-    ap.add_argument("--n-boot", type=int, default=200)
-    args = ap.parse_args()
-
+def main_synthetic(args):
     work_dir = args.work_dir or tempfile.mkdtemp(prefix="growth_backtest_")
     os.makedirs(RESULTS_DIR, exist_ok=True)
 
-    df = run_backtest(work_dir, seed=args.seed, n_boot=args.n_boot)
-    df.to_csv(os.path.join(RESULTS_DIR, "growth_backtest.csv"), index=False)
+    df = run_backtest(work_dir, seed=args.seed, n_boot=args.n_boot if args.n_boot is not None else 200)
+    df.to_csv(os.path.join(RESULTS_DIR, "growth_backtest_synthetic.csv"), index=False)
 
     summary = summarize(df)
     table_summary = summary[summary["n_windows"] >= MIN_WINDOWS_FOR_SUMMARY_TABLE]
@@ -297,13 +313,305 @@ def main():
         )
         lines.append("")
 
-    md_path = os.path.join(RESULTS_DIR, "growth_backtest.md")
+    md_path = os.path.join(RESULTS_DIR, "growth_backtest_synthetic.md")
     with open(md_path, "w") as f:
         f.write("\n".join(lines))
 
     print("\n".join(lines))
-    print(f"\nwrote {os.path.join(RESULTS_DIR, 'growth_backtest.csv')}")
+    print(f"\nwrote {os.path.join(RESULTS_DIR, 'growth_backtest_synthetic.csv')}")
     print(f"wrote {md_path}")
+
+
+# -- A1: real C2C12 held-out fleet --------------------------------------------
+
+REAL_TARGETS = (50.0, 60.0, 70.0, 80.0)
+CUT_OFFSETS = (20.0, 10.0)  # fit until observed confluency first reaches target - offset
+
+
+def _load_fleet():
+    spec = importlib.util.spec_from_file_location("replay_fleet", os.path.join(REPO, "scripts", "replay_fleet.py"))
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _naive(ts) -> pd.Timestamp:
+    t = pd.Timestamp(ts)
+    return t.tz_convert(None) if t.tzinfo is not None else t
+
+
+def full_frame_series(cache_dir: str, sequence_ids) -> pd.DataFrame:
+    """Hourly full-frame Cellpose-SAM confluency per sequence, with hours since
+    each sequence's first frame."""
+    images = pd.read_parquet(os.path.join(cache_dir, "images.parquet"))
+    conf = pd.read_parquet(os.path.join(cache_dir, "confluency.parquet"))
+    full = conf[(conf.model_name == "seg") & (conf.crop_spec == "full")][["image_sha256", "pct"]]
+    df = images[images.sequence_id.isin(list(sequence_ids))][["image_sha256", "sequence_id", "frame_idx", "timestamp"]]
+    df = df.merge(full, on="image_sha256", how="left")
+    if df.pct.isna().any():
+        raise ValueError("frames without a full-frame seg row")
+    df["t"] = [_naive(t) for t in df.timestamp]
+    df = df.sort_values(["sequence_id", "t"]).reset_index(drop=True)
+    df["hours"] = df.groupby("sequence_id").t.transform(lambda s: (s - s.min()).dt.total_seconds() / 3600.0)
+    return df
+
+
+def truth_crossing(series: pd.DataFrame, target: float) -> dict | None:
+    """First crossing of `target` in one sequence's hourly series, linearly
+    interpolated between the frame below and the first frame at/above it.
+    None if the series never reaches it. Also returns how fragile it is."""
+    h, y = series.hours.to_numpy(), series.pct.to_numpy()
+    above = np.flatnonzero(y >= target)
+    if len(above) == 0:
+        return None
+    i = int(above[0])
+    t = float(h[0]) if i == 0 else float(h[i - 1] + (target - y[i - 1]) * (h[i] - h[i - 1]) / (y[i] - y[i - 1]))
+    after = y[i:]
+    return {"true_hours": t, "max_pct": float(y.max()), "margin_pct": float(y.max() - target),
+            "frames_after": int(len(after)), "frames_after_at_or_above": int((after >= target).sum()),
+            "last_pct": float(y[-1]), "last_hours": float(h[-1])}
+
+
+def _without_repositioning(visits: list[dict], full_pct: dict) -> list[dict]:
+    """The same visits with the full-frame reading in place of the sampled crops."""
+    out = []
+    for v in visits:
+        pct = full_pct[v["image_sha256"][0]]
+        out.append({**v, "fov_confluency": [pct], "confluency_mean": pct, "confluency_sd": 0.0, "n_fov": 1,
+                    "crop_specs": ["full"], "image_sha256": v["image_sha256"][:1]})
+    return out
+
+
+def _outcome(visits, truth, target, offset, seed, n_boot) -> dict:
+    cut = target - offset
+    prefix = []
+    for v in visits:
+        prefix.append(v)
+        if v["confluency_mean"] >= cut:
+            break
+    else:
+        return {"outcome": "cut_not_reached"}
+    t0 = _naive(visits[0]["timestamp"])
+    cut_hours = (_naive(prefix[-1]["timestamp"]) - t0).total_seconds() / 3600.0
+    row = {"cut_hours": cut_hours, "n_visits_fit": len(prefix)}
+    if cut_hours >= truth["true_hours"]:
+        return {**row, "outcome": "cut_at_or_after_crossing"}
+    r = fit_growth(prefix, target_pct=target, seed=seed, n_boot=n_boot)
+    row.update({"fit_status": r.status, "chosen_model": r.chosen_model})
+    if r.status != "OK":
+        return {**row, "outcome": f"fit_{r.status.lower()}"}
+    if r.t_star_status != "REACHED":
+        return {**row, "outcome": "not_reached"}
+    err = r.t_star_hours - truth["true_hours"]
+    row.update({"outcome": "predicted", "predicted_hours": r.t_star_hours, "error_hours": err,
+                "abs_error_hours": abs(err), "lead_hours": truth["true_hours"] - cut_hours})
+    if r.t_star_interval_hours is not None:
+        lo, hi = r.t_star_interval_hours
+        row.update({"interval_lo": lo, "interval_hi": hi, "covered": bool(lo <= truth["true_hours"] <= hi)})
+    return row
+
+
+def run_real_backtest(cache_dir: str, split_path: str, n_boot: int | None = None, check_jsonl: bool = True):
+    fleet = _load_fleet()
+    split = pd.read_csv(split_path)
+    held = sorted(split[(split.kind == "base") & (split.split == "heldout")].sequence_id)
+    series = full_frame_series(cache_dir, held)
+    full_pct = dict(zip(series.image_sha256, series.pct))
+    tables = ReplayTables(Cache(cache_dir))
+    cache = Cache(cache_dir)
+
+    truths = []
+    for sid in held:
+        s = series[series.sequence_id == sid]
+        for target in REAL_TARGETS:
+            tr = truth_crossing(s, target)
+            truths.append({"sequence_id": sid, "target_pct": target, "crosses": tr is not None, **(tr or {})})
+    truths = pd.DataFrame(truths)
+
+    rows = []
+    for cadence in fleet.CADENCES:
+        for sid in held:
+            streams = {}
+            for n_fov in fleet.N_FOVS:
+                streams[("with_repositioning", n_fov)] = build_replay_visits(
+                    cache, sid, lineage_id=sid, segment_id="S1", flask_id=sid, seed=fleet.SEED, tables=tables,
+                    mean_interval_hours=cadence, jitter_hours=fleet.JITTER_FRAC * cadence, n_fov=n_fov,
+                    crop_frac=fleet.CROP_FRAC)
+            first = streams[("with_repositioning", fleet.N_FOVS[0])]
+            first_frame = series[series.sequence_id == sid].t.min()
+            if _naive(first[0]["timestamp"]) != first_frame:
+                raise AssertionError(f"{sid}: first visit is not at the first frame; T* and truth clocks differ")
+            streams[("without_repositioning", 1)] = _without_repositioning(first, full_pct)
+
+            for target in REAL_TARGETS:
+                tr = truths[(truths.sequence_id == sid) & (truths.target_pct == target)].iloc[0]
+                if not tr.crosses:
+                    continue
+                for offset in CUT_OFFSETS:
+                    for (setting, n_fov), visits in streams.items():
+                        rows.append({"sequence_id": sid, "target_pct": target, "cut": f"target-{offset:g}",
+                                     "cadence_h": cadence, "repositioning": setting, "n_fov": n_fov,
+                                     "true_hours": tr.true_hours,
+                                     **_outcome(visits, tr, target, offset, fleet.SEED, n_boot)})
+
+    if check_jsonl:
+        # the streams here are the fleet's streams (same params, same seed)
+        path = os.path.join(cache_dir, "replay_fleet", f"visits_{fleet.CADENCES[0]:g}h_fov{fleet.N_FOVS[0]}.jsonl")
+        if os.path.exists(path):
+            import json as _json
+            saved = [_json.loads(line) for line in open(path)]
+            saved = [v for v in saved if v["source_sequence_id"] == held[0]]
+            regen = build_replay_visits(cache, held[0], lineage_id=held[0], segment_id="S1", flask_id=held[0],
+                                        seed=fleet.SEED, tables=tables, mean_interval_hours=fleet.CADENCES[0],
+                                        jitter_hours=fleet.JITTER_FRAC * fleet.CADENCES[0], n_fov=fleet.N_FOVS[0],
+                                        crop_frac=fleet.CROP_FRAC)
+            key = lambda v: (v["visit_id"], v["fov_confluency"])  # noqa: E731
+            if [key(v) for v in saved] != [key(v) for v in regen]:
+                raise AssertionError(f"replayed stream for {held[0]} differs from {path}")
+    return pd.DataFrame(rows), truths, held
+
+
+def crop_offset(cache_dir: str, sequence_ids, frac: float) -> dict:
+    """Median (mean of a frame's `frac` crops − its full-frame reading), all frames and frames at >= 30%."""
+    images = pd.read_parquet(os.path.join(cache_dir, "images.parquet"))
+    shas = set(images[images.sequence_id.isin(list(sequence_ids))].image_sha256)
+    conf = pd.read_parquet(os.path.join(cache_dir, "confluency.parquet"))
+    conf = conf[(conf.model_name == "seg") & conf.image_sha256.isin(shas)]
+    full = conf[conf.crop_spec == "full"].set_index("image_sha256").pct
+    crops = conf[conf.crop_spec.str.startswith(f"crop_f{frac}_")].groupby("image_sha256").pct.mean()
+    d = crops - full.reindex(crops.index)
+    hi = full.reindex(crops.index) >= 30
+    return {"n": int(len(d)), "median": float(d.median()), "n_hi": int(hi.sum()), "median_hi": float(d[hi].median())}
+
+
+def _fmt(x, nd=1):
+    return "—" if x is None or (isinstance(x, float) and np.isnan(x)) else f"{x:.{nd}f}"
+
+
+def write_real_summary(path, df, truths, held, offset_stats, args, n_boot_used):
+    fleet = _load_fleet()
+    crossing = truths[truths.crosses]
+    lines = [
+        "# Growth model backtest on real C2C12 sequences (A1)",
+        "",
+        f"Generated {pd.Timestamp.now(tz='UTC'):%Y-%m-%d %H:%M} UTC by `scripts/backtest_growth.py` from "
+        f"`{args.cache_dir}`. Data: C2C12 time-lapse, Ker et al., *Sci Data* 5:180237 (2018), CC BY 4.0. "
+        "Visits are simulated from the recorded frames (replay); no model runs at replay time.",
+        "",
+        f"**Held-out fleet only:** {len(held)} base sequences from `results/replay_fleet_split.csv`. "
+        f"Replayed exactly as the A2 fleet: mean cadence {', '.join(f'{c:g} h' for c in fleet.CADENCES)} "
+        f"(jitter ±{fleet.JITTER_FRAC:.0%}), {fleet.CROP_FRAC} crops, seed {fleet.SEED}. "
+        f"Bootstrap: {n_boot_used} resamples.",
+        "",
+        "**Truth** is the first crossing of the target in each sequence's hourly *full-frame* confluency as "
+        "Cellpose-SAM reads it (not a manual annotation). V1 found Cellpose-SAM reads about 8 pp low on "
+        "EVICAN, so \"50%\" here means 50% as Cellpose-SAM measures it.",
+        "",
+        "**FOV settings.** *with repositioning*: each visit reads 1 or 3 randomly placed 0.25 crops of the "
+        "frame (crop positions differ from frame to frame). *without repositioning*: the full-frame reading "
+        "at the same visit times. That is the same measurement the truth comes from, so it is a ceiling: "
+        "extrapolation error with perfect measurement. Its fit weights use the 0.5-crop noise fit "
+        "(`fallback_crop_frac`), a proxy; there is no measured full-frame noise.",
+        "",
+        f"Crop vs full frame on the held-out frames: the mean of a frame's 0.25 crops is a median "
+        f"{offset_stats['median']:+.2f} pp from its full-frame reading (n={offset_stats['n']} frames), "
+        f"{offset_stats['median_hi']:+.2f} pp on frames at ≥ 30% (n={offset_stats['n_hi']}).",
+        "",
+        "## Which targets can be tested",
+        "",
+        "| target | held-out sequences that cross it |",
+        "|---|---|",
+    ]
+    for t in REAL_TARGETS:
+        lines.append(f"| {t:g}% | {int(truths[truths.target_pct == t].crosses.sum())} of {len(held)} |")
+    lines += ["", "## Truth per crossing sequence", "",
+              "| target | sequence | first crossing (h) | max (%) | margin over target (pp) | "
+              "frames at or above target after crossing | last frame (%) |", "|---|---|---|---|---|---|---|"]
+    for r in crossing.sort_values(["target_pct", "sequence_id"]).itertuples():
+        lines.append(f"| {r.target_pct:g}% | {r.sequence_id} | {r.true_hours:.1f} | {r.max_pct:.1f} | "
+                     f"{r.margin_pct:.1f} | {int(r.frames_after_at_or_above)}/{int(r.frames_after)} | {r.last_pct:.1f} |")
+
+    lines += ["", "## Outcomes and errors", "",
+              "Every crossing sequence is counted in every row. *cut not reached*: the observed series never "
+              "reaches the cut. *cut at/after crossing*: it reaches the cut only at or after the true crossing, "
+              "so there is nothing left to predict. *too few visits at cut*: fewer than the growth model's minimum (a noisy reading hit the cut early). *not reached*: the fit levels off below the target (a miss). "
+              "Error = predicted − true (h); negative means predicted too early. *Lead*: true crossing − cut (h), how far ahead the prediction was made. A prediction whose bootstrap gave too few crossings has no interval. Medians only for ≥ "
+              f"{MIN_WINDOWS_FOR_SUMMARY_TABLE} predictions; coverage is a count.", "",
+              "| target | cut | cadence | FOVs | sequences | cut not reached | cut at/after crossing | too few visits at cut | fit failed "
+              "| not reached | predicted | median abs error (h) | median signed error (h) | median lead (h) "
+              "| 90% interval covers truth |", "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
+    order = {"with_repositioning": 0, "without_repositioning": 1}
+    for (t, cut, cad, setting, nf), g in sorted(df.groupby(["target_pct", "cut", "cadence_h", "repositioning", "n_fov"]),
+                                                key=lambda kv: (kv[0][0], -int(kv[0][1].split("-")[1]), kv[0][2],
+                                                                order[kv[0][3]], kv[0][4])):
+        oc = g.outcome.value_counts()
+        pred = g[g.outcome == "predicted"]
+        n_pred = len(pred)
+        big = n_pred >= MIN_WINDOWS_FOR_SUMMARY_TABLE
+        cov = pred.covered.dropna() if "covered" in pred else pd.Series(dtype=bool)
+        no_interval = n_pred - len(cov)
+        cov_txt = f"{int(cov.sum())}/{len(cov)}" + (f" ({no_interval} without interval)" if no_interval else "")
+        fov = f"{nf} crop{'s' if nf > 1 else ''}" if setting == "with_repositioning" else "full frame"
+        few = int(oc.get("fit_insufficient_data", 0))
+        failed = int(sum(n for k, n in oc.items() if k.startswith("fit_"))) - few
+        lines.append(
+            f"| {t:g}% | {cut} | {cad:g} h | {fov} | {len(g)} | {oc.get('cut_not_reached', 0)} | "
+            f"{oc.get('cut_at_or_after_crossing', 0)} | {few} | {failed} | {oc.get('not_reached', 0)} | {n_pred} | "
+            f"{_fmt(pred.abs_error_hours.median() if big else None)} | {_fmt(pred.error_hours.median() if big else None)} | "
+            f"{_fmt(pred.lead_hours.median() if big else None)} | {cov_txt} |")
+
+    lines += ["", "## V3", "",
+              "V3 asks for median abs T* error ≤ 12 h and 90% coverage of 80–95% at the target − 10 cut. "
+              f"At most {int(crossing.groupby('target_pct').size().max()) if len(crossing) else 0} held-out "
+              "sequences cross any target, so coverage moves in steps of 20 pp or more; **V3 has no verdict at "
+              "this n.** The numbers above are reported as measured.",
+              "", "## Notes", "",
+              "- Visits within a sequence are not independent, and the cadences and FOV settings reuse the same "
+              "sequences: the sample size is the number of sequences.",
+              "- `fit_growth()` fits every visit it is given. The live trend path "
+              "(`one_step_ahead_series()`, History's trend view) drops visits that fail the quality gate, and the "
+              "gate currently fails every C2C12 frame (docs/STATUS.md, item 14).",
+              "- The bootstrap resamples residuals within the AIC-chosen model only, so it misses "
+              "model-selection uncertainty (see `results/growth_backtest_synthetic.md` and V3's fix).",
+              "- 24 h cadence is not testable on the C2C12 span (`results/replay_fleet_summary.md`).",
+              "- Raw rows: `results/growth_backtest.csv`; per-sequence truth: `results/growth_backtest_truth.csv`.",
+              ""]
+    with open(path, "w") as f:
+        f.write("\n".join(lines))
+
+
+def main_c2c12(args):
+    df, truths, held = run_real_backtest(args.cache_dir, args.split, n_boot=args.n_boot)
+    os.makedirs(args.out, exist_ok=True)
+    df.to_csv(os.path.join(args.out, "growth_backtest.csv"), index=False)
+    truths.to_csv(os.path.join(args.out, "growth_backtest_truth.csv"), index=False)
+    fleet = _load_fleet()
+    if args.n_boot is not None:
+        n_boot_used = args.n_boot
+    else:
+        import yaml
+        with open(os.path.join(REPO, "configs", "growth.yaml")) as f:
+            n_boot_used = yaml.safe_load(f)["bootstrap"]["n_resamples"]
+    write_real_summary(os.path.join(args.out, "growth_backtest.md"), df, truths, held,
+                       crop_offset(args.cache_dir, held, fleet.CROP_FRAC), args, n_boot_used)
+    print(open(os.path.join(args.out, "growth_backtest.md")).read())
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--source", choices=("c2c12", "synthetic"), default="c2c12")
+    ap.add_argument("--cache-dir", default="cache", help="c2c12: the compute cache")
+    ap.add_argument("--split", default=os.path.join(RESULTS_DIR, "replay_fleet_split.csv"), help="c2c12")
+    ap.add_argument("--out", default=RESULTS_DIR, help="c2c12")
+    ap.add_argument("--work-dir", default=None, help="synthetic")
+    ap.add_argument("--seed", type=int, default=0, help="synthetic")
+    ap.add_argument("--n-boot", type=int, default=None,
+                    help="default: 200 for synthetic (as committed), configs/growth.yaml for c2c12")
+    args = ap.parse_args()
+    if args.source == "synthetic":
+        main_synthetic(args)
+    else:
+        main_c2c12(args)
 
 
 if __name__ == "__main__":
