@@ -465,20 +465,44 @@ def build_replay_visits(
     return visits
 
 
-def split_sequences(sequence_ids, seed: int = 0, tuning_frac: float = 0.4) -> dict[str, str]:
+def split_sequences(sequence_ids, seed: int = 0, tuning_frac: float = 0.4,
+                    strata: dict[str, str] | None = None) -> dict[str, str]:
     """A2 fleet split: each base sequence goes to "tuning" (~tuning_frac) or
     "heldout", seeded. Split by sequence, never by visit or frame.
 
     Fault sequences must take their base sequence's side (fault_split()):
     their pre-onset frames *are* the base sequence's frames, so splitting
-    them independently would put the same frames on both sides."""
+    them independently would put the same frames on both sides.
+
+    `strata` (sequence_id -> stratum name; ids not in it form one stratum of
+    their own) splits each stratum separately at tuning_frac, so every fault
+    type reaches both sides (fault_strata()). make_fault_set.py picks its
+    contamination/stall bases with the same seeded permutation of the same
+    sorted ids, so an unstratified split at the same seed puts all of them in
+    tuning."""
     ids = sorted(set(sequence_ids))
     if not 0.0 < tuning_frac < 1.0:
         raise ValueError(f"tuning_frac must be in (0, 1), got {tuning_frac}")
-    order = np.random.default_rng(seed).permutation(len(ids))
-    n_tuning = int(round(tuning_frac * len(ids)))
-    tuning = {ids[i] for i in order[:n_tuning]}
+    rng = np.random.default_rng(seed)
+    groups = {}
+    for sid in ids:
+        groups.setdefault((strata or {}).get(sid, ""), []).append(sid)
+    tuning = set()
+    for name in sorted(groups):
+        members = groups[name]
+        order = rng.permutation(len(members))
+        tuning |= {members[i] for i in order[:int(round(tuning_frac * len(members)))]}
     return {sid: ("tuning" if sid in tuning else "heldout") for sid in ids}
+
+
+def fault_strata(manifest: pd.DataFrame, ignore=("lamp_dimming",)) -> dict[str, str]:
+    """base_sequence_id -> the fault type built on it, for split_sequences(strata=).
+    Fault types applied to every sequence (lamp dimming) carry no information
+    and are ignored."""
+    pairs = manifest[~manifest.fault_type.isin(ignore)][["base_sequence_id", "fault_type"]].drop_duplicates()
+    if pairs.base_sequence_id.duplicated().any():
+        raise ValueError("a base sequence carries more than one stratifying fault type")
+    return dict(zip(pairs.base_sequence_id, pairs.fault_type))
 
 
 def fault_split(manifest: pd.DataFrame, base_split: dict[str, str]) -> dict[str, str]:

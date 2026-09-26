@@ -227,7 +227,7 @@ def test_replay_integrates_with_history(fixture_cache, tmp_path):
 
 # -- A2: fault-sequence adapter (frames=), load-once tables, overrides, split --
 
-from culture.replay import ReplayTables, fault_split, split_sequences
+from culture.replay import ReplayTables, fault_split, fault_strata, split_sequences
 
 _FAULT_ID = "fixture_seq_1__fault_contam"
 _ONSET_H = 48.0
@@ -381,6 +381,33 @@ def test_split_by_sequence_is_seeded_and_fault_twins_follow_base():
     assert all(fs[f"{sid}__fault_{k}"] == split[sid] for sid in ids for k in ("dim", "contam"))
     with pytest.raises(ValueError, match="not in the split"):
         fault_split(man, {k: v for k, v in split.items() if k != "seq_00"})
+
+
+def test_stratified_split_puts_every_fault_type_on_both_sides():
+    # make_fault_set.py's choice: the first 8 of rng(0).permutation over the sorted ids
+    ids = [f"seq_{i:02d}" for i in range(24)]
+    order = np.random.default_rng(0).permutation(24)
+    strata = {**{ids[i]: "contamination_onset" for i in order[:4]}, **{ids[i]: "growth_stall" for i in order[4:8]}}
+    plain = split_sequences(ids, seed=0)
+    assert all(plain[sid] == "tuning" for sid in strata)  # the collision stratifying fixes
+
+    split = split_sequences(ids, seed=0, strata=strata)
+    assert split == split_sequences(list(reversed(ids)), seed=0, strata=strata)
+    for group in ("contamination_onset", "growth_stall"):
+        sides = [split[sid] for sid, g in strata.items() if g == group]
+        assert sorted(sides) == ["heldout", "heldout", "tuning", "tuning"]
+    rest = [split[sid] for sid in ids if sid not in strata]
+    assert rest.count("tuning") == round(0.4 * 16)
+
+
+def test_fault_strata_ignores_fault_types_on_every_sequence():
+    man = pd.DataFrame([{"base_sequence_id": "a", "fault_type": "lamp_dimming"},
+                        {"base_sequence_id": "a", "fault_type": "contamination_onset"},
+                        {"base_sequence_id": "b", "fault_type": "lamp_dimming"}])
+    assert fault_strata(man) == {"a": "contamination_onset"}
+    two = pd.concat([man, pd.DataFrame([{"base_sequence_id": "a", "fault_type": "growth_stall"}])])
+    with pytest.raises(ValueError, match="more than one"):
+        fault_strata(two)
 
 
 def test_visit_ids_differ_across_fov_and_cadence_variants(fixture_cache):
