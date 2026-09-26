@@ -1,6 +1,6 @@
 # A2 replay fleet
 
-Generated 2026-09-26 16:41 UTC by `scripts/replay_fleet.py` from `cache`; seed 0, split seed 0, crop_frac 0.25. Visits are replayed from the compute cache (C2C12 time-lapse, Ker et al. 2018, CC BY 4.0; fault sequences are simulated from it). No model runs at replay time.
+Generated 2026-09-26 17:02 UTC by `scripts/replay_fleet.py` from `cache`; seed 0, split seed 0, crop_frac 0.25. Visits are replayed from the compute cache (C2C12 time-lapse, Ker et al. 2018, CC BY 4.0; fault sequences are simulated from it). No model runs at replay time.
 
 ## Split
 
@@ -56,11 +56,11 @@ Class probabilities are temperature-scaled (configs/calibration.yaml, fit on syn
 
 | streams | sequences | visits | quality gate pass | QC class_pred |
 |---|---|---|---|---|
-| normal (base) | 14 | 208 | 0/208 (0%) | contamination_suspected 37/208 (18%), detachment 22/208 (11%), image_quality 136/208 (65%), normal 13/208 (6%) |
-| contamination_onset after onset | 2 | 16 | 0/16 (0%) | contamination_suspected 15/16 (94%), normal 1/16 (6%) |
-| growth_stall after onset | 2 | 17 | 0/17 (0%) | contamination_suspected 3/17 (18%), image_quality 14/17 (82%) |
-| lamp_dimming after onset | 14 | 110 | 0/110 (0%) | contamination_suspected 32/110 (29%), detachment 20/110 (18%), image_quality 47/110 (43%), normal 11/110 (10%) |
+| normal (base) | 14 | 208 | 181/208 (87%) | contamination_suspected 37/208 (18%), detachment 22/208 (11%), image_quality 136/208 (65%), normal 13/208 (6%) |
+| contamination_onset after onset | 2 | 16 | 1/16 (6%) | contamination_suspected 15/16 (94%), normal 1/16 (6%) |
+| growth_stall after onset | 2 | 17 | 17/17 (100%) | contamination_suspected 3/17 (18%), image_quality 14/17 (82%) |
+| lamp_dimming after onset | 14 | 110 | 56/110 (51%) | contamination_suspected 32/110 (29%), detachment 20/110 (18%), image_quality 47/110 (43%), normal 11/110 (10%) |
 
 Fault rows count visits after onset (`fault.hours_since_start > onset_hours`). Growth-stall frames are real earlier frames replayed on a slowed clock, so they are never `is_modified`.
 
-Quality gate reasons on the held-out normal visits (a visit can fail several): uniformity_above_threshold 208, exposure_out_of_range 207, blur_below_threshold 128. The gate's thresholds (configs/quality.yaml) were calibrated on synthetic tiles.
+Quality gate reasons on the held-out normal visits (a visit can fail several): exposure_out_of_range 19, uniformity_above_threshold 7, blur_below_threshold 6. Threshold set used (configs/quality.yaml): c2c12 (`default` = calibrated on synthetic tiles; an entry name = calibrated on that dataset's tuning frames, see results/quality_gate_<name>.md).

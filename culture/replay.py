@@ -273,11 +273,14 @@ def _class_probs_and_pred(tables: ReplayTables, image_sha: str,
     return class_probs, class_pred, calibrated
 
 
-def _quality_for_frame(tables: ReplayTables, image_sha: str) -> dict:
+def _quality_for_frame(tables: ReplayTables, image_sha: str, dataset: str | None = None) -> dict:
+    """The gate on cached metrics, with the configs/quality.yaml thresholds
+    calibrated on `dataset` if there are any."""
     r = tables.quality(image_sha)
     if r is None:
         return {"blur": 0.0, "mean_intensity": 0.0, "uniformity": 0.0, "pass": False, "reasons": ["no_cached_quality_metrics"]}
-    result = evaluate_thresholds(r["blur_laplacian_var"], r["exposure_mean"], r["uniformity_block_std"])
+    result = evaluate_thresholds(r["blur_laplacian_var"], r["exposure_mean"], r["uniformity_block_std"],
+                                 dataset=dataset)
     return result.to_dict()
 
 
@@ -354,7 +357,8 @@ def build_replay_visits(
     is_modified, severity, ...).
 
     Every visit carries `source_dataset` (a fault stream: its base sequence's
-    dataset), which culture/growth.py uses to pick a configs/noise.yaml entry.
+    dataset), which culture/growth.py uses to pick a configs/noise.yaml entry
+    and the quality gate uses to pick a configs/quality.yaml entry.
 
     `tables`: a ReplayTables to reuse across streams; built here if None.
 
@@ -427,7 +431,7 @@ def build_replay_visits(
         n_fov_visit = len(fov_confluency)
 
         class_probs, class_pred, calibrated = _class_probs_and_pred(tables, sha, calibration)
-        quality = _quality_for_frame(tables, sha)
+        quality = _quality_for_frame(tables, sha, source_dataset)
 
         timestamp = visit_time.tz_localize("UTC").isoformat() if visit_time.tzinfo is None else visit_time.isoformat()
         visit_id = str(uuid.uuid5(_VISIT_ID_NAMESPACE, f"{sequence_id}|{segment_id}|{timestamp}|{seed}{id_suffix}"))

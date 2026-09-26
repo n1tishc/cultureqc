@@ -19,6 +19,13 @@ not guessed: at the 1st/99th percentile cut, normal tiles false-positive at
 the time by the union of all three checks. See configs/quality.yaml's own
 "calibration" block for the exact run this came from.
 
+`entries.<name>` in the same file holds thresholds calibrated on another
+image source (e.g. `c2c12`, from the tuning fleet's normal frames: the
+synthetic tiles' exposure window is 1.4 grey levels wide, and no real C2C12
+frame falls in it). evaluate_thresholds(dataset=) uses the entry whose
+`datasets` list the dataset; everything else, the live app included, uses
+the top level.
+
 Usage:
     from culture.quality import quality_gate
     result = quality_gate(img)  # -> QualityResult
@@ -59,6 +66,7 @@ class QualityResult:
     uniformity: float
     passed: bool
     reasons: list[str] = field(default_factory=list)
+    thresholds: str = "default"  # which configs/quality.yaml threshold set decided
 
     def to_dict(self) -> dict:
         return {
@@ -67,18 +75,30 @@ class QualityResult:
             "uniformity": self.uniformity,
             "pass": self.passed,
             "reasons": self.reasons,
+            "thresholds": self.thresholds,
         }
 
 
+def thresholds_for(dataset: str | None, config_path: str = _DEFAULT_CONFIG_PATH) -> tuple[str, dict]:
+    """(name, thresholds): the `entries` entry calibrated on `dataset`, else
+    the top-level ("default") thresholds."""
+    t = _load_thresholds(config_path)
+    for name, entry in (t.get("entries") or {}).items():
+        if dataset is not None and dataset in entry.get("datasets", []):
+            return name, entry
+    return "default", t
+
+
 def evaluate_thresholds(
-    blur: float, exposure: float, uniformity: float, config_path: str = _DEFAULT_CONFIG_PATH
+    blur: float, exposure: float, uniformity: float, config_path: str = _DEFAULT_CONFIG_PATH,
+    dataset: str | None = None,
 ) -> QualityResult:
     """The gate's decision logic alone, on already-computed metrics — reused
     by quality_gate() (raw pixels -> quality_metrics() -> here) and by
     culture/replay.py (cached quality.parquet numbers -> here directly, no
     pixels touched, no recompute), so there's exactly one place "pass or
     fail, and why" is decided."""
-    t = _load_thresholds(config_path)
+    name, t = thresholds_for(dataset, config_path)
 
     reasons = []
     if blur < t["blur_laplacian_var"]["floor"]:
@@ -91,7 +111,7 @@ def evaluate_thresholds(
 
     return QualityResult(
         blur=blur, mean_intensity=exposure, uniformity=uniformity,
-        passed=(len(reasons) == 0), reasons=reasons,
+        passed=(len(reasons) == 0), reasons=reasons, thresholds=name,
     )
 
 

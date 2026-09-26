@@ -87,6 +87,7 @@ def _rates(visits: list[dict]) -> dict:
     return {"n_visits": len(visits),
             "class_pred": {k: int(n) for k, n in preds.items()},
             "quality_pass": int(sum(bool(v["quality"]["pass"]) for v in visits)),
+            "gate_thresholds": sorted({str(v["quality"].get("thresholds")) for v in visits}),
             "gate_reasons": dict(pd.Series([r for v in visits for r in v["quality"]["reasons"]],
                                            dtype=object).value_counts().astype(int))}
 
@@ -168,7 +169,10 @@ def write_summary(path, args, specs, streams, split_df, pairing, heldout_rates, 
               "frames are real earlier frames replayed on a slowed clock, so they are never `is_modified`.", "",
               "Quality gate reasons on the held-out normal visits (a visit can fail several): " + ", ".join(
                   f"{k} {v}" for k, v in heldout_rates["normal (base)"]["gate_reasons"].items()) + ". "
-              "The gate's thresholds (configs/quality.yaml) were calibrated on synthetic tiles.", ""]
+              "Threshold set used (configs/quality.yaml): "
+              + ", ".join(heldout_rates["normal (base)"]["gate_thresholds"])
+              + " (`default` = calibrated on synthetic tiles; an entry name = calibrated on that dataset's "
+              "tuning frames, see results/quality_gate_<name>.md).", ""]
     with open(path, "w") as f:
         f.write("\n".join(lines))
 

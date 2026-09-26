@@ -324,7 +324,12 @@ def main_synthetic(args):
 
 # -- A1: real C2C12 held-out fleet --------------------------------------------
 
-REAL_TARGETS = (50.0, 60.0, 70.0, 80.0)
+SPEC_TARGETS = (50.0, 60.0, 70.0, 80.0)
+# Not in the spec (A1 lists 50-80%): held-out C2C12 sequences reach at most 57%,
+# so only 50% is testable there (5 of 14). 30% and 40% added 2026-09-26 so the
+# fit/extrapolation is tested on more sequences; reported separately, never as V3.
+EXTRA_TARGETS = (30.0, 40.0)
+REAL_TARGETS = EXTRA_TARGETS + SPEC_TARGETS
 CUT_OFFSETS = (20.0, 10.0)  # fit until observed confluency first reaches target - offset
 
 
@@ -519,11 +524,15 @@ def write_real_summary(path, df, truths, held, offset_stats, args, n_boot_used):
         "",
         "## Which targets can be tested",
         "",
-        "| target | held-out sequences that cross it |",
-        "|---|---|",
+        "| target | in spec | held-out sequences that cross it |",
+        "|---|---|---|",
     ]
     for t in REAL_TARGETS:
-        lines.append(f"| {t:g}% | {int(truths[truths.target_pct == t].crosses.sum())} of {len(held)} |")
+        lines.append(f"| {t:g}% | {'yes' if t in SPEC_TARGETS else '**no, added**'} | "
+                     f"{int(truths[truths.target_pct == t].crosses.sum())} of {len(held)} |")
+    lines += ["", "30% and 40% are not A1 targets. They were added because only 50% is crossed by the held-out "
+              "sequences; they test the same fit and extrapolation on more sequences, at lower confluency "
+              "(cuts at 10–30%), and never count toward V3."]
     lines += ["", "## Truth per crossing sequence", "",
               "| target | sequence | first crossing (h) | max (%) | margin over target (pp) | "
               "frames at or above target after crossing | last frame (%) |", "|---|---|---|---|---|---|---|"]
@@ -561,8 +570,8 @@ def write_real_summary(path, df, truths, held, offset_stats, args, n_boot_used):
             f"{_fmt(pred.lead_hours.median() if big else None)} | {cov_txt} |")
 
     lines += ["", "## V3", "",
-              "V3 asks for median abs T* error ≤ 12 h and 90% coverage of 80–95% at the target − 10 cut. "
-              f"At most {int(crossing.groupby('target_pct').size().max()) if len(crossing) else 0} held-out "
+              "V3 asks for median abs T* error ≤ 12 h and 90% coverage of 80–95% at the target − 10 cut, on the spec "
+              f"targets. At most {int(crossing[crossing.target_pct.isin(SPEC_TARGETS)].groupby('target_pct').size().max()) if crossing.target_pct.isin(SPEC_TARGETS).any() else 0} held-out "
               "sequences cross any target, so coverage moves in steps of 20 pp or more; **V3 has no verdict at "
               "this n.** The numbers above are reported as measured.",
               "", "## Notes", "",

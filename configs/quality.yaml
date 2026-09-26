@@ -20,3 +20,26 @@ calibration:
     per scripts/synth_contamination.py), most of which don't move Laplacian variance;
     exposure and uniformity are much cleaner single-metric separators. Recall is a
     union-of-3-checks number.
+entries:
+  c2c12:
+    blur_laplacian_var:
+      floor: 46.57
+    exposure_mean:
+      low: 95.33
+      high: 148.37
+    uniformity_block_std:
+      ceiling: 25.305
+    datasets:
+    - c2c12
+    calibration:
+      generated_at: '2026-09-26T17:02:28Z'
+      source: cache/quality.parquet, frames of the tuning base sequences in results/replay_fleet_split.csv
+      percentile:
+      - 1.0
+      - 99.0
+      n_frames: 860
+      n_sequences: 10
+      tuning_fail_rate_pct: 4.2
+      heldout_normal_fail_rate_pct: 12.1
+      note: No real should-fail frames exist for this source; fail rates on held-out
+        normal frames and held-out simulated fault frames are in results/quality_gate_c2c12.md.

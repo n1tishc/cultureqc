@@ -121,3 +121,69 @@ def test_image_quality_tile_sample_recall_matches_calibration():
     # calibration run -- this is a regression guard (did something silently
     # break the gate/thresholds), not a tight statistical claim.
     assert 0.55 <= recall <= 0.90, f"recall {recall:.2f} drifted far from the calibrated ~0.72"
+
+
+# -- per-dataset threshold entries (configs/quality.yaml `entries`) --
+
+def test_dataset_entry_thresholds_are_used_only_for_that_dataset(tmp_path):
+    import yaml
+
+    from culture.quality import evaluate_thresholds
+    cfg = {"blur_laplacian_var": {"floor": 100.0}, "exposure_mean": {"low": 127.0, "high": 129.0},
+           "uniformity_block_std": {"ceiling": 2.0},
+           "entries": {"real": {"datasets": ["c2c12"], "blur_laplacian_var": {"floor": 40.0},
+                                "exposure_mean": {"low": 90.0, "high": 150.0},
+                                "uniformity_block_std": {"ceiling": 25.0}}}}
+    path = tmp_path / "quality.yaml"
+    path.write_text(yaml.safe_dump(cfg))
+    real = evaluate_thresholds(60.0, 110.0, 12.0, config_path=str(path), dataset="c2c12")
+    assert real.passed and real.thresholds == "real" and real.to_dict()["thresholds"] == "real"
+    for ds in (None, "evican_eval2019"):
+        r = evaluate_thresholds(60.0, 110.0, 12.0, config_path=str(path), dataset=ds)
+        assert not r.passed and r.thresholds == "default"
+        assert set(r.reasons) == {"blur_below_threshold", "exposure_out_of_range", "uniformity_above_threshold"}
+
+
+def test_calibrate_entry_keeps_top_level_and_uses_tuning_frames_only(tmp_path, monkeypatch):
+    import importlib.util
+    import sys
+
+    import pandas as pd
+    import yaml
+    spec = importlib.util.spec_from_file_location(
+        "calibrate_quality_gate", os.path.join(os.path.dirname(__file__), "..", "scripts", "calibrate_quality_gate.py"))
+    cq = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(cq)
+
+    cache = tmp_path / "cache"
+    (cache / "sidecars").mkdir(parents=True)
+    rows, q = [], []
+    for k, (sid, exposure) in enumerate([("s_tune", 100.0), ("s_held", 200.0)]):
+        for i in range(50):
+            sha = f"{sid}_{i}"
+            rows.append({"image_sha256": sha, "dataset": "c2c12", "sequence_id": sid})
+            q.append({"image_sha256": sha, "blur_laplacian_var": 50.0 + i, "exposure_mean": exposure + i * 0.1,
+                      "uniformity_block_std": 10.0})
+    pd.DataFrame(rows).to_parquet(cache / "images.parquet")
+    pd.DataFrame(q).to_parquet(cache / "quality.parquet")
+    pd.DataFrame(columns=["fault_sequence_id", "base_sequence_id", "fault_type", "is_modified", "severity",
+                          "image_sha256"]).astype({"is_modified": bool}).to_parquet(
+        cache / "sidecars" / "fault_manifest.parquet")
+    split = tmp_path / "split.csv"
+    pd.DataFrame([{"sequence_id": "s_tune", "kind": "base", "split": "tuning"},
+                  {"sequence_id": "s_held", "kind": "base", "split": "heldout"}]).to_csv(split, index=False)
+    top = {"blur_laplacian_var": {"floor": 100.88}, "exposure_mean": {"low": 127.79, "high": 129.22},
+           "uniformity_block_std": {"ceiling": 2.231}}
+    out = tmp_path / "quality.yaml"
+    out.write_text(yaml.safe_dump(top))
+
+    monkeypatch.setattr(sys, "argv", ["x", "--cache-dir", str(cache), "--entry", "c2c12", "--split", str(split),
+                                      "--out", str(out), "--results", str(tmp_path)])
+    cq.main()
+    doc = yaml.safe_load(out.read_text())
+    assert {k: doc[k] for k in top} == top
+    e = doc["entries"]["c2c12"]
+    assert e["datasets"] == ["c2c12"] and e["calibration"]["n_sequences"] == 1
+    assert 100.0 <= e["exposure_mean"]["low"] <= e["exposure_mean"]["high"] <= 105.0  # tuning frames only
+    assert e["calibration"]["heldout_normal_fail_rate_pct"] == 100.0
+    assert (tmp_path / "quality_gate_c2c12.md").exists()
