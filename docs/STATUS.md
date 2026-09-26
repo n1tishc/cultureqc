@@ -16,7 +16,7 @@ Nothing is merged to `main`.
 | 3 Growth model + T* + timeline | Done, **backtest synthetic only** | `culture/growth.py`, `tests/test_growth.py`, `results/growth_backtest.md`, `results/growth_examples.*`, `results/growth_runtime.txt` | Backtest is a harness check; don't quote it until A1 reruns it on real sequences. Missing one §6.1 item, see below |
 | 4, 4b, 5, 5b, 6, 7, 8 | Not started | — | Minimal versions in Phase A |
 
-Tests: `pytest tests` → 96 passed, 1 xfailed (2026-09-26, after the C2C12 quality gate).
+Tests: `pytest tests` → 100 passed, 1 xfailed (2026-09-26, after A4).
 
 ## Phase A progress
 
@@ -32,7 +32,8 @@ Tests: `pytest tests` → 96 passed, 1 xfailed (2026-09-26, after the C2C12 qual
 | §6.1 one-step-ahead | Done. `culture/growth.py`: `predict_next()`, `one_step_ahead_series()`; `predictive_sd = sqrt(fit_sd² + obs_sd²)`, with obs_sd = σ_fov at the *expected* confluency / √n_fov (config `one_step_ahead.fov_scaling`). Synthetic check with the model correct and a test noise model: SD(z) = **1.23**, mean 0.15, n=285 (fit_sd alone: 2.14; obs_sd alone: 1.72). So z is slightly over-dispersed even when the curve shape is right; A6 must check the z scale on the tuning fleet. A stall shows in the one-step residual for about 4 visits, then the refit bends into a plateau and absorbs it, so SPC must accumulate early (CUSUM) |
 | A3 fault set | Done by `nb/03`. Lamp-dim onset frames are the originals, not modified (drift item 10, fixed) |
 | A1 growth backtest | Done (2026-09-26), **thin**. `scripts/backtest_growth.py` (default `--source c2c12`) on the 14 held-out sequences, same streams as the A2 fleet. Truth = first crossing of the hourly full-frame Cellpose-SAM series. Held-out sequences reach at most 57.0%: **only the 50% target is testable (5 of 14 cross; 60/70/80%: 0)**, and 3 of the 5 cross by < 2 pp in their last 1–2 frames. At the target − 10 cut: median abs error 4.9 h (6 h, 1 crop), 9.0 h (6 h, 3 crops), 2.1 h (12 h, 1 crop, 3 predictions), 5.8 h (12 h, 3 crops); full frame 2.4 h / 1.9 h. **V3: no verdict at n=5.** Added 30% and 40% targets (not in the spec; 12 and 8 held-out crossings), reported separately. `results/growth_backtest.md`; the synthetic harness check moved to `results/growth_backtest_synthetic.*` (CSV regenerated: same predictions, interval bounds changed by `a5dd140`'s bootstrap; summary unchanged) |
-| A4, A6, A7, A8 | Not started |
+| A4 anomaly | Done (2026-09-26). `culture/anomaly.py`, `scripts/eval_anomaly.py`, `configs/anomaly.yaml`: DINOv2 qctile patches, cosine nearest-patch distance, image score = mean of the top 1% (AnomalyDINO); greedy-coreset banks (10%, PatchCore) from the tuning normals, bins 0–20 / 20–40 / 40–100% (60–80 and 80–100 merged: < 3 tuning sequences); every frame scored without its own base sequence (per-fold coresets). Held-out normal flag rate at the 5% thresholds: **10.0%** (0–20% bin 14.7%; 090318 F0016 alone 69%). **V4 fails as written** (Spearman ρ binned z −0.16 vs global −0.09), but ρ misses the global score's U shape: mean z at ≥ 50% is +1.19 global vs +0.37 binned. **V5(b) passes, n=2** (AUROC 1.00 at ≥ 150 sprites), but the sprites also raise Cellpose confluency by a median +59 pp. **V5(a) fails** for the CLS-kNN stand-in on synthetic tiles (detachment 0.82, image_quality 0.78; contamination 1.00). Dimming doesn't move the score (AUROC 0.41–0.49). `results/anomaly_summary.md` |
+| A6, A7, A8 | Not started |
 
 ## Schedule
 
