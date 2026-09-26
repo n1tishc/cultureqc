@@ -1,6 +1,6 @@
 # A2 replay fleet
 
-Generated 2026-09-26 16:35 UTC by `scripts/replay_fleet.py` from `cache`; seed 0, split seed 0, crop_frac 0.25. Visits are replayed from the compute cache (C2C12 time-lapse, Ker et al. 2018, CC BY 4.0; fault sequences are simulated from it). No model runs at replay time.
+Generated 2026-09-26 16:41 UTC by `scripts/replay_fleet.py` from `cache`; seed 0, split seed 0, crop_frac 0.25. Visits are replayed from the compute cache (C2C12 time-lapse, Ker et al. 2018, CC BY 4.0; fault sequences are simulated from it). No model runs at replay time.
 
 ## Split
 
@@ -29,6 +29,13 @@ Jitter ±25% of the mean interval. The growth model needs at least 5 visits.
 | 6 h | 3 | 56 | 14 / 15 / 15 | 0 |
 | 12 h | 1 | 56 | 8 / 8 / 8 | 0 |
 | 12 h | 3 | 56 | 8 / 8 / 8 | 0 |
+
+Visits up to and including onset, per fault stream. The one-step growth residual needs 5 earlier visits before it can score a visit, so below 5 it cannot score the first visits after onset:
+
+| cadence | contamination_onset | growth_stall | lamp_dimming |
+|---|---|---|---|
+| 6 h | 7 | 6 | 7 |
+| 12 h | 4 | 3 | 4 |
 
 24 h cadence (jitter ±6 h, measured on the 24 base sequences, 1 FOV): 5–5 visits per stream, median 5; 0 of 24 below the growth model's minimum of 5. A backtest cut point or a one-step-ahead prediction fits only the visits before it, so with at most 5 visits it never has 5 before the one it scores: 24 h is reported as **not testable on the C2C12 span** (spec §2A.3). Celltrio's real cadence is an open question.
 

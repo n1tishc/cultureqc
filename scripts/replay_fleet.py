@@ -130,6 +130,17 @@ def write_summary(path, args, specs, streams, split_df, pairing, heldout_rates, 
     for (cad, nf), g in streams.groupby(["cadence_h", "n_fov"]):
         lines.append(f"| {cad:g} h | {nf} | {len(g)} | {g.n_visits.min()} / {g.n_visits.median():g} / "
                      f"{g.n_visits.max()} | {int((g.n_visits < MIN_GROWTH_VISITS).sum())} |")
+    faults = streams[streams.fault_type != "none"]
+    lines += ["", "Visits up to and including onset, per fault stream. The one-step growth residual needs "
+              f"{MIN_GROWTH_VISITS} earlier visits before it can score a visit, so below {MIN_GROWTH_VISITS} it "
+              "cannot score the first visits after onset:", "", "| cadence | " + " | ".join(sorted(faults.fault_type.unique())) + " |",
+              "|---|" + "---|" * faults.fault_type.nunique()]
+    for cad, g in faults[faults.n_fov == N_FOVS[0]].groupby("cadence_h"):
+        cells = []
+        for _, h in sorted(g.groupby("fault_type")):
+            lo, hi = int(h.n_visits_to_onset.min()), int(h.n_visits_to_onset.max())
+            cells.append(f"{lo}" if lo == hi else f"{lo}–{hi}")
+        lines.append(f"| {cad:g} h | " + " | ".join(cells) + " |")
     below = cadence24["n_below_min"]
     lines += ["", f"24 h cadence (jitter ±6 h, measured on the {len(base)} base sequences, 1 FOV): "
               f"{cadence24['min']}–{cadence24['max']} visits per stream, median {cadence24['median']:g}; "
@@ -200,7 +211,9 @@ def main():
                     rows.append({**spec, "cadence_h": cadence, "jitter_h": JITTER_FRAC * cadence, "n_fov": n_fov,
                                  "crop_frac": args.crop_frac, "seed": args.seed, "n_visits": len(visits),
                                  "span_hours": (pd.Timestamp(visits[-1]["timestamp"]) - t0).total_seconds() / 3600,
-                                 "source_dataset": visits[0]["source_dataset"]})
+                                 "source_dataset": visits[0]["source_dataset"],
+                                 "n_visits_to_onset": (np.nan if spec["fault_type"] == "none" else sum(
+                                     v["fault"]["hours_since_start"] <= spec["onset_hours"] for v in visits))})
             for spec in specs:
                 if spec["fault_type"] == "none":
                     continue

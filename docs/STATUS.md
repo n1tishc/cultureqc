@@ -115,10 +115,15 @@ on 2026-09-26. The date that actually binds is the **code freeze on Sun Oct 4**.
     normal fleet (6 h, 1 FOV) 0/208 visits pass: uniformity above threshold
     208, exposure out of range 207, blur below floor 128.
     `configs/quality.yaml` was calibrated on synthetic tiles (exposure
-    127.8–129.2, uniformity ≤ 2.23); C2C12 frames sit at exposure 95–163
-    and uniformity 8.7–27.9. The QC classifier shows the same shift: 13/208
-    held-out normal visits (6%) are predicted `normal`. **Decision needed**
-    before A4/A6/A7 use either signal.
+    127.8–129.2, uniformity ≤ 2.23); visits of all 24 base sequences (6 h,
+    1 FOV) sit at exposure 95–163 and uniformity 8.7–27.9. The QC
+    classifier shows the same shift: 13/208 held-out normal visits (6%) are
+    predicted `normal`. `fit_growth()` ignores the gate, so A1's backtest
+    is unaffected, but `one_step_ahead_series()` and History's trend view
+    skip failing visits, so the A6 growth residual has no C2C12 data until
+    this is decided. **Decision needed** before A4/A6/A7.
+    Also: at 12 h, fault streams have only 3–4 visits up to onset (fewer
+    than the 5 a fit needs); at 6 h, 6–7.
 15. **Fault-set bases and the fleet split collided.** `make_fault_set.py`
     picks its 8 contamination/stall bases as the first 8 of
     `rng(0).permutation` over the sorted ids; an unstratified
