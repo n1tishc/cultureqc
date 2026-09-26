@@ -1,0 +1,4 @@
+frames,n,called_normal_pct,called_contamination_suspected_pct,called_detachment_pct,called_image_quality_pct,mean_p_normal,mean_p_contamination_suspected,mean_p_detachment,mean_p_image_quality
+normal (held-out base frames),1228,4.9674,15.7166,12.2150,67.1010,0.0697,0.1767,0.1325,0.6210
+"contamination_onset (held-out, after onset)",49,6.1224,91.8367,2.0408,0.0000,0.0913,0.8822,0.0114,0.0151
+"lamp_dimming (held-out, after onset)",327,9.7859,29.3578,21.1009,39.7554,0.1015,0.2907,0.2141,0.3937

@@ -578,8 +578,8 @@ def write_real_summary(path, df, truths, held, offset_stats, args, n_boot_used):
               "- Visits within a sequence are not independent, and the cadences and FOV settings reuse the same "
               "sequences: the sample size is the number of sequences.",
               "- `fit_growth()` fits every visit it is given. The live trend path "
-              "(`one_step_ahead_series()`, History's trend view) drops visits that fail the quality gate, and the "
-              "gate currently fails every C2C12 frame (docs/STATUS.md, item 14).",
+              "(`one_step_ahead_series()`, History's trend view) drops visits that fail the quality gate; with the "
+              "C2C12 gate entry, 12.1% of held-out normal frames fail it (`results/quality_gate_c2c12.md`).",
               "- The bootstrap resamples residuals within the AIC-chosen model only, so it misses "
               "model-selection uncertainty (see `results/growth_backtest_synthetic.md` and V3's fix).",
               "- 24 h cadence is not testable on the C2C12 span (`results/replay_fleet_summary.md`).",
