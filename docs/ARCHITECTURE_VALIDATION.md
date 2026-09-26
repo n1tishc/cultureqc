@@ -12,11 +12,11 @@ Every number here is copied from a results file named next to it; nothing is re-
 |---|---|---|---|---|
 | V1 | Confluency good enough on real images? | EVICAN MAE **8.35 pp** (n = 33); reads low (mean signed −8.32 pp). 60–90% band: **1 image, read 0% vs 65% truth** | **Pass** overall; band **not measurable** | — (stop rule is > 10 pp) |
 | V2 | Growth between visits beats FOV noise? | Median increment ÷ σ_fov at 30–70%: **0.35 (6 h), 0.65 (12 h)** at 1 FOV; 0.61 / 1.12 at 3 FOVs | **Fail**, every cell incl. 3 FOVs | "Growth-deviation flags only at the longer cadence" → **no**: 12 h / 3 FOVs is 1.12, still < 2. Only a larger FOV (context: 0.5-frac, never replayed) reaches 2 |
-| V3 | Passage prediction useful and honest? | 50% target, target − 10 cut: median abs error 2.1–9.0 h across cells; coverage 3/3 to 4/5 | **No verdict** (5 sequences cross 50%; 0 cross 60–80%) | — |
+| V3 | Passage prediction useful and honest? | 50% target, target − 10 cut: median abs error 1.9–9.0 h across cells; coverage 3/5 to 3/3 | **No verdict** (5 sequences cross 50%; 0 cross 60–80%) | — |
 | V4 | Density conditioning removes growth confound? | Spearman ρ binned **−0.16** vs global −0.09 | **Fail** | "Drop anomaly *trend* monitoring; keep per-visit flag" → **yes**, and V6 supports it (anomaly/class monitors gave all held-out false alarms) |
-| V5 | Per-visit anomaly score separates faults? | (b) C2C12 contamination AUROC **1.00** at ≥ 150 sprites; (a) synthetic, stand-in CLS scorer: 1.00 / 0.82 / 0.78 | (b) **Pass on n = 2**; (a) **fail for the stand-in**, patch scorer not measured | Weak classes listed as limitations; classifier primary for them |
-| V6 | SPC catches faults without alarm fatigue? | **3.75** false alarms / 100 visits; contamination **0/2**, growth stall **0/2** detected by SPC | **Fail** on all three | Raise L / require agreement / lower λ → **no**: the causes are structural (see V6) |
-| V7 | Tells instrument from culture? | Dimming raised INSTRUMENT_DRIFT 2 h / 8 h after onset — **but the normal fleet drifted too**; single-flask fleets all inherit it | (a) **pass by rule, not evidence**; (b) **fail** | "Informational only + README limitation" → matches B5's place in the cut order |
+| V5 | Per-visit anomaly score separates faults? | (b) C2C12 contamination (simulated faults) AUROC **1.00** at ≥ 150 sprites; sprites shift confluency ~+59 pp and 88% of frames change bin; (a) synthetic, stand-in CLS scorer: 1.00 / 0.82 / 0.78 | (b) **Pass on n = 2**; (a) **fail for the stand-in**, patch scorer not measured | Weak classes listed as limitations; classifier primary for them |
+| V6 | SPC catches faults without alarm fatigue? | **3.75** false alarms / 100 visits; simulated faults: contamination **0/2**, growth stall **0/2** detected by SPC | **Fail** on all three | Raise L / require agreement / lower λ → **no**: the causes are structural (see V6) |
+| V7 | Tells instrument from culture? | Simulated dimming raised INSTRUMENT_DRIFT 2 h / 8 h after onset — **but the normal fleet drifted too**; single-flask fleets all inherit it | (a) **pass by rule, not evidence**; (b) **fail** | "Informational only + README limitation" → matches B5's place in the cut order |
 | V8 | Trended probabilities calibrated? | ECE on val after T = **0.0057** (in-sample); test 0.0139 | **Pass**, synthetic tiles only; the classifier is off-domain on C2C12 | — |
 | V9 | Live path fits the Space? | **689 s per FOV** at C2C12 frame size (Cellpose-SAM ≈ all of it), 2-thread Mac approximation | **Fail** (138× the 5 s budget) | ViT-S / fewer crops / smaller input → **no** (smallest input tried: 14×). Precompute demo examples, or a GPU Space / lighter live confluency model |
 | V10 | Media conditions distinguishable? | Conditions not resolved; per experiment, area doubling time 17.7 / 12.4 / 15.4 h (medians) | Informational | — |
@@ -24,7 +24,7 @@ Every number here is copied from a results file named next to it; nothing is re-
 **What matters most for Phase B.** Three findings change the design, not just the parameters:
 
 1. **Growth deviations are below the noise floor at the replayed FOV size (V2).** One visit's growth step is about a third (6 h) to two-thirds (12 h) of one 0.25-frac FOV's σ_fov. This is why the growth residual cannot see a stall (V6), and no SPC tuning fixes it. Detecting a stall needs more or larger FOVs, and accumulation over many visits.
-2. **The QC classifier does not transfer to real C2C12 frames.** It calls 5.0% of held-out normal frames "normal" and 67.1% "image_quality" (`results/classifier_c2c12.md`); it does call 91.8% of contaminated frames "contamination". Every class-probability residual and the calibration result (V8) sit on top of this.
+2. **The QC classifier does not transfer to real C2C12 frames.** It calls 5.0% of held-out normal frames "normal" and 67.1% "image_quality" (`results/classifier_c2c12.md`); it calls 91.8% of contaminated frames "contamination", but also 15.7% of normal frames. Every class-probability residual and the calibration result (V8) sit on top of this.
 3. **The live path is ~140× over budget (V9)**, entirely from Cellpose-SAM, so the demo strategy is a decision, not an optimisation.
 
 ## Setup
@@ -61,6 +61,8 @@ Tests: `pytest tests` → 112 passed, 1 xfailed.
 - **Consequence:** all C2C12 "truth" in V2/V3 is Cellpose-SAM's own full-frame reading, so "50%" means 50% as Cellpose-SAM reads it, likely ~8 pp below true coverage. The band where passage decisions happen is still unvalidated.
 - `results/confluency_real_summary.md`, `results/confluency_real_scatter.png`.
 
+![](../results/confluency_real_scatter.png)
+
 ## V2 — Growth between visits vs FOV noise
 
 - **Setup:** held-out normal streams. Increment = full-frame confluency at the next visit minus this visit, for visits at 30–70% (held-out sequences peak at 56%, so 30–56%; 9 of 14 streams contribute). σ_fov = 2.828 + 0.2072 × confluency (C2C12, 0.25-frac crops, `configs/noise.yaml`), ÷ √n_fov.
@@ -76,6 +78,8 @@ Tests: `pytest tests` → 112 passed, 1 xfailed.
 - **Spec's change:** "fails at 3 FOVs → growth-deviation flags only at the longer cadence." That does not reach 2 here either (12 h / 3 FOVs = 1.12). What moves the ratio is **FOV size** (and count): a question for Celltrio, not a setting we can choose.
 - `results/growth_signal_summary.md`, `results/growth_signal_v2.png`.
 
+![](../results/growth_signal_v2.png)
+
 ## V3 — Passage prediction
 
 - **Setup (A1):** fit on visits until the observed series first reaches target − 20 / target − 10; truth = first crossing in the hourly full-frame series. Targets crossed by held-out sequences: 50% by 5 of 14; 60–80% by none. 30% and 40% added (12 and 8 sequences), labelled not-in-spec, never counted toward V3.
@@ -89,6 +93,8 @@ Tests: `pytest tests` → 112 passed, 1 xfailed.
 - **Verdict: no verdict.** At n ≤ 5, coverage moves in steps of 20 pp; the error numbers are inside 12 h but on 3–5 sequences. The bootstrap still misses model-selection uncertainty (known; V3's fix).
 - `results/growth_backtest.md`, `results/growth_backtest_v3.png`.
 
+![](../results/growth_backtest_v3.png)
+
 ## V4 — Density conditioning
 
 - **Setup (A4):** DINOv2-small patch kNN on the 256 px centre tile (AnomalyDINO-style scoring, PatchCore coreset), banks per full-frame confluency bin from tuning normal frames; bins merged to 0–20 / 20–40 / 40–100 (too few tuning sequences above 40%). Global bank for comparison.
@@ -97,28 +103,36 @@ Tests: `pytest tests` → 112 passed, 1 xfailed.
 - **Spec's change:** drop anomaly *trend* monitoring; keep the per-visit OOD flag. **Supported by V6:** all 24 held-out SPC false alarms came from anomaly and class monitors, 16 of them on 090318 F0016. Calibration transfer across experiments (090318 has 1 tuning sequence) is the other half of the problem.
 - `results/anomaly_summary.md`, `results/anomaly_v4.png`.
 
+![](../results/anomaly_v4.png)
+
 ## V5 — Per-visit anomaly separation
 
-- **(b) C2C12 contamination:** AUROC **1.00** (binned z) at ≥ 150 sprites per tile area, 0.99 below; 100% flagged. **Pass on n = 2** held-out contamination sequences. Caveat: the sprites raise Cellpose confluency by a median **+59 pp**, and 88% of contaminated frames land in a different bin from their base frame. Lamp dimming does not move the score (AUROC 0.41–0.49).
+- **(b) C2C12 contamination (simulated faults):** AUROC **1.00** (binned z) at ≥ 150 sprites per tile area, 0.99 below; 100% flagged. **Pass on n = 2** held-out contamination sequences. Caveat: the sprites raise Cellpose confluency by a median **+59 pp**, and 88% of contaminated frames land in a different bin from their base frame. Lamp dimming does not move the score (AUROC 0.41–0.49).
 - **(a) Synthetic tiles:** only CLS embeddings exist on the Mac for synthetic tiles, so a **stand-in CLS-kNN scorer** was used: contamination 1.00, detachment **0.82**, image_quality **0.78**. **Fail for the stand-in**; the patch scorer on synthetic tiles is **not measured**.
 - **Spec's change:** list weak classes as limitations; the classifier stays primary for them (subject to its transfer problem, below).
 - `results/anomaly_summary.md`, `results/anomaly_v5.png`.
 
+![](../results/anomaly_v5.png)
+
 ## V6 — SPC on residuals
 
 - **Setup (A6):** EWMA + one-sided tabular CUSUM on growth (one-step-ahead z, lower side), anomaly z and three class probabilities (upper), each standardised on tuning normals. λ = 0.2, k = 0.5; one multiplier c on L and h, chosen as the smallest with ≤ 1 false alarm / 100 tuning visits: **c = 1.8 (L 5.15, h 7.2)** (the spec's L = 2.86 gave 9.4 / 100 on tuning).
-- **Number (held-out):** **3.75 false alarms / 100 visits** (24/640; 16 on 090318 F0016). Contamination **0/2** and growth stall **0/2** detected by SPC in every cell. REIMAGE flags contamination 1–2 visits after onset (it removes those visits from SPC). Growth z on tuning normals: mean +0.69, SD 1.79.
+- **Number (held-out):** **3.75 false alarms / 100 visits** (24/640; 16 on 090318 F0016). Simulated contamination **0/2** and growth stall **0/2** detected by SPC in every cell. REIMAGE flags contamination 1–2 visits after onset (it removes those visits from SPC). Growth z on tuning normals: mean +0.69, SD 1.79.
 - **Verdict: fail** (false alarms, detection, delay).
 - **Why, and whether the spec's levers help:** the spec's levers (raise L, require EWMA + CUSUM agreement, lower λ) do not reach the causes:
   1. **Stall:** the per-visit refit absorbs the plateau, and (V2) one visit's growth step is below one FOV's noise. A frozen or population growth reference only helps together with a CUSUM that accumulates over many visits, or more/larger FOVs. This is a bigger change than a residual swap.
-  2. **Contamination:** the quality gate removes post-onset visits, so SPC sees 0–1 of them. It is caught, by REIMAGE (8/8 in A7's per-flask table) and by the classifier (91.8% of contaminated frames), just not by SPC. Fix in decision logic: repeated gate failure / immediate classifier call as a first-class contamination flag.
+  2. **Contamination:** the quality gate removes post-onset visits, so SPC sees 0–1 of them. Those visits get REIMAGE (8/8 streams × cells in A7's per-flask table), but REIMAGE only asks for a new image; it is not a detection. The classifier calls 91.8% of contaminated frames "contamination", yet also **15.7% of normal frames and 29.4% of dimmed frames** (`results/classifier_c2c12.md`), and 12.1% of normal frames fail the gate, some flasks repeatedly. So neither "repeated gate failure" nor "classifier call" alone is a usable contamination flag: over 8–15 visits most normal flasks would trip it, and dimming would turn into culture flags. A combined rule (e.g. gate failure and a contamination call on consecutive visits, not during INSTRUMENT_DRIFT) is **untested** and depends on B3 fixing the classifier's transfer; it was deliberately not designed and scored here, because that would be another result chosen after seeing held-out data.
   3. **False alarms:** anomaly and class monitors on one poorly covered experiment (see V4); the class residual trends an off-domain classifier.
 - `results/spc_summary.md`, `results/spc_examples.png`, `results/spc_tradeoff.png`.
+
+![](../results/spc_examples.png)
+
+![](../results/spc_tradeoff.png)
 
 ## V7 — Instrument vs culture
 
 - **Setup (A7):** flasks aligned on hours since start. Population inputs per visit: log exposure relative to the flask's own first 24 h minus an age-dependent expected change (tuning frames), and A4 anomaly z; every visit counted, gate failures included. Per window (= cadence), fleet median, standardised by the tuning fleet's population series; EWMA (λ 0.2, L 2.86); INSTRUMENT_DRIFT while beyond the limit; per-flask SPC flags in drift windows marked suppressed.
-- **Number (the pre-registered held-out run):** dimming → INSTRUMENT_DRIFT **2 h (6 h cadence) / 8 h (12 h)** after onset, 0 unsuppressed post-onset culture flags. But the **held-out normal fleet drifts from the same windows** (first drift window ends 42 h / 48 h): 6 drift episodes across cells, 16 real per-flask flags hidden. Every single-flask fleet inherits it. Stall flasks have no flag at all (from A6); contamination flasks are flagged by REIMAGE (8/8). Dimming still gives REIMAGE on 10 of 14 flasks.
+- **Number (the pre-registered held-out run; simulated faults):** dimming → INSTRUMENT_DRIFT **2 h (6 h cadence) / 8 h (12 h)** after onset, 0 unsuppressed post-onset culture flags. But the **held-out normal fleet drifts from the same windows** (first drift window ends 42 h / 48 h): 6 drift episodes across cells, 16 real per-flask flags hidden. Every single-flask fleet inherits it. Stall flasks have no flag at all (from A6); contamination flasks are flagged by REIMAGE (8/8). Dimming still gives REIMAGE on 10 of 14 flasks.
 - **Verdict:** (a) dimming **pass by the rule, not evidence**; (b) single-flask **fail**.
 - **Cause:** the tuning population SD (0.034 in per-flask z) is one fleet's window-to-window SD, which misses fleet-to-fleet offset. Held-out normals sit ≈ −0.2 z below the tuning reference. (Leave-one-flask-out references gave 0.032: in-sample fitting is not the cause.)
 - **Post-hoc diagnostic (chosen after seeing held-out; not a verdict):** standardising by the standard error of a median of n flasks (1.2533 · s / √n) gives 0 normal drift episodes, 0/16 single-flask fleets in drift, dimming still at 2 h / 8 h. Assumes independent flasks; they cluster by experiment, so it is optimistic.
@@ -126,12 +140,16 @@ Tests: `pytest tests` → 112 passed, 1 xfailed.
 - Easiest possible case: synchronous onset, identical ramp, age-aligned flasks.
 - `results/drift_summary.md`, `results/drift_fleet.png`.
 
+![](../results/drift_fleet.png)
+
 ## V8 — Calibration
 
 - **Setup (A5):** temperature scaling on cached val logits of the synthetic tile set; T = 1.5536.
 - **Number:** ECE val **0.0057** after (0.0102 before; in-sample), test **0.0139** after.
 - **Verdict: pass**, on synthetic tiles only. On real C2C12 frames the classifier's calls are mostly wrong for normal flasks (5.0% "normal"), so "calibrated" does not carry over. Whether to keep class-residual SPC (V8's fail branch: trend only anomaly + growth) is a review decision.
 - `results/calibration_summary.md`, `results/classifier_c2c12.md`.
+
+![](../results/calibration_reliability.png)
 
 ## V9 — Latency
 
@@ -181,6 +199,8 @@ Conditions are "unknown" in this C2C12 import, so per experiment (held-out seque
 6. **REIMAGE roll-up.** While INSTRUMENT_DRIFT is active, should N per-flask REIMAGEs become one instrument action? (Decision-logic question for B6; §11.1 ranks REIMAGE first today.)
 7. **B3 retrain (GPU).** The domain-shift test is effectively already failed on C2C12; the conditional retrain would need a GPU run (the spec allows it only if triggered). Needs your go-ahead.
 
+**Taken together:** with decisions 2 and 3 as recommended and V2 as measured, B4's SPC would trend only the growth residual, which detected none of the simulated faults. B4 could still demonstrate the machinery and an in-control false-alarm rate in replay, but **not fault detection**; the demo's fault story would rest on the per-visit anomaly flag (V5b), REIMAGE and the classifier, with their stated limits.
+
 ### Phase B, in the spec's priority order, with the design changes placed
 
 | Slice | Priority | Design change from Phase A |
@@ -188,7 +208,7 @@ Conditions are "unknown" in this C2C12 import, so per experiment (held-out seque
 | B1 timeline on real C2C12 replays | Must | Normal + fault scenarios; show REIMAGE and contamination flags as they fire; label "Replay of recorded time-lapse (simulated visits)"; C2C12 credit |
 | B2 anomaly in the app | Must | Per-visit OOD flag + heatmap; no trend (if decision 2); site-calibration mode, since calibration does not transfer across experiments (090318) |
 | B3 calibration + domain shift | Must (calibration) | Document classifier behaviour on real frames; conditional retrain if decision 7 |
-| B4 SPC in the app | Must | Contamination as a first-class flag (repeated gate failure / immediate classifier call); growth residual only with the stated V2 limitation, or the redesign in decision 4; detectability matrix states what is and isn't detectable at the assumed FOV setup; mycoplasma wording + forbidden-phrase test |
+| B4 SPC in the app | Must | Contamination route: a combined gate + classifier rule, designed on tuning and validated (untested; depends on B3); growth residual only with the stated V2 limitation, or the redesign in decision 4; detectability matrix states what is and isn't detectable at the assumed FOV setup; mycoplasma wording + forbidden-phrase test |
 | B5 instrument drift | Should (cut early) | Informational, or SE-of-median scaling + REIMAGE roll-up |
 | B6 decision engine | Should | REIMAGE / INSTRUMENT_DRIFT precedence per decision 6 |
 | B8 docs + demo | Must | This report as a README section; results table with provenance; limitations above; demo per decision 1 |
