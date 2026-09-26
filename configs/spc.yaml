@@ -1,0 +1,66 @@
+params:
+  ewma_lambda: 0.2
+  ewma_L: 5.148
+  cusum_k: 0.5
+  cusum_h: 7.2
+starting_values:
+  ewma_lambda: 0.2
+  ewma_L: 2.86
+  cusum_k: 0.5
+  cusum_h: 4.0
+  note: "\u03BB and L from the spec (\xA72A.7); CUSUM k and h are starting values,\
+    \ not from the spec"
+selection:
+  rule: "smallest c on [1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.8, 2.0, 2.25, 2.5, 3.0]\
+    \ (L = 2.86\xB7c, h = 4.0\xB7c; \u03BB, k fixed) with combined false alarms \u2264\
+    \ 1.0 per 100 flask-visits on the tuning normal base streams (all cadence \xD7\
+    \ FOV cells pooled); fault detection not used"
+  chosen_c: 1.8
+  met: true
+monitors:
+- GROWTH_BELOW_EXPECTED:growth:ewma:lower
+- ANOMALY_DRIFT:anomaly:ewma:upper
+- FAILURE_CLASS_DRIFT:class_contamination_suspected:ewma:upper
+- FAILURE_CLASS_DRIFT:class_detachment:ewma:upper
+- FAILURE_CLASS_DRIFT:class_image_quality:ewma:upper
+- GROWTH_BELOW_EXPECTED:growth:cusum:lower
+- ANOMALY_DRIFT:anomaly:cusum:upper
+- FAILURE_CLASS_DRIFT:class_contamination_suspected:cusum:upper
+- FAILURE_CLASS_DRIFT:class_detachment:cusum:upper
+- FAILURE_CLASS_DRIFT:class_image_quality:cusum:upper
+reset_after_signal: true
+residual_standardisation:
+  growth:
+    source_column: growth_z
+    mean: 0.68639
+    sd: 1.786258
+    n_visits: 220
+    lag1_autocorr_median: -0.177
+  anomaly:
+    source_column: anomaly_z
+    mean: -0.06923
+    sd: 0.986167
+    n_visits: 420
+    lag1_autocorr_median: 0.013
+  class_contamination_suspected:
+    source_column: p_contamination_suspected
+    mean: 0.181794
+    sd: 0.257761
+    n_visits: 420
+    lag1_autocorr_median: 0.107
+  class_detachment:
+    source_column: p_detachment
+    mean: 0.120982
+    sd: 0.21136
+    n_visits: 420
+    lag1_autocorr_median: 0.089
+  class_image_quality:
+    source_column: p_image_quality
+    mean: 0.605719
+    sd: 0.361992
+    n_visits: 420
+    lag1_autocorr_median: 0.34
+source:
+  split_file: results/replay_fleet_split.csv
+  residuals: cache/spc/residuals.parquet
+generated_at: '2026-09-26T17:59:40Z'
