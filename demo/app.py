@@ -28,7 +28,7 @@ from culture.rules import decide, LineConfig
 from culture.records import RecordWriter, verify_chain, hash_file
 from culture.rationale import generate_rationale
 from culture import detectability
-from demo.flask_timeline import build_demo_timeline
+from demo import replay_timeline
 from demo.theme import CultureQCTheme
 
 WORK_DIR = tempfile.mkdtemp(prefix="cultureqc_demo_")
@@ -545,31 +545,27 @@ with gr.Blocks(
                 )
 
         with gr.Tab("Flask Timeline"):
+            # Precomputed replays (scripts/export_demo_replays.py): no cache, no
+            # models, instant on CPU. Banner and credit come from the JSONs.
+            _replays = replay_timeline.load_replays()
+            _first = next(iter(_replays.values()))
             gr.HTML(
                 '<div class="rc-card" style="border-left:3px solid var(--accent);'
                 'padding:12px 16px;margin-bottom:10px;">'
-                '<strong style="color:var(--text-primary)">Replay of recorded time-lapse '
-                '(simulated visits)</strong><br>'
+                f'<strong style="color:var(--text-primary)">{html.escape(_first["banner"])}</strong><br>'
                 '<span style="color:var(--text-secondary);font-size:0.85em;line-height:1.5">'
-                "Demo data: this flask&rsquo;s images are a synthetic placeholder sequence &mdash; "
-                "no real time-lapse is cached yet (see docs/DATASETS.md). Confluency, QC class, "
-                "and quality-gate numbers below are fabricated to exercise the replay/history "
-                "pipeline end-to-end, not measurements. Visit timestamps and FOV repositioning "
-                "are sampled by culture/replay.py exactly as they would be against a real cached "
-                "sequence.</span></div>"
+                "Precomputed from held-out sequences: every number below was produced before the app "
+                "started, by the same code the Phase A checks used. No SPC or trend charts; the QC "
+                "classifier is not shown (demoted, see the Analyze tab).</span></div>"
             )
-            with gr.Row(elem_classes="topbar-controls"):
-                timeline_seed = gr.Number(
-                    value=2, precision=0, minimum=0, label="Replay seed",
-                )
-                timeline_regen_btn = gr.Button("Regenerate replay", elem_classes=["analyze-btn"])
-            timeline_summary = gr.Markdown()
+            timeline_choice = gr.Radio(
+                choices=replay_timeline.choices(_replays), value=next(iter(_replays)), show_label=False,
+                container=False, elem_classes="scenario-picker",
+            )
             timeline_plot = gr.Plot(show_label=False, container=False)
-            timeline_growth_md = gr.Markdown()
-            timeline_table = gr.Dataframe(
-                label="Raw history (hash-chained JSONL, one row per visit/event, per lineage)",
-                wrap=True,
-            )
+            timeline_summary = gr.Markdown()
+            timeline_table = gr.HTML()
+            gr.Markdown(f'<span class="replay-credit">{html.escape(_first["credit"])}</span>')
 
         with gr.Tab("Detectability"):
             gr.HTML(detectability.to_html())
@@ -605,22 +601,13 @@ with gr.Blocks(
         show_progress="hidden",
     )
 
-    def on_generate_timeline(seed):
-        fig, df, summary, growth_md = build_demo_timeline(WORK_DIR, int(seed))
-        return fig, df, summary, growth_md
+    def on_timeline(scenario):
+        return replay_timeline.render(scenario, _replays)
 
-    demo.load(
-        fn=on_generate_timeline,
-        inputs=[timeline_seed],
-        outputs=[timeline_plot, timeline_table, timeline_summary, timeline_growth_md],
-        show_progress="hidden",
-    )
-    timeline_regen_btn.click(
-        fn=on_generate_timeline,
-        inputs=[timeline_seed],
-        outputs=[timeline_plot, timeline_table, timeline_summary, timeline_growth_md],
-        show_progress="hidden",
-    )
+    demo.load(fn=on_timeline, inputs=[timeline_choice],
+              outputs=[timeline_plot, timeline_summary, timeline_table], show_progress="hidden")
+    timeline_choice.change(fn=on_timeline, inputs=[timeline_choice],
+                           outputs=[timeline_plot, timeline_summary, timeline_table], show_progress="hidden")
 
 
 if __name__ == "__main__":

@@ -12,7 +12,7 @@ from culture import claims, detectability
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TEXT_FILES = ["README.md", "configs/detectability.yaml", *sorted(
     os.path.relpath(p, REPO) for p in glob.glob(os.path.join(REPO, "demo", "replays", "*.json")))]
-PY_UI_FILES = ["demo/app.py", "demo/flask_timeline.py", "culture/rationale.py", "culture/detectability.py"]
+PY_UI_FILES = ["demo/app.py", "demo/flask_timeline.py", "demo/replay_timeline.py", "culture/rationale.py", "culture/detectability.py"]
 
 
 @pytest.mark.parametrize("text", [

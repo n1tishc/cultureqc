@@ -140,14 +140,17 @@ than silently averaging across a retrain.
 **Replay (§5.4, `culture/replay.py`):** builds realistic visit streams —
 irregular jittered timestamps, simulated FOV repositioning, simulated
 passage — entirely from the compute cache, no model inference at replay
-time. **Real C2C12/CTC sequences aren't cached yet**: the real Slice 1b
-cache has `sequence_id`/`frame_idx` unset for all 4,246 rows (none of its
-three datasets are sequences), so replay currently only runs against a
-fixture cache (`tests/test_replay.py`, `demo/flask_timeline.py`,
-`scripts/backtest_growth.py`) — real sequences need `nb/00` + a cache pass
-that sets those fields. Every replayed visit is labeled
-`"provenance": "replay_simulated"`; the app's Flask Timeline tab shows this
-explicitly.
+time. It runs on the cached C2C12 time-lapse sequences (Ker et al. 2018,
+CC BY 4.0) and their simulated fault twins. Every replayed visit is labeled
+`"provenance": "replay_simulated"`.
+
+**Flask Timeline tab (B1):** five precomputed replays of held-out sequences
+(two normal, contamination onset, growth slowdown, lamp dimming), written by
+`scripts/export_demo_replays.py` to `demo/replays/*.json`, so the tab needs no
+cache and no model. Per visit it shows confluency with its FOV-noise band, the
+per-visit anomaly flag, the quality gate (REIMAGE), and one passage forecast
+made when confluency first reaches target − 10, captioned with its backtest.
+The contamination replay is captioned as an exaggerated-scale stress test.
 
 **Growth model (§6.1, `culture/growth.py`):** fits each segment's
 trend-eligible visits with a logistic and a Gompertz curve (weighted by
@@ -196,10 +199,9 @@ labeled example segments (good/poor/plateau):
 [`results/growth_examples.png`](results/growth_examples.png),
 [`results/growth_examples.md`](results/growth_examples.md).
 
-The app's Flask Timeline tab overlays the fitted curve + fit uncertainty
-band + target line on the replayed visit plot, and shows chosen model, AIC,
-`T*` + interval, and area doubling time (`ln2 / r`, early phase — never
-"cell doubling time") per segment. Area doubling time is the model's
+`fit_growth()` also returns the chosen model, AIC, `T*` + interval, and area
+doubling time (`ln2 / r`, early phase — never "cell doubling time") per
+segment. Area doubling time is the model's
 specific growth rate at the segment's first visit — a **rate**, independent
 of whether/when the segment ultimately reaches the target: the "plateau"
 example below shows a *faster* early doubling time than "poor" even though

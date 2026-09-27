@@ -1,0 +1,455 @@
+{
+ "anomaly_source": "cache/anomaly/scores.parquet (A4, held-out frames vs tuning banks); per-bin thresholds at 5% FPR on tuning normals, configs/anomaly.yaml",
+ "banner": "Replay of recorded time-lapse (simulated visits and faults)",
+ "base_sequence_id": "c2c12_090318_exp1_F0003_Data",
+ "caption": "Recorded C2C12 sequence, held out from all tuning. No fault was added.",
+ "config_hashes": {
+  "anomaly.yaml": "2776ce48025a554c2d3487c0d98433ef376ee4b9de1f5b25d48508bf82721184",
+  "detectability.yaml": "5c7310f638cbbcc646f71b329207e790c3ac5136c457ddc0af641ffa9e6ca010",
+  "growth.yaml": "5a61223bf061a82d947367396d3a42101ade964851520f23746e2e4f0b134cc0",
+  "noise.yaml": "a5dc3a7ea41367eb3a10adf29d77899251dd390b674372fffc19035241957177",
+  "qc.yaml": "53c8f2ad51b5937d1d81baafb454de186df3c1a192f4400ee6bb936dfb63b959",
+  "quality.yaml": "e86534e26c560eabd02f28dc79c19ab731803113b75deb53d9567e4d255f768c",
+  "replay.yaml": "eea079ce411bb937e9ab6dbbd568d30549d97dc89dde7a8835ef5ada77e506a2"
+ },
+ "credit": "C2C12 time-lapse: Ker, D.F.E. et al., Sci Data 5:180237 (2018), CC BY 4.0. Real recorded frames; visit times, FOV positions and faults are simulated.",
+ "experiment": "90318",
+ "fault": null,
+ "forecast": {
+  "backtest": {
+   "interval_covers": "4/5",
+   "median_abs_error_h": 9.0,
+   "n_predicted": 5,
+   "n_sequences": 5,
+   "source": "results/growth_backtest.csv, 6 h cadence, 3 FOVs"
+  },
+  "backtest_parity": {
+   "backtest_predicted_hours": 97.93,
+   "quality_filter_changes_forecast": true,
+   "unfiltered_matches_backtest": true,
+   "unfiltered_t_star_hours": 97.93
+  },
+  "cut_pct": 40.0,
+  "status": "cut_not_reached",
+  "target_pct": 50.0
+ },
+ "generated_by": "scripts/export_demo_replays.py",
+ "model_versions": {
+  "dino": {
+   "version": "facebook/dinov2-small",
+   "weights_sha256": "ae1e99fcefd534ed978cdeb8326f08030c96e28b7a81ffcbc98a857c84d14be1"
+  },
+  "qc": {
+   "version": "qc_effnetb0_v1",
+   "weights_sha256": "c126318c27ecbd29514aef60254637f014499ae52d0d004a358158f860b0529d"
+  },
+  "quality": {
+   "note": "deterministic CV (blur/exposure/uniformity) — no weights to hash",
+   "version": "quality_v1",
+   "weights_sha256": null
+  },
+  "seg": {
+   "version": "cpsam_v2",
+   "weights_sha256": "0f1cc3f7ecdd8a037a57c6c48d9d8921391be4cbce3fa9f13c3e3a2e1253c667"
+  }
+ },
+ "noise_band": "±1 standard error of the 3-FOV mean: sigma_fov(confluency) / sqrt(3), configs/noise.yaml C2C12 fit (the noise V2 compares one visit's growth to)",
+ "notes": [
+  "1 of 15 visits raises an anomaly flag with no fault present: false alarms. Thresholds allow about 5% on tuning normals, and calibration does not transfer across experiments (results/anomaly_summary.md).",
+  "5 of 15 visits fail the quality gate with no fault present: false re-image requests, left out of the trend (results/quality_gate_c2c12.md).",
+  "No passage forecast: the visits that pass the quality gate never reach 40% (target − 10), where a forecast is first made."
+ ],
+ "provenance": "replay_simulated",
+ "recorded_crossing_hours": 86.62,
+ "replay_params": {
+  "crop_frac": 0.25,
+  "jitter_hours": 1.5,
+  "mean_interval_hours": 6.0,
+  "n_fov": 3,
+  "seed": 0
+ },
+ "scenario": "normal_2",
+ "split": "heldout",
+ "stream_id": "c2c12_090318_exp1_F0003_Data",
+ "summary": {
+  "anomaly_flags_after_onset": null,
+  "anomaly_flags_before_onset": 1,
+  "first_flag_after_onset_visit": null,
+  "n_post_onset_visits": null,
+  "n_visits": 15,
+  "reimage_after_onset": null,
+  "reimage_before_onset": 5
+ },
+ "visits": [
+  {
+   "anomaly_bin": "0-20",
+   "anomaly_flag": false,
+   "anomaly_score": 0.2646,
+   "anomaly_threshold": 0.3076,
+   "anomaly_z": 0.74,
+   "confluency_mean": 1.24,
+   "confluency_sd": 0.93,
+   "fov_confluency": [
+    0.55,
+    2.55,
+    0.61
+   ],
+   "hours": 0.0,
+   "image_sha256": "dcdba71ad7b501b98007cab16b301230b047f447a3d61d656d54380daf0e3ecf",
+   "noise_se": 1.78,
+   "post_onset": null,
+   "quality_pass": true,
+   "quality_reasons": [],
+   "reimage": false,
+   "source_frame_idx": 1,
+   "timestamp": "2009-03-18T00:00:00+00:00",
+   "visit": 0
+  },
+  {
+   "anomaly_bin": "0-20",
+   "anomaly_flag": true,
+   "anomaly_score": 0.4071,
+   "anomaly_threshold": 0.3076,
+   "anomaly_z": 4.12,
+   "confluency_mean": 3.73,
+   "confluency_sd": 2.08,
+   "fov_confluency": [
+    1.1,
+    6.18,
+    3.91
+   ],
+   "hours": 6.41,
+   "image_sha256": "369f02b7b4619c3c482d2d9a049044e4236d2b67581ceded993c50118755efe1",
+   "noise_se": 2.08,
+   "post_onset": null,
+   "quality_pass": true,
+   "quality_reasons": [],
+   "reimage": false,
+   "source_frame_idx": 73,
+   "timestamp": "2009-03-18T06:24:39.186223+00:00",
+   "visit": 1
+  },
+  {
+   "anomaly_bin": "0-20",
+   "anomaly_flag": false,
+   "anomaly_score": 0.3013,
+   "anomaly_threshold": 0.3076,
+   "anomaly_z": 1.61,
+   "confluency_mean": 4.92,
+   "confluency_sd": 4.42,
+   "fov_confluency": [
+    4.04,
+    0.0,
+    10.73
+   ],
+   "hours": 11.72,
+   "image_sha256": "ab5dc5e78db7aec8d24b4cd7bb2bc6b7e18bb911c42a307715204baf2a5f1946",
+   "noise_se": 2.22,
+   "post_onset": null,
+   "quality_pass": true,
+   "quality_reasons": [],
+   "reimage": false,
+   "source_frame_idx": 145,
+   "timestamp": "2009-03-18T11:43:12.882732+00:00",
+   "visit": 2
+  },
+  {
+   "anomaly_bin": "0-20",
+   "anomaly_flag": false,
+   "anomaly_score": 0.2481,
+   "anomaly_threshold": 0.3076,
+   "anomaly_z": 0.35,
+   "confluency_mean": 5.85,
+   "confluency_sd": 0.6,
+   "fov_confluency": [
+    5.55,
+    6.69,
+    5.3
+   ],
+   "hours": 16.34,
+   "image_sha256": "8ed2d01827bc3108b342db4ece061c6a5b1850c0547aa1a57c79777d10f58ac2",
+   "noise_se": 2.33,
+   "post_onset": null,
+   "quality_pass": true,
+   "quality_reasons": [],
+   "reimage": false,
+   "source_frame_idx": 193,
+   "timestamp": "2009-03-18T16:20:35.396791+00:00",
+   "visit": 3
+  },
+  {
+   "anomaly_bin": "0-20",
+   "anomaly_flag": false,
+   "anomaly_score": 0.274,
+   "anomaly_threshold": 0.3076,
+   "anomaly_z": 0.96,
+   "confluency_mean": 9.39,
+   "confluency_sd": 2.91,
+   "fov_confluency": [
+    6.13,
+    13.19,
+    8.85
+   ],
+   "hours": 20.89,
+   "image_sha256": "e1f57f4d977416dc1d5db28eb99cbb0e8a6ddfc78e7cc79494c7e5e2a9336786",
+   "noise_se": 2.76,
+   "post_onset": null,
+   "quality_pass": true,
+   "quality_reasons": [],
+   "reimage": false,
+   "source_frame_idx": 253,
+   "timestamp": "2009-03-18T20:53:33.895255+00:00",
+   "visit": 4
+  },
+  {
+   "anomaly_bin": "0-20",
+   "anomaly_flag": false,
+   "anomaly_score": 0.2845,
+   "anomaly_threshold": 0.3076,
+   "anomaly_z": 1.21,
+   "confluency_mean": 9.64,
+   "confluency_sd": 6.04,
+   "fov_confluency": [
+    3.69,
+    17.92,
+    7.31
+   ],
+   "hours": 27.83,
+   "image_sha256": "91655aa302b75f9ba71fd1beb6d399a8b664beee26ab458cdd4634d38e41b3f8",
+   "noise_se": 2.79,
+   "post_onset": null,
+   "quality_pass": true,
+   "quality_reasons": [],
+   "reimage": false,
+   "source_frame_idx": 337,
+   "timestamp": "2009-03-19T03:49:57.213838+00:00",
+   "visit": 5
+  },
+  {
+   "anomaly_bin": "0-20",
+   "anomaly_flag": false,
+   "anomaly_score": 0.2569,
+   "anomaly_threshold": 0.3076,
+   "anomaly_z": 0.56,
+   "confluency_mean": 8.54,
+   "confluency_sd": 1.55,
+   "fov_confluency": [
+    6.79,
+    10.56,
+    8.28
+   ],
+   "hours": 35.07,
+   "image_sha256": "20ba3184cdc5ad2ffb4b908b2fbe7c0ab634e03fe94e7ac97095f7000deb6eac",
+   "noise_se": 2.65,
+   "post_onset": null,
+   "quality_pass": true,
+   "quality_reasons": [],
+   "reimage": false,
+   "source_frame_idx": 421,
+   "timestamp": "2009-03-19T11:04:14.974073+00:00",
+   "visit": 6
+  },
+  {
+   "anomaly_bin": "0-20",
+   "anomaly_flag": false,
+   "anomaly_score": 0.205,
+   "anomaly_threshold": 0.3076,
+   "anomaly_z": -0.67,
+   "confluency_mean": 8.87,
+   "confluency_sd": 3.18,
+   "fov_confluency": [
+    6.97,
+    13.35,
+    6.28
+   ],
+   "hours": 41.39,
+   "image_sha256": "63fd3fc1abf6620afd1bb1c4b836d07d280b035110ce6c4500eec540ee4012f1",
+   "noise_se": 2.69,
+   "post_onset": null,
+   "quality_pass": true,
+   "quality_reasons": [],
+   "reimage": false,
+   "source_frame_idx": 493,
+   "timestamp": "2009-03-19T17:23:26.640451+00:00",
+   "visit": 7
+  },
+  {
+   "anomaly_bin": "0-20",
+   "anomaly_flag": false,
+   "anomaly_score": 0.2256,
+   "anomaly_threshold": 0.3076,
+   "anomaly_z": -0.18,
+   "confluency_mean": 18.15,
+   "confluency_sd": 4.67,
+   "fov_confluency": [
+    12.53,
+    23.96,
+    17.96
+   ],
+   "hours": 48.08,
+   "image_sha256": "6260748095efc116a3fe31c1354f0ca8af2017d3f8c5025cd1fd6131a0c65812",
+   "noise_se": 3.8,
+   "post_onset": null,
+   "quality_pass": true,
+   "quality_reasons": [],
+   "reimage": false,
+   "source_frame_idx": 577,
+   "timestamp": "2009-03-20T00:04:45.203310+00:00",
+   "visit": 8
+  },
+  {
+   "anomaly_bin": "0-20",
+   "anomaly_flag": false,
+   "anomaly_score": 0.2168,
+   "anomaly_threshold": 0.3076,
+   "anomaly_z": -0.39,
+   "confluency_mean": 16.81,
+   "confluency_sd": 5.92,
+   "fov_confluency": [
+    13.68,
+    11.65,
+    25.1
+   ],
+   "hours": 54.21,
+   "image_sha256": "700b08dd2abf828bc8f869e4e5ca30c9ab0284ef9c3dba79d9219346b3fbbf53",
+   "noise_se": 3.64,
+   "post_onset": null,
+   "quality_pass": true,
+   "quality_reasons": [],
+   "reimage": false,
+   "source_frame_idx": 649,
+   "timestamp": "2009-03-20T06:12:36.353218+00:00",
+   "visit": 9
+  },
+  {
+   "anomaly_bin": "20-40",
+   "anomaly_flag": false,
+   "anomaly_score": 0.2079,
+   "anomaly_threshold": 0.329,
+   "anomaly_z": -1.17,
+   "confluency_mean": 24.06,
+   "confluency_sd": 6.63,
+   "fov_confluency": [
+    23.73,
+    16.1,
+    32.34
+   ],
+   "hours": 61.52,
+   "image_sha256": "7803f96a4da052ee68d65a3f6ede567029e9f0b5c66cd831ab451165b621f830",
+   "noise_se": 4.51,
+   "post_onset": null,
+   "quality_pass": false,
+   "quality_reasons": [
+    "exposure_out_of_range"
+   ],
+   "reimage": true,
+   "source_frame_idx": 745,
+   "timestamp": "2009-03-20T13:30:55.135395+00:00",
+   "visit": 10
+  },
+  {
+   "anomaly_bin": "20-40",
+   "anomaly_flag": false,
+   "anomaly_score": 0.2548,
+   "anomaly_threshold": 0.329,
+   "anomaly_z": 0.06,
+   "confluency_mean": 19.53,
+   "confluency_sd": 7.94,
+   "fov_confluency": [
+    13.27,
+    14.6,
+    30.73
+   ],
+   "hours": 68.46,
+   "image_sha256": "abeca61dfb503730cb45b789727fb9534c391ef7e3ad8183efbddb433342ec35",
+   "noise_se": 3.97,
+   "post_onset": null,
+   "quality_pass": false,
+   "quality_reasons": [
+    "exposure_out_of_range"
+   ],
+   "reimage": true,
+   "source_frame_idx": 817,
+   "timestamp": "2009-03-20T20:27:46.353780+00:00",
+   "visit": 11
+  },
+  {
+   "anomaly_bin": "20-40",
+   "anomaly_flag": false,
+   "anomaly_score": 0.2279,
+   "anomaly_threshold": 0.329,
+   "anomaly_z": -0.65,
+   "confluency_mean": 42.02,
+   "confluency_sd": 15.86,
+   "fov_confluency": [
+    20.63,
+    58.57,
+    46.86
+   ],
+   "hours": 72.97,
+   "image_sha256": "ade5d3cbb7e5950b12058ed4273a46be5702eefbca88060974242470c807ddc0",
+   "noise_se": 6.66,
+   "post_onset": null,
+   "quality_pass": false,
+   "quality_reasons": [
+    "exposure_out_of_range"
+   ],
+   "reimage": true,
+   "source_frame_idx": 877,
+   "timestamp": "2009-03-21T00:58:15.929582+00:00",
+   "visit": 12
+  },
+  {
+   "anomaly_bin": "40-100",
+   "anomaly_flag": false,
+   "anomaly_score": 0.3015,
+   "anomaly_threshold": 0.4274,
+   "anomaly_z": 0.25,
+   "confluency_mean": 47.41,
+   "confluency_sd": 7.48,
+   "fov_confluency": [
+    54.67,
+    37.12,
+    50.43
+   ],
+   "hours": 80.04,
+   "image_sha256": "4971f257cc3f0117897fad1e7a3adbb427448e9235c9c186a1627bd01c20026f",
+   "noise_se": 7.3,
+   "post_onset": null,
+   "quality_pass": false,
+   "quality_reasons": [
+    "exposure_out_of_range"
+   ],
+   "reimage": true,
+   "source_frame_idx": 961,
+   "timestamp": "2009-03-21T08:02:35.895769+00:00",
+   "visit": 13
+  },
+  {
+   "anomaly_bin": "40-100",
+   "anomaly_flag": false,
+   "anomaly_score": 0.3207,
+   "anomaly_threshold": 0.4274,
+   "anomaly_z": 0.55,
+   "confluency_mean": 56.67,
+   "confluency_sd": 5.06,
+   "fov_confluency": [
+    55.7,
+    51.01,
+    63.3
+   ],
+   "hours": 84.64,
+   "image_sha256": "d45d30f78f6b8174fdb4cdca1c52e60dacf1a51597a76a2cffc4a06c20147913",
+   "noise_se": 8.41,
+   "post_onset": null,
+   "quality_pass": false,
+   "quality_reasons": [
+    "exposure_out_of_range"
+   ],
+   "reimage": true,
+   "source_frame_idx": 1021,
+   "timestamp": "2009-03-21T12:38:38.619982+00:00",
+   "visit": 14
+  }
+ ]
+}

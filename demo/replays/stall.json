@@ -1,0 +1,429 @@
+{
+ "anomaly_source": "cache/anomaly/scores.parquet (A4, held-out frames vs tuning banks); per-bin thresholds at 5% FPR on tuning normals, configs/anomaly.yaml",
+ "banner": "Replay of recorded time-lapse (simulated visits and faults)",
+ "base_sequence_id": "c2c12_090303_exp1_F0014_Data",
+ "caption": "Simulated growth slowdown from 29 h: after onset the flask replays its own recorded frames at 40% speed. No flag is expected: growth stalls are not detectable at the tested setup. V2: one visit's growth is 0.35–1.12× the field-to-field noise, 2× needed; V6: 0 of 2 simulated stalls flagged (results/growth_signal_summary.md, results/spc_summary.md)",
+ "config_hashes": {
+  "anomaly.yaml": "2776ce48025a554c2d3487c0d98433ef376ee4b9de1f5b25d48508bf82721184",
+  "detectability.yaml": "5c7310f638cbbcc646f71b329207e790c3ac5136c457ddc0af641ffa9e6ca010",
+  "growth.yaml": "5a61223bf061a82d947367396d3a42101ade964851520f23746e2e4f0b134cc0",
+  "noise.yaml": "a5dc3a7ea41367eb3a10adf29d77899251dd390b674372fffc19035241957177",
+  "qc.yaml": "53c8f2ad51b5937d1d81baafb454de186df3c1a192f4400ee6bb936dfb63b959",
+  "quality.yaml": "e86534e26c560eabd02f28dc79c19ab731803113b75deb53d9567e4d255f768c",
+  "replay.yaml": "eea079ce411bb937e9ab6dbbd568d30549d97dc89dde7a8835ef5ada77e506a2"
+ },
+ "credit": "C2C12 time-lapse: Ker, D.F.E. et al., Sci Data 5:180237 (2018), CC BY 4.0. Real recorded frames; visit times, FOV positions and faults are simulated.",
+ "experiment": "90303",
+ "fault": {
+  "onset_hours": 29.4,
+  "type": "growth_stall"
+ },
+ "forecast": {
+  "backtest": {
+   "interval_covers": "4/5",
+   "median_abs_error_h": 9.0,
+   "n_predicted": 5,
+   "n_sequences": 5,
+   "source": "results/growth_backtest.csv, 6 h cadence, 3 FOVs"
+  },
+  "cut_pct": 40.0,
+  "status": "cut_not_reached",
+  "target_pct": 50.0
+ },
+ "generated_by": "scripts/export_demo_replays.py",
+ "model_versions": {
+  "dino": {
+   "version": "facebook/dinov2-small",
+   "weights_sha256": "ae1e99fcefd534ed978cdeb8326f08030c96e28b7a81ffcbc98a857c84d14be1"
+  },
+  "qc": {
+   "version": "qc_effnetb0_v1",
+   "weights_sha256": "c126318c27ecbd29514aef60254637f014499ae52d0d004a358158f860b0529d"
+  },
+  "quality": {
+   "note": "deterministic CV (blur/exposure/uniformity) — no weights to hash",
+   "version": "quality_v1",
+   "weights_sha256": null
+  },
+  "seg": {
+   "version": "cpsam_v2",
+   "weights_sha256": "0f1cc3f7ecdd8a037a57c6c48d9d8921391be4cbce3fa9f13c3e3a2e1253c667"
+  }
+ },
+ "noise_band": "±1 standard error of the 3-FOV mean: sigma_fov(confluency) / sqrt(3), configs/noise.yaml C2C12 fit (the noise V2 compares one visit's growth to)",
+ "notes": [
+  "6 of 6 visits before onset fail the quality gate with no fault present: false re-image requests, left out of the trend (results/quality_gate_c2c12.md).",
+  "No passage forecast: the visits that pass the quality gate never reach 40% (target − 10), where a forecast is first made."
+ ],
+ "provenance": "replay_simulated",
+ "recorded_crossing_hours": null,
+ "replay_params": {
+  "crop_frac": 0.25,
+  "jitter_hours": 1.5,
+  "mean_interval_hours": 6.0,
+  "n_fov": 3,
+  "seed": 0
+ },
+ "scenario": "stall",
+ "split": "heldout",
+ "stream_id": "c2c12_090303_exp1_F0014_Data__fault_stall",
+ "summary": {
+  "anomaly_flags_after_onset": 0,
+  "anomaly_flags_before_onset": 0,
+  "first_flag_after_onset_visit": null,
+  "n_post_onset_visits": 8,
+  "n_visits": 14,
+  "reimage_after_onset": 0,
+  "reimage_before_onset": 6
+ },
+ "visits": [
+  {
+   "anomaly_bin": "0-20",
+   "anomaly_flag": false,
+   "anomaly_score": 0.1915,
+   "anomaly_threshold": 0.3076,
+   "anomaly_z": -0.99,
+   "confluency_mean": 1.63,
+   "confluency_sd": 0.69,
+   "fov_confluency": [
+    1.95,
+    0.68,
+    2.27
+   ],
+   "hours": 0.0,
+   "image_sha256": "a0dbf7a700d50eb7f2fd054b331c4bb5b2437c211961af3e7485ede48c2d6268",
+   "noise_se": 1.83,
+   "post_onset": false,
+   "quality_pass": false,
+   "quality_reasons": [
+    "blur_below_threshold"
+   ],
+   "reimage": true,
+   "source_frame_idx": 1,
+   "timestamp": "2009-03-03T00:00:00+00:00",
+   "visit": 0
+  },
+  {
+   "anomaly_bin": "0-20",
+   "anomaly_flag": false,
+   "anomaly_score": 0.1832,
+   "anomaly_threshold": 0.3076,
+   "anomaly_z": -1.19,
+   "confluency_mean": 1.39,
+   "confluency_sd": 1.44,
+   "fov_confluency": [
+    0.8,
+    0.0,
+    3.37
+   ],
+   "hours": 6.41,
+   "image_sha256": "4d5dc8309e285b82301814ebfc03a851737ba0bf9e490e34ec693c0e01162e8e",
+   "noise_se": 1.8,
+   "post_onset": false,
+   "quality_pass": false,
+   "quality_reasons": [
+    "blur_below_threshold"
+   ],
+   "reimage": true,
+   "source_frame_idx": 73,
+   "timestamp": "2009-03-03T06:24:39.186223+00:00",
+   "visit": 1
+  },
+  {
+   "anomaly_bin": "0-20",
+   "anomaly_flag": false,
+   "anomaly_score": 0.174,
+   "anomaly_threshold": 0.3076,
+   "anomaly_z": -1.4,
+   "confluency_mean": 4.48,
+   "confluency_sd": 0.56,
+   "fov_confluency": [
+    3.71,
+    5.05,
+    4.67
+   ],
+   "hours": 11.72,
+   "image_sha256": "b1454686b393cbc313608b07f338792fb1fbebc48a53cb0cbadedbcc86ac0534",
+   "noise_se": 2.17,
+   "post_onset": false,
+   "quality_pass": false,
+   "quality_reasons": [
+    "blur_below_threshold"
+   ],
+   "reimage": true,
+   "source_frame_idx": 145,
+   "timestamp": "2009-03-03T11:43:12.882732+00:00",
+   "visit": 2
+  },
+  {
+   "anomaly_bin": "0-20",
+   "anomaly_flag": false,
+   "anomaly_score": 0.1868,
+   "anomaly_threshold": 0.3076,
+   "anomaly_z": -1.1,
+   "confluency_mean": 4.84,
+   "confluency_sd": 0.97,
+   "fov_confluency": [
+    3.67,
+    4.8,
+    6.04
+   ],
+   "hours": 16.34,
+   "image_sha256": "bc6a90af23cbf73d74dccd8064b3ba471fbe1e7107e738073e5b69fe8dc55614",
+   "noise_se": 2.21,
+   "post_onset": false,
+   "quality_pass": false,
+   "quality_reasons": [
+    "blur_below_threshold"
+   ],
+   "reimage": true,
+   "source_frame_idx": 193,
+   "timestamp": "2009-03-03T16:20:35.396791+00:00",
+   "visit": 3
+  },
+  {
+   "anomaly_bin": "0-20",
+   "anomaly_flag": false,
+   "anomaly_score": 0.1515,
+   "anomaly_threshold": 0.3076,
+   "anomaly_z": -1.94,
+   "confluency_mean": 4.01,
+   "confluency_sd": 1.46,
+   "fov_confluency": [
+    2.16,
+    5.72,
+    4.15
+   ],
+   "hours": 20.89,
+   "image_sha256": "f4db914f31a103dc9374568e9e0af477b6fc50d3abf60cbb9bd25a89e64ac12d",
+   "noise_se": 2.11,
+   "post_onset": false,
+   "quality_pass": false,
+   "quality_reasons": [
+    "blur_below_threshold"
+   ],
+   "reimage": true,
+   "source_frame_idx": 253,
+   "timestamp": "2009-03-03T20:53:33.895255+00:00",
+   "visit": 4
+  },
+  {
+   "anomaly_bin": "0-20",
+   "anomaly_flag": false,
+   "anomaly_score": 0.1787,
+   "anomaly_threshold": 0.3076,
+   "anomaly_z": -1.29,
+   "confluency_mean": 9.33,
+   "confluency_sd": 1.17,
+   "fov_confluency": [
+    10.13,
+    7.68,
+    10.18
+   ],
+   "hours": 27.83,
+   "image_sha256": "6b6db54d367ac441ff04a6a8fdc366fb60724d255f5fa24676b81aa07174f540",
+   "noise_se": 2.75,
+   "post_onset": false,
+   "quality_pass": false,
+   "quality_reasons": [
+    "blur_below_threshold"
+   ],
+   "reimage": true,
+   "source_frame_idx": 337,
+   "timestamp": "2009-03-04T03:49:57.213838+00:00",
+   "visit": 5
+  },
+  {
+   "anomaly_bin": "0-20",
+   "anomaly_flag": false,
+   "anomaly_score": 0.213,
+   "anomaly_threshold": 0.3076,
+   "anomaly_z": -0.48,
+   "confluency_mean": 4.1,
+   "confluency_sd": 1.39,
+   "fov_confluency": [
+    2.5,
+    3.92,
+    5.89
+   ],
+   "hours": 35.07,
+   "image_sha256": "d59cb174a290f7febd9c17c7a947419d8e90e7ed0ccc74b3a21edfdcc5904b02",
+   "noise_se": 2.12,
+   "post_onset": true,
+   "quality_pass": true,
+   "quality_reasons": [],
+   "reimage": false,
+   "source_frame_idx": 425,
+   "timestamp": "2009-03-04T11:04:14.974073+00:00",
+   "visit": 6
+  },
+  {
+   "anomaly_bin": "0-20",
+   "anomaly_flag": false,
+   "anomaly_score": 0.2155,
+   "anomaly_threshold": 0.3076,
+   "anomaly_z": -0.42,
+   "confluency_mean": 6.94,
+   "confluency_sd": 1.87,
+   "fov_confluency": [
+    9.09,
+    7.2,
+    4.54
+   ],
+   "hours": 41.39,
+   "image_sha256": "60faeb1c3450a99629cadbcaf899391adbd391ce9fbf46d05d584dfec597b060",
+   "noise_se": 2.46,
+   "post_onset": true,
+   "quality_pass": true,
+   "quality_reasons": [],
+   "reimage": false,
+   "source_frame_idx": 497,
+   "timestamp": "2009-03-04T17:23:26.640451+00:00",
+   "visit": 7
+  },
+  {
+   "anomaly_bin": "0-20",
+   "anomaly_flag": false,
+   "anomaly_score": 0.1838,
+   "anomaly_threshold": 0.3076,
+   "anomaly_z": -1.17,
+   "confluency_mean": 8.55,
+   "confluency_sd": 0.54,
+   "fov_confluency": [
+    8.64,
+    9.17,
+    7.85
+   ],
+   "hours": 48.08,
+   "image_sha256": "799cec98b006bc449420b3bf9483626b2ca86613e4d3abfe4dd91a748ac3387a",
+   "noise_se": 2.66,
+   "post_onset": true,
+   "quality_pass": true,
+   "quality_reasons": [],
+   "reimage": false,
+   "source_frame_idx": 581,
+   "timestamp": "2009-03-05T00:04:45.203310+00:00",
+   "visit": 8
+  },
+  {
+   "anomaly_bin": "0-20",
+   "anomaly_flag": false,
+   "anomaly_score": 0.2139,
+   "anomaly_threshold": 0.3076,
+   "anomaly_z": -0.46,
+   "confluency_mean": 12.26,
+   "confluency_sd": 1.21,
+   "fov_confluency": [
+    10.79,
+    13.76,
+    12.24
+   ],
+   "hours": 54.21,
+   "image_sha256": "8b3eded41d2bb53c70db9d670da0580b8bbb4b4d68f7b04a49372a16608b3746",
+   "noise_se": 3.1,
+   "post_onset": true,
+   "quality_pass": true,
+   "quality_reasons": [],
+   "reimage": false,
+   "source_frame_idx": 653,
+   "timestamp": "2009-03-05T06:12:36.353218+00:00",
+   "visit": 9
+  },
+  {
+   "anomaly_bin": "0-20",
+   "anomaly_flag": false,
+   "anomaly_score": 0.1799,
+   "anomaly_threshold": 0.3076,
+   "anomaly_z": -1.26,
+   "confluency_mean": 12.89,
+   "confluency_sd": 3.72,
+   "fov_confluency": [
+    9.1,
+    11.63,
+    17.95
+   ],
+   "hours": 61.52,
+   "image_sha256": "a1c5b7cd98b4996f4ae9b3e25eb15dccc381f69e8e35b7e81e99f645288f922b",
+   "noise_se": 3.18,
+   "post_onset": true,
+   "quality_pass": true,
+   "quality_reasons": [],
+   "reimage": false,
+   "source_frame_idx": 737,
+   "timestamp": "2009-03-05T13:30:55.135395+00:00",
+   "visit": 10
+  },
+  {
+   "anomaly_bin": "0-20",
+   "anomaly_flag": false,
+   "anomaly_score": 0.2128,
+   "anomaly_threshold": 0.3076,
+   "anomaly_z": -0.49,
+   "confluency_mean": 13.49,
+   "confluency_sd": 2.16,
+   "fov_confluency": [
+    10.72,
+    16.0,
+    13.75
+   ],
+   "hours": 68.46,
+   "image_sha256": "0a20e091ce0cb16c8eaff88ee00395ac7e49d87c5831226d640f73d7940a9e44",
+   "noise_se": 3.25,
+   "post_onset": true,
+   "quality_pass": true,
+   "quality_reasons": [],
+   "reimage": false,
+   "source_frame_idx": 821,
+   "timestamp": "2009-03-05T20:27:46.353780+00:00",
+   "visit": 11
+  },
+  {
+   "anomaly_bin": "0-20",
+   "anomaly_flag": false,
+   "anomaly_score": 0.1923,
+   "anomaly_threshold": 0.3076,
+   "anomaly_z": -0.97,
+   "confluency_mean": 14.12,
+   "confluency_sd": 1.48,
+   "fov_confluency": [
+    13.06,
+    13.09,
+    16.22
+   ],
+   "hours": 72.97,
+   "image_sha256": "2f605036d8f6ad61bc2384892244d223b27e0c8162df7394f495c9a944113563",
+   "noise_se": 3.32,
+   "post_onset": true,
+   "quality_pass": true,
+   "quality_reasons": [],
+   "reimage": false,
+   "source_frame_idx": 881,
+   "timestamp": "2009-03-06T00:58:15.929582+00:00",
+   "visit": 12
+  },
+  {
+   "anomaly_bin": "0-20",
+   "anomaly_flag": false,
+   "anomaly_score": 0.196,
+   "anomaly_threshold": 0.3076,
+   "anomaly_z": -0.88,
+   "confluency_mean": 15.17,
+   "confluency_sd": 2.35,
+   "fov_confluency": [
+    14.57,
+    12.64,
+    18.31
+   ],
+   "hours": 80.04,
+   "image_sha256": "ebf1977c24baa9ddd3364e9c35b1ac483a9a48bea607f2eba84d58578fc1f502",
+   "noise_se": 3.45,
+   "post_onset": true,
+   "quality_pass": true,
+   "quality_reasons": [],
+   "reimage": false,
+   "source_frame_idx": 965,
+   "timestamp": "2009-03-06T08:02:35.895769+00:00",
+   "visit": 13
+  }
+ ]
+}
