@@ -153,8 +153,10 @@ export function Recall({ ladder, onGo }) {
         the flask.{" "}
         <strong>
           98% test accuracy, 100% contamination recall at every severity
-          including early.
+          including early, on synthetic test tiles.
         </strong>{" "}
+        It does not transfer to real C2C12 frames, so it is not used for
+        decisions.{" "}
         <span className="stated">
           Evaluation figures, not recomputed on this page &mdash; see{" "}
           <a href="#/analysis">provenance</a>.

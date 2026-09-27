@@ -4,12 +4,12 @@ emoji: 🧫
 colorFrom: green
 colorTo: blue
 sdk: gradio
-sdk_version: "5.50.0"
-app_file: app.py
+sdk_version: "6.26.0"
+app_file: console.py
 python_version: "3.11"
 pinned: false
 license: mit
-short_description: Upload a brightfield image, see the raw model output
+short_description: cultureQC review console (call-day GPU Space)
 ---
 
 # cultureQC — raw model demo
@@ -57,6 +57,25 @@ finds one), same as `deploy/hf-space/api.py` does today.
 
 Same per-boot audit-log caveat as `hf-space`: this Space's disk is wiped on
 restart, so `prev_record_hash` links records within one boot only.
+
+## Call-day console (`console.py`, current `app_file`)
+
+For the dry run (Thu Oct 1), the rehearsal and the call, this Space runs the
+review console, `demo/app.py`, through `console.py`: Analyze with precomputed
+examples, Flask Timeline, Detectability. `deploy/sync_space.py` mirrors
+`culture/`, `config/`, `configs/`, `demo/` and the anomaly banks in; the
+publish script refuses to upload unless the banks match `configs/anomaly.yaml`.
+
+- **Hardware:** a dedicated GPU tier (not ZeroGPU: the console has no
+  `@spaces.GPU` calls). The owner switches it on for the dry run and the call,
+  and back to CPU afterwards. On CPU the precomputed examples and replays still
+  work; a live Analyze takes minutes (V9).
+- **Startup log:** `cuda: True (<device>)`, `anomaly banks verified`, and the
+  model warm-up time. Anything else means the call runs on the precomputed
+  fallback.
+- **Gradio:** the console uses Gradio 6 APIs, so `sdk_version` is 6.26.0 (the
+  version it is tested with locally). To go back to the raw-output page, set
+  `app_file: app.py` **and** `sdk_version: "5.50.0"` (see below).
 
 ## Why `sdk_version: "5.50.0"` specifically
 

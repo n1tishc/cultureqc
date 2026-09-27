@@ -1,0 +1,70 @@
+params:
+  ewma_lambda: 0.2
+  ewma_L: 2.86
+  limit_multiplier_c: 1.0
+inputs:
+  exposure:
+    side: two
+  anomaly:
+    side: upper
+baseline_hours: 24.0
+min_flasks_per_window: 5
+window: visit cadence
+exposure_reference:
+  bin_hours: 6.0
+  hours:
+  - 27.0
+  - 33.0
+  - 39.0
+  - 45.0
+  - 51.0
+  - 57.0
+  - 63.0
+  - 69.0
+  - 75.0
+  - 81.0
+  - 87.0
+  expected_log_change:
+  - 0.00227
+  - 0.00629
+  - 0.01312
+  - 0.0187
+  - 0.02587
+  - 0.03503
+  - 0.04127
+  - 0.04984
+  - 0.06093
+  - 0.0699
+  - 0.08367
+  sd:
+  - 0.02548
+  - 0.02548
+  - 0.02548
+  - 0.02548
+  - 0.02548
+  - 0.02548
+  - 0.03418
+  - 0.04246
+  - 0.05002
+  - 0.05845
+  - 0.06335
+  source: tuning base-sequence frames (hourly), results/replay_fleet_split.csv
+population_standardisation:
+  exposure:
+    mean: 0.03285
+    sd: 0.03442
+    n_windows: 14
+  anomaly:
+    mean: -0.22455
+    sd: 0.41525
+    n_windows: 14
+population_standardisation_source: tuning normal fleet population series (window-to-window
+  SD); known flaw, see results/drift_summary.md (post-hoc diagnostic)
+selection:
+  rule: smallest c on [1.0, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0] (L = 2.86·c) with no INSTRUMENT_DRIFT
+    window on the tuning normal fleets (all cadence × FOV cells)
+  chosen_c: 1.0
+  met: true
+suppression: 'all per-flask SPC culture flags in windows with INSTRUMENT_DRIFT active
+  (spec §10: anomaly drift; other codes are an extension); REIMAGE never suppressed'
+generated_at: '2026-09-26T18:19:55Z'

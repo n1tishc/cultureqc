@@ -1,0 +1,13 @@
+# Replay mode config (cultureQC_upgrade.md §5.4).
+# Not calibrated against real data (unlike configs/quality.yaml,
+# configs/noise.yaml) -- these are simulation parameters, not measured
+# thresholds. Defaults chosen to be plausible for a manually-checked flask
+# (not imaged every frame, but often enough to catch meaningful change).
+
+timing:
+  mean_interval_hours: 20     # average gap between visits
+  jitter_hours: 6              # +/- uniform jitter around the mean interval
+
+repositioning:
+  min_crops_per_visit: 1
+  max_crops_per_visit: 4       # "1-N of the cached crops for that frame"

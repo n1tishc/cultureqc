@@ -219,7 +219,9 @@ export function Provenance() {
             per-record output: <b>2.3 pp</b> and <b>31 pp</b> mean absolute
             confluency error and the <b>thirteen times</b> that follows from
             them, <b>98%</b> test accuracy, and <b>100%</b> contamination recall
-            at every severity. The browser does not recompute these the way it
+            at every severity, all measured on synthetic tiles. On real C2C12
+            frames the classifier does not transfer (5.0% of normal frames
+            called normal), so it is not used for decisions. The browser does not recompute these the way it
             recomputes the record digests &mdash; they are stated, not
             demonstrated, and the honest boundary on the recall figure is the
             sprite-scale limit described above. The head-to-head table in{" "}

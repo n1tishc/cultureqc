@@ -19,6 +19,7 @@ Usage:
 from __future__ import annotations
 
 import json
+import os
 from dataclasses import asdict, dataclass
 
 import cv2
@@ -30,6 +31,67 @@ IMAGENET_MEAN = np.array([0.485, 0.456, 0.406]).reshape(3, 1, 1)
 IMAGENET_STD = np.array([0.229, 0.224, 0.225]).reshape(3, 1, 1)
 
 HF_REPO_ID = "LongGrainRice/cultureqc-qc-effnetb0-v1"
+MODEL_VERSION = "qc_effnetb0_v1"
+QC_CONFIG_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "configs", "qc.yaml")
+# Spec v4 §2B.2 wording; configs/qc.yaml's classifier.label overrides it.
+DEMOTED_LABEL = ("Trained on synthetic tiles; known not to transfer to this imaging setup "
+                 "(see validation report)")
+
+
+# ---------------------------------------------------------------------------
+# Scale matching (spec v3.2 §2B.1, B0; configs/qc.yaml)
+# ---------------------------------------------------------------------------
+
+def load_qc_config(path: str = QC_CONFIG_PATH) -> dict:
+    import yaml
+
+    with open(path) as f:
+        return yaml.safe_load(f)
+
+
+def rescale_factor(cfg: dict, multiplier: float | None = None, force: bool = False) -> float | None:
+    """source_um_per_px / target_um_per_px × multiplier, or None when rescaling
+    is off (unless force, which B0 uses to evaluate before it is switched on)."""
+    r = cfg["rescale"]
+    if not (r.get("enabled") or force):
+        return None
+    m = r.get("multiplier", 1.0) if multiplier is None else multiplier
+    return float(r["source_um_per_px"]) / float(r["target_um_per_px"]) * float(m)
+
+
+def rescale_frame(img: np.ndarray, factor: float | None) -> np.ndarray:
+    """Resize a whole frame by `factor` before the QC tile is cut, so the 256 px
+    tile spans the physical area of a training tile. Linear when enlarging,
+    area-averaging when shrinking (no aliasing)."""
+    if factor is None or factor == 1.0:
+        return img
+    h, w = img.shape[:2]
+    size = (max(1, round(w * factor)), max(1, round(h * factor)))
+    return cv2.resize(img, size, interpolation=cv2.INTER_LINEAR if factor > 1 else cv2.INTER_AREA)
+
+
+def classifier_demoted(path: str = QC_CONFIG_PATH) -> bool:
+    """True unless configs/qc.yaml explicitly says `classifier.demoted: false`.
+    Fails safe: a missing file or key means demoted (spec v4 §2B.2, B3)."""
+    try:
+        cfg = load_qc_config(path) or {}
+    except FileNotFoundError:
+        return True
+    return (cfg.get("classifier") or {}).get("demoted", True) is not False
+
+
+def demoted_label(path: str = QC_CONFIG_PATH) -> str:
+    try:
+        label = ((load_qc_config(path) or {}).get("classifier") or {}).get("label")
+    except FileNotFoundError:
+        label = None
+    return label or DEMOTED_LABEL
+
+
+def rescaled_model_version(factor: float) -> str:
+    """Logits from rescaled input are a different input distribution: never
+    mix them with MODEL_VERSION rows (trend windows, calibration)."""
+    return f"{MODEL_VERSION}+rescale{factor:.3f}"
 
 
 # ---------------------------------------------------------------------------
@@ -43,6 +105,7 @@ class QCResult:
     evidence_bboxes: list          # list of (x, y, w, h), can be empty
     per_class_probs: dict
     model_version: str
+    calibrated: bool = False       # temperature-scaled (configs/calibration.yaml)?
 
     # Keep backward compat: single bbox returns the largest, or None
     @property
@@ -64,6 +127,17 @@ class QCResult:
 
 _model = None
 _cam = None
+_calibration = None
+_calibration_loaded = False
+
+
+def _get_calibration():
+    """configs/calibration.yaml, loaded once (None if absent)."""
+    global _calibration, _calibration_loaded
+    if not _calibration_loaded:
+        from culture.calibration import load_calibration
+        _calibration, _calibration_loaded = load_calibration(), True
+    return _calibration
 
 
 def _get_model():
@@ -163,15 +237,23 @@ def qc_classify(img: np.ndarray, run_gradcam: bool = True, on_visual=None) -> QC
 
     Note: input should be roughly tile-scale (256x256 the model was trained
     on); a full flask image should be tiled by the caller first.
+
+    Probabilities are temperature-scaled with configs/calibration.yaml when
+    it was fit for MODEL_VERSION (`calibrated` says whether). That fit is on
+    synthetic val tiles (V8), so it says nothing about calibration on real
+    images. Scaling doesn't change the arg-max, so the flag and the
+    Grad-CAM target are the same either way.
     """
     import torch
+
+    from culture.calibration import calibrated_probs
 
     model = _get_model()
     img_tensor = _preprocess(img).to(next(model.parameters()).device)
 
     with torch.no_grad():
-        logits = model(img_tensor.unsqueeze(0))
-        probs = torch.softmax(logits, dim=1)[0]
+        logits = model(img_tensor.unsqueeze(0))[0].cpu().numpy()
+    probs, calibrated = calibrated_probs(logits, _get_calibration(), MODEL_VERSION)
 
     pred_idx = int(probs.argmax())
     per_class = {CLASS_NAMES[i]: round(float(probs[i]), 4) for i in range(len(CLASS_NAMES))}
@@ -188,7 +270,8 @@ def qc_classify(img: np.ndarray, run_gradcam: bool = True, on_visual=None) -> QC
         confidence=round(float(probs[pred_idx]), 4),
         evidence_bboxes=bboxes,
         per_class_probs=per_class,
-        model_version="qc_effnetb0_v1",
+        model_version=MODEL_VERSION,
+        calibrated=calibrated,
     )
 # ---------------------------------------------------------------------------
 # CLI

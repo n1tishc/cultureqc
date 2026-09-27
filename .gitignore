@@ -38,3 +38,7 @@ events*.jsonl
 .claude/
 .codex/
 .impeccable/
+
+# ── Console Space: untracked mirrors (deploy/sync_space.py writes them; the publish script uploads them) ──
+deploy/hf-space-demo/demo/
+deploy/hf-space-demo/cache/

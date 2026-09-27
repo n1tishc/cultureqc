@@ -1,0 +1,30 @@
+# QC classifier input options (cultureQC_upgrade_specv3.md §2B.1, B0).
+# rescale: before the 256 px centre tile is cut, resize the frame by
+#   factor = source_um_per_px / target_um_per_px * multiplier
+# so the tile covers the same physical area as a training tile.
+# Off by default: the live path is byte-for-byte the pre-B0 path until B0 passes.
+rescale:
+  enabled: false
+  # Training tiles are native-resolution 256 px crops of LIVECell 704 x 520 images
+  # (scripts/synth_contamination.py). Edlund et al. 2021, Nat Methods 18:1038, Methods:
+  # "704 x 520 pixels corresponding to 0.875 x 0.645 mm2" -> 875 / 704 = 1.243 um/px.
+  target_um_per_px: 1.243
+  # Pixel size of the instrument being analysed. C2C12 (Ker et al. 2018, Sci Data
+  # 5:180237, Methods): "1392 x 1040 pixels with a resolution of 1.3 um/pixel".
+  source_um_per_px: 1.3
+  # Chosen by scripts/classifier_scale_test.py on the tuning fleet (1.0 until then).
+  multiplier: 1.0
+
+# Classifier role in the live path (cultureQC_upgrade_specv4.md §2B.2, B3).
+# B0 failed (results/classifier_scale_test.md: 2.9% of held-out normal C2C12 frames
+# called normal) and the owner chose demotion over a retrain on 2026-09-27. While
+# demoted, the classifier still runs and its calibrated output is recorded for audit,
+# but it is shown collapsed under `label`, draws no evidence boxes, and never feeds
+# culture.rules.decide(). A missing file or key counts as demoted (culture/qc.py).
+# If this is ever switched off: since B3 the confidences are temperature-scaled
+# (T = 1.55, softer), so rules' qc_review_threshold 0.7 triggers less often than before.
+classifier:
+  demoted: true
+  label: >-
+    Trained on synthetic tiles; known not to transfer to this imaging setup
+    (see validation report)

@@ -161,6 +161,36 @@ Two things worth knowing before relying on this for speed:
   `quota exceeded` before the call even starts, too small risks the run being
   cut off.
 
+## Call-day console — `LongGrainRice/cultureqc-demo` on a GPU
+
+For the dry run (Thu Oct 1), the rehearsal (Mon Oct 5) and the call (Tue Oct 6)
+the demo Space runs the review console (`console.py` → `demo/app.py`) instead of
+the raw-output page. Nothing is pushed without the owner's go-ahead.
+
+```bash
+python deploy/sync_space.py                     # mirrors culture/, config/, configs/, demo/, banks
+.venv/bin/python -m pytest deploy/hf-space/test_api.py -q
+.venv/bin/python deploy/publish_demo_space.py   # refuses unless the banks match configs/anomaly.yaml
+```
+
+1. **Owner:** switch the Space's hardware to a dedicated GPU tier (Settings →
+   Hardware; not ZeroGPU) and wait for the build.
+2. The Space log should show `cuda: True (<device>)`, `anomaly banks verified`
+   and `models warmed up in … s`. If it shows `cuda: False` or `UNAVAILABLE`,
+   the console still works on its precomputed examples and replays.
+3. Dry run: set the Space variable `CULTUREQC_SELFCHECK=5` and restart. At
+   startup `demo/selfcheck.py` re-runs 5 examples live (C2C12 first), compares
+   confluency, anomaly score/flag and action with the stored outputs, times each
+   stage, and prints the report to the log; save it as
+   `results/live_latency_gpu.md`. Remove the variable afterwards.
+4. **After the call, switch the hardware back to CPU.** To restore the
+   raw-output page, set `app_file: app.py` and `sdk_version: "5.50.0"` in
+   `hf-space-demo/README.md` and publish again.
+
+`demo/` and `cache/anomaly/banks.npz` inside `hf-space-demo/` are written by
+the sync and git-ignored (the banks are not in git at all; they come from
+`scripts/eval_anomaly.py`). The Hub stores the 67 MB banks file through LFS.
+
 ## Frontend — Vercel
 
 React 18 on Vite. The API URL is a module constant rather than an environment

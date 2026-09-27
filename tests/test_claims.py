@@ -10,9 +10,11 @@ import pytest
 from culture import claims, detectability
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-TEXT_FILES = ["README.md", "configs/detectability.yaml", *sorted(
-    os.path.relpath(p, REPO) for p in glob.glob(os.path.join(REPO, "demo", "replays", "*.json")))]
-PY_UI_FILES = ["demo/app.py", "demo/flask_timeline.py", "demo/replay_timeline.py", "culture/rationale.py", "culture/detectability.py", "culture/anomaly.py"]
+TEXT_FILES = ["README.md", "configs/detectability.yaml", "demo/examples/examples.json", *sorted(
+    os.path.relpath(p, REPO) for p in glob.glob(os.path.join(REPO, "demo", "replays", "*.json"))),
+    *[p for p in ["docs/DEMO_SCRIPT.md"] if os.path.exists(os.path.join(REPO, p))]]
+PY_UI_FILES = ["demo/app.py", "demo/flask_timeline.py", "demo/replay_timeline.py", "culture/rationale.py", "culture/detectability.py", "culture/anomaly.py",
+                "demo/analysis.py", "demo/precomputed.py", "demo/selfcheck.py"]
 
 
 @pytest.mark.parametrize("text", [

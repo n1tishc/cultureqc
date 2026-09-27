@@ -26,3 +26,8 @@ opencv-python-headless>=4.8
 Pillow>=10.0
 numpy>=1.26
 PyYAML>=6.0
+
+# The review console (console.py -> demo/app.py)
+transformers>=4.40         # DINOv2-small, the anomaly check (culture/anomaly.py)
+pandas>=2.0                # culture/cache.py, demo/replay_timeline.py
+matplotlib>=3.8            # Flask Timeline plots

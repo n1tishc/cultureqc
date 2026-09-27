@@ -21,37 +21,25 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from culture.seg import cpsam_confluency, threshold_confluency, _get_model as _get_seg_model
-from culture.qc import qc_classify, classifier_demoted, demoted_label
-from culture.pipeline import config_hashes
-from culture.rules import decide, LineConfig
-from culture.records import RecordWriter, verify_chain, hash_file
-from culture.rationale import generate_rationale
+from culture.qc import demoted_label
+from culture.records import RecordWriter, verify_chain
 from culture import detectability
-from culture.anomaly import LIVE_LIMITS, score_frame
-from culture.visuals import anomaly_tile_view, outline_scored_region, png
-from demo import replay_timeline
+from culture.anomaly import LIVE_LIMITS
+from culture.visuals import anomaly_tile_view, png
+from demo import precomputed, replay_timeline
+from demo.analysis import analyze_image, build_record
 from demo.theme import CultureQCTheme
 
 WORK_DIR = tempfile.mkdtemp(prefix="cultureqc_demo_")
 LOG_PATH = os.path.join(WORK_DIR, "cultureqc_demo_events.jsonl")
 writer = RecordWriter(LOG_PATH)
 
-TILE_SIZE = 256
-DEFAULT_HOURS_SINCE_PASSAGE = 48.0
-DEFAULT_HOURS_SINCE_FEED = 12.0
 CELL_LINES = ["A172", "BT474", "BV2", "Huh7", "MCF7", "SHSY5Y", "SKOV3", "SkBr3", "unknown"]
 
-# Real images (EVICAN, CC BY 4.0) with known ground truth, for Slice 1 of
-# cultureQC_upgrade.md's real-image validation (results/confluency_real_summary.md
-# has the full write-up). One low-error case, one high-error case — shown
-# side by side rather than cherry-picking the flattering one, per this
-# project's own "check it, don't take the record's word for it" stance.
-# GT confluency = union of the dataset's COCO "Cell" masks / image area.
-EVICAN_EXAMPLES = [
-    ("test-data/evican_66_PC3.jpg", 5.50, 5.13),
-    ("test-data/evican_48_HT29.jpg", 51.60, 29.35),
-]
+# Precomputed Analyze examples (scripts/export_demo_examples.py): real C2C12
+# and EVICAN frames run once through demo/analysis.py, shown instantly and
+# labelled as precomputed; Analyze re-runs them live.
+EXAMPLES = precomputed.load()
 
 STATUS_COLORS = {"green": "#22c55e", "amber": "#f59e0b", "red": "#ef4444"}
 
@@ -114,44 +102,6 @@ def _tint(hex_color, alpha):
     return f"rgba({r},{g},{b},{alpha})"
 
 
-# ─── Overlay rendering ───
-
-def _scale_bboxes(bboxes, img_h, img_w):
-    """Map QC evidence boxes from the centered 256x256 tile back to full-image coords."""
-    scale_y = img_h / TILE_SIZE
-    scale_x = img_w / TILE_SIZE
-    offset_y = (img_h - TILE_SIZE) // 2 if img_h >= TILE_SIZE else 0
-    offset_x = (img_w - TILE_SIZE) // 2 if img_w >= TILE_SIZE else 0
-    out = []
-    for bx, by, bw, bh in bboxes:
-        ix = int(bx * scale_x) + offset_x
-        iy = int(by * scale_y) + offset_y
-        iw = int(bw * scale_x)
-        ih = int(bh * scale_y)
-        out.append((ix, iy, ix + iw, iy + ih))
-    return out
-
-
-def _build_overlay(img_gray, cell_mask, evidence_boxes):
-    overlay = cv2.cvtColor(img_gray, cv2.COLOR_GRAY2RGB)
-
-    green = np.zeros_like(overlay)
-    green[:, :, 1] = 190
-    blended = cv2.addWeighted(overlay, 0.68, green, 0.32, 0)
-    overlay = np.where(cell_mask[:, :, None].astype(bool), blended, overlay)
-
-    if evidence_boxes:
-        glow = np.zeros_like(overlay)
-        for x1, y1, x2, y2 in evidence_boxes:
-            cv2.rectangle(glow, (x1, y1), (x2, y2), (255, 40, 40), 7)
-        glow = cv2.GaussianBlur(glow, (13, 13), 0)
-        overlay = cv2.add(overlay, glow)
-        for x1, y1, x2, y2 in evidence_boxes:
-            cv2.rectangle(overlay, (x1, y1), (x2, y2), (255, 30, 30), 2)
-
-    return overlay
-
-
 # ─── Analysis ───
 
 def run_analysis(original_path, cell_line, target_confluency):
@@ -165,117 +115,27 @@ def run_analysis(original_path, cell_line, target_confluency):
         return gr.update(), gr.update(visible=False), err, None
 
     target_confluency = float(target_confluency or 80.0)
-
-    conf_result = cpsam_confluency(img, method="probmap")
-    threshold_confluency(img)  # baseline computed for parity; not shown in this surface
-    anomaly = score_frame(img, conf_result.pct)   # B2: shown for review, never used by decide()
-
-    h, w = img.shape[:2]
-    if h >= TILE_SIZE and w >= TILE_SIZE:
-        cy, cx = h // 2, w // 2
-        tile = img[cy - TILE_SIZE // 2 : cy + TILE_SIZE // 2, cx - TILE_SIZE // 2 : cx + TILE_SIZE // 2]
-    else:
-        tile = cv2.resize(img, (TILE_SIZE, TILE_SIZE))
-
-    # Demoted classifier (configs/qc.yaml): recorded, shown collapsed, no
-    # evidence boxes, and left out of decide() and the rationale.
-    demoted = classifier_demoted()
-    qc_result = qc_classify(tile, run_gradcam=not demoted)
-    decision_flag = None if demoted else qc_result.flag
-    decision_conf = None if demoted else qc_result.confidence
-
-    cfg = LineConfig(cell_line=cell_line, target_confluency=target_confluency)
-    action, reason = decide(
-        confluency_pct=conf_result.pct,
-        confluency_confidence=conf_result.confidence,
-        qc_flag=decision_flag,
-        qc_confidence=decision_conf,
-        line_config=cfg,
-        hours_since_passage=DEFAULT_HOURS_SINCE_PASSAGE,
-        hours_since_feed=DEFAULT_HOURS_SINCE_FEED,
-    )
-
-    seg_model = _get_seg_model()
-    masks, flows, _ = seg_model.eval(img, diameter=None, channels=[0, 0])
-    cell_mask = flows[2] > 0
-
-    evidence_boxes = []
-    if not demoted and qc_result.evidence_bboxes and qc_result.flag != "normal":
-        evidence_boxes = _scale_bboxes(qc_result.evidence_bboxes, h, w)
-
-    overlay = _build_overlay(img, cell_mask, evidence_boxes)
-    if anomaly.status == "ok":
-        overlay = outline_scored_region(overlay, h, w)
+    a = analyze_image(img, original_path, cell_line, target_confluency)
     overlay_path = os.path.join(WORK_DIR, f"overlay_{next(tempfile._get_candidate_names())}.png")
-    cv2.imwrite(overlay_path, cv2.cvtColor(overlay, cv2.COLOR_RGB2BGR))
+    cv2.imwrite(overlay_path, cv2.cvtColor(a.overlay, cv2.COLOR_RGB2BGR))
 
-    rat = generate_rationale(
-        qc_flag=decision_flag,
-        qc_confidence=decision_conf,
-        evidence_bbox=qc_result.evidence_bbox,
-        confluency_pct=conf_result.pct,
-        target_confluency=target_confluency,
-        action=action,
-        tile_size=TILE_SIZE,
-        use_vlm=False,
-        image_path=original_path,
-    )
-
-    from datetime import datetime, timezone
-
-    record = {
-        "schema_version": "0.2",
-        "flask_id": "demo",
-        "cell_line": cell_line,
-        "protocol_stage": None,
-        "captured_at": datetime.now(timezone.utc).isoformat(),
-        "image_ref": os.path.basename(original_path),
-        "image_hash": hash_file(original_path),
-        "pixel_size_um": None,
-        "confluency_pct": conf_result.pct,
-        "confluency_confidence": conf_result.confidence,
-        "confluency_method": conf_result.method,
-        "qc_flag": qc_result.flag,
-        "qc_confidence": qc_result.confidence,
-        "qc_severity": None,
-        "qc_evidence_bbox": list(qc_result.evidence_bbox) if qc_result.evidence_bbox else None,
-        "qc_rationale": rat["rationale"],
-        "qc_calibrated": qc_result.calibrated,
-        "qc_used_in_decision": not demoted,
-        **anomaly.record_fields(),
-        "growth_trend": None,
-        "eta_to_target_hours": None,
-        "recommended_action": action,
-        "action_reason": reason,
-        "decided_by": "rules_v0.2",
-        "model_versions": {
-            "seg": conf_result.model_version,
-            "qc": qc_result.model_version,
-            "dino": anomaly.model_version,
-            "vlm": rat["method"],
-        },
-        "model_weights_hash": None,
-        "config_hashes": config_hashes(),
-        "reviewed_by": None,
-        "review_outcome": None,
-    }
-    finalized = writer.append(record)
+    finalized = writer.append(build_record(a, original_path, cell_line))
     chain_ok, _ = verify_chain(LOG_PATH)
 
     results_html = render_results(
-        anomaly_html=render_anomaly(img, anomaly),
-        demoted=demoted,
-        qc_calibrated=qc_result.calibrated,
-        qc_flag=qc_result.flag,
-        qc_confidence=qc_result.confidence,
-        per_class_probs=qc_result.per_class_probs,
-        evidence_region_count=len(evidence_boxes),
-        confluency_pct=conf_result.pct,
-        confluency_confidence=conf_result.confidence,
-        confluency_method=conf_result.method,
+        anomaly_html=render_anomaly(img, a.anomaly),
+        demoted=a.demoted,
+        qc_calibrated=a.qc.calibrated,
+        qc_flag=a.qc.flag,
+        qc_confidence=a.qc.confidence,
+        per_class_probs=a.qc.per_class_probs,
+        evidence_region_count=len(a.evidence_boxes),
+        confluency_pct=a.confluency.pct,
+        confluency_confidence=a.confluency.confidence,
+        confluency_method=a.confluency.method,
         target_confluency=target_confluency,
-        action=action,
-        rationale=rat["rationale"],
+        action=a.action,
+        rationale=a.rationale["rationale"],
         record=finalized,
         chain_ok=chain_ok,
         record_count=writer.record_count,
@@ -318,6 +178,47 @@ def render_anomaly(img, anomaly):
   </div>"""
 
 
+def render_provenance(ex):
+    """The label every precomputed example carries (claims policy: precomputed
+    outputs are never presented as live)."""
+    t = ex["timings_s"]
+    return f"""
+  <div class="rc-card precomputed-card">
+    <div class="precomputed-head">Precomputed example</div>
+    <div class="classifier-note">Produced by <code>scripts/export_demo_examples.py</code> with the same code as
+    the Analyze button, on {html.escape(ex["device"].upper())} ({t["wall"]:.0f} s),
+    {html.escape(ex["generated_at"][:10])}. Press Analyze to run this image live.</div>
+    <div class="precomputed-caption">{html.escape(ex["caption"])}</div>
+    <div class="classifier-note">{html.escape(ex["credit"])}</div>
+  </div>"""
+
+
+def show_example(ex):
+    """Render a precomputed example: no model runs."""
+    img = cv2.imread(precomputed.image_path(ex), cv2.IMREAD_GRAYSCALE)
+    anomaly = precomputed.anomaly_result(ex)
+    qc = ex["qc"]
+    return render_results(
+        anomaly_html=render_anomaly(img, anomaly),
+        demoted=ex["demoted"],
+        qc_calibrated=qc["calibrated"],
+        qc_flag=qc["flag"],
+        qc_confidence=qc["confidence"],
+        per_class_probs=qc["per_class_probs"],
+        evidence_region_count=ex["evidence_region_count"],
+        confluency_pct=ex["confluency"]["pct"],
+        confluency_confidence=ex["confluency"]["confidence"],
+        confluency_method=ex["confluency"]["method"],
+        target_confluency=ex["target_confluency"],
+        action=ex["action"],
+        rationale=ex["rationale"],
+        record=ex["record"],
+        chain_ok=None,
+        record_count=None,
+        example=ex,
+    )
+
+
 def render_results(
     anomaly_html,
     demoted,
@@ -335,6 +236,7 @@ def render_results(
     record,
     chain_ok,
     record_count,
+    example=None,
 ):
     flag_label, flag_color_key = FLAG_META.get(qc_flag, (qc_flag.replace("_", " ").title(), "amber"))
     flag_color = STATUS_COLORS[flag_color_key]
@@ -373,7 +275,12 @@ def render_results(
         region_dot_style = "background:transparent;border-color:var(--border)"
 
     audit_json = html.escape(json.dumps(record, indent=2, sort_keys=True))
-    chain_label = "intact" if chain_ok else "BROKEN"
+    if example is None:
+        audit_meta = f"Chain {'intact' if chain_ok else 'BROKEN'} &middot; record #{record_count}"
+        provenance_html = ""
+    else:
+        audit_meta = ("Precomputed record, stored with the example; not part of this session's chain")
+        provenance_html = render_provenance(example)
     calibration_line = ("Probabilities temperature-scaled on synthetic validation tiles (V8); "
                         "calibration on real images not measured." if qc_calibrated
                         else "Probabilities not temperature-scaled.")
@@ -381,6 +288,7 @@ def render_results(
     if demoted:
         return f"""
 <div class="rc-stack">
+{provenance_html}
   <div class="rc-card confluency-card" style="animation-delay:0ms">
     <div class="confluency-number">{confluency_pct:.1f}<span class="unit">%</span></div>
     <div class="confluency-bar">
@@ -412,7 +320,7 @@ def render_results(
 
   <details class="rc-card audit-details" style="animation-delay:400ms">
     <summary><span class="audit-chevron"></span>Audit Record</summary>
-    <div class="audit-meta">Chain {chain_label} &middot; record #{record_count}</div>
+    <div class="audit-meta">{audit_meta}</div>
     <pre class="audit-json">{audit_json}</pre>
   </details>
 </div>
@@ -420,6 +328,7 @@ def render_results(
 
     return f"""
 <div class="rc-stack">
+{provenance_html}
   <div class="rc-card status-card" style="animation-delay:0ms;background:{_tint(flag_color, 0.08)};border-color:{_tint(flag_color, 0.28)}">
     <div class="status-row">
       <span class="status-icon" style="color:{flag_color}">{icon}</span>
@@ -456,7 +365,7 @@ def render_results(
 
   <details class="rc-card audit-details" style="animation-delay:400ms">
     <summary><span class="audit-chevron"></span>Audit Record</summary>
-    <div class="audit-meta">Chain {chain_label} &middot; record #{record_count}</div>
+    <div class="audit-meta">{audit_meta}</div>
     <pre class="audit-json">{audit_json}</pre>
   </details>
 </div>
@@ -480,6 +389,16 @@ def on_upload(path):
         cv2.imwrite(preview_path, raw)
 
     return gr.update(visible=False), "", path, None, preview_path
+
+
+def on_example(path):
+    ex = precomputed.match(path, EXAMPLES)
+    if ex is None:
+        vis, html_, orig, ov, preview = on_upload(path)
+        return preview, vis, html_, orig, ov, gr.update(), gr.update()
+    overlay = precomputed.overlay_path(ex)
+    return (overlay, gr.update(visible=True, value="Overlay"), show_example(ex), precomputed.image_path(ex),
+            overlay, ex["cell_line"], ex["target_confluency"])
 
 
 def switch_view(choice, original_path, overlay_path):
@@ -573,18 +492,19 @@ with gr.Blocks(
 
             with gr.Row(elem_classes="real-examples-row"):
                 gr.Markdown(
-                    "**Real images (EVICAN, CC BY 4.0)** — ground truth from the dataset's own "
-                    "expert masks, not this pipeline. Left: cultureQC close to GT "
-                    f"(GT {EVICAN_EXAMPLES[0][1]:.1f}%, predicted {EVICAN_EXAMPLES[0][2]:.1f}%). "
-                    f"Right: a real error case (GT {EVICAN_EXAMPLES[1][1]:.1f}%, predicted "
-                    f"{EVICAN_EXAMPLES[1][2]:.1f}%) — see `results/confluency_real_summary.md` "
-                    "for why. Click either to analyse it live."
+                    "**Examples: precomputed, labelled as such; press Analyze to run one live.** "
+                    "C2C12 frames are held-out frames from the Phase A replays; the contaminated ones are "
+                    "simulated (bacteria pasted at 16.5× their real size). EVICAN: one accurate case and one "
+                    "error case against the dataset's own expert masks. "
+                    + " · ".join(sorted({e["credit"] for e in EXAMPLES}))
                 )
-                real_examples = gr.Examples(
-                    examples=[[path] for path, _, _ in EVICAN_EXAMPLES],
+                gr.Examples(
+                    examples=[[precomputed.image_path(e)] for e in EXAMPLES],
+                    example_labels=[e["label"] for e in EXAMPLES],
                     inputs=[image_view],
-                    outputs=[view_toggle, results_html, original_state, overlay_state, image_view],
-                    fn=on_upload,
+                    outputs=[image_view, view_toggle, results_html, original_state, overlay_state, cell_line,
+                             target_conf],
+                    fn=on_example,
                     run_on_click=True,
                     label="",
                 )
@@ -616,8 +536,8 @@ with gr.Blocks(
             gr.HTML(detectability.to_html())
 
     gr.HTML(
-        '<div class="app-footer">cultureQC v0.1 &middot; Cellpose-SAM &middot; EfficientNet-B0 '
-        '(synthetic-trained QC classifier) &middot; MIT</div>'
+        '<div class="app-footer">cultureQC v0.1 &middot; Cellpose-SAM &middot; DINOv2-small (anomaly check) '
+        '&middot; EfficientNet-B0 (synthetic-trained QC classifier, demoted) &middot; MIT</div>'
     )
 
     image_view.upload(
