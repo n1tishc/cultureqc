@@ -13,10 +13,21 @@ import uuid
 from datetime import datetime, timezone
 
 from culture.seg import cpsam_confluency
-from culture.qc import qc_classify, CLASS_NAMES
+from culture.qc import qc_classify, classifier_demoted, CLASS_NAMES
+from culture.calibration import DEFAULT_CALIBRATION_PATH
 from culture.rules import decide, LineConfig, DEFAULT_CONFIG
 from culture.records import RecordWriter, hash_file
 from culture.rationale import generate_rationale
+
+
+def config_hashes() -> dict:
+    """SHA-256 of each config that shaped this record; a config that isn't
+    there (e.g. a Space without configs/) is left out, not faked."""
+    from culture.qc import QC_CONFIG_PATH
+    from culture import detectability
+    paths = {"qc.yaml": QC_CONFIG_PATH, "calibration.yaml": DEFAULT_CALIBRATION_PATH,
+             "detectability.yaml": detectability.DEFAULT_PATH}
+    return {name: hash_file(p) for name, p in paths.items() if os.path.exists(p)}
 
 
 def analyze(
@@ -69,11 +80,15 @@ def analyze(
     else:
         tile = cv2.resize(img, (tile_size, tile_size))
 
+    # Demoted (configs/qc.yaml, spec v4 §2B.2): the classifier still runs and
+    # is recorded, but draws no Grad-CAM evidence and stays out of decide()
+    # and the rationale.
+    demoted = classifier_demoted()
     emit({"stage": "qc", "status": "running"})
     def cam_ready(cam):
         visuals["heatmap"] = qc_visual(cam, w, h)
-    qc_result = qc_classify(tile, run_gradcam=True, **(
-        {"on_visual": cam_ready} if observer or details is not None else {}))
+    qc_result = qc_classify(tile, run_gradcam=not demoted, **(
+        {"on_visual": cam_ready} if not demoted and (observer or details is not None) else {}))
     if details is not None:
         details.update(qc=qc_result, visuals=visuals)
     emit({"stage": "qc", "status": "complete", "visuals": dict(visuals)})
@@ -83,8 +98,8 @@ def analyze(
     action, reason = decide(
         confluency_pct=conf_result.pct,
         confluency_confidence=conf_result.confidence,
-        qc_flag=qc_result.flag,
-        qc_confidence=qc_result.confidence,
+        qc_flag=None if demoted else qc_result.flag,
+        qc_confidence=None if demoted else qc_result.confidence,
         line_config=cfg,
         hours_since_passage=hours_since_passage,
         hours_since_feed=hours_since_feed,
@@ -92,8 +107,8 @@ def analyze(
 
     # ── Rationale ──
     rat = generate_rationale(
-        qc_flag=qc_result.flag,
-        qc_confidence=qc_result.confidence,
+        qc_flag=None if demoted else qc_result.flag,
+        qc_confidence=None if demoted else qc_result.confidence,
         evidence_bbox=qc_result.evidence_bbox,
         confluency_pct=conf_result.pct,
         target_confluency=cfg.target_confluency,
@@ -122,6 +137,8 @@ def analyze(
         "qc_severity": None,  # would come from a severity sub-classifier
         "qc_evidence_bbox": list(qc_result.evidence_bbox) if qc_result.evidence_bbox else None,
         "qc_rationale": rat["rationale"],
+        "qc_calibrated": qc_result.calibrated,
+        "qc_used_in_decision": not demoted,
         "growth_trend": None,  # would come from time-series mode
         "eta_to_target_hours": None,
         "recommended_action": action,
@@ -133,6 +150,7 @@ def analyze(
             "vlm": rat["method"],
         },
         "model_weights_hash": None,
+        "config_hashes": config_hashes(),
         "reviewed_by": None,
         "review_outcome": None,
     }

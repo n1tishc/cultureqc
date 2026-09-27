@@ -73,6 +73,17 @@ def test_model_versions_present(record):
     assert record["model_versions"]["qc"] == "qc_effnetb0_v1"
 
 
+def test_classifier_calibrated_and_demoted(record):
+    # B3 (spec v4 §2B.2): the A5 temperature is applied live; the classifier
+    # is demoted (configs/qc.yaml), so it is recorded but not decided on.
+    assert record["qc_calibrated"] is True
+    assert record["qc_used_in_decision"] is False
+    assert record["qc_evidence_bbox"] is None                     # no Grad-CAM while demoted
+    assert "QC flag" not in record["action_reason"]
+    assert record["qc_rationale"].startswith("Confluency ")
+    assert set(record["config_hashes"]) == {"qc.yaml", "calibration.yaml", "detectability.yaml"}
+
+
 def test_image_hash_matches_fixture(record):
     import hashlib
     h = hashlib.sha256()

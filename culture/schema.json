@@ -102,6 +102,14 @@
       "type": ["string", "null"],
       "description": "<=2 sentences, references image regions"
     },
+    "qc_calibrated": {
+      "type": "boolean",
+      "description": "qc_confidence is temperature-scaled (configs/calibration.yaml)"
+    },
+    "qc_used_in_decision": {
+      "type": "boolean",
+      "description": "false while the classifier is demoted (configs/qc.yaml): recorded, not used by the rules"
+    },
     "growth_trend": {
       "type": ["string", "null"],
       "enum": ["rising", "flat", "falling", "unknown", null]
@@ -129,6 +137,11 @@
     },
     "model_weights_hash": {
       "type": ["object", "null"]
+    },
+    "config_hashes": {
+      "type": "object",
+      "additionalProperties": {"type": "string"},
+      "description": "SHA-256 of each config file that shaped this record, keyed by file name"
     },
     "reviewed_by": {
       "type": ["string", "null"]

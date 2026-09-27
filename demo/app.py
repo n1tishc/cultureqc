@@ -22,7 +22,8 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from culture.seg import cpsam_confluency, threshold_confluency, _get_model as _get_seg_model
-from culture.qc import qc_classify
+from culture.qc import qc_classify, classifier_demoted, demoted_label
+from culture.pipeline import config_hashes
 from culture.rules import decide, LineConfig
 from culture.records import RecordWriter, verify_chain, hash_file
 from culture.rationale import generate_rationale
@@ -173,14 +174,19 @@ def run_analysis(original_path, cell_line, target_confluency):
     else:
         tile = cv2.resize(img, (TILE_SIZE, TILE_SIZE))
 
-    qc_result = qc_classify(tile, run_gradcam=True)
+    # Demoted classifier (configs/qc.yaml): recorded, shown collapsed, no
+    # evidence boxes, and left out of decide() and the rationale.
+    demoted = classifier_demoted()
+    qc_result = qc_classify(tile, run_gradcam=not demoted)
+    decision_flag = None if demoted else qc_result.flag
+    decision_conf = None if demoted else qc_result.confidence
 
     cfg = LineConfig(cell_line=cell_line, target_confluency=target_confluency)
     action, reason = decide(
         confluency_pct=conf_result.pct,
         confluency_confidence=conf_result.confidence,
-        qc_flag=qc_result.flag,
-        qc_confidence=qc_result.confidence,
+        qc_flag=decision_flag,
+        qc_confidence=decision_conf,
         line_config=cfg,
         hours_since_passage=DEFAULT_HOURS_SINCE_PASSAGE,
         hours_since_feed=DEFAULT_HOURS_SINCE_FEED,
@@ -191,7 +197,7 @@ def run_analysis(original_path, cell_line, target_confluency):
     cell_mask = flows[2] > 0
 
     evidence_boxes = []
-    if qc_result.evidence_bboxes and qc_result.flag != "normal":
+    if not demoted and qc_result.evidence_bboxes and qc_result.flag != "normal":
         evidence_boxes = _scale_bboxes(qc_result.evidence_bboxes, h, w)
 
     overlay = _build_overlay(img, cell_mask, evidence_boxes)
@@ -199,8 +205,8 @@ def run_analysis(original_path, cell_line, target_confluency):
     cv2.imwrite(overlay_path, cv2.cvtColor(overlay, cv2.COLOR_RGB2BGR))
 
     rat = generate_rationale(
-        qc_flag=qc_result.flag,
-        qc_confidence=qc_result.confidence,
+        qc_flag=decision_flag,
+        qc_confidence=decision_conf,
         evidence_bbox=qc_result.evidence_bbox,
         confluency_pct=conf_result.pct,
         target_confluency=target_confluency,
@@ -229,6 +235,8 @@ def run_analysis(original_path, cell_line, target_confluency):
         "qc_severity": None,
         "qc_evidence_bbox": list(qc_result.evidence_bbox) if qc_result.evidence_bbox else None,
         "qc_rationale": rat["rationale"],
+        "qc_calibrated": qc_result.calibrated,
+        "qc_used_in_decision": not demoted,
         "growth_trend": None,
         "eta_to_target_hours": None,
         "recommended_action": action,
@@ -240,7 +248,7 @@ def run_analysis(original_path, cell_line, target_confluency):
             "vlm": rat["method"],
         },
         "model_weights_hash": None,
-        "config_hashes": {"detectability.yaml": detectability.config_hash()},
+        "config_hashes": config_hashes(),
         "reviewed_by": None,
         "review_outcome": None,
     }
@@ -248,6 +256,8 @@ def run_analysis(original_path, cell_line, target_confluency):
     chain_ok, _ = verify_chain(LOG_PATH)
 
     results_html = render_results(
+        demoted=demoted,
+        qc_calibrated=qc_result.calibrated,
         qc_flag=qc_result.flag,
         qc_confidence=qc_result.confidence,
         per_class_probs=qc_result.per_class_probs,
@@ -267,6 +277,8 @@ def run_analysis(original_path, cell_line, target_confluency):
 
 
 def render_results(
+    demoted,
+    qc_calibrated,
     qc_flag,
     qc_confidence,
     per_class_probs,
@@ -298,9 +310,11 @@ def render_results(
         cls_label = EVIDENCE_LABELS[cls_key]
         prob = per_class_probs.get(cls_key, 0.0)
         is_predicted = cls_key == qc_flag
-        row_color = STATUS_COLORS[cls_color_key] if is_predicted else "#4b5563"
-        label_color = STATUS_COLORS[cls_color_key] if is_predicted else "var(--text-secondary)"
-        weight = "600" if is_predicted else "400"
+        # Demoted: no status colours, so no row reads as a finding.
+        highlight = is_predicted and not demoted
+        row_color = STATUS_COLORS[cls_color_key] if highlight else "#4b5563"
+        label_color = STATUS_COLORS[cls_color_key] if highlight else "var(--text-secondary)"
+        weight = "600" if highlight else "400"
         evidence_rows.append(f"""
     <div class="evidence-row">
       <span class="evidence-label" style="color:{label_color};font-weight:{weight}">{html.escape(cls_label)}</span>
@@ -317,6 +331,47 @@ def render_results(
 
     audit_json = html.escape(json.dumps(record, indent=2, sort_keys=True))
     chain_label = "intact" if chain_ok else "BROKEN"
+    calibration_line = ("Probabilities temperature-scaled on synthetic validation tiles (V8); "
+                        "calibration on real images not measured." if qc_calibrated
+                        else "Probabilities not temperature-scaled.")
+
+    if demoted:
+        return f"""
+<div class="rc-stack">
+  <div class="rc-card confluency-card" style="animation-delay:0ms">
+    <div class="confluency-number">{confluency_pct:.1f}<span class="unit">%</span></div>
+    <div class="confluency-bar">
+      <div class="confluency-fill" style="transform:scaleX({bar_pct / 100:.4f});background:{fill_color}"></div>
+      <div class="confluency-target-marker" style="left:{target_pct:.1f}%"></div>
+    </div>
+    <div class="confluency-meta">
+      <span>Target: {target_confluency:.0f}%</span>
+      <span>Confidence: {confluency_confidence:.2f}</span>
+      <span>Method: {html.escape(confluency_method)}</span>
+    </div>
+  </div>
+
+  <div class="rc-card action-card" style="animation-delay:100ms">
+    <span class="action-badge" style="background:{_tint(action_color, 0.15)};color:{action_color}">{html.escape(action_label)}</span>
+  </div>
+
+  <div class="rc-card rationale" style="animation-delay:200ms">{html.escape(rationale)}</div>
+
+  <details class="rc-card audit-details classifier-details" style="animation-delay:300ms">
+    <summary><span class="audit-chevron"></span>QC classifier (not used in the recommendation)</summary>
+    <div class="classifier-note">{html.escape(demoted_label())}</div>
+    <div class="evidence-rows">{"".join(evidence_rows)}
+    </div>
+    <div class="classifier-note">{html.escape(calibration_line)} Recorded in the audit record for traceability.</div>
+  </details>
+
+  <details class="rc-card audit-details" style="animation-delay:400ms">
+    <summary><span class="audit-chevron"></span>Audit Record</summary>
+    <div class="audit-meta">Chain {chain_label} &middot; record #{record_count}</div>
+    <pre class="audit-json">{audit_json}</pre>
+  </details>
+</div>
+"""
 
     return f"""
 <div class="rc-stack">
@@ -332,6 +387,7 @@ def render_results(
       <span class="evidence-region-dot" style="{region_dot_style}"></span>
       <span>{region_line}</span>
     </div>
+    <div class="classifier-note">{html.escape(calibration_line)}</div>
   </div>
 
   <div class="rc-card confluency-card" style="animation-delay:100ms">
@@ -441,7 +497,7 @@ with gr.Blocks(
     with gr.Row(elem_classes="topbar"):
         gr.HTML('<div class="wordmark"><span class="wordmark-dot"></span>cultureQC</div>')
 
-    with gr.Tabs():
+    with gr.Tabs(elem_classes="app-tabs"):
         with gr.Tab("Analyze"):
             with gr.Row(elem_classes="topbar-controls"):
                 with gr.Row(elem_classes="control-cluster"):

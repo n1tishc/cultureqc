@@ -510,3 +510,14 @@ footer { display: none !important; }
 .detect-table tr:last-child td { border-bottom: none; }
 .detect-note { color: var(--text-secondary); font-size: 0.82rem; line-height: 1.5; margin: 10px 0 0; }
 .detect-hash { font-family: var(--mono); color: var(--text-muted); }
+
+/* Demoted QC classifier (configs/qc.yaml): collapsed, neutral, below the decision. */
+.classifier-note { font-size: 12px; line-height: 1.5; color: var(--text-muted); margin-top: 10px; }
+.classifier-details .evidence-rows { margin-top: 10px; }
+
+/* The Tabs wrapper (Slice 2) broke the fill-height chain, collapsing .main-row
+   to ~40 px; pass the viewport height down through tabs → tab item → column. */
+.app-tabs { flex: 1 1 auto !important; display: flex !important; flex-direction: column !important; min-height: 0 !important; }
+.app-tabs > .tabitem { flex: 1 1 auto !important; min-height: 0 !important; }
+.app-tabs > .tabitem > .column { flex: 1 1 auto !important; min-height: 0 !important; }
+.app-tabs > .tabitem > .column > :not(.main-row) { flex: 0 0 auto !important; }

@@ -7,6 +7,7 @@ predict the output, and audit the decision without understanding the model.
 
 Order of precedence:
   1. QC flag != normal with confidence >= threshold -> human_review
+     (skipped when qc_flag is None: the classifier is demoted, configs/qc.yaml)
   2. Confluency confidence < 0.3 -> human_review (uncertain measurement)
   3. Confluency >= target and hours since passage >= min_hours -> passage
   4. Hours since feed >= feed_interval -> feed
@@ -89,14 +90,17 @@ def load_all_configs(config_dir: str) -> dict[str, LineConfig]:
 def decide(
     confluency_pct: float,
     confluency_confidence: float,
-    qc_flag: str,
-    qc_confidence: float,
+    qc_flag: str | None,
+    qc_confidence: float | None,
     line_config: LineConfig | None = None,
     hours_since_passage: float | None = None,
     hours_since_feed: float | None = None,
 ) -> tuple[str, str]:
     """
     Deterministic action decision.
+
+    qc_flag=None leaves the classifier out of the decision (rule 1 is
+    skipped); pass that when it is demoted rather than a made-up "normal".
 
     Returns:
         (action, reason) where action is one of:
@@ -105,7 +109,7 @@ def decide(
     cfg = line_config or DEFAULT_CONFIG
 
     # 1. QC flag check (highest priority)
-    if qc_flag != "normal" and qc_confidence >= cfg.qc_review_threshold:
+    if qc_flag is not None and qc_flag != "normal" and qc_confidence >= cfg.qc_review_threshold:
         return (
             "human_review",
             f"QC flag '{qc_flag}' at {qc_confidence:.0%} confidence "

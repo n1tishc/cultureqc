@@ -76,8 +76,8 @@ _TREND_PHRASES = {
 # ---------------------------------------------------------------------------
 
 def template_rationale(
-    qc_flag: str,
-    qc_confidence: float,
+    qc_flag: str | None,
+    qc_confidence: float | None,
     evidence_bbox: tuple | list | None,
     confluency_pct: float,
     target_confluency: float = 80.0,
@@ -91,13 +91,18 @@ def template_rationale(
     Always correct because it only references values it's handed, never invents.
     This is the more GMP-defensible design: a deterministic sentence that's
     always right beats a VLM that's occasionally wrong.
+
+    qc_flag=None (classifier demoted, configs/qc.yaml): no sentence about
+    what the classifier saw, only confluency and the action.
     """
     quadrant = _bbox_quadrant(evidence_bbox, tile_size)
     flag_phrase = _FLAG_PHRASES.get(qc_flag, f"QC flag '{qc_flag}' raised")
     action_phrase = _ACTION_PHRASES.get(action, action)
 
     # Sentence 1: what was detected and where
-    if qc_flag == "normal":
+    if qc_flag is None:
+        s1 = ""
+    elif qc_flag == "normal":
         s1 = f"{flag_phrase} in the field of view; culture appears healthy."
     else:
         s1 = (
@@ -122,7 +127,7 @@ def template_rationale(
         f"recommend {action_phrase}."
     )
 
-    return f"{s1} {s2}"
+    return f"{s1} {s2}" if s1 else s2
 
 
 # ---------------------------------------------------------------------------
@@ -252,8 +257,8 @@ Do NOT invent any numbers. Only use the numbers provided above. Be concise and f
 # ---------------------------------------------------------------------------
 
 def generate_rationale(
-    qc_flag: str,
-    qc_confidence: float,
+    qc_flag: str | None,
+    qc_confidence: float | None,
     evidence_bbox: tuple | list | None,
     confluency_pct: float,
     target_confluency: float = 80.0,
@@ -273,7 +278,7 @@ def generate_rationale(
     vlm_succeeded = False
     rationale = None
 
-    if use_vlm and image_path:
+    if use_vlm and image_path and qc_flag is not None:
         rationale = vlm_rationale(
             image_path=image_path,
             qc_flag=qc_flag,

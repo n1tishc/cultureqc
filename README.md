@@ -8,16 +8,18 @@
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 cultureQC reads a phase-contrast image of a cell culture and returns a confluency
-estimate, a QC flag with visual evidence of *where* it is looking, a recommended
-action, and a hash-chained audit record — from a single call.
+estimate, a QC classifier call, a recommended action, and a hash-chained audit
+record — from a single call. The classifier is currently **demoted**: it is
+recorded but not used for the action (see [Known limits](#known-limits)).
 
 ```python
 from culture.pipeline import analyze
 
 record = analyze("field.tif", flask_id="F-01", cell_line="Huh7")
 record["confluency_pct"]        # 13.45
-record["qc_flag"]               # "contamination_suspected"
-record["recommended_action"]    # "human_review"
+record["qc_flag"]               # "contamination_suspected" (recorded only)
+record["qc_used_in_decision"]   # False while the classifier is demoted
+record["recommended_action"]    # "passage" / "feed" / "hold" / "human_review"
 record["record_hash"]           # sha256 over the canonical JSON, linked to the previous record
 ```
 
@@ -35,8 +37,8 @@ narrower but still real: 11.2pp vs. 8.4pp — see
 [Validation on real images](#validation-on-real-images).
 
 The differentiator is not raw accuracy though; it is **explainability and
-auditability**. Comparable tools show a mask and a number. This draws the
-Grad-CAM regions that caused the flag, and writes every decision to a
+auditability**. Comparable tools show a mask and a number. This writes every
+decision, with the model versions and config hashes behind it, to a
 tamper-evident log you can re-verify later.
 
 ## The four outputs
@@ -47,12 +49,12 @@ decision it drove, and the proof cannot drift apart.
 | Output | Detail |
 |---|---|
 | **Confluency** | Cellpose-SAM (`cpsam_v2`) probability map. 2.3 pp mean absolute error on a **synthetic** benchmark, zero-shot across morphologies; 8.4 pp on real held-out microscopy (see below). A threshold baseline is computed alongside for comparison. |
-| **QC flag** | EfficientNet-B0 over a centred 256×256 tile: `normal`, `contamination_suspected`, `detachment`, `image_quality`. 98% test accuracy and 100% contamination recall at every severity on a **synthetic** test set; it does not transfer to real C2C12 frames (`results/classifier_scale_test.md`). |
-| **Evidence** | Up to 8 Grad-CAM bounding boxes showing the regions behind the flag, mapped back to full-image coordinates. |
-| **Action** | Deterministic rules over confluency + flag + timing: `passage`, `feed`, `hold`, `human_review`. No model decides this. |
+| **QC flag** | EfficientNet-B0 over a centred 256×256 tile: `normal`, `contamination_suspected`, `detachment`, `image_quality`. 98% test accuracy and 100% contamination recall at every severity on a **synthetic** test set; it does not transfer to real C2C12 frames (`results/classifier_scale_test.md`). Probabilities are temperature-scaled (`configs/calibration.yaml`, fit on synthetic val tiles). **Demoted** (`configs/qc.yaml`): recorded, shown collapsed, not used for the action. |
+| **Evidence** | Up to 8 Grad-CAM bounding boxes showing the regions behind the flag, mapped back to full-image coordinates. Not computed while the classifier is demoted. |
+| **Action** | Deterministic rules over confluency + timing (+ the QC flag only when the classifier is not demoted): `passage`, `feed`, `hold`, `human_review`. No model decides this. |
 
 Each analysis is appended to a hash-chained JSONL log (`culture/records.py`,
-28-field schema in `culture/schema.json`). Every record carries the SHA-256 of
+31-field schema in `culture/schema.json`). Every record carries the SHA-256 of
 the one before it, so altering any record breaks every link after it.
 
 ```bash
@@ -322,6 +324,16 @@ detachment on real images are not tested; mycoplasma is not optically detectable
 ## Known limits
 
 Stated here rather than discovered later.
+
+**The QC classifier is demoted.** On held-out C2C12 frames it calls 2.9–5.0% of
+normal frames normal, against an 80% bar, and rescaling the input to the training
+pixel size does not fix it (B0, `results/classifier_scale_test.md`). It still runs
+and its temperature-scaled output is written to every record (`qc_flag`,
+`qc_confidence`, `qc_calibrated`), but `qc_used_in_decision` is `false`: the
+action rules ignore it, the rationale does not mention it, no Grad-CAM evidence
+is drawn, and the app shows it collapsed under "Trained on synthetic tiles; known
+not to transfer to this imaging setup (see validation report)". The switch is
+`classifier.demoted` in `configs/qc.yaml`.
 
 **The QC classifier is trained entirely on synthetic contamination**, and the
 100% recall above is measured at the sprites' native scale. Bacterial sprites are

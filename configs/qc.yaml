@@ -14,3 +14,15 @@ rescale:
   source_um_per_px: 1.3
   # Chosen by scripts/classifier_scale_test.py on the tuning fleet (1.0 until then).
   multiplier: 1.0
+
+# Classifier role in the live path (cultureQC_upgrade_specv4.md §2B.2, B3).
+# B0 failed (results/classifier_scale_test.md: 2.9% of held-out normal C2C12 frames
+# called normal) and the owner chose demotion over a retrain on 2026-09-27. While
+# demoted, the classifier still runs and its calibrated output is recorded for audit,
+# but it is shown collapsed under `label`, draws no evidence boxes, and never feeds
+# culture.rules.decide(). A missing file or key counts as demoted (culture/qc.py).
+classifier:
+  demoted: true
+  label: >-
+    Trained on synthetic tiles; known not to transfer to this imaging setup
+    (see validation report)

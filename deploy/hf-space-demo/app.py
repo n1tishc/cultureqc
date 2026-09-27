@@ -127,7 +127,12 @@ def infer(image: np.ndarray | None, cell_line: str, target_confluency: float):
         record, visuals = _run_analysis(path, cell_line, target_confluency)
         elapsed = time.time() - t0
 
-    verdict = f"{record['qc_flag'].replace('_', ' ')} · {record['confluency_pct']}% confluent"
+    # A demoted classifier (configs/qc.yaml; record["qc_used_in_decision"] is
+    # False) is not a verdict: lead with confluency and the action instead.
+    if record.get("qc_used_in_decision", True):
+        verdict = f"{record['qc_flag'].replace('_', ' ')} · {record['confluency_pct']}% confluent"
+    else:
+        verdict = f"{record['confluency_pct']}% confluent · {record['recommended_action'].replace('_', ' ')}"
     detail = (
         f"Recommended action: {record['recommended_action']} — {record['action_reason']}\n\n"
         f"{record['qc_rationale']}\n\n"
@@ -163,7 +168,8 @@ with gr.Blocks(title="cultureQC — raw model demo") as demo:
     with gr.Row():
         raw_out = gr.Image(label="Raw field", interactive=False)
         mask_out = gr.Image(label="Segmentation mask", interactive=False)
-        heatmap_out = gr.Image(label="Grad-CAM heatmap", interactive=False)
+        heatmap_out = gr.Image(label="Grad-CAM heatmap (blank while the classifier is demoted)",
+                               interactive=False)
     record_out = gr.JSON(label="Full signed record")
 
     run_btn.click(
