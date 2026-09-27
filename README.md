@@ -47,7 +47,7 @@ decision it drove, and the proof cannot drift apart.
 | Output | Detail |
 |---|---|
 | **Confluency** | Cellpose-SAM (`cpsam_v2`) probability map. 2.3 pp mean absolute error on a **synthetic** benchmark, zero-shot across morphologies; 8.4 pp on real held-out microscopy (see below). A threshold baseline is computed alongside for comparison. |
-| **QC flag** | EfficientNet-B0 over a centred 256×256 tile: `normal`, `contamination_suspected`, `detachment`, `image_quality`. 98% test accuracy, 100% contamination recall at every severity. |
+| **QC flag** | EfficientNet-B0 over a centred 256×256 tile: `normal`, `contamination_suspected`, `detachment`, `image_quality`. 98% test accuracy and 100% contamination recall at every severity on a **synthetic** test set; it does not transfer to real C2C12 frames (`results/classifier_scale_test.md`). |
 | **Evidence** | Up to 8 Grad-CAM bounding boxes showing the regions behind the flag, mapped back to full-image coordinates. |
 | **Action** | Deterministic rules over confluency + flag + timing: `passage`, `feed`, `hold`, `human_review`. No model decides this. |
 
@@ -308,6 +308,17 @@ found that `culture/schema.json`'s `confluency_method` enum and its
 what the pipeline actually writes — a pre-existing drift, not a regression,
 left for whoever next touches `schema.json`.
 
+## What it can and cannot detect
+
+`configs/detectability.yaml` (shown in the demo's **Detectability** tab; its SHA-256
+is recorded in every analysis record and visit summary) lists each issue with the
+Phase A check behind it, or "not tested". In short, at the tested setup (replayed
+C2C12, 0.25-frac fields, 1–3 per visit, every 6–12 h): image-quality defects are
+caught by the quality gate; growth stalls and instrument drift are **not**
+reliably detectable; bacterial contamination was caught per visit only in an
+exaggerated-scale simulation (sprites 16.5× real size); yeast, fungi and
+detachment on real images are not tested; mycoplasma is not optically detectable.
+
 ## Known limits
 
 Stated here rather than discovered later.
@@ -321,9 +332,11 @@ sprite library and re-running the shipped classifier: at 0.45× only 6 of 12
 contaminated tiles in the severity ladder were flagged, and at 0.2× the model
 reads contamination as an image-quality artifact instead.
 
-**Analysis is slow on CPU.** About a minute per image on 2 vCPU; roughly 20 s on
-a fast laptop. A GPU changes this by about an order of magnitude, and
-`culture/seg.py` selects the device automatically.
+**Analysis is slow on CPU.** Cellpose-SAM is almost all of it: 230 s for a
+704×520 image and 689 s for a 1392×1040 C2C12 frame on an Apple M2 Pro limited
+to 2 threads to approximate the 2-vCPU Space (V9, `results/live_latency.md`; an
+approximation, not a measurement on the Space). `culture/seg.py` uses a GPU
+when one is present; GPU latency has not been measured yet.
 
 **`demo/app.py::_scale_bboxes` over-scales evidence boxes** on images larger than
 256px. The Grad-CAM box is measured on a centred crop, so mapping it back should

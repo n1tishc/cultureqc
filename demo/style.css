@@ -481,3 +481,32 @@ footer { display: none !important; }
   font-size: 12px;
   padding: 10px 0 14px;
 }
+
+/* ─── Detectability tab (B4) ─── */
+.detect-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.detect-table th {
+  text-align: left;
+  color: var(--text-secondary);
+  font-weight: 600;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.detect-table td {
+  color: var(--text-primary);
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.detect-table td:nth-child(3) { color: var(--text-secondary); }
+.detect-table tr:last-child td { border-bottom: none; }
+.detect-note { color: var(--text-secondary); font-size: 0.82rem; line-height: 1.5; margin: 10px 0 0; }
+.detect-hash { font-family: var(--mono); color: var(--text-muted); }

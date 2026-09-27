@@ -14,7 +14,7 @@ Every number here is copied from a results file named next to it; nothing is re-
 | V2 | Growth between visits beats FOV noise? | Median increment ÷ σ_fov at 30–70%: **0.35 (6 h), 0.65 (12 h)** at 1 FOV; 0.61 / 1.12 at 3 FOVs | **Fail**, every cell incl. 3 FOVs | "Growth-deviation flags only at the longer cadence" → **no**: 12 h / 3 FOVs is 1.12, still < 2. Only a larger FOV (context: 0.5-frac, never replayed) reaches 2 |
 | V3 | Passage prediction useful and honest? | 50% target, target − 10 cut: median abs error 1.9–9.0 h across cells; coverage 3/5 to 3/3 | **No verdict** (5 sequences cross 50%; 0 cross 60–80%) | — |
 | V4 | Density conditioning removes growth confound? | Spearman ρ binned **−0.16** vs global −0.09 | **Fail** | "Drop anomaly *trend* monitoring; keep per-visit flag" → **yes**, and V6 supports it (anomaly/class monitors gave all held-out false alarms) |
-| V5 | Per-visit anomaly score separates faults? | (b) C2C12 contamination (simulated faults) AUROC **1.00** at ≥ 150 sprites; sprites shift confluency ~+59 pp and 88% of frames change bin; (a) synthetic, stand-in CLS scorer: 1.00 / 0.82 / 0.78 | (b) **Pass on n = 2**; (a) **fail for the stand-in**, patch scorer not measured | Weak classes listed as limitations; classifier primary for them |
+| V5 | Per-visit anomaly score separates faults? | (b) C2C12 contamination (simulated faults) AUROC **1.00** at ≥ 150 sprites; sprites shift confluency ~+59 pp and 88% of frames change bin; (a) synthetic, stand-in CLS scorer: 1.00 / 0.82 / 0.78 | (b) **Pass on n = 2, on an exaggerated fault** (sprites 16.5× real size, see V5); (a) **fail for the stand-in**, patch scorer not measured | Weak classes listed as limitations; classifier primary for them |
 | V6 | SPC catches faults without alarm fatigue? | **3.75** false alarms / 100 visits; simulated faults: contamination **0/2**, growth stall **0/2** detected by SPC | **Fail** on all three | Raise L / require agreement / lower λ → **no**: the causes are structural (see V6) |
 | V7 | Tells instrument from culture? | Simulated dimming raised INSTRUMENT_DRIFT 2 h / 8 h after onset — **but the normal fleet drifted too**; single-flask fleets all inherit it | (a) **pass by rule, not evidence**; (b) **fail** | "Informational only + README limitation" → matches B5's place in the cut order |
 | V8 | Trended probabilities calibrated? | ECE on val after T = **0.0057** (in-sample); test 0.0139 | **Pass**, synthetic tiles only; the classifier is off-domain on C2C12 | — |
@@ -109,6 +109,7 @@ Tests: `pytest tests` → 112 passed, 1 xfailed.
 
 - **(b) C2C12 contamination (simulated faults):** AUROC **1.00** (binned z) at ≥ 150 sprites per tile area, 0.99 below; 100% flagged. **Pass on n = 2** held-out contamination sequences. Caveat: the sprites raise Cellpose confluency by a median **+59 pp**, and 88% of contaminated frames land in a different bin from their base frame. Lamp dimming does not move the score (AUROC 0.41–0.49).
 - **(a) Synthetic tiles:** only CLS embeddings exist on the Mac for synthetic tiles, so a **stand-in CLS-kNN scorer** was used: contamination 1.00, detachment **0.82**, image_quality **0.78**. **Fail for the stand-in**; the patch scorer on synthetic tiles is **not measured**.
+- **Correction (2026-09-26, found in B0's example tiles):** the contamination sprites are DeepBacs bacteria imaged at 79 nm/px (100× objective; Zenodo 5550935) and pasted pixel-for-pixel into 1.3 µm/px C2C12 frames, so they are **16.5× too long**: the median sprite is 55 px, ≈ 72 µm on the frame (measured on the local sprite library, `docs/STATUS.md`). The (b) pass stands as measured, but on an exaggerated-scale fault; contamination at a realistic scale is **not tested**. The same caveat applies to the classifier's contamination recall (91.8%), the quality gate's 92% fail rate on these frames, and the +59 pp confluency shift. The demo keeps this scenario, captioned as an exaggerated-scale stress test.
 - **Spec's change:** list weak classes as limitations; the classifier stays primary for them (subject to its transfer problem, below).
 - `results/anomaly_summary.md`, `results/anomaly_v5.png`.
 
@@ -180,7 +181,7 @@ Conditions are "unknown" in this C2C12 import, so per experiment (held-out seque
 **Doesn't:**
 - Not RoboCell or Celltrio images. One cell line (C2C12), one microscope, ~85 h span, 3 experiments.
 - Cadence (6 h, 12 h), FOVs per visit (1, 3) and FOV size (0.25-frac crop) are **assumptions** to confirm with Celltrio. V2 depends on them directly.
-- Faults are simulated: sprite contamination, re-timed frames for stalls, synchronous lamp dimming. Real faults are messier and slower.
+- Faults are simulated: sprite contamination (at 16.5× real bacterial size, see V5), re-timed frames for stalls, synchronous lamp dimming. Real faults are messier and slower.
 - Held-out n is small: 14 normal sequences, **2 per fault type**. Frames within a sequence are not independent. A pass on n = 2 (V5b) is weak; a fail on n = 2 is informative only when the mechanism is clear (V6, V7).
 - Confluency "truth" is Cellpose-SAM's own reading, which V1 found ~8 pp low and unvalidated in the 60–90% band.
 - V9 is a Mac approximation of the Space, not a measurement on it.
@@ -188,6 +189,8 @@ Conditions are "unknown" in this C2C12 import, so per experiment (held-out seque
 ---
 
 ## Next steps (proposals for the Phase A review)
+
+*The owner's decisions on these are in `cultureQC_upgrade_specv4.md` §2.0 (freeze Fri Oct 2); Phase B follows that spec. This section is kept as proposed at the review.*
 
 ### Decisions for you
 

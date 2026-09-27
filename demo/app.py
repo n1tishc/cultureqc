@@ -26,6 +26,7 @@ from culture.qc import qc_classify
 from culture.rules import decide, LineConfig
 from culture.records import RecordWriter, verify_chain, hash_file
 from culture.rationale import generate_rationale
+from culture import detectability
 from demo.flask_timeline import build_demo_timeline
 from demo.theme import CultureQCTheme
 
@@ -239,6 +240,7 @@ def run_analysis(original_path, cell_line, target_confluency):
             "vlm": rat["method"],
         },
         "model_weights_hash": None,
+        "config_hashes": {"detectability.yaml": detectability.config_hash()},
         "reviewed_by": None,
         "review_outcome": None,
     }
@@ -512,6 +514,9 @@ with gr.Blocks(
                 label="Raw history (hash-chained JSONL, one row per visit/event, per lineage)",
                 wrap=True,
             )
+
+        with gr.Tab("Detectability"):
+            gr.HTML(detectability.to_html())
 
     gr.HTML(
         '<div class="app-footer">cultureQC v0.1 &middot; Cellpose-SAM &middot; EfficientNet-B0 '

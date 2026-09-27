@@ -59,6 +59,7 @@ import yaml
 from culture.calibration import DEFAULT_CALIBRATION_PATH, calibrated_probs, calibration_config_hash, load_calibration
 from culture.model_versions import get_model_versions
 from culture.quality import config_hash as quality_config_hash
+from culture.detectability import config_hash as detectability_config_hash
 from culture.quality import evaluate_thresholds
 
 _DEFAULT_CONFIG_PATH = os.path.join(
@@ -415,7 +416,8 @@ def build_replay_visits(
 
     visit_times = _sample_visit_timestamps(frames, timing, rng, n_visits)
     model_versions = get_model_versions()
-    cfg_hashes = {"quality.yaml": quality_config_hash(), "replay.yaml": replay_config_hash(config_path)}
+    cfg_hashes = {"quality.yaml": quality_config_hash(), "replay.yaml": replay_config_hash(config_path),
+                  "detectability.yaml": detectability_config_hash()}
     calibration = load_calibration(calibration_path)
     if calibration is not None:
         cfg_hashes["calibration.yaml"] = calibration_config_hash(calibration_path)
