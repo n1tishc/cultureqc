@@ -41,6 +41,7 @@ pyarrow>=14.0               # parquet shards for culture/cache.py
 
 # ── Service / demo ──
 gradio>=4.0                # demo/app.py, the console surface
+plotly>=5.20               # 3D confluency and space x time views (demo/confluency_3d.py, demo/replay_3d.py)
 
 # ── Eval / viz ──
 matplotlib>=3.7

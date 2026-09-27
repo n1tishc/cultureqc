@@ -1,0 +1,2688 @@
+{
+ "frame_hw": [
+  1040,
+  1392
+ ],
+ "generated_by": "scripts/export_replay_maps.py",
+ "map_format": "int16 logits x 1000, every 4th pixel (culture.cache.downsample_probmap)",
+ "replays": {
+  "contamination": {
+   "file": "contamination.npz",
+   "layers": [
+    {
+     "fov_boxes": [
+      [
+       612,
+       500,
+       260,
+       348
+      ],
+      [
+       283,
+       553,
+       260,
+       348
+      ],
+      [
+       455,
+       823,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 4.11,
+     "fov_pct_recorded": [
+      2.13,
+      7.62,
+      2.58
+     ],
+     "frame_pct_from_map": 1.89,
+     "frame_pct_recorded": 1.9,
+     "hours": 0.0,
+     "image_sha256": "81902a31fad598207cb1cd142a81f85b18bf3ce0a70caf906fc6ba4a1efe325b",
+     "map_sha256": "a933e1fbb89859a036aa7a446cc7ba6792757b384aaad84f6e0289d1f7272feb",
+     "quality_pass": true,
+     "quality_reasons": [],
+     "visit": 0
+    },
+    {
+     "fov_boxes": [
+      [
+       525,
+       999,
+       260,
+       348
+      ],
+      [
+       719,
+       970,
+       260,
+       348
+      ],
+      [
+       364,
+       292,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 1.95,
+     "fov_pct_recorded": [
+      0.0,
+      2.13,
+      3.73
+     ],
+     "frame_pct_from_map": 2.92,
+     "frame_pct_recorded": 2.92,
+     "hours": 6.41,
+     "image_sha256": "fd6ac384d0c2dc879981ba0d24841432e8e28e414dc1590728ad5f1cd939a1a5",
+     "map_sha256": "b51611e36b529f14afb8f6890134b79e9f1d946588ec164d8c93cdb1f7707173",
+     "quality_pass": true,
+     "quality_reasons": [],
+     "visit": 1
+    },
+    {
+     "fov_boxes": [
+      [
+       732,
+       815,
+       260,
+       348
+      ],
+      [
+       85,
+       745,
+       260,
+       348
+      ],
+      [
+       552,
+       675,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 3.41,
+     "fov_pct_recorded": [
+      3.71,
+      3.47,
+      3.04
+     ],
+     "frame_pct_from_map": 4.46,
+     "frame_pct_recorded": 4.48,
+     "hours": 11.72,
+     "image_sha256": "a9ec2bfa72424097cdaccb2c18ca902801415213b5d4833f2ada7cde6a86e588",
+     "map_sha256": "e3b9ca152137401d332270d17e27dcff489266c58271370ca2f41d280b08d5a4",
+     "quality_pass": true,
+     "quality_reasons": [],
+     "visit": 2
+    },
+    {
+     "fov_boxes": [
+      [
+       613,
+       643,
+       260,
+       348
+      ],
+      [
+       476,
+       42,
+       260,
+       348
+      ],
+      [
+       288,
+       920,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 2.58,
+     "fov_pct_recorded": [
+      2.59,
+      2.87,
+      2.27
+     ],
+     "frame_pct_from_map": 3.44,
+     "frame_pct_recorded": 3.48,
+     "hours": 16.34,
+     "image_sha256": "d6aa3c47785de76536bbdb10fa200696214849873c4823e6491b6e0dd5ee71a3",
+     "map_sha256": "e5ee21ec401134f04c631b2f579ce5aeb58ea2858d0d3fac49c5862ea389b335",
+     "quality_pass": true,
+     "quality_reasons": [],
+     "visit": 3
+    },
+    {
+     "fov_boxes": [
+      [
+       271,
+       643,
+       260,
+       348
+      ],
+      [
+       353,
+       518,
+       260,
+       348
+      ],
+      [
+       255,
+       161,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 7.36,
+     "fov_pct_recorded": [
+      8.3,
+      11.54,
+      2.24
+     ],
+     "frame_pct_from_map": 6.25,
+     "frame_pct_recorded": 6.3,
+     "hours": 20.89,
+     "image_sha256": "fb7356446e2d0a0c28e80d9d271bf541267379bef9cd9e86776037a817b1a005",
+     "map_sha256": "84aa7f6100919165b6893d48306fbc472dfe9aa8e2a03ec92b952711bb16c7e8",
+     "quality_pass": true,
+     "quality_reasons": [],
+     "visit": 4
+    },
+    {
+     "fov_boxes": [
+      [
+       386,
+       613,
+       260,
+       348
+      ],
+      [
+       501,
+       811,
+       260,
+       348
+      ],
+      [
+       101,
+       958,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 4.75,
+     "fov_pct_recorded": [
+      6.36,
+      3.62,
+      4.27
+     ],
+     "frame_pct_from_map": 8.0,
+     "frame_pct_recorded": 8.02,
+     "hours": 27.83,
+     "image_sha256": "0bb19792aaab33abd59768ebf887afe646447909bce4001c28ae89576c2d0bcc",
+     "map_sha256": "2c6d50e4f183da24795a5ec32dab7d748daf76ff22579162f2d937591c95929e",
+     "quality_pass": true,
+     "quality_reasons": [],
+     "visit": 5
+    },
+    {
+     "fov_boxes": [
+      [
+       370,
+       858,
+       260,
+       348
+      ],
+      [
+       455,
+       274,
+       260,
+       348
+      ],
+      [
+       715,
+       106,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 14.72,
+     "fov_pct_recorded": [
+      12.41,
+      12.61,
+      19.14
+     ],
+     "frame_pct_from_map": 9.37,
+     "frame_pct_recorded": 9.41,
+     "hours": 35.07,
+     "image_sha256": "fb3fc96f5a5939516c6baa7d63b6d89f7a08fe078c5231259b7b24d4faa950a1",
+     "map_sha256": "328d94c065958de69f0274745d11e6e6db963f447dece4b8c4b31d6d238a60a0",
+     "quality_pass": true,
+     "quality_reasons": [],
+     "visit": 6
+    },
+    {
+     "fov_boxes": [
+      [
+       729,
+       265,
+       260,
+       348
+      ],
+      [
+       548,
+       305,
+       260,
+       348
+      ],
+      [
+       255,
+       288,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 49.72,
+     "fov_pct_recorded": [
+      50.56,
+      49.31,
+      49.3
+     ],
+     "frame_pct_from_map": 47.29,
+     "frame_pct_recorded": 47.27,
+     "hours": 41.39,
+     "image_sha256": "9ccbd0e693f6cb910ce95ad3d44fa2c5a0774a71158aba1a15b28c768ae9074e",
+     "map_sha256": "404d31d712ad5f9660039ee47e1caa3a6433434fb13f1d372564fd41638a9a07",
+     "quality_pass": true,
+     "quality_reasons": [],
+     "visit": 7
+    },
+    {
+     "fov_boxes": [
+      [
+       259,
+       26,
+       260,
+       348
+      ],
+      [
+       736,
+       862,
+       260,
+       348
+      ],
+      [
+       394,
+       201,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 78.39,
+     "fov_pct_recorded": [
+      79.72,
+      76.71,
+      78.73
+     ],
+     "frame_pct_from_map": 76.37,
+     "frame_pct_recorded": 76.32,
+     "hours": 48.08,
+     "image_sha256": "28cdb904465bad0ee9a3725cc99a4e81922cf5ee1ed9bfd540a0816eee3f63c6",
+     "map_sha256": "c15d0e34436af1c41b8482c02ca5564b6eda9226a887996fed45047172b3f6ea",
+     "quality_pass": false,
+     "quality_reasons": [
+      "exposure_out_of_range"
+     ],
+     "visit": 8
+    },
+    {
+     "fov_boxes": [
+      [
+       66,
+       625,
+       260,
+       348
+      ],
+      [
+       114,
+       426,
+       260,
+       348
+      ],
+      [
+       57,
+       304,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 92.49,
+     "fov_pct_recorded": [
+      93.21,
+      90.96,
+      93.31
+     ],
+     "frame_pct_from_map": 86.49,
+     "frame_pct_recorded": 86.52,
+     "hours": 54.21,
+     "image_sha256": "614bbda6a42b58b01c9f37939c46032bc6c93ee4911651edd4e2520f57e5b811",
+     "map_sha256": "ca246e1dddb0a8146c7a806b6a1c6b919fa6bed1962d9d227c08be20d38a6ca9",
+     "quality_pass": false,
+     "quality_reasons": [
+      "exposure_out_of_range"
+     ],
+     "visit": 9
+    },
+    {
+     "fov_boxes": [
+      [
+       300,
+       301,
+       260,
+       348
+      ],
+      [
+       89,
+       785,
+       260,
+       348
+      ],
+      [
+       96,
+       959,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 91.54,
+     "fov_pct_recorded": [
+      90.41,
+      89.86,
+      94.34
+     ],
+     "frame_pct_from_map": 90.0,
+     "frame_pct_recorded": 90.03,
+     "hours": 61.52,
+     "image_sha256": "2f1ba75357e0177fbe37993eb8788b71969d04520089249a216d9ab25f528f9c",
+     "map_sha256": "5c875b78ef040ddfb1b42fa5e6792404f4886dd4b776f3fa9447832182d1ac81",
+     "quality_pass": false,
+     "quality_reasons": [
+      "exposure_out_of_range"
+     ],
+     "visit": 10
+    },
+    {
+     "fov_boxes": [
+      [
+       527,
+       539,
+       260,
+       348
+      ],
+      [
+       636,
+       682,
+       260,
+       348
+      ],
+      [
+       394,
+       842,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 89.65,
+     "fov_pct_recorded": [
+      91.06,
+      93.28,
+      84.61
+     ],
+     "frame_pct_from_map": 88.34,
+     "frame_pct_recorded": 88.39,
+     "hours": 68.46,
+     "image_sha256": "4fb39d884940b690d63092415e16d63ff9c54c548736f76cc180c1f7fd8abc9b",
+     "map_sha256": "fa1861a4d9342716acf1c1064f40d636d0b3571d95212e7cfed2e72d67f0d2e6",
+     "quality_pass": false,
+     "quality_reasons": [
+      "exposure_out_of_range"
+     ],
+     "visit": 11
+    },
+    {
+     "fov_boxes": [
+      [
+       667,
+       174,
+       260,
+       348
+      ],
+      [
+       81,
+       626,
+       260,
+       348
+      ],
+      [
+       6,
+       741,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 90.49,
+     "fov_pct_recorded": [
+      90.91,
+      89.58,
+      90.99
+     ],
+     "frame_pct_from_map": 88.73,
+     "frame_pct_recorded": 88.77,
+     "hours": 72.97,
+     "image_sha256": "3009aab76a4d9dc7161c324c05d6219acf1db02e8899466727925b3b234bc5b7",
+     "map_sha256": "28b98830ac02d4257e6f48bee100f133969bbab0a7920d3f7f5ed6dbd473e9b7",
+     "quality_pass": false,
+     "quality_reasons": [
+      "exposure_out_of_range"
+     ],
+     "visit": 12
+    },
+    {
+     "fov_boxes": [
+      [
+       259,
+       175,
+       260,
+       348
+      ],
+      [
+       25,
+       373,
+       260,
+       348
+      ],
+      [
+       604,
+       284,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 87.82,
+     "fov_pct_recorded": [
+      87.5,
+      88.28,
+      87.67
+     ],
+     "frame_pct_from_map": 85.81,
+     "frame_pct_recorded": 85.91,
+     "hours": 80.04,
+     "image_sha256": "5251dfefe9006b9cbe0b40a5184f5d0282e2bc7c059099d78ba26f09686494c6",
+     "map_sha256": "08f6fc4daeb2ed8f0f0e14a88c98bcb03f60d28e5fdbb2aa7114bb2a31ba574e",
+     "quality_pass": false,
+     "quality_reasons": [
+      "exposure_out_of_range",
+      "uniformity_above_threshold"
+     ],
+     "visit": 13
+    },
+    {
+     "fov_boxes": [
+      [
+       501,
+       350,
+       260,
+       348
+      ],
+      [
+       453,
+       871,
+       260,
+       348
+      ],
+      [
+       385,
+       427,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 90.73,
+     "fov_pct_recorded": [
+      92.66,
+      86.6,
+      92.94
+     ],
+     "frame_pct_from_map": 85.59,
+     "frame_pct_recorded": 85.59,
+     "hours": 84.64,
+     "image_sha256": "4c05fdb0c6419ebafe4d43406c87dfe93894e7952754e3f834b9ea4a7b2a6dd9",
+     "map_sha256": "0d0b5b419b7812a4eff68b6d29103dabd013b1447bde9050cd8223972eeef55f",
+     "quality_pass": false,
+     "quality_reasons": [
+      "exposure_out_of_range",
+      "uniformity_above_threshold"
+     ],
+     "visit": 14
+    }
+   ],
+   "stream_id": "c2c12_090318_exp1_F0005_Data__fault_contam"
+  },
+  "dimming": {
+   "file": "dimming.npz",
+   "layers": [
+    {
+     "fov_boxes": [
+      [
+       157,
+       96,
+       260,
+       348
+      ],
+      [
+       420,
+       665,
+       260,
+       348
+      ],
+      [
+       752,
+       485,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 1.17,
+     "fov_pct_recorded": [
+      1.65,
+      0.0,
+      1.87
+     ],
+     "frame_pct_from_map": 1.51,
+     "frame_pct_recorded": 1.52,
+     "hours": 0.0,
+     "image_sha256": "d67251fc8c38430dc99efb30b806edee0de0181b77a19dac0e357dbfa643b784",
+     "map_sha256": "56231beb67506b9bac0c2ed378032c8364cbbd7429932c91b5c4cca10395c30f",
+     "quality_pass": true,
+     "quality_reasons": [],
+     "visit": 0
+    },
+    {
+     "fov_boxes": [
+      [
+       183,
+       350,
+       260,
+       348
+      ],
+      [
+       374,
+       31,
+       260,
+       348
+      ],
+      [
+       200,
+       967,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 0.99,
+     "fov_pct_recorded": [
+      1.64,
+      0.79,
+      0.54
+     ],
+     "frame_pct_from_map": 3.91,
+     "frame_pct_recorded": 3.92,
+     "hours": 6.41,
+     "image_sha256": "c9d66bb27fd3d5791f1fb251727dbbeb83771a79edf5ccb7d7a3a2c1553a6551",
+     "map_sha256": "2da0bfb97861d416541e7effe327c15a4ff5549e4c7d376720d0442489600aa0",
+     "quality_pass": true,
+     "quality_reasons": [],
+     "visit": 1
+    },
+    {
+     "fov_boxes": [
+      [
+       113,
+       32,
+       260,
+       348
+      ],
+      [
+       619,
+       486,
+       260,
+       348
+      ],
+      [
+       609,
+       670,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 1.48,
+     "fov_pct_recorded": [
+      3.66,
+      0.78,
+      0.0
+     ],
+     "frame_pct_from_map": 6.6,
+     "frame_pct_recorded": 6.63,
+     "hours": 11.72,
+     "image_sha256": "4a8837bc0e0e06390ffc486271e5709825b7e5f7c351fe3b1ac5a728592f58f0",
+     "map_sha256": "43c1d83a12f0611cacef0725343bb58089f81a2b8abf518889a1b034772552aa",
+     "quality_pass": true,
+     "quality_reasons": [],
+     "visit": 2
+    },
+    {
+     "fov_boxes": [
+      [
+       344,
+       629,
+       260,
+       348
+      ],
+      [
+       119,
+       291,
+       260,
+       348
+      ],
+      [
+       69,
+       737,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 4.17,
+     "fov_pct_recorded": [
+      5.14,
+      7.37,
+      0.0
+     ],
+     "frame_pct_from_map": 7.39,
+     "frame_pct_recorded": 7.43,
+     "hours": 16.34,
+     "image_sha256": "c2bc4afe72f4ebb41e84f0f375ef687cc272eec9fc17c25488e2acccbb283dc4",
+     "map_sha256": "76404ef70a3bf7eda63ee1ca764ef2bc8edb5b9855706133d79874d5bb09653e",
+     "quality_pass": true,
+     "quality_reasons": [],
+     "visit": 3
+    },
+    {
+     "fov_boxes": [
+      [
+       118,
+       797,
+       260,
+       348
+      ],
+      [
+       88,
+       190,
+       260,
+       348
+      ],
+      [
+       662,
+       990,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 6.31,
+     "fov_pct_recorded": [
+      0.0,
+      11.57,
+      7.35
+     ],
+     "frame_pct_from_map": 7.12,
+     "frame_pct_recorded": 7.16,
+     "hours": 20.89,
+     "image_sha256": "66a2c85fd80bea4d97c7ca72adfb71cc50eaaed1a37824987bc308613907c31b",
+     "map_sha256": "512799b8f29a43084b91f245f5c55deb8f28e6471ce8b1e548d10f2417cca978",
+     "quality_pass": true,
+     "quality_reasons": [],
+     "visit": 4
+    },
+    {
+     "fov_boxes": [
+      [
+       628,
+       28,
+       260,
+       348
+      ],
+      [
+       335,
+       106,
+       260,
+       348
+      ],
+      [
+       547,
+       646,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 3.75,
+     "fov_pct_recorded": [
+      2.89,
+      1.17,
+      7.18
+     ],
+     "frame_pct_from_map": 8.85,
+     "frame_pct_recorded": 8.88,
+     "hours": 27.83,
+     "image_sha256": "a7e049a8a616200ef4cd807ac291d9970c4579e5a2b186ca6818d499a2525c92",
+     "map_sha256": "8fa794f842e76dc469d7e504d14069b6d67b41ae652cc91506cf51da550087cc",
+     "quality_pass": true,
+     "quality_reasons": [],
+     "visit": 5
+    },
+    {
+     "fov_boxes": [
+      [
+       415,
+       466,
+       260,
+       348
+      ],
+      [
+       429,
+       382,
+       260,
+       348
+      ],
+      [
+       158,
+       27,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 7.59,
+     "fov_pct_recorded": [
+      1.75,
+      2.57,
+      18.46
+     ],
+     "frame_pct_from_map": 12.36,
+     "frame_pct_recorded": 12.38,
+     "hours": 35.07,
+     "image_sha256": "f3d58609829ad470007ccd3c49d60a5f17c5c55102b3aee6876651ac5bb23f0f",
+     "map_sha256": "2af5bd6c9b6b4a196380f36d7162c1494dd9ef94bcdebbdb9006197be4199c83",
+     "quality_pass": true,
+     "quality_reasons": [],
+     "visit": 6
+    },
+    {
+     "fov_boxes": [
+      [
+       386,
+       288,
+       260,
+       348
+      ],
+      [
+       316,
+       686,
+       260,
+       348
+      ],
+      [
+       632,
+       657,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 12.26,
+     "fov_pct_recorded": [
+      3.24,
+      13.25,
+      20.28
+     ],
+     "frame_pct_from_map": 14.44,
+     "frame_pct_recorded": 14.47,
+     "hours": 41.39,
+     "image_sha256": "48dd27da17b1860ca05e36f4e113e7ef8c05acae72e53a92d3a9ebfeaa09a3ed",
+     "map_sha256": "4098aefaf6ae4e5281952cf1ceac12bab170267ee3f4a063409e29edd2f48171",
+     "quality_pass": true,
+     "quality_reasons": [],
+     "visit": 7
+    },
+    {
+     "fov_boxes": [
+      [
+       301,
+       112,
+       260,
+       348
+      ],
+      [
+       105,
+       790,
+       260,
+       348
+      ],
+      [
+       775,
+       541,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 18.54,
+     "fov_pct_recorded": [
+      15.89,
+      11.41,
+      28.32
+     ],
+     "frame_pct_from_map": 16.28,
+     "frame_pct_recorded": 16.29,
+     "hours": 48.08,
+     "image_sha256": "872187f1c66048a9565b48fcb21461db264babd9871058e0341e587f7edad3ab",
+     "map_sha256": "fa66a930432da1dfcb14d851a91aab4997e270f230342c142d6c49363802b28d",
+     "quality_pass": false,
+     "quality_reasons": [
+      "exposure_out_of_range"
+     ],
+     "visit": 8
+    },
+    {
+     "fov_boxes": [
+      [
+       152,
+       629,
+       260,
+       348
+      ],
+      [
+       440,
+       965,
+       260,
+       348
+      ],
+      [
+       634,
+       108,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 15.12,
+     "fov_pct_recorded": [
+      8.44,
+      26.21,
+      10.72
+     ],
+     "frame_pct_from_map": 22.14,
+     "frame_pct_recorded": 22.22,
+     "hours": 54.21,
+     "image_sha256": "637ccd9e45d240999eb7f4a3cd1c8d4ff161325b13833c8c80d61f485e41c532",
+     "map_sha256": "4716c5660fec138ac0971e11d949d4552c2dfdb43b8805fb65eb9a4b7d648888",
+     "quality_pass": false,
+     "quality_reasons": [
+      "blur_below_threshold",
+      "exposure_out_of_range"
+     ],
+     "visit": 9
+    },
+    {
+     "fov_boxes": [
+      [
+       62,
+       1023,
+       260,
+       348
+      ],
+      [
+       60,
+       85,
+       260,
+       348
+      ],
+      [
+       237,
+       432,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 18.68,
+     "fov_pct_recorded": [
+      17.64,
+      34.15,
+      4.24
+     ],
+     "frame_pct_from_map": 29.42,
+     "frame_pct_recorded": 29.53,
+     "hours": 61.52,
+     "image_sha256": "26ad851bf53a0c2fc96630aeddd58756a6d1e18c491a7b0fd539aa93894077e0",
+     "map_sha256": "d8a4c9d8e4eca9fa5213ef7656ddf2acb54dd3d4501729910b2517f1e2894c04",
+     "quality_pass": false,
+     "quality_reasons": [
+      "blur_below_threshold",
+      "exposure_out_of_range"
+     ],
+     "visit": 10
+    },
+    {
+     "fov_boxes": [
+      [
+       316,
+       685,
+       260,
+       348
+      ],
+      [
+       697,
+       1037,
+       260,
+       348
+      ],
+      [
+       494,
+       412,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 34.26,
+     "fov_pct_recorded": [
+      41.37,
+      34.04,
+      27.38
+     ],
+     "frame_pct_from_map": 33.3,
+     "frame_pct_recorded": 33.36,
+     "hours": 68.46,
+     "image_sha256": "d40c8ac164bbb3e1fa7b0a85d2ddad23edac2e85f0da254f9953c5b22f664c45",
+     "map_sha256": "7e4868183fd352ac15fc0234e2730dc20a7ea22365f5e402868c742e7697dd77",
+     "quality_pass": false,
+     "quality_reasons": [
+      "blur_below_threshold",
+      "exposure_out_of_range"
+     ],
+     "visit": 11
+    },
+    {
+     "fov_boxes": [
+      [
+       689,
+       1007,
+       260,
+       348
+      ],
+      [
+       723,
+       3,
+       260,
+       348
+      ],
+      [
+       229,
+       775,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 34.6,
+     "fov_pct_recorded": [
+      42.43,
+      19.71,
+      41.66
+     ],
+     "frame_pct_from_map": 38.57,
+     "frame_pct_recorded": 38.61,
+     "hours": 72.97,
+     "image_sha256": "8f71b66affd4725ba32f9b32b0d3460e7953200f077cbd1c5ddf0d5602f6bbc3",
+     "map_sha256": "913707572b17907f758af636645a624a0de3f24d8a0d43f0008ce0bb2c86fde0",
+     "quality_pass": false,
+     "quality_reasons": [
+      "blur_below_threshold",
+      "exposure_out_of_range"
+     ],
+     "visit": 12
+    },
+    {
+     "fov_boxes": [
+      [
+       120,
+       425,
+       260,
+       348
+      ],
+      [
+       451,
+       789,
+       260,
+       348
+      ],
+      [
+       412,
+       389,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 45.41,
+     "fov_pct_recorded": [
+      41.65,
+      56.99,
+      37.59
+     ],
+     "frame_pct_from_map": 47.57,
+     "frame_pct_recorded": 47.69,
+     "hours": 80.04,
+     "image_sha256": "63502fdf18052f7ed74e5054218036ec49ae8443a28f2c8c8803e1fcc00a8668",
+     "map_sha256": "1b4abe59e9ee6ab900b00b73b29a5b0d84b606511f4bc15793ebfdd116eb1074",
+     "quality_pass": false,
+     "quality_reasons": [
+      "blur_below_threshold",
+      "exposure_out_of_range"
+     ],
+     "visit": 13
+    }
+   ],
+   "stream_id": "c2c12_090303_exp1_F0003_Data__fault_dim"
+  },
+  "normal_1": {
+   "file": "normal_1.npz",
+   "layers": [
+    {
+     "fov_boxes": [
+      [
+       157,
+       96,
+       260,
+       348
+      ],
+      [
+       420,
+       665,
+       260,
+       348
+      ],
+      [
+       752,
+       485,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 1.17,
+     "fov_pct_recorded": [
+      1.65,
+      0.0,
+      1.87
+     ],
+     "frame_pct_from_map": 1.51,
+     "frame_pct_recorded": 1.52,
+     "hours": 0.0,
+     "image_sha256": "d67251fc8c38430dc99efb30b806edee0de0181b77a19dac0e357dbfa643b784",
+     "map_sha256": "56231beb67506b9bac0c2ed378032c8364cbbd7429932c91b5c4cca10395c30f",
+     "quality_pass": true,
+     "quality_reasons": [],
+     "visit": 0
+    },
+    {
+     "fov_boxes": [
+      [
+       183,
+       350,
+       260,
+       348
+      ],
+      [
+       374,
+       31,
+       260,
+       348
+      ],
+      [
+       200,
+       967,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 0.99,
+     "fov_pct_recorded": [
+      1.64,
+      0.79,
+      0.54
+     ],
+     "frame_pct_from_map": 3.91,
+     "frame_pct_recorded": 3.92,
+     "hours": 6.41,
+     "image_sha256": "c9d66bb27fd3d5791f1fb251727dbbeb83771a79edf5ccb7d7a3a2c1553a6551",
+     "map_sha256": "2da0bfb97861d416541e7effe327c15a4ff5549e4c7d376720d0442489600aa0",
+     "quality_pass": true,
+     "quality_reasons": [],
+     "visit": 1
+    },
+    {
+     "fov_boxes": [
+      [
+       113,
+       32,
+       260,
+       348
+      ],
+      [
+       619,
+       486,
+       260,
+       348
+      ],
+      [
+       609,
+       670,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 1.48,
+     "fov_pct_recorded": [
+      3.66,
+      0.78,
+      0.0
+     ],
+     "frame_pct_from_map": 6.6,
+     "frame_pct_recorded": 6.63,
+     "hours": 11.72,
+     "image_sha256": "4a8837bc0e0e06390ffc486271e5709825b7e5f7c351fe3b1ac5a728592f58f0",
+     "map_sha256": "43c1d83a12f0611cacef0725343bb58089f81a2b8abf518889a1b034772552aa",
+     "quality_pass": true,
+     "quality_reasons": [],
+     "visit": 2
+    },
+    {
+     "fov_boxes": [
+      [
+       344,
+       629,
+       260,
+       348
+      ],
+      [
+       119,
+       291,
+       260,
+       348
+      ],
+      [
+       69,
+       737,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 4.17,
+     "fov_pct_recorded": [
+      5.14,
+      7.37,
+      0.0
+     ],
+     "frame_pct_from_map": 7.39,
+     "frame_pct_recorded": 7.43,
+     "hours": 16.34,
+     "image_sha256": "c2bc4afe72f4ebb41e84f0f375ef687cc272eec9fc17c25488e2acccbb283dc4",
+     "map_sha256": "76404ef70a3bf7eda63ee1ca764ef2bc8edb5b9855706133d79874d5bb09653e",
+     "quality_pass": true,
+     "quality_reasons": [],
+     "visit": 3
+    },
+    {
+     "fov_boxes": [
+      [
+       118,
+       797,
+       260,
+       348
+      ],
+      [
+       88,
+       190,
+       260,
+       348
+      ],
+      [
+       662,
+       990,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 6.31,
+     "fov_pct_recorded": [
+      0.0,
+      11.57,
+      7.35
+     ],
+     "frame_pct_from_map": 7.12,
+     "frame_pct_recorded": 7.16,
+     "hours": 20.89,
+     "image_sha256": "66a2c85fd80bea4d97c7ca72adfb71cc50eaaed1a37824987bc308613907c31b",
+     "map_sha256": "512799b8f29a43084b91f245f5c55deb8f28e6471ce8b1e548d10f2417cca978",
+     "quality_pass": true,
+     "quality_reasons": [],
+     "visit": 4
+    },
+    {
+     "fov_boxes": [
+      [
+       628,
+       28,
+       260,
+       348
+      ],
+      [
+       335,
+       106,
+       260,
+       348
+      ],
+      [
+       547,
+       646,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 3.75,
+     "fov_pct_recorded": [
+      2.89,
+      1.17,
+      7.18
+     ],
+     "frame_pct_from_map": 8.85,
+     "frame_pct_recorded": 8.88,
+     "hours": 27.83,
+     "image_sha256": "a7e049a8a616200ef4cd807ac291d9970c4579e5a2b186ca6818d499a2525c92",
+     "map_sha256": "8fa794f842e76dc469d7e504d14069b6d67b41ae652cc91506cf51da550087cc",
+     "quality_pass": true,
+     "quality_reasons": [],
+     "visit": 5
+    },
+    {
+     "fov_boxes": [
+      [
+       415,
+       466,
+       260,
+       348
+      ],
+      [
+       429,
+       382,
+       260,
+       348
+      ],
+      [
+       158,
+       27,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 7.59,
+     "fov_pct_recorded": [
+      1.75,
+      2.57,
+      18.46
+     ],
+     "frame_pct_from_map": 12.36,
+     "frame_pct_recorded": 12.38,
+     "hours": 35.07,
+     "image_sha256": "f3d58609829ad470007ccd3c49d60a5f17c5c55102b3aee6876651ac5bb23f0f",
+     "map_sha256": "2af5bd6c9b6b4a196380f36d7162c1494dd9ef94bcdebbdb9006197be4199c83",
+     "quality_pass": true,
+     "quality_reasons": [],
+     "visit": 6
+    },
+    {
+     "fov_boxes": [
+      [
+       350,
+       255,
+       260,
+       348
+      ],
+      [
+       720,
+       683,
+       260,
+       348
+      ],
+      [
+       486,
+       700,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 17.75,
+     "fov_pct_recorded": [
+      5.87,
+      29.08,
+      18.29
+     ],
+     "frame_pct_from_map": 14.34,
+     "frame_pct_recorded": 14.38,
+     "hours": 41.39,
+     "image_sha256": "23e8c5b92fd040c6105bb02157b50a724f2e4d53e40b08f742774a780bfa87f3",
+     "map_sha256": "ad57e48930bf7f33d1cb3459b2d242dcff474957e837c95a40ed407bf76d9e43",
+     "quality_pass": true,
+     "quality_reasons": [],
+     "visit": 7
+    },
+    {
+     "fov_boxes": [
+      [
+       127,
+       518,
+       260,
+       348
+      ],
+      [
+       70,
+       844,
+       260,
+       348
+      ],
+      [
+       520,
+       425,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 6.74,
+     "fov_pct_recorded": [
+      3.62,
+      10.59,
+      6.01
+     ],
+     "frame_pct_from_map": 16.26,
+     "frame_pct_recorded": 16.29,
+     "hours": 48.08,
+     "image_sha256": "f2c75b99ff628f6812babd7af5d2c41b1ef06d126f3432643944cfe32e9719f0",
+     "map_sha256": "210ba74f11f868f805c729b5476350cbc9979051fca07651b2747b80f10019c5",
+     "quality_pass": true,
+     "quality_reasons": [],
+     "visit": 8
+    },
+    {
+     "fov_boxes": [
+      [
+       756,
+       251,
+       260,
+       348
+      ],
+      [
+       44,
+       612,
+       260,
+       348
+      ],
+      [
+       558,
+       123,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 12.59,
+     "fov_pct_recorded": [
+      19.86,
+      13.47,
+      4.43
+     ],
+     "frame_pct_from_map": 21.97,
+     "frame_pct_recorded": 22.06,
+     "hours": 54.21,
+     "image_sha256": "105eac2bae7b7265e54b2634227c89fa04377a664103f0c6d7ce800ab6223706",
+     "map_sha256": "de895eca3d45a99de29513cf6385c153432b7de6e41ae2542e962150f7c01cd9",
+     "quality_pass": true,
+     "quality_reasons": [],
+     "visit": 9
+    },
+    {
+     "fov_boxes": [
+      [
+       355,
+       670,
+       260,
+       348
+      ],
+      [
+       555,
+       161,
+       260,
+       348
+      ],
+      [
+       773,
+       991,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 22.99,
+     "fov_pct_recorded": [
+      26.34,
+      16.31,
+      26.33
+     ],
+     "frame_pct_from_map": 29.47,
+     "frame_pct_recorded": 29.54,
+     "hours": 61.52,
+     "image_sha256": "0b1ccc2c57c8835ab5c1789684734c57a9928352463439432f79b123f8b5bfdf",
+     "map_sha256": "a7f7db908d151ba7d0408fbf05b1030d1ca6677f2e62a8400364cf18bff760c5",
+     "quality_pass": true,
+     "quality_reasons": [],
+     "visit": 10
+    },
+    {
+     "fov_boxes": [
+      [
+       123,
+       295,
+       260,
+       348
+      ],
+      [
+       504,
+       812,
+       260,
+       348
+      ],
+      [
+       40,
+       47,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 34.81,
+     "fov_pct_recorded": [
+      16.19,
+      46.26,
+      41.97
+     ],
+     "frame_pct_from_map": 33.37,
+     "frame_pct_recorded": 33.44,
+     "hours": 68.46,
+     "image_sha256": "f07310eddd0f2772e1dda7a69d70ee330aafea5f0ca307467e3db1bb9762f006",
+     "map_sha256": "cc866291710a9fae9edb5af219f8970c43575d47c7075f2ef435e4cd1ac2676b",
+     "quality_pass": true,
+     "quality_reasons": [],
+     "visit": 11
+    },
+    {
+     "fov_boxes": [
+      [
+       74,
+       671,
+       260,
+       348
+      ],
+      [
+       615,
+       480,
+       260,
+       348
+      ],
+      [
+       608,
+       683,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 45.91,
+     "fov_pct_recorded": [
+      37.37,
+      44.97,
+      55.39
+     ],
+     "frame_pct_from_map": 39.76,
+     "frame_pct_recorded": 39.88,
+     "hours": 72.97,
+     "image_sha256": "2731673c022c394a1e0fd3d1c43b8f74a5c2823875aff479e88b3a209459fb30",
+     "map_sha256": "aec7d704fffc182acefbbffe01700e754d52e23c69a88c7126118aaf23e7c1e6",
+     "quality_pass": true,
+     "quality_reasons": [],
+     "visit": 12
+    },
+    {
+     "fov_boxes": [
+      [
+       73,
+       782,
+       260,
+       348
+      ],
+      [
+       505,
+       719,
+       260,
+       348
+      ],
+      [
+       309,
+       481,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 40.89,
+     "fov_pct_recorded": [
+      33.97,
+      53.81,
+      34.88
+     ],
+     "frame_pct_from_map": 47.52,
+     "frame_pct_recorded": 47.63,
+     "hours": 80.04,
+     "image_sha256": "7b03fd36446fe639a1e0fd6119c2a9ba6fa0bcd52d71a2ca749d1db20a0fb642",
+     "map_sha256": "32d325e5a85d4fd7e2f92f3e146e440f22ef91a2bd713246253df4c0d6b7f942",
+     "quality_pass": true,
+     "quality_reasons": [],
+     "visit": 13
+    }
+   ],
+   "stream_id": "c2c12_090303_exp1_F0003_Data"
+  },
+  "normal_2": {
+   "file": "normal_2.npz",
+   "layers": [
+    {
+     "fov_boxes": [
+      [
+       465,
+       245,
+       260,
+       348
+      ],
+      [
+       478,
+       628,
+       260,
+       348
+      ],
+      [
+       272,
+       759,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 1.24,
+     "fov_pct_recorded": [
+      0.55,
+      2.55,
+      0.61
+     ],
+     "frame_pct_from_map": 1.86,
+     "frame_pct_recorded": 1.87,
+     "hours": 0.0,
+     "image_sha256": "dcdba71ad7b501b98007cab16b301230b047f447a3d61d656d54380daf0e3ecf",
+     "map_sha256": "5480a000dc8cabab6478f660177fca3fdd6787747d325dbf95edf8608c5244fa",
+     "quality_pass": true,
+     "quality_reasons": [],
+     "visit": 0
+    },
+    {
+     "fov_boxes": [
+      [
+       155,
+       303,
+       260,
+       348
+      ],
+      [
+       424,
+       397,
+       260,
+       348
+      ],
+      [
+       386,
+       201,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 3.73,
+     "fov_pct_recorded": [
+      1.1,
+      6.18,
+      3.91
+     ],
+     "frame_pct_from_map": 3.6,
+     "frame_pct_recorded": 3.61,
+     "hours": 6.41,
+     "image_sha256": "369f02b7b4619c3c482d2d9a049044e4236d2b67581ceded993c50118755efe1",
+     "map_sha256": "62898ebef42ccfb5d2a4a6e5172ae05bdf9e68841506dd358c73917fb15ca417",
+     "quality_pass": true,
+     "quality_reasons": [],
+     "visit": 1
+    },
+    {
+     "fov_boxes": [
+      [
+       689,
+       606,
+       260,
+       348
+      ],
+      [
+       621,
+       247,
+       260,
+       348
+      ],
+      [
+       701,
+       965,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 4.92,
+     "fov_pct_recorded": [
+      4.04,
+      0.0,
+      10.73
+     ],
+     "frame_pct_from_map": 5.06,
+     "frame_pct_recorded": 5.08,
+     "hours": 11.72,
+     "image_sha256": "ab5dc5e78db7aec8d24b4cd7bb2bc6b7e18bb911c42a307715204baf2a5f1946",
+     "map_sha256": "446f1f99282ca36f1e054196ecd37638f390314cea21e888a62adb0113a45cdf",
+     "quality_pass": true,
+     "quality_reasons": [],
+     "visit": 2
+    },
+    {
+     "fov_boxes": [
+      [
+       11,
+       939,
+       260,
+       348
+      ],
+      [
+       446,
+       335,
+       260,
+       348
+      ],
+      [
+       440,
+       162,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 5.85,
+     "fov_pct_recorded": [
+      5.55,
+      6.69,
+      5.3
+     ],
+     "frame_pct_from_map": 6.36,
+     "frame_pct_recorded": 6.38,
+     "hours": 16.34,
+     "image_sha256": "8ed2d01827bc3108b342db4ece061c6a5b1850c0547aa1a57c79777d10f58ac2",
+     "map_sha256": "f3081e5692c9e50d2e2243848d6a919a7e119373bbeb7e51d7add05bd0cc4063",
+     "quality_pass": true,
+     "quality_reasons": [],
+     "visit": 3
+    },
+    {
+     "fov_boxes": [
+      [
+       179,
+       590,
+       260,
+       348
+      ],
+      [
+       462,
+       472,
+       260,
+       348
+      ],
+      [
+       649,
+       587,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 9.39,
+     "fov_pct_recorded": [
+      6.13,
+      13.19,
+      8.85
+     ],
+     "frame_pct_from_map": 6.66,
+     "frame_pct_recorded": 6.71,
+     "hours": 20.89,
+     "image_sha256": "e1f57f4d977416dc1d5db28eb99cbb0e8a6ddfc78e7cc79494c7e5e2a9336786",
+     "map_sha256": "9a00a33ad8f6530b0f21161ed6d8fc195b1afb34c5d1cc55b2bcc26833e08855",
+     "quality_pass": true,
+     "quality_reasons": [],
+     "visit": 4
+    },
+    {
+     "fov_boxes": [
+      [
+       2,
+       173,
+       260,
+       348
+      ],
+      [
+       226,
+       379,
+       260,
+       348
+      ],
+      [
+       43,
+       484,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 9.64,
+     "fov_pct_recorded": [
+      3.69,
+      17.92,
+      7.31
+     ],
+     "frame_pct_from_map": 9.36,
+     "frame_pct_recorded": 9.42,
+     "hours": 27.83,
+     "image_sha256": "91655aa302b75f9ba71fd1beb6d399a8b664beee26ab458cdd4634d38e41b3f8",
+     "map_sha256": "aed38c748e50a669ecdd04b93b7f729ba3814e74cce52243833962af88568f9f",
+     "quality_pass": true,
+     "quality_reasons": [],
+     "visit": 5
+    },
+    {
+     "fov_boxes": [
+      [
+       409,
+       370,
+       260,
+       348
+      ],
+      [
+       393,
+       493,
+       260,
+       348
+      ],
+      [
+       482,
+       123,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 8.54,
+     "fov_pct_recorded": [
+      6.79,
+      10.56,
+      8.28
+     ],
+     "frame_pct_from_map": 9.84,
+     "frame_pct_recorded": 9.89,
+     "hours": 35.07,
+     "image_sha256": "20ba3184cdc5ad2ffb4b908b2fbe7c0ab634e03fe94e7ac97095f7000deb6eac",
+     "map_sha256": "c76931ad65339301f52d15fdba74b0b2cfe5f6c481db07250397bd97ecd89566",
+     "quality_pass": true,
+     "quality_reasons": [],
+     "visit": 6
+    },
+    {
+     "fov_boxes": [
+      [
+       321,
+       401,
+       260,
+       348
+      ],
+      [
+       243,
+       113,
+       260,
+       348
+      ],
+      [
+       408,
+       296,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 8.87,
+     "fov_pct_recorded": [
+      6.97,
+      13.35,
+      6.28
+     ],
+     "frame_pct_from_map": 12.65,
+     "frame_pct_recorded": 12.68,
+     "hours": 41.39,
+     "image_sha256": "63fd3fc1abf6620afd1bb1c4b836d07d280b035110ce6c4500eec540ee4012f1",
+     "map_sha256": "0340298cabc6c6fddf59eee004952b683c600bb135d7d1abeeb5cfebff8eec22",
+     "quality_pass": true,
+     "quality_reasons": [],
+     "visit": 7
+    },
+    {
+     "fov_boxes": [
+      [
+       10,
+       366,
+       260,
+       348
+      ],
+      [
+       30,
+       867,
+       260,
+       348
+      ],
+      [
+       157,
+       445,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 18.15,
+     "fov_pct_recorded": [
+      12.53,
+      23.96,
+      17.96
+     ],
+     "frame_pct_from_map": 17.36,
+     "frame_pct_recorded": 17.37,
+     "hours": 48.08,
+     "image_sha256": "6260748095efc116a3fe31c1354f0ca8af2017d3f8c5025cd1fd6131a0c65812",
+     "map_sha256": "58b6540eb66bf40b95bcfa5dcabd56c22358259c32b4d814254525ffd081b501",
+     "quality_pass": true,
+     "quality_reasons": [],
+     "visit": 8
+    },
+    {
+     "fov_boxes": [
+      [
+       150,
+       425,
+       260,
+       348
+      ],
+      [
+       625,
+       414,
+       260,
+       348
+      ],
+      [
+       105,
+       795,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 16.81,
+     "fov_pct_recorded": [
+      13.68,
+      11.65,
+      25.1
+     ],
+     "frame_pct_from_map": 19.36,
+     "frame_pct_recorded": 19.41,
+     "hours": 54.21,
+     "image_sha256": "700b08dd2abf828bc8f869e4e5ca30c9ab0284ef9c3dba79d9219346b3fbbf53",
+     "map_sha256": "96fdb551d4bb2ccd28bef65db58b55c1cc8f4f3478bd3875d18558fca3cdeff3",
+     "quality_pass": true,
+     "quality_reasons": [],
+     "visit": 9
+    },
+    {
+     "fov_boxes": [
+      [
+       451,
+       445,
+       260,
+       348
+      ],
+      [
+       499,
+       954,
+       260,
+       348
+      ],
+      [
+       72,
+       854,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 24.06,
+     "fov_pct_recorded": [
+      23.73,
+      16.1,
+      32.34
+     ],
+     "frame_pct_from_map": 24.12,
+     "frame_pct_recorded": 24.15,
+     "hours": 61.52,
+     "image_sha256": "7803f96a4da052ee68d65a3f6ede567029e9f0b5c66cd831ab451165b621f830",
+     "map_sha256": "2690c0b38b8e0c4c53a866b6734c94629416aa2ad54c34f5fbdb41e5a10246e3",
+     "quality_pass": false,
+     "quality_reasons": [
+      "exposure_out_of_range"
+     ],
+     "visit": 10
+    },
+    {
+     "fov_boxes": [
+      [
+       663,
+       159,
+       260,
+       348
+      ],
+      [
+       347,
+       665,
+       260,
+       348
+      ],
+      [
+       31,
+       468,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 19.53,
+     "fov_pct_recorded": [
+      13.27,
+      14.6,
+      30.73
+     ],
+     "frame_pct_from_map": 30.09,
+     "frame_pct_recorded": 30.18,
+     "hours": 68.46,
+     "image_sha256": "abeca61dfb503730cb45b789727fb9534c391ef7e3ad8183efbddb433342ec35",
+     "map_sha256": "2407de5bb36872f1039477b20d0682ac8c0ecc3f595888b3a4611db7b6d7f343",
+     "quality_pass": false,
+     "quality_reasons": [
+      "exposure_out_of_range"
+     ],
+     "visit": 11
+    },
+    {
+     "fov_boxes": [
+      [
+       272,
+       694,
+       260,
+       348
+      ],
+      [
+       227,
+       106,
+       260,
+       348
+      ],
+      [
+       355,
+       259,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 42.02,
+     "fov_pct_recorded": [
+      20.63,
+      58.57,
+      46.86
+     ],
+     "frame_pct_from_map": 36.5,
+     "frame_pct_recorded": 36.58,
+     "hours": 72.97,
+     "image_sha256": "ade5d3cbb7e5950b12058ed4273a46be5702eefbca88060974242470c807ddc0",
+     "map_sha256": "4ab4ae9192a8abd6f414f14e67d91cc38d64b75f85c4297cc9f79274300da29a",
+     "quality_pass": false,
+     "quality_reasons": [
+      "exposure_out_of_range"
+     ],
+     "visit": 12
+    },
+    {
+     "fov_boxes": [
+      [
+       172,
+       222,
+       260,
+       348
+      ],
+      [
+       457,
+       862,
+       260,
+       348
+      ],
+      [
+       304,
+       399,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 47.41,
+     "fov_pct_recorded": [
+      54.67,
+      37.12,
+      50.43
+     ],
+     "frame_pct_from_map": 41.77,
+     "frame_pct_recorded": 41.86,
+     "hours": 80.04,
+     "image_sha256": "4971f257cc3f0117897fad1e7a3adbb427448e9235c9c186a1627bd01c20026f",
+     "map_sha256": "7478fae818e9d713f952788f2a88d8cb9612ee3801a6a07718d2dc91cf4cc6f9",
+     "quality_pass": false,
+     "quality_reasons": [
+      "exposure_out_of_range"
+     ],
+     "visit": 13
+    },
+    {
+     "fov_boxes": [
+      [
+       295,
+       446,
+       260,
+       348
+      ],
+      [
+       670,
+       985,
+       260,
+       348
+      ],
+      [
+       285,
+       348,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 56.67,
+     "fov_pct_recorded": [
+      55.7,
+      51.01,
+      63.3
+     ],
+     "frame_pct_from_map": 49.51,
+     "frame_pct_recorded": 49.59,
+     "hours": 84.64,
+     "image_sha256": "d45d30f78f6b8174fdb4cdca1c52e60dacf1a51597a76a2cffc4a06c20147913",
+     "map_sha256": "162a46357cdaab502b0a681efc761410340260bda7245b24391382ffaabbf319",
+     "quality_pass": false,
+     "quality_reasons": [
+      "exposure_out_of_range"
+     ],
+     "visit": 14
+    }
+   ],
+   "stream_id": "c2c12_090318_exp1_F0003_Data"
+  },
+  "stall": {
+   "file": "stall.npz",
+   "layers": [
+    {
+     "fov_boxes": [
+      [
+       209,
+       934,
+       260,
+       348
+      ],
+      [
+       80,
+       361,
+       260,
+       348
+      ],
+      [
+       185,
+       806,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 1.63,
+     "fov_pct_recorded": [
+      1.95,
+      0.68,
+      2.27
+     ],
+     "frame_pct_from_map": 0.82,
+     "frame_pct_recorded": 0.82,
+     "hours": 0.0,
+     "image_sha256": "a0dbf7a700d50eb7f2fd054b331c4bb5b2437c211961af3e7485ede48c2d6268",
+     "map_sha256": "2d6c0bae7c00abcffea56f0fa3608d86e145859c561a268a0d89a5953c2ab574",
+     "quality_pass": false,
+     "quality_reasons": [
+      "blur_below_threshold"
+     ],
+     "visit": 0
+    },
+    {
+     "fov_boxes": [
+      [
+       67,
+       33,
+       260,
+       348
+      ],
+      [
+       373,
+       846,
+       260,
+       348
+      ],
+      [
+       174,
+       616,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 1.39,
+     "fov_pct_recorded": [
+      0.8,
+      0.0,
+      3.37
+     ],
+     "frame_pct_from_map": 2.83,
+     "frame_pct_recorded": 2.83,
+     "hours": 6.41,
+     "image_sha256": "4d5dc8309e285b82301814ebfc03a851737ba0bf9e490e34ec693c0e01162e8e",
+     "map_sha256": "a6e6c03079bc8f43510d6a83774f66602b456ca353f20a9af74ddfccc755790e",
+     "quality_pass": false,
+     "quality_reasons": [
+      "blur_below_threshold"
+     ],
+     "visit": 1
+    },
+    {
+     "fov_boxes": [
+      [
+       383,
+       880,
+       260,
+       348
+      ],
+      [
+       648,
+       703,
+       260,
+       348
+      ],
+      [
+       484,
+       1009,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 4.48,
+     "fov_pct_recorded": [
+      3.71,
+      5.05,
+      4.67
+     ],
+     "frame_pct_from_map": 4.41,
+     "frame_pct_recorded": 4.43,
+     "hours": 11.72,
+     "image_sha256": "b1454686b393cbc313608b07f338792fb1fbebc48a53cb0cbadedbcc86ac0534",
+     "map_sha256": "90356d052c2baf617949dfce137e16c3354f056ba4c2833965610f275de3d0da",
+     "quality_pass": false,
+     "quality_reasons": [
+      "blur_below_threshold"
+     ],
+     "visit": 2
+    },
+    {
+     "fov_boxes": [
+      [
+       471,
+       864,
+       260,
+       348
+      ],
+      [
+       568,
+       7,
+       260,
+       348
+      ],
+      [
+       472,
+       1003,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 4.84,
+     "fov_pct_recorded": [
+      3.67,
+      4.8,
+      6.04
+     ],
+     "frame_pct_from_map": 4.23,
+     "frame_pct_recorded": 4.26,
+     "hours": 16.34,
+     "image_sha256": "bc6a90af23cbf73d74dccd8064b3ba471fbe1e7107e738073e5b69fe8dc55614",
+     "map_sha256": "8262853e3469de8afc00613ece83125eb8b1615eee30ef2a1f98a4964d9fe04e",
+     "quality_pass": false,
+     "quality_reasons": [
+      "blur_below_threshold"
+     ],
+     "visit": 3
+    },
+    {
+     "fov_boxes": [
+      [
+       754,
+       279,
+       260,
+       348
+      ],
+      [
+       671,
+       258,
+       260,
+       348
+      ],
+      [
+       136,
+       759,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 4.01,
+     "fov_pct_recorded": [
+      2.16,
+      5.72,
+      4.15
+     ],
+     "frame_pct_from_map": 3.92,
+     "frame_pct_recorded": 3.91,
+     "hours": 20.89,
+     "image_sha256": "f4db914f31a103dc9374568e9e0af477b6fc50d3abf60cbb9bd25a89e64ac12d",
+     "map_sha256": "6c5e73fa0fe7358bcd9027dd476e983e4054f9a66c30861a42b454c7bce06a4d",
+     "quality_pass": false,
+     "quality_reasons": [
+      "blur_below_threshold"
+     ],
+     "visit": 4
+    },
+    {
+     "fov_boxes": [
+      [
+       245,
+       809,
+       260,
+       348
+      ],
+      [
+       698,
+       909,
+       260,
+       348
+      ],
+      [
+       579,
+       687,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 9.33,
+     "fov_pct_recorded": [
+      10.13,
+      7.68,
+      10.18
+     ],
+     "frame_pct_from_map": 6.9,
+     "frame_pct_recorded": 6.92,
+     "hours": 27.83,
+     "image_sha256": "6b6db54d367ac441ff04a6a8fdc366fb60724d255f5fa24676b81aa07174f540",
+     "map_sha256": "8513c34c07953cf0090376d831d4428f470803ccc31ed3891fffec061ac45884",
+     "quality_pass": false,
+     "quality_reasons": [
+      "blur_below_threshold"
+     ],
+     "visit": 5
+    },
+    {
+     "fov_boxes": [
+      [
+       769,
+       402,
+       260,
+       348
+      ],
+      [
+       606,
+       873,
+       260,
+       348
+      ],
+      [
+       370,
+       330,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 4.1,
+     "fov_pct_recorded": [
+      2.5,
+      3.92,
+      5.89
+     ],
+     "frame_pct_from_map": 7.48,
+     "frame_pct_recorded": 7.51,
+     "hours": 35.07,
+     "image_sha256": "d59cb174a290f7febd9c17c7a947419d8e90e7ed0ccc74b3a21edfdcc5904b02",
+     "map_sha256": "9159800bf6c1ac0f492d1dc051b3569460205493710482258d2b097bba19d5fd",
+     "quality_pass": true,
+     "quality_reasons": [],
+     "visit": 6
+    },
+    {
+     "fov_boxes": [
+      [
+       363,
+       727,
+       260,
+       348
+      ],
+      [
+       514,
+       347,
+       260,
+       348
+      ],
+      [
+       679,
+       727,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 6.94,
+     "fov_pct_recorded": [
+      9.09,
+      7.2,
+      4.54
+     ],
+     "frame_pct_from_map": 8.0,
+     "frame_pct_recorded": 8.03,
+     "hours": 41.39,
+     "image_sha256": "60faeb1c3450a99629cadbcaf899391adbd391ce9fbf46d05d584dfec597b060",
+     "map_sha256": "8965d4f30cc1a34134448228837df999331d9df466314c202b94bda1f7bb817c",
+     "quality_pass": true,
+     "quality_reasons": [],
+     "visit": 7
+    },
+    {
+     "fov_boxes": [
+      [
+       250,
+       899,
+       260,
+       348
+      ],
+      [
+       551,
+       168,
+       260,
+       348
+      ],
+      [
+       95,
+       819,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 8.55,
+     "fov_pct_recorded": [
+      8.64,
+      9.17,
+      7.85
+     ],
+     "frame_pct_from_map": 9.81,
+     "frame_pct_recorded": 9.85,
+     "hours": 48.08,
+     "image_sha256": "799cec98b006bc449420b3bf9483626b2ca86613e4d3abfe4dd91a748ac3387a",
+     "map_sha256": "76ba068430557fd88c754f2d168ceb807ffd2413a4dbf23b7e21b30e9fe09b7c",
+     "quality_pass": true,
+     "quality_reasons": [],
+     "visit": 8
+    },
+    {
+     "fov_boxes": [
+      [
+       490,
+       198,
+       260,
+       348
+      ],
+      [
+       322,
+       875,
+       260,
+       348
+      ],
+      [
+       189,
+       833,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 12.26,
+     "fov_pct_recorded": [
+      10.79,
+      13.76,
+      12.24
+     ],
+     "frame_pct_from_map": 10.38,
+     "frame_pct_recorded": 10.45,
+     "hours": 54.21,
+     "image_sha256": "8b3eded41d2bb53c70db9d670da0580b8bbb4b4d68f7b04a49372a16608b3746",
+     "map_sha256": "f4f99e85c93c63c9a4ee2ca4c4b7a6beb8fbf6439e83b3e668ce55f73672e508",
+     "quality_pass": true,
+     "quality_reasons": [],
+     "visit": 9
+    },
+    {
+     "fov_boxes": [
+      [
+       292,
+       942,
+       260,
+       348
+      ],
+      [
+       661,
+       19,
+       260,
+       348
+      ],
+      [
+       214,
+       618,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 12.89,
+     "fov_pct_recorded": [
+      9.1,
+      11.63,
+      17.95
+     ],
+     "frame_pct_from_map": 11.23,
+     "frame_pct_recorded": 11.27,
+     "hours": 61.52,
+     "image_sha256": "a1c5b7cd98b4996f4ae9b3e25eb15dccc381f69e8e35b7e81e99f645288f922b",
+     "map_sha256": "b385bdeafc8b7ad89c70ce0dbb33888d6eba1e2a6372c019a43bc2111477586f",
+     "quality_pass": true,
+     "quality_reasons": [],
+     "visit": 10
+    },
+    {
+     "fov_boxes": [
+      [
+       322,
+       654,
+       260,
+       348
+      ],
+      [
+       645,
+       78,
+       260,
+       348
+      ],
+      [
+       517,
+       387,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 13.49,
+     "fov_pct_recorded": [
+      10.72,
+      16.0,
+      13.75
+     ],
+     "frame_pct_from_map": 12.2,
+     "frame_pct_recorded": 12.23,
+     "hours": 68.46,
+     "image_sha256": "0a20e091ce0cb16c8eaff88ee00395ac7e49d87c5831226d640f73d7940a9e44",
+     "map_sha256": "7e2ec1951c7b52404366e7a76bd1f9360a2fd32003298cab4c30eabcff1c88ba",
+     "quality_pass": true,
+     "quality_reasons": [],
+     "visit": 11
+    },
+    {
+     "fov_boxes": [
+      [
+       376,
+       262,
+       260,
+       348
+      ],
+      [
+       457,
+       738,
+       260,
+       348
+      ],
+      [
+       436,
+       537,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 14.12,
+     "fov_pct_recorded": [
+      13.06,
+      13.09,
+      16.22
+     ],
+     "frame_pct_from_map": 12.97,
+     "frame_pct_recorded": 12.98,
+     "hours": 72.97,
+     "image_sha256": "2f605036d8f6ad61bc2384892244d223b27e0c8162df7394f495c9a944113563",
+     "map_sha256": "35e923ac4bdfaf4a89f264b5c32d9659e63effd09740d4fd3c8c43a8a1d3fc62",
+     "quality_pass": true,
+     "quality_reasons": [],
+     "visit": 12
+    },
+    {
+     "fov_boxes": [
+      [
+       618,
+       351,
+       260,
+       348
+      ],
+      [
+       189,
+       318,
+       260,
+       348
+      ],
+      [
+       62,
+       560,
+       260,
+       348
+      ]
+     ],
+     "fov_mean_recorded": 15.17,
+     "fov_pct_recorded": [
+      14.57,
+      12.64,
+      18.31
+     ],
+     "frame_pct_from_map": 14.39,
+     "frame_pct_recorded": 14.4,
+     "hours": 80.04,
+     "image_sha256": "ebf1977c24baa9ddd3364e9c35b1ac483a9a48bea607f2eba84d58578fc1f502",
+     "map_sha256": "da6b856f66721a79dac36022ddb1bc36bfd10e480443c5de453656d6578f10d1",
+     "quality_pass": true,
+     "quality_reasons": [],
+     "visit": 13
+    }
+   ],
+   "stream_id": "c2c12_090303_exp1_F0014_Data__fault_stall"
+  }
+ },
+ "source": "cache/probmaps (Cellpose-SAM cpsam_v2 on Colab GPU, nb/03), copied unchanged"
+}

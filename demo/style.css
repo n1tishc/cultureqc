@@ -549,3 +549,17 @@ footer { display: none !important; }
 .precomputed-card .classifier-note { margin-top: 6px; }
 .precomputed-card code { font-family: var(--mono); font-size: 11px; }
 .precomputed-caption { margin-top: 8px; font-size: 13px; line-height: 1.5; color: var(--text-secondary); }
+
+/* 3D confluency view (demo/confluency_3d.py) */
+.image-pane { flex-wrap: nowrap !important; }
+.image-pane:has(.landscape-plot:not(.hidden)) { overflow-y: auto !important; }
+.image-pane .landscape-plot { flex: 0 0 auto; padding-top: 40px; background: transparent !important; border: none !important; }
+.map-note { margin: 10px 14px 12px; font-size: 13px; line-height: 1.55; color: var(--text-secondary); }
+.map-note strong { color: var(--text-primary); }
+.map-note code { font-family: var(--mono); font-size: 11px; }
+.map-note .c-cell { color: var(--green); font-weight: 600; }
+.map-note .c-border { color: var(--amber); font-weight: 600; }
+.map-note .c-bg { color: #94a3b8; font-weight: 600; }
+.map-meta { margin-top: 6px; font-size: 12px; color: var(--text-muted); }
+.map-check.ok { color: var(--green); }
+.map-check.bad { color: var(--red); font-weight: 600; }

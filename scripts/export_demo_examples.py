@@ -19,6 +19,12 @@ Flask Timeline's dimming replay shows the gate catching it.
 For the C2C12 frames the JSON also holds the compute cache's values for the
 same image (Colab GPU, nb/03), so CPU vs GPU agreement is visible.
 
+Each example also stores the cell-probability map its confluency was counted
+from (<id>_probmap.npz, the cache's stored form), for the 3D confluency view;
+its SHA-256 is the record's confluency_map_hash. For C2C12 frames, the share
+of map pixels whose side of the cutoff differs from the cache's map is stored
+under cache.probmap_sign_disagree_pct.
+
 Usage (needs data/c2c12_picks/ from nb/04c_fetch_c2c12_frames.ipynb, and the
 cache for the parity columns):
     python scripts/export_demo_examples.py [--only ID ...]
@@ -37,11 +43,13 @@ import time
 from datetime import datetime, timezone
 
 import cv2
+import numpy as np
 import pandas as pd
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, REPO)
 
+from culture.cache import probmap_sha256  # noqa: E402
 from culture.records import RecordWriter, hash_file  # noqa: E402
 from demo.analysis import analyze_image, build_record  # noqa: E402
 
@@ -141,9 +149,17 @@ def main():
         cv2.imwrite(os.path.join(OUT_DIR, overlay_file), cv2.cvtColor(a.overlay, cv2.COLOR_RGB2BGR),
                     [cv2.IMWRITE_JPEG_QUALITY, 90])
         rec = writer.append(build_record(a, dst, CELL_LINE, datetime.now(timezone.utc).isoformat()))
+        probmap_file = f"{e['id']}_probmap.npz"
+        np.savez_compressed(os.path.join(OUT_DIR, probmap_file), prob_x1000=a.probmap_x1000)
+        assert probmap_sha256(a.probmap_x1000) == rec["confluency_map_hash"]
         entry = {k: v for k, v in e.items() if k not in ("src",)}
+        if "cache" in e:
+            cached = np.load(os.path.join(CACHE, "probmaps", f"{sha}.npz"))["prob_x1000"]
+            assert cached.shape == a.probmap_x1000.shape
+            entry["cache"] = dict(e["cache"], probmap_sign_disagree_pct=round(
+                float(((cached > 0) != (a.probmap_x1000 > 0)).mean() * 100), 4))
         entry.update(
-            image=image_file, overlay=overlay_file, image_sha256=sha, height=int(img.shape[0]),
+            image=image_file, overlay=overlay_file, probmap=probmap_file, image_sha256=sha, height=int(img.shape[0]),
             width=int(img.shape[1]), cell_line=CELL_LINE, target_confluency=TARGET,
             confluency=a.confluency.to_dict(), qc=a.qc.to_dict(), demoted=a.demoted,
             anomaly=a.anomaly.__dict__ | {"top_patches": [list(p) for p in a.anomaly.top_patches]},

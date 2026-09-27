@@ -78,6 +78,10 @@
       "type": "string",
       "enum": ["cpsam_v2_probmap", "cpsam_v2_instance", "threshold_baseline"]
     },
+    "confluency_map_hash": {
+      "type": ["string", "null"],
+      "description": "SHA-256 of the Cellpose-SAM cell-probability map the confluency was counted from, at 1/4 resolution as int16 logits x 1000 (culture.cache.probmap_sha256); null when the record has no map"
+    },
     "qc_flag": {
       "type": "string",
       "enum": ["normal", "contamination_suspected", "detachment", "image_quality"]

@@ -69,6 +69,24 @@ FLUSH_EVERY = 100  # build() flushes all parquet tables every N records (see mod
 # Keys and specs
 # ---------------------------------------------------------------------------
 
+def downsample_probmap(prob: np.ndarray) -> np.ndarray:
+    """The stored form of a Cellpose-SAM cell-probability map: every
+    PROBMAP_DOWNSAMPLE-th pixel, logits x 1000 as int16. Raw values are
+    unbounded logits, in practice about [-10, 10]; int16 rather than lossy
+    uint8 keeps any threshold in a sane range exactly recoverable. The cache,
+    the live console and the precomputed examples all use this one function."""
+    small = prob[::PROBMAP_DOWNSAMPLE, ::PROBMAP_DOWNSAMPLE]
+    return np.clip(small * 1000, -32000, 32000).astype(np.int16)
+
+
+def probmap_sha256(scaled: np.ndarray) -> str:
+    """SHA-256 of a stored map's values (not of an .npz file, whose zip headers
+    carry timestamps): shape as "HxW", a newline, then little-endian int16
+    bytes in C order."""
+    a = np.ascontiguousarray(scaled, dtype="<i2")
+    return hashlib.sha256(f"{a.shape[0]}x{a.shape[1]}\n".encode() + a.tobytes()).hexdigest()
+
+
 def image_sha256(path: str) -> str:
     """Same hashing as culture/records.py::hash_file — one identity for an
     image whether it's referenced by the live pipeline or the cache."""
@@ -400,12 +418,7 @@ class Cache:
                     "pct": result.pct, "confidence": result.confidence, "extra": json.dumps(result.extra),
                 })
             if need_probmap and "prob" in captured:
-                prob = captured["prob"]
-                small = prob[::PROBMAP_DOWNSAMPLE, ::PROBMAP_DOWNSAMPLE]
-                # Raw prob values are unbounded logits in practice small (~[-10,10]);
-                # store as int16 scaled by 1000 rather than lossy uint8, so any
-                # threshold in a sane range is exactly recoverable.
-                scaled = np.clip(small * 1000, -32000, 32000).astype(np.int16)
+                scaled = downsample_probmap(captured["prob"])
                 _atomic_write_bytes(probmap_path, lambda f: np.savez_compressed(f, prob_x1000=scaled))
 
         # Crop confluency rows for the FOV-noise model, computed from the

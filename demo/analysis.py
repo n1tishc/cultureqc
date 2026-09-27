@@ -19,6 +19,7 @@ import cv2
 import numpy as np
 
 from culture.anomaly import AnomalyResult, score_frame
+from culture.cache import downsample_probmap, probmap_sha256
 from culture.pipeline import config_hashes
 from culture.qc import QCResult, classifier_demoted, qc_classify
 from culture.rationale import generate_rationale
@@ -44,6 +45,10 @@ class Analysis:
     evidence_boxes: list
     overlay: np.ndarray                      # RGB, full frame
     timings_s: dict = field(default_factory=dict)
+    # The cell-probability map the confluency was counted from, in the
+    # cache's stored form (culture.cache.downsample_probmap); its SHA-256 goes
+    # in the record as confluency_map_hash. Kept in memory only.
+    probmap_x1000: np.ndarray | None = None
 
 
 def _scale_bboxes(bboxes, img_h, img_w):
@@ -87,7 +92,7 @@ def analyze_image(img: np.ndarray, image_path: str, cell_line: str, target_confl
     t0 = time.perf_counter()
     captured = {}
     # One Cellpose-SAM pass: the overlay mask is the same prob > 0 the confluency counts.
-    conf = cpsam_confluency(img, method="probmap", on_visual=lambda prob, fg: captured.update(fg=fg))
+    conf = cpsam_confluency(img, method="probmap", on_visual=lambda prob, fg: captured.update(prob=prob, fg=fg))
     threshold_confluency(img)  # baseline computed for parity; not shown in this surface
     t["segmentation"] = time.perf_counter() - t0
 
@@ -142,7 +147,8 @@ def analyze_image(img: np.ndarray, image_path: str, cell_line: str, target_confl
     t["total"] = sum(t.values())
     return Analysis(confluency=conf, qc=qc, demoted=demoted, anomaly=anomaly, action=action, reason=reason,
                     rationale=rationale, evidence_boxes=evidence_boxes, overlay=overlay,
-                    timings_s={k: round(v, 3) for k, v in t.items()})
+                    timings_s={k: round(v, 3) for k, v in t.items()},
+                    probmap_x1000=downsample_probmap(captured["prob"]))
 
 
 def build_record(a: Analysis, image_path: str, cell_line: str, captured_at: str | None = None) -> dict:
@@ -159,6 +165,7 @@ def build_record(a: Analysis, image_path: str, cell_line: str, captured_at: str 
         "confluency_pct": a.confluency.pct,
         "confluency_confidence": a.confluency.confidence,
         "confluency_method": a.confluency.method,
+        "confluency_map_hash": probmap_sha256(a.probmap_x1000) if a.probmap_x1000 is not None else None,
         "qc_flag": a.qc.flag,
         "qc_confidence": a.qc.confidence,
         "qc_severity": None,

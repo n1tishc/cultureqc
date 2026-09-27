@@ -2,7 +2,8 @@
 demo/selfcheck.py — the GPU dry run's parity and latency check
 (cultureQC_upgrade_specv4.md §2B.7 item 3): re-run the first N precomputed
 Analyze examples live, compare with their stored outputs (confluency, anomaly
-score and flag, action), and time each stage.
+score and flag, action, and the 3D view's cell-probability map: share of map
+points on the other side of the cutoff), and time each stage.
 
     python -m demo.selfcheck [--n 5] [--out results/live_latency_gpu.md]
 
@@ -41,6 +42,9 @@ def run(n: int = 5) -> str:
         img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
         a = analyze_image(img, path, ex["cell_line"], ex["target_confluency"])
         t = a.timings_s
+        stored_map = precomputed.probmap(ex)
+        map_diff = (f"{((stored_map > 0) != (a.probmap_x1000 > 0)).mean() * 100:.3f}"
+                    if stored_map is not None and stored_map.shape == a.probmap_x1000.shape else "n/a")
         if img.shape == (1040, 1392):
             totals.append(t["total"])
         rows.append(
@@ -48,7 +52,7 @@ def run(n: int = 5) -> str:
             f"{t['qc_classifier']:.3f} | {t['total']:.2f} | {a.confluency.pct:.2f} vs {ex['confluency']['pct']:.2f} | "
             f"{a.anomaly.score} vs {ex['anomaly']['score']} | "
             f"{'same' if a.anomaly.flag == ex['anomaly']['flag'] else 'DIFFERENT'} | "
-            f"{'same' if a.action == ex['action'] else 'DIFFERENT'} |")
+            f"{'same' if a.action == ex['action'] else 'DIFFERENT'} | {map_diff} |")
     median = f"{statistics.median(totals):.2f} s" if totals else "n/a"
     return "\n".join([
         "# Live latency and parity on the Space (live_latency_gpu)",
@@ -60,8 +64,8 @@ def run(n: int = 5) -> str:
         "`results/live_latency.md` (V9).",
         "",
         "| example | size | Cellpose-SAM (s) | anomaly (s) | classifier (s) | total (s) | confluency live vs stored (%) "
-        "| anomaly score live vs stored | anomaly flag | action |",
-        "|---|---|---|---|---|---|---|---|---|---|",
+        "| anomaly score live vs stored | anomaly flag | action | map points across the cutoff (%) |",
+        "|---|---|---|---|---|---|---|---|---|---|---|",
         *rows,
         "",
         f"Median total per 1392×1040 C2C12 frame: **{median}** (n = {len(totals)}).",

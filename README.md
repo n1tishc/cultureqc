@@ -118,7 +118,7 @@ drove, and the proof cannot drift apart.
 | **Anomaly check** | DINOv2-small patch distances on the 256 px centre tile against banks of normal C2C12 patches, one per confluency bin; flag = score above the bin's 5%-FPR threshold, with a patch heatmap (`culture/anomaly.py`, `configs/anomaly.yaml`). Shown for review only: it never changes the action. Uncalibrated outside the tested imaging setup; see [Site calibration](#site-calibration). |
 | **Action** | Deterministic rules over confluency and timing (plus the QC flag only when the classifier is not demoted): `passage`, `feed`, `hold`, `human_review`. No model decides this. |
 | **QC classifier (demoted)** | EfficientNet-B0 over the centred 256 px tile: `normal`, `contamination_suspected`, `detachment`, `image_quality`. Trained on synthetic tiles only; accuracy 0.9801 on synthetic test tiles, but 5.0% of real held-out C2C12 normal frames are called normal. Temperature-scaled (`configs/calibration.yaml`). Recorded and shown collapsed; not used for the action, and no Grad-CAM evidence is drawn while demoted (`configs/qc.yaml`). |
-| **Record** | Appended to a hash-chained JSONL log (`culture/records.py`, 39-field schema in `culture/schema.json`), with the model versions and the SHA-256 of every config it used. Every record carries the SHA-256 of the one before it, so altering any record breaks every link after it. |
+| **Record** | Appended to a hash-chained JSONL log (`culture/records.py`, 40-field schema in `culture/schema.json`), with the model versions and the SHA-256 of every config it used. The console's records also carry `confluency_map_hash`, the SHA-256 of the Cellpose-SAM map the confluency was counted from (1/4 resolution, int16), so the 3D view below can be checked against the record. Every record carries the SHA-256 of the one before it, so altering any record breaks every link after it. |
 
 ```bash
 python -m culture.records events.jsonl
@@ -237,8 +237,20 @@ never replayed**.
   each image once through the same code as the Analyze button
   (`demo/analysis.py`) and stores the outputs in `demo/examples/`. They show
   instantly with no model loaded and are labelled as precomputed. Pressing
-  Analyze runs the image live.
-- **Flask Timeline**: the five precomputed replays above.
+  Analyze runs the image live. The **3D** view draws the Cellpose-SAM
+  cell-probability map as a surface: height is the map's logit, not cell
+  thickness (phase contrast does not measure height). Points above the cutoff
+  plane are counted as cell, and the borderline band around it is what sets
+  the confidence. The view recomputes the map's SHA-256 and shows whether it
+  matches the record's `confluency_map_hash` (`demo/confluency_3d.py`).
+- **Flask Timeline**: the five precomputed replays above, as a curve or in
+  **3D space × time**: one layer per visit, showing where the frame's map
+  counts cell, with the 3 FOV crops the visit's number came from. The maps
+  are the compute cache's own, copied by `scripts/export_replay_maps.py` into
+  `demo/replay_maps/`, and each layer's hash is checked when drawn. A visit's
+  number is Cellpose-SAM run on each crop, so it is not read off the layer;
+  each layer is labelled with both the 3-FOV mean and the full-frame value
+  (`demo/replay_3d.py`).
 - **Detectability**: the matrix above.
 
 For the call, the console runs on a GPU Space (`deploy/hf-space-demo/`).
@@ -337,6 +349,8 @@ demo/             the review console (Gradio)
   analysis.py       the Analyze path, shared with the example export
   examples/         precomputed Analyze examples (scripts/export_demo_examples.py)
   replays/          precomputed timeline replays (scripts/export_demo_replays.py)
+  replay_maps/      the replays' cached maps for the 3D view (scripts/export_replay_maps.py)
+  confluency_3d.py, replay_3d.py   the 3D views
 
 scripts/          every number's script: eval_*, backtest_growth, export_*, site_calibrate
 results/          their outputs, cited next to each number in this README

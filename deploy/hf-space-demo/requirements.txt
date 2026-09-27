@@ -31,3 +31,4 @@ PyYAML>=6.0
 transformers>=4.40         # DINOv2-small, the anomaly check (culture/anomaly.py)
 pandas>=2.0                # culture/cache.py, demo/replay_timeline.py
 matplotlib>=3.8            # Flask Timeline plots
+plotly>=5.20               # 3D confluency and space x time views

@@ -322,7 +322,8 @@
     "anomaly_bin": "0-20",
     "anomaly_flag": false,
     "anomaly_score": 0.231172,
-    "confluency_pct": 16.82
+    "confluency_pct": 16.82,
+    "probmap_sign_disagree_pct": 0.0398
    },
    "caption": "Held-out normal frame (c2c12_090318_exp1_F0003_Data, frame 589); Cellpose-SAM reads 16.8%; anomaly not flagged (score 0.231, threshold 0.308).",
    "cell_line": "unknown",
@@ -343,7 +344,7 @@
    "device": "cpu",
    "evidence_region_count": 0,
    "frame": 589,
-   "generated_at": "2026-09-27T21:33:22.066818+00:00",
+   "generated_at": "2026-09-27T23:09:45.768784+00:00",
    "height": 1040,
    "id": "c2c12_normal_0_20",
    "image": "c2c12_normal_0_20.png",
@@ -351,6 +352,7 @@
    "kind": "c2c12_normal",
    "label": "C2C12 normal, 0-20% bin",
    "overlay": "c2c12_normal_0_20_overlay.jpg",
+   "probmap": "c2c12_normal_0_20_probmap.npz",
    "qc": {
     "calibrated": true,
     "confidence": 0.7866,
@@ -368,7 +370,7 @@
    "rationale": "Confluency 16.8% below target (80%); recommend no action required; continue monitoring.",
    "record": {
     "action_reason": "Confluency 16.8% below target 80%. No action needed.",
-    "analysed_at": "2026-09-27T21:33:22.069008+00:00",
+    "analysed_at": "2026-09-27T23:09:45.771053+00:00",
     "anomaly_bank_sha256": "870ff30ce3339db29bb9dd7aae35713c154f24b7a3a0980b7b19bf559813463a",
     "anomaly_bin": "0-20",
     "anomaly_flag": false,
@@ -377,7 +379,7 @@
     "anomaly_threshold": 0.307557,
     "anomaly_used_in_decision": false,
     "anomaly_z": -0.0463,
-    "captured_at": "2026-09-27T21:33:22.066818+00:00",
+    "captured_at": "2026-09-27T23:09:45.768784+00:00",
     "cell_line": "unknown",
     "config_hashes": {
      "anomaly.yaml": "2776ce48025a554c2d3487c0d98433ef376ee4b9de1f5b25d48508bf82721184",
@@ -386,6 +388,7 @@
      "qc.yaml": "53c8f2ad51b5937d1d81baafb454de186df3c1a192f4400ee6bb936dfb63b959"
     },
     "confluency_confidence": 0.775,
+    "confluency_map_hash": "882b36a8c9215c76ffff0a2d1b1f726123c69abe5f6903837252488e3ac48166",
     "confluency_method": "probmap",
     "confluency_pct": 16.82,
     "decided_by": "rules_v0.2",
@@ -412,8 +415,8 @@
     "qc_severity": null,
     "qc_used_in_decision": false,
     "recommended_action": "hold",
-    "record_hash": "d8918a227fdca41d76ae56ac22fe7adc6ae54565dc521f5c561d1b1d7e4010cd",
-    "record_id": "20883b49-696b-4c83-b20b-092be93df47e",
+    "record_hash": "302094083bd82a6347e489faa5d3fbd7ac4a4de37004d1e6e8b91665b80074e2",
+    "record_id": "69184219-ac1f-41c4-862f-26d944b9903d",
     "review_outcome": null,
     "reviewed_by": null,
     "schema_version": "0.2"
@@ -422,11 +425,11 @@
    "severity": null,
    "target_confluency": 80.0,
    "timings_s": {
-    "anomaly": 3.289,
-    "qc_classifier": 0.874,
-    "segmentation": 410.526,
-    "total": 414.689,
-    "wall": 414.7
+    "anomaly": 3.491,
+    "qc_classifier": 0.67,
+    "segmentation": 421.001,
+    "total": 425.162,
+    "wall": 425.173
    },
    "torch_threads": 6,
    "width": 1392
@@ -753,7 +756,8 @@
     "anomaly_bin": "20-40",
     "anomaly_flag": false,
     "anomaly_score": 0.220552,
-    "confluency_pct": 39.41
+    "confluency_pct": 39.41,
+    "probmap_sign_disagree_pct": 0.0785
    },
    "caption": "Held-out normal frame (c2c12_090325_exp1_F0013_Data, frame 889); Cellpose-SAM reads 39.4%; anomaly not flagged (score 0.221, threshold 0.329).",
    "cell_line": "unknown",
@@ -774,7 +778,7 @@
    "device": "cpu",
    "evidence_region_count": 0,
    "frame": 889,
-   "generated_at": "2026-09-27T21:40:22.156488+00:00",
+   "generated_at": "2026-09-27T23:16:45.348457+00:00",
    "height": 1040,
    "id": "c2c12_normal_20_40",
    "image": "c2c12_normal_20_40.png",
@@ -782,6 +786,7 @@
    "kind": "c2c12_normal",
    "label": "C2C12 normal, 20-40% bin",
    "overlay": "c2c12_normal_20_40_overlay.jpg",
+   "probmap": "c2c12_normal_20_40_probmap.npz",
    "qc": {
     "calibrated": true,
     "confidence": 0.4079,
@@ -799,7 +804,7 @@
    "rationale": "Confluency 39.4% below target (80%); recommend no action required; continue monitoring.",
    "record": {
     "action_reason": "Confluency 39.4% below target 80%. No action needed.",
-    "analysed_at": "2026-09-27T21:40:22.158487+00:00",
+    "analysed_at": "2026-09-27T23:16:45.350161+00:00",
     "anomaly_bank_sha256": "870ff30ce3339db29bb9dd7aae35713c154f24b7a3a0980b7b19bf559813463a",
     "anomaly_bin": "20-40",
     "anomaly_flag": false,
@@ -808,7 +813,7 @@
     "anomaly_threshold": 0.328964,
     "anomaly_used_in_decision": false,
     "anomaly_z": -0.8371,
-    "captured_at": "2026-09-27T21:40:22.156488+00:00",
+    "captured_at": "2026-09-27T23:16:45.348457+00:00",
     "cell_line": "unknown",
     "config_hashes": {
      "anomaly.yaml": "2776ce48025a554c2d3487c0d98433ef376ee4b9de1f5b25d48508bf82721184",
@@ -817,6 +822,7 @@
      "qc.yaml": "53c8f2ad51b5937d1d81baafb454de186df3c1a192f4400ee6bb936dfb63b959"
     },
     "confluency_confidence": 0.512,
+    "confluency_map_hash": "aa852ef551a30010222d7fabcf496ba570fd1e3dfe264a61252aad02a9fb62e8",
     "confluency_method": "probmap",
     "confluency_pct": 39.41,
     "decided_by": "rules_v0.2",
@@ -833,7 +839,7 @@
     },
     "model_weights_hash": null,
     "pixel_size_um": null,
-    "prev_record_hash": "d8918a227fdca41d76ae56ac22fe7adc6ae54565dc521f5c561d1b1d7e4010cd",
+    "prev_record_hash": "302094083bd82a6347e489faa5d3fbd7ac4a4de37004d1e6e8b91665b80074e2",
     "protocol_stage": null,
     "qc_calibrated": true,
     "qc_confidence": 0.4079,
@@ -843,8 +849,8 @@
     "qc_severity": null,
     "qc_used_in_decision": false,
     "recommended_action": "hold",
-    "record_hash": "e041f57836ccacc07845a1ec74f111df71a88c6bde14cdc09d0e8801779ad672",
-    "record_id": "27b505c7-6fad-43d7-bfb7-98a77dbb831f",
+    "record_hash": "e1cdc8dc63507dfb74934e4b00672f73012d3f99abd4c5492103e50049572fcd",
+    "record_id": "fe7e2ddd-bd19-48ae-a34b-dac22ee56126",
     "review_outcome": null,
     "reviewed_by": null,
     "schema_version": "0.2"
@@ -853,11 +859,11 @@
    "severity": null,
    "target_confluency": 80.0,
    "timings_s": {
-    "anomaly": 0.039,
+    "anomaly": 0.041,
     "qc_classifier": 0.225,
-    "segmentation": 419.796,
-    "total": 420.06,
-    "wall": 420.069
+    "segmentation": 419.27,
+    "total": 419.535,
+    "wall": 419.545
    },
    "torch_threads": 6,
    "width": 1392
@@ -1184,7 +1190,8 @@
     "anomaly_bin": "40-100",
     "anomaly_flag": false,
     "anomaly_score": 0.263383,
-    "confluency_pct": 51.45
+    "confluency_pct": 51.45,
+    "probmap_sign_disagree_pct": 0.2177
    },
    "caption": "Held-out normal frame (c2c12_090318_exp1_F0013_Data, frame 1045); Cellpose-SAM reads 51.4%; anomaly not flagged (score 0.263, threshold 0.427).",
    "cell_line": "unknown",
@@ -1205,7 +1212,7 @@
    "device": "cpu",
    "evidence_region_count": 0,
    "frame": 1045,
-   "generated_at": "2026-09-27T21:47:16.567406+00:00",
+   "generated_at": "2026-09-27T23:23:33.213017+00:00",
    "height": 1040,
    "id": "c2c12_normal_40_100",
    "image": "c2c12_normal_40_100.png",
@@ -1213,6 +1220,7 @@
    "kind": "c2c12_normal",
    "label": "C2C12 normal, 40-100% bin",
    "overlay": "c2c12_normal_40_100_overlay.jpg",
+   "probmap": "c2c12_normal_40_100_probmap.npz",
    "qc": {
     "calibrated": true,
     "confidence": 0.3927,
@@ -1230,7 +1238,7 @@
    "rationale": "Confluency 51.4% below target (80%); recommend pause automated decisions and flag for human review.",
    "record": {
     "action_reason": "Confluency confidence 0.01 is below floor 0.30. Image may be ambiguous; recommend manual inspection.",
-    "analysed_at": "2026-09-27T21:47:16.569930+00:00",
+    "analysed_at": "2026-09-27T23:23:33.215277+00:00",
     "anomaly_bank_sha256": "870ff30ce3339db29bb9dd7aae35713c154f24b7a3a0980b7b19bf559813463a",
     "anomaly_bin": "40-100",
     "anomaly_flag": false,
@@ -1239,7 +1247,7 @@
     "anomaly_threshold": 0.427394,
     "anomaly_used_in_decision": false,
     "anomaly_z": -0.3491,
-    "captured_at": "2026-09-27T21:47:16.567406+00:00",
+    "captured_at": "2026-09-27T23:23:33.213017+00:00",
     "cell_line": "unknown",
     "config_hashes": {
      "anomaly.yaml": "2776ce48025a554c2d3487c0d98433ef376ee4b9de1f5b25d48508bf82721184",
@@ -1248,6 +1256,7 @@
      "qc.yaml": "53c8f2ad51b5937d1d81baafb454de186df3c1a192f4400ee6bb936dfb63b959"
     },
     "confluency_confidence": 0.013,
+    "confluency_map_hash": "9243d66e825673a24fa70f8bd3f29ca06898b2a6c5bc74ed1e32d0a280dfaff0",
     "confluency_method": "probmap",
     "confluency_pct": 51.42,
     "decided_by": "rules_v0.2",
@@ -1264,7 +1273,7 @@
     },
     "model_weights_hash": null,
     "pixel_size_um": null,
-    "prev_record_hash": "e041f57836ccacc07845a1ec74f111df71a88c6bde14cdc09d0e8801779ad672",
+    "prev_record_hash": "e1cdc8dc63507dfb74934e4b00672f73012d3f99abd4c5492103e50049572fcd",
     "protocol_stage": null,
     "qc_calibrated": true,
     "qc_confidence": 0.3927,
@@ -1274,8 +1283,8 @@
     "qc_severity": null,
     "qc_used_in_decision": false,
     "recommended_action": "human_review",
-    "record_hash": "bb393cbed9f81b58781f38cff16daa4972e2f06fb62c3161aa55b362e585682e",
-    "record_id": "dda408ba-e7bb-4c7d-a275-3b6dc0d2b048",
+    "record_hash": "3f079fe138b5a04a3fd03602b0752c2c77bfd053d9443bf58efe46247cc167dd",
+    "record_id": "9a7b34be-dc9b-4dfd-8536-966ccd3dc739",
     "review_outcome": null,
     "reviewed_by": null,
     "schema_version": "0.2"
@@ -1284,11 +1293,11 @@
    "severity": null,
    "target_confluency": 80.0,
    "timings_s": {
-    "anomaly": 0.032,
-    "qc_classifier": 0.232,
-    "segmentation": 414.116,
-    "total": 414.38,
-    "wall": 414.389
+    "anomaly": 0.033,
+    "qc_classifier": 0.233,
+    "segmentation": 407.555,
+    "total": 407.821,
+    "wall": 407.831
    },
    "torch_threads": 6,
    "width": 1392
@@ -1615,7 +1624,8 @@
     "anomaly_bin": "40-100",
     "anomaly_flag": true,
     "anomaly_score": 0.623414,
-    "confluency_pct": 86.65
+    "confluency_pct": 86.65,
+    "probmap_sign_disagree_pct": 0.0884
    },
    "caption": "Held-out frame with simulated contamination (246 bacteria pasted at 16.5\u00d7 their real size); anomaly flagged (score 0.623, threshold 0.427). Cellpose-SAM reads 86.6%: the pasted bacteria are counted as cells, so the confluency rules recommend passage. The flag is shown for review only and does not change the action.",
    "cell_line": "unknown",
@@ -1636,7 +1646,7 @@
    "device": "cpu",
    "evidence_region_count": 0,
    "frame": 637,
-   "generated_at": "2026-09-27T21:54:02.836319+00:00",
+   "generated_at": "2026-09-27T23:30:18.741790+00:00",
    "height": 1040,
    "id": "c2c12_contamination_1",
    "image": "c2c12_contamination_1.png",
@@ -1644,6 +1654,7 @@
    "kind": "c2c12_contamination",
    "label": "C2C12 simulated contamination 1",
    "overlay": "c2c12_contamination_1_overlay.jpg",
+   "probmap": "c2c12_contamination_1_probmap.npz",
    "qc": {
     "calibrated": true,
     "confidence": 0.9897,
@@ -1661,7 +1672,7 @@
    "rationale": "Confluency 86.6% above target (80%); recommend proceed with passage.",
    "record": {
     "action_reason": "Confluency 86.6% >= target 80%, 48h since last passage.",
-    "analysed_at": "2026-09-27T21:54:02.838319+00:00",
+    "analysed_at": "2026-09-27T23:30:18.744201+00:00",
     "anomaly_bank_sha256": "870ff30ce3339db29bb9dd7aae35713c154f24b7a3a0980b7b19bf559813463a",
     "anomaly_bin": "40-100",
     "anomaly_flag": true,
@@ -1670,7 +1681,7 @@
     "anomaly_threshold": 0.427394,
     "anomaly_used_in_decision": false,
     "anomaly_z": 5.297,
-    "captured_at": "2026-09-27T21:54:02.836319+00:00",
+    "captured_at": "2026-09-27T23:30:18.741790+00:00",
     "cell_line": "unknown",
     "config_hashes": {
      "anomaly.yaml": "2776ce48025a554c2d3487c0d98433ef376ee4b9de1f5b25d48508bf82721184",
@@ -1679,6 +1690,7 @@
      "qc.yaml": "53c8f2ad51b5937d1d81baafb454de186df3c1a192f4400ee6bb936dfb63b959"
     },
     "confluency_confidence": 0.658,
+    "confluency_map_hash": "83ff967fa278898032c2a347c72b947f6903797f8e814dab25dbb3e04bec4f6e",
     "confluency_method": "probmap",
     "confluency_pct": 86.64,
     "decided_by": "rules_v0.2",
@@ -1695,7 +1707,7 @@
     },
     "model_weights_hash": null,
     "pixel_size_um": null,
-    "prev_record_hash": "bb393cbed9f81b58781f38cff16daa4972e2f06fb62c3161aa55b362e585682e",
+    "prev_record_hash": "3f079fe138b5a04a3fd03602b0752c2c77bfd053d9443bf58efe46247cc167dd",
     "protocol_stage": null,
     "qc_calibrated": true,
     "qc_confidence": 0.9897,
@@ -1705,8 +1717,8 @@
     "qc_severity": null,
     "qc_used_in_decision": false,
     "recommended_action": "passage",
-    "record_hash": "49752ef39e492a03a52c2475e57448f80a00f853be743ce9a67fea0747aa56b0",
-    "record_id": "ca10e8ea-6211-4b83-b5dc-652c8eb6c81b",
+    "record_hash": "efb83b51f13ddc2b10a48778bfa156cc8b1a1ad421030bde2cbdd18003f9b656",
+    "record_id": "b5eeefd9-f734-4e05-89fc-fdad0c5b0fee",
     "review_outcome": null,
     "reviewed_by": null,
     "schema_version": "0.2"
@@ -1715,11 +1727,11 @@
    "severity": 246.417,
    "target_confluency": 80.0,
    "timings_s": {
-    "anomaly": 0.031,
+    "anomaly": 0.032,
     "qc_classifier": 0.232,
-    "segmentation": 405.967,
-    "total": 406.23,
-    "wall": 406.24
+    "segmentation": 405.214,
+    "total": 405.477,
+    "wall": 405.487
    },
    "torch_threads": 6,
    "width": 1392
@@ -2046,7 +2058,8 @@
     "anomaly_bin": "40-100",
     "anomaly_flag": true,
     "anomaly_score": 0.639067,
-    "confluency_pct": 88.63
+    "confluency_pct": 88.63,
+    "probmap_sign_disagree_pct": 0.2443
    },
    "caption": "Held-out frame with simulated contamination (400 bacteria pasted at 16.5\u00d7 their real size); anomaly flagged (score 0.639, threshold 0.427). Cellpose-SAM reads 88.6%: the pasted bacteria are counted as cells, so the confluency rules recommend passage. The flag is shown for review only and does not change the action.",
    "cell_line": "unknown",
@@ -2067,7 +2080,7 @@
    "device": "cpu",
    "evidence_region_count": 0,
    "frame": 769,
-   "generated_at": "2026-09-27T22:00:46.628163+00:00",
+   "generated_at": "2026-09-27T23:37:00.997645+00:00",
    "height": 1040,
    "id": "c2c12_contamination_2",
    "image": "c2c12_contamination_2.png",
@@ -2075,6 +2088,7 @@
    "kind": "c2c12_contamination",
    "label": "C2C12 simulated contamination 2",
    "overlay": "c2c12_contamination_2_overlay.jpg",
+   "probmap": "c2c12_contamination_2_probmap.npz",
    "qc": {
     "calibrated": true,
     "confidence": 0.996,
@@ -2092,7 +2106,7 @@
    "rationale": "Confluency 88.6% above target (80%); recommend proceed with passage.",
    "record": {
     "action_reason": "Confluency 88.6% >= target 80%, 48h since last passage.",
-    "analysed_at": "2026-09-27T22:00:46.631307+00:00",
+    "analysed_at": "2026-09-27T23:37:00.999757+00:00",
     "anomaly_bank_sha256": "870ff30ce3339db29bb9dd7aae35713c154f24b7a3a0980b7b19bf559813463a",
     "anomaly_bin": "40-100",
     "anomaly_flag": true,
@@ -2101,7 +2115,7 @@
     "anomaly_threshold": 0.427394,
     "anomaly_used_in_decision": false,
     "anomaly_z": 5.544,
-    "captured_at": "2026-09-27T22:00:46.628163+00:00",
+    "captured_at": "2026-09-27T23:37:00.997645+00:00",
     "cell_line": "unknown",
     "config_hashes": {
      "anomaly.yaml": "2776ce48025a554c2d3487c0d98433ef376ee4b9de1f5b25d48508bf82721184",
@@ -2110,6 +2124,7 @@
      "qc.yaml": "53c8f2ad51b5937d1d81baafb454de186df3c1a192f4400ee6bb936dfb63b959"
     },
     "confluency_confidence": 0.381,
+    "confluency_map_hash": "d4351fcfaf5d6865f78e1486ee81595b58e2bc5d9b65ed87c29f28a429e6f8b0",
     "confluency_method": "probmap",
     "confluency_pct": 88.62,
     "decided_by": "rules_v0.2",
@@ -2126,7 +2141,7 @@
     },
     "model_weights_hash": null,
     "pixel_size_um": null,
-    "prev_record_hash": "49752ef39e492a03a52c2475e57448f80a00f853be743ce9a67fea0747aa56b0",
+    "prev_record_hash": "efb83b51f13ddc2b10a48778bfa156cc8b1a1ad421030bde2cbdd18003f9b656",
     "protocol_stage": null,
     "qc_calibrated": true,
     "qc_confidence": 0.996,
@@ -2136,8 +2151,8 @@
     "qc_severity": null,
     "qc_used_in_decision": false,
     "recommended_action": "passage",
-    "record_hash": "93b0da0b1a951e1a05d472967c41d8e757c738069c021d07f92e26abe42893d4",
-    "record_id": "05a8e0cd-26da-40a5-bcd5-339b1c7e35b5",
+    "record_hash": "2a4354f73b7ded79b2cd35a3164e2031a222ad7a47ad777acafbefb4dcc335da",
+    "record_id": "ff6f0e37-6a50-49ab-916b-dc189ea687e5",
     "review_outcome": null,
     "reviewed_by": null,
     "schema_version": "0.2"
@@ -2146,11 +2161,11 @@
    "severity": 400.0,
    "target_confluency": 80.0,
    "timings_s": {
-    "anomaly": 0.031,
-    "qc_classifier": 0.232,
-    "segmentation": 403.491,
-    "total": 403.754,
-    "wall": 403.764
+    "anomaly": 0.028,
+    "qc_classifier": 0.228,
+    "segmentation": 401.959,
+    "total": 402.215,
+    "wall": 402.224
    },
    "torch_threads": 6,
    "width": 1392
@@ -2491,7 +2506,7 @@
    "demoted": true,
    "device": "cpu",
    "evidence_region_count": 0,
-   "generated_at": "2026-09-27T21:26:19.327077+00:00",
+   "generated_at": "2026-09-27T23:38:53.710879+00:00",
    "gt_pct": 5.5,
    "height": 412,
    "id": "evican_pc3",
@@ -2500,6 +2515,7 @@
    "kind": "evican",
    "label": "EVICAN PC3 (real, accurate)",
    "overlay": "evican_pc3_overlay.jpg",
+   "probmap": "evican_pc3_probmap.npz",
    "qc": {
     "calibrated": true,
     "confidence": 0.9998,
@@ -2517,7 +2533,7 @@
    "rationale": "Confluency 5.1% below target (80%); recommend no action required; continue monitoring.",
    "record": {
     "action_reason": "Confluency 5.1% below target 80%. No action needed.",
-    "analysed_at": "2026-09-27T21:26:19.328005+00:00",
+    "analysed_at": "2026-09-27T23:38:53.711604+00:00",
     "anomaly_bank_sha256": "870ff30ce3339db29bb9dd7aae35713c154f24b7a3a0980b7b19bf559813463a",
     "anomaly_bin": "0-20",
     "anomaly_flag": true,
@@ -2526,7 +2542,7 @@
     "anomaly_threshold": 0.307557,
     "anomaly_used_in_decision": false,
     "anomaly_z": 2.715,
-    "captured_at": "2026-09-27T21:26:19.327077+00:00",
+    "captured_at": "2026-09-27T23:38:53.710879+00:00",
     "cell_line": "unknown",
     "config_hashes": {
      "anomaly.yaml": "2776ce48025a554c2d3487c0d98433ef376ee4b9de1f5b25d48508bf82721184",
@@ -2535,6 +2551,7 @@
      "qc.yaml": "53c8f2ad51b5937d1d81baafb454de186df3c1a192f4400ee6bb936dfb63b959"
     },
     "confluency_confidence": 0.969,
+    "confluency_map_hash": "2d6d82480ab6ba6ad1b9f862425046751f980c58eed37b2acb36d368bf5152ae",
     "confluency_method": "probmap",
     "confluency_pct": 5.13,
     "decided_by": "rules_v0.2",
@@ -2551,7 +2568,7 @@
     },
     "model_weights_hash": null,
     "pixel_size_um": null,
-    "prev_record_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+    "prev_record_hash": "2a4354f73b7ded79b2cd35a3164e2031a222ad7a47ad777acafbefb4dcc335da",
     "protocol_stage": null,
     "qc_calibrated": true,
     "qc_confidence": 0.9998,
@@ -2561,19 +2578,19 @@
     "qc_severity": null,
     "qc_used_in_decision": false,
     "recommended_action": "hold",
-    "record_hash": "ad5ed2cbe5b17cbee539fc09ffed065215939cc8c4ebfb5282424f4662dc9c0c",
-    "record_id": "ed887e23-be20-49d3-8698-9fffefae4df9",
+    "record_hash": "c1673e02700808b19318fe681f29bc400372c9e6a75cb4c085bc7a2e5dd93c44",
+    "record_id": "0e19f6f6-98e2-4725-a24b-72ff5d08bf07",
     "review_outcome": null,
     "reviewed_by": null,
     "schema_version": "0.2"
    },
    "target_confluency": 80.0,
    "timings_s": {
-    "anomaly": 3.367,
-    "qc_classifier": 0.681,
-    "segmentation": 115.569,
-    "total": 119.617,
-    "wall": 119.621
+    "anomaly": 0.034,
+    "qc_classifier": 0.231,
+    "segmentation": 112.433,
+    "total": 112.698,
+    "wall": 112.699
    },
    "torch_threads": 6,
    "width": 506
@@ -2914,7 +2931,7 @@
    "demoted": true,
    "device": "cpu",
    "evidence_region_count": 0,
-   "generated_at": "2026-09-27T22:02:41.561800+00:00",
+   "generated_at": "2026-09-27T23:40:46.206970+00:00",
    "gt_pct": 51.6,
    "height": 416,
    "id": "evican_ht29",
@@ -2923,6 +2940,7 @@
    "kind": "evican",
    "label": "EVICAN HT29 (real, error case)",
    "overlay": "evican_ht29_overlay.jpg",
+   "probmap": "evican_ht29_probmap.npz",
    "qc": {
     "calibrated": true,
     "confidence": 0.6352,
@@ -2940,7 +2958,7 @@
    "rationale": "Confluency 29.4% below target (80%); recommend pause automated decisions and flag for human review.",
    "record": {
     "action_reason": "Confluency confidence 0.27 is below floor 0.30. Image may be ambiguous; recommend manual inspection.",
-    "analysed_at": "2026-09-27T22:02:41.563205+00:00",
+    "analysed_at": "2026-09-27T23:40:46.207769+00:00",
     "anomaly_bank_sha256": "870ff30ce3339db29bb9dd7aae35713c154f24b7a3a0980b7b19bf559813463a",
     "anomaly_bin": "20-40",
     "anomaly_flag": false,
@@ -2949,7 +2967,7 @@
     "anomaly_threshold": 0.328964,
     "anomaly_used_in_decision": false,
     "anomaly_z": 0.3087,
-    "captured_at": "2026-09-27T22:02:41.561800+00:00",
+    "captured_at": "2026-09-27T23:40:46.206970+00:00",
     "cell_line": "unknown",
     "config_hashes": {
      "anomaly.yaml": "2776ce48025a554c2d3487c0d98433ef376ee4b9de1f5b25d48508bf82721184",
@@ -2958,6 +2976,7 @@
      "qc.yaml": "53c8f2ad51b5937d1d81baafb454de186df3c1a192f4400ee6bb936dfb63b959"
     },
     "confluency_confidence": 0.266,
+    "confluency_map_hash": "496989e812a06c11a8cff83b7e0d89ad512adcb62f1ce3f951f112e3c3964348",
     "confluency_method": "probmap",
     "confluency_pct": 29.35,
     "decided_by": "rules_v0.2",
@@ -2974,7 +2993,7 @@
     },
     "model_weights_hash": null,
     "pixel_size_um": null,
-    "prev_record_hash": "93b0da0b1a951e1a05d472967c41d8e757c738069c021d07f92e26abe42893d4",
+    "prev_record_hash": "c1673e02700808b19318fe681f29bc400372c9e6a75cb4c085bc7a2e5dd93c44",
     "protocol_stage": null,
     "qc_calibrated": true,
     "qc_confidence": 0.6352,
@@ -2984,19 +3003,19 @@
     "qc_severity": null,
     "qc_used_in_decision": false,
     "recommended_action": "human_review",
-    "record_hash": "5cdb4bf76e1736bbb66d01c87c7e461a828a4703b44e2ccae5a4a3bb07948184",
-    "record_id": "e472e237-9231-4323-aa51-f229a6a7156e",
+    "record_hash": "b7bb75a1c3a1e50646166135b71359764b868f83033233016364d3d970617dc6",
+    "record_id": "ba42f8e0-3474-4121-9734-71d4806f9f28",
     "review_outcome": null,
     "reviewed_by": null,
     "schema_version": "0.2"
    },
    "target_confluency": 80.0,
    "timings_s": {
-    "anomaly": 0.037,
-    "qc_classifier": 0.239,
-    "segmentation": 114.651,
-    "total": 114.926,
-    "wall": 114.927
+    "anomaly": 0.031,
+    "qc_classifier": 0.225,
+    "segmentation": 112.232,
+    "total": 112.488,
+    "wall": 112.49
    },
    "torch_threads": 6,
    "width": 444

@@ -26,7 +26,7 @@ from culture.records import RecordWriter, verify_chain
 from culture import detectability
 from culture.anomaly import LIVE_LIMITS
 from culture.visuals import anomaly_tile_view, png
-from demo import precomputed, replay_timeline
+from demo import confluency_3d, precomputed, replay_3d, replay_timeline
 from demo.analysis import analyze_image, build_record
 from demo.theme import CultureQCTheme
 
@@ -107,12 +107,12 @@ def _tint(hex_color, alpha):
 def run_analysis(original_path, cell_line, target_confluency):
     if not original_path:
         empty = '<div class="rc-empty">Upload an image to begin analysis.</div>'
-        return gr.update(), gr.update(visible=False), empty, None
+        return gr.update(), gr.update(visible=False), empty, None, None
 
     img = cv2.imread(original_path, cv2.IMREAD_GRAYSCALE)
     if img is None:
         err = '<div class="rc-empty">Could not read that image file.</div>'
-        return gr.update(), gr.update(visible=False), err, None
+        return gr.update(), gr.update(visible=False), err, None, None
 
     target_confluency = float(target_confluency or 80.0)
     a = analyze_image(img, original_path, cell_line, target_confluency)
@@ -141,7 +141,9 @@ def run_analysis(original_path, cell_line, target_confluency):
         record_count=writer.record_count,
     )
 
-    return overlay_path, gr.update(visible=True, value="Overlay"), results_html, overlay_path
+    map_view = {"prob": a.probmap_x1000, "confluency": a.confluency.to_dict(),
+                "map_hash": finalized["confluency_map_hash"], "precomputed": False}
+    return overlay_path, gr.update(visible=True, value="Overlay"), results_html, overlay_path, map_view
 
 
 def render_anomaly(img, anomaly):
@@ -395,16 +397,37 @@ def on_example(path):
     ex = precomputed.match(path, EXAMPLES)
     if ex is None:
         vis, html_, orig, ov, preview = on_upload(path)
-        return preview, vis, html_, orig, ov, gr.update(), gr.update()
+        return preview, vis, html_, orig, ov, gr.update(), gr.update(), None
     overlay = precomputed.overlay_path(ex)
+    prob = precomputed.probmap(ex)
+    map_view = None if prob is None else {
+        "prob": prob, "confluency": ex["confluency"], "map_hash": ex["record"].get("confluency_map_hash"),
+        "precomputed": True}
     return (overlay, gr.update(visible=True, value="Overlay"), show_example(ex), precomputed.image_path(ex),
-            overlay, ex["cell_line"], ex["target_confluency"])
+            overlay, ex["cell_line"], ex["target_confluency"], map_view)
 
 
-def switch_view(choice, original_path, overlay_path):
-    if choice == "Original":
-        return original_path
-    return overlay_path or original_path
+def switch_view(choice, original_path, overlay_path, map_view):
+    """Original / Overlay show the image; 3D swaps in the confluency landscape."""
+    if choice == "3D" and map_view is not None:
+        return (gr.update(visible=False),
+                gr.update(value=confluency_3d.landscape_figure(map_view["prob"]), visible=True),
+                gr.update(value=confluency_3d.landscape_note(map_view["prob"], map_view["confluency"],
+                                                             map_view["map_hash"], map_view["precomputed"]),
+                          visible=True))
+    path = original_path if choice == "Original" else (overlay_path or original_path)
+    return gr.update(value=path, visible=True), gr.update(visible=False), gr.update(visible=False)
+
+
+def on_timeline(scenario, mode, replays=None):
+    """Flask Timeline: the confluency curve, or the 3D space x time view."""
+    replays = replay_timeline.load_replays() if replays is None else replays
+    curve, summary, table = replay_timeline.render(scenario, replays)
+    if mode != "Curve" and replay_3d.available(scenario):
+        return (gr.update(value=curve, visible=False), summary, table,
+                gr.update(value=replay_3d.figure(scenario, replays[scenario]), visible=True),
+                gr.update(value=replay_3d.note(scenario), visible=True))
+    return gr.update(value=curve, visible=True), summary, table, gr.update(visible=False), gr.update(visible=False)
 
 
 def start_loading():
@@ -457,6 +480,7 @@ with gr.Blocks(
 ) as demo:
     original_state = gr.State(None)
     overlay_state = gr.State(None)
+    map_state = gr.State(None)        # the 3D view's map: {"prob", "confluency", "map_hash", "precomputed"}
 
     with gr.Row(elem_classes="topbar"):
         gr.HTML('<div class="wordmark"><span class="wordmark-dot"></span>cultureQC</div>')
@@ -478,7 +502,7 @@ with gr.Blocks(
             with gr.Row(elem_classes="main-row"):
                 with gr.Column(scale=62, min_width=0, elem_classes="image-pane"):
                     view_toggle = gr.Radio(
-                        ["Original", "Overlay"], value="Overlay", visible=False, show_label=False,
+                        ["Original", "Overlay", "3D"], value="Overlay", visible=False, show_label=False,
                         container=False, elem_classes="view-toggle",
                     )
                     loading_overlay = gr.HTML('<div class="image-loading-overlay"></div>', visible=False)
@@ -486,6 +510,9 @@ with gr.Blocks(
                         type="filepath", show_label=False, container=False, elem_classes="hero-image",
                         sources=["upload"], buttons=[], height="100%",
                     )
+                    landscape_plot = gr.Plot(visible=False, show_label=False, container=False,
+                                             elem_classes="landscape-plot")
+                    landscape_note = gr.HTML(visible=False)
 
                 with gr.Column(scale=38, min_width=0, elem_classes="results-pane"):
                     results_html = gr.HTML('<div class="rc-empty">Upload an image to begin analysis.</div>')
@@ -503,7 +530,7 @@ with gr.Blocks(
                     example_labels=[e["label"] for e in EXAMPLES],
                     inputs=[image_view],
                     outputs=[image_view, view_toggle, results_html, original_state, overlay_state, cell_line,
-                             target_conf],
+                             target_conf, map_state],
                     fn=on_example,
                     run_on_click=True,
                     label="",
@@ -527,7 +554,11 @@ with gr.Blocks(
                 choices=replay_timeline.choices(_replays), value=next(iter(_replays)), show_label=False,
                 container=False, elem_classes="scenario-picker",
             )
+            timeline_mode = gr.Radio(["Curve", "3D: space × time"], value="Curve", show_label=False,
+                                     container=False, elem_classes="view-mode")
             timeline_plot = gr.Plot(show_label=False, container=False)
+            timeline_3d = gr.Plot(show_label=False, container=False, visible=False)
+            timeline_3d_note = gr.HTML(visible=False)
             timeline_summary = gr.Markdown()
             timeline_table = gr.HTML()
             gr.Markdown(f'<span class="replay-credit">{html.escape(_first["credit"])}</span>')
@@ -544,14 +575,14 @@ with gr.Blocks(
         fn=on_upload,
         inputs=[image_view],
         outputs=[view_toggle, results_html, original_state, overlay_state, image_view],
-    )
+    ).then(fn=lambda: None, inputs=None, outputs=[map_state], show_progress="hidden")
 
     analyze_btn.click(
         fn=start_loading, inputs=None, outputs=[analyze_btn, loading_overlay], show_progress="hidden",
     ).then(
         fn=run_analysis,
         inputs=[original_state, cell_line, target_conf],
-        outputs=[image_view, view_toggle, results_html, overlay_state],
+        outputs=[image_view, view_toggle, results_html, overlay_state, map_state],
         show_progress="hidden",
     ).then(
         fn=end_loading, inputs=None, outputs=[analyze_btn, loading_overlay], show_progress="hidden",
@@ -561,18 +592,21 @@ with gr.Blocks(
 
     view_toggle.change(
         fn=switch_view,
-        inputs=[view_toggle, original_state, overlay_state],
-        outputs=[image_view],
+        inputs=[view_toggle, original_state, overlay_state, map_state],
+        outputs=[image_view, landscape_plot, landscape_note],
         show_progress="hidden",
     )
 
-    def on_timeline(scenario):
-        return replay_timeline.render(scenario, _replays)
+    def _on_timeline(scenario, mode):
+        return on_timeline(scenario, mode, _replays)
 
-    demo.load(fn=on_timeline, inputs=[timeline_choice],
-              outputs=[timeline_plot, timeline_summary, timeline_table], show_progress="hidden")
-    timeline_choice.change(fn=on_timeline, inputs=[timeline_choice],
-                           outputs=[timeline_plot, timeline_summary, timeline_table], show_progress="hidden")
+    _timeline_outputs = [timeline_plot, timeline_summary, timeline_table, timeline_3d, timeline_3d_note]
+    demo.load(fn=_on_timeline, inputs=[timeline_choice, timeline_mode], outputs=_timeline_outputs,
+              show_progress="hidden")
+    timeline_choice.change(fn=_on_timeline, inputs=[timeline_choice, timeline_mode], outputs=_timeline_outputs,
+                           show_progress="hidden")
+    timeline_mode.change(fn=_on_timeline, inputs=[timeline_choice, timeline_mode], outputs=_timeline_outputs,
+                         show_progress="hidden")
 
 
 if __name__ == "__main__":

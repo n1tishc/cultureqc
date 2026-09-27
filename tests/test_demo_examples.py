@@ -5,12 +5,16 @@ examples (demo/examples/, scripts/export_demo_examples.py).
   threshold, action vs the rules on the stored numbers.
 - C2C12 examples agree with the compute cache (GPU) for the same image.
 - Showing one needs no model and never touches the session's audit chain.
+- The 3D view's map is the one the record hashes (confluency_map_hash).
 """
 
+import math
 import os
 
+import numpy as np
 import pytest
 
+from culture.cache import PROBMAP_DOWNSAMPLE, downsample_probmap, probmap_sha256
 from culture.records import hash_file
 from culture.rules import LineConfig, decide
 from demo import precomputed
@@ -77,6 +81,9 @@ def test_showing_an_example_runs_no_model(monkeypatch):
         assert "Precomputed example" in html and "not part of this session" in html
         assert ex["caption"].split(";")[0] in html.replace("&#x27;", "'")
         assert out[0] == precomputed.overlay_path(ex)
+        image, plot, note = app.switch_view("3D", None, None, out[7])
+        assert image["visible"] is False and plot["visible"] is True
+        assert "matches the record" in note["value"] and "NOT" not in note["value"]
     assert app.writer.record_count == before
 
 
@@ -90,3 +97,45 @@ def test_example_matches_after_gradio_resave(ex, tmp_path):
     if copy.suffix == ".png":
         assert hash_file(str(copy)) != ex["image_sha256"]
         assert precomputed.match(str(copy), EXAMPLES) is ex
+
+
+@pytest.mark.parametrize("ex", EXAMPLES, ids=lambda e: e["id"])
+def test_3d_map_is_the_recorded_one(ex):
+    """The stored map hashes to the record's confluency_map_hash, has the
+    cache's stored shape, and reproduces the full-resolution numbers."""
+    m = precomputed.probmap(ex)
+    assert m is not None and m.dtype == np.int16
+    assert m.shape == (math.ceil(ex["height"] / PROBMAP_DOWNSAMPLE), math.ceil(ex["width"] / PROBMAP_DOWNSAMPLE))
+    assert probmap_sha256(m) == ex["record"]["confluency_map_hash"]
+    c = ex["confluency"]
+    # observed on the 7 examples: max 0.15 pp and 0.0014 (1/4-resolution sampling)
+    assert (m > 0).mean() * 100 == pytest.approx(c["pct"], abs=0.5)
+    assert (np.abs(m) < 1000).mean() == pytest.approx(c["extra"]["borderline_fraction"], abs=0.005)
+
+
+@pytest.mark.parametrize("ex", [e for e in EXAMPLES if "cache" in e], ids=lambda e: e["id"])
+def test_3d_map_agrees_with_the_cache(ex):
+    """CPU map (this export) vs the Colab GPU cache's map of the same frame:
+    share of map points on the other side of the cutoff."""
+    assert ex["cache"]["probmap_sign_disagree_pct"] < 1.0      # observed max 0.244%
+
+
+def test_map_hash_is_canonical():
+    prob = np.random.default_rng(0).normal(0, 4, (1040, 1392)).astype(np.float32)
+    m = downsample_probmap(prob)
+    assert m.shape == (260, 348) and m.dtype == np.int16
+    assert probmap_sha256(m) == probmap_sha256(m.astype(">i2")) == probmap_sha256(np.asfortranarray(m))
+    assert probmap_sha256(m) != probmap_sha256(m.reshape(348, 260))
+    changed = m.copy()
+    changed[0, 0] += 1
+    assert probmap_sha256(changed) != probmap_sha256(m)
+
+
+def test_3d_note_flags_a_map_that_does_not_match():
+    from demo import confluency_3d
+
+    ex = next(e for e in EXAMPLES if e.get("probmap"))
+    m = precomputed.probmap(ex).copy()
+    m[0, 0] += 1
+    note = confluency_3d.landscape_note(m, ex["confluency"], ex["record"]["confluency_map_hash"], True)
+    assert "does NOT match" in note

@@ -34,6 +34,15 @@ def overlay_path(ex: dict) -> str:
     return os.path.join(EXAMPLES_DIR, ex["overlay"])
 
 
+def probmap(ex: dict) -> np.ndarray | None:
+    """The stored cell-probability map (int16 logits x 1000) behind the
+    example's confluency; None for an example exported without one."""
+    if not ex.get("probmap"):
+        return None
+    with np.load(os.path.join(EXAMPLES_DIR, ex["probmap"])) as npz:
+        return npz["prob_x1000"]
+
+
 def match(path: str, examples: list[dict]) -> dict | None:
     """The example this file shows. Gradio copies example files and re-saves
     PNGs (8-bit grey becomes RGB), so a byte hash matches only the JPEGs; the
