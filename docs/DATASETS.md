@@ -158,6 +158,29 @@ further here.
   the manifest's structural columns (which tile came from which base image,
   which class, how many sprites) reproduce exactly; only the exact sprite
   pixel placement on one tile out of four checked does not.
+- **Pixel size (B0, `configs/qc.yaml`):** 1.243 µm/px. Methods: "Phase-contrast
+  images were acquired using a ×10 objective … (1,408 × 1,040 pixels
+  corresponding to 1.75 × 1.29 mm²) that were each cropped into four equally
+  sized images (704 × 520 pixels corresponding to 0.875 × 0.645 mm²)";
+  875 µm / 704 px = 1.243. Training tiles are native-resolution 256 px crops
+  of these (`scripts/synth_contamination.py::random_crop`). The same section
+  notes the Incucyte phase images have "less pronounced halo artifacts and more
+  high-frequency content than other phase-contrast modalities", a difference
+  from C2C12's conventional phase contrast that rescaling does not address.
+  Source: the Nature Methods PDF hosted by Sartorius,
+  https://www.sartorius.com/download/1185054/nature-methods-incucyte-livecell-large-scale-dataset-label-f-1--data.pdf
+
+## C2C12 time-lapse — used, Phase A replay fleet (`nb/03`)
+
+- **What:** Ker et al. 2018, *Sci Data* 5:180237, doi:10.1038/sdata.2018.237;
+  data OSF `ysaq2`. 24 of 48 sequences, hourly frames (`scripts/fetch_c2c12.py`).
+- **License:** CC BY 4.0, attribution required wherever the images or derived
+  numbers appear.
+- **Pixel size (B0, `configs/qc.yaml`):** 1.3 µm/px. Methods: "Zeiss Axiovert
+  T135V microscope … equipped with a 5X, 0.15 N.A. phase-contrast objective";
+  "Microscope images were 1392 × 1040 pixels with a resolution of 1.3
+  μm/pixel." (https://pmc.ncbi.nlm.nih.gov/articles/PMC6233481/). Against
+  LIVECell's 1.243 µm/px the scale factor is 1.046.
 
 ## AutoQC-Bench — sized, not yet pulled (Slice 1b/spec §4A validation target)
 
@@ -231,7 +254,7 @@ further here.
   label ~20 frames if used for Slice 1," i.e. explicitly optional here since
   it has tracking GT, not segmentation GT, without manual labeling work.
   Deferred to Slice 2/3, where it's actually required (replay, growth
-  backtest).
+  backtest); now used, see its own section above.
 
 ## Held-out eval subset actually scored (Slice 1)
 

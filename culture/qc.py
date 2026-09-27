@@ -19,6 +19,7 @@ Usage:
 from __future__ import annotations
 
 import json
+import os
 from dataclasses import asdict, dataclass
 
 import cv2
@@ -30,6 +31,46 @@ IMAGENET_MEAN = np.array([0.485, 0.456, 0.406]).reshape(3, 1, 1)
 IMAGENET_STD = np.array([0.229, 0.224, 0.225]).reshape(3, 1, 1)
 
 HF_REPO_ID = "LongGrainRice/cultureqc-qc-effnetb0-v1"
+MODEL_VERSION = "qc_effnetb0_v1"
+QC_CONFIG_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "configs", "qc.yaml")
+
+
+# ---------------------------------------------------------------------------
+# Scale matching (spec v3.2 §2B.1, B0; configs/qc.yaml)
+# ---------------------------------------------------------------------------
+
+def load_qc_config(path: str = QC_CONFIG_PATH) -> dict:
+    import yaml
+
+    with open(path) as f:
+        return yaml.safe_load(f)
+
+
+def rescale_factor(cfg: dict, multiplier: float | None = None, force: bool = False) -> float | None:
+    """source_um_per_px / target_um_per_px × multiplier, or None when rescaling
+    is off (unless force, which B0 uses to evaluate before it is switched on)."""
+    r = cfg["rescale"]
+    if not (r.get("enabled") or force):
+        return None
+    m = r.get("multiplier", 1.0) if multiplier is None else multiplier
+    return float(r["source_um_per_px"]) / float(r["target_um_per_px"]) * float(m)
+
+
+def rescale_frame(img: np.ndarray, factor: float | None) -> np.ndarray:
+    """Resize a whole frame by `factor` before the QC tile is cut, so the 256 px
+    tile spans the physical area of a training tile. Linear when enlarging,
+    area-averaging when shrinking (no aliasing)."""
+    if factor is None or factor == 1.0:
+        return img
+    h, w = img.shape[:2]
+    size = (max(1, round(w * factor)), max(1, round(h * factor)))
+    return cv2.resize(img, size, interpolation=cv2.INTER_LINEAR if factor > 1 else cv2.INTER_AREA)
+
+
+def rescaled_model_version(factor: float) -> str:
+    """Logits from rescaled input are a different input distribution: never
+    mix them with MODEL_VERSION rows (trend windows, calibration)."""
+    return f"{MODEL_VERSION}+rescale{factor:.3f}"
 
 
 # ---------------------------------------------------------------------------
@@ -188,7 +229,7 @@ def qc_classify(img: np.ndarray, run_gradcam: bool = True, on_visual=None) -> QC
         confidence=round(float(probs[pred_idx]), 4),
         evidence_bboxes=bboxes,
         per_class_probs=per_class,
-        model_version="qc_effnetb0_v1",
+        model_version=MODEL_VERSION,
     )
 # ---------------------------------------------------------------------------
 # CLI

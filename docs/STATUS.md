@@ -39,6 +39,12 @@ Tests: `pytest tests` → 112 passed, 1 xfailed (2026-09-26, after A7).
 | V2, V10 | Done (2026-09-26); **V2 fails.** `scripts/eval_growth_signal.py` → `results/growth_signal_summary.md`: held-out normal streams, full-frame increment between visits at 30–70% (effectively 30–56%) ÷ σ_fov (C2C12, 0.25-frac)/√n_fov. Median ratio 0.35 (6 h) / 0.65 (12 h) at 1 FOV, 0.61 / 1.12 at 3 FOVs (pass ≥ 2 at 1 FOV); measured visit error SD 13.2 pp (1 FOV) agrees with the model. Context: 0.5-frac noise fit gives up to 2.71 (12 h / 3 FOVs), not replayed. V10 (informational): area doubling time per experiment 17.7 / 12.4 / 15.4 h (median) |
 | Phase A report | Done (2026-09-26): `docs/ARCHITECTURE_VALIDATION.md` — summary table, one section per V1–V10, what it does and doesn't prove, next steps (decisions for the review, Phase B mapping, Celltrio questions). Also `results/classifier_c2c12.md` (classifier calls 5.0% of held-out normal C2C12 frames normal, 91.8% of contaminated frames contamination) and `results/growth_backtest_v3.png`. Deviation: no single `scripts/validate_architecture.py`; per-check scripts listed in the report |
 
+## Phase B progress (`cultureQC_upgrade_specv3.md`, v3.2)
+
+| Step | Status |
+|---|---|
+| B0 scale-matched classifier test | **Prepared, awaiting the Colab run** (2026-09-26). `scripts/classifier_scale_test.py` (protocol and choice rule in its docstring), `configs/qc.yaml` (rescale off; pixel sizes cited in `docs/DATASETS.md`), `culture.qc.rescale_factor/rescale_frame/rescaled_model_version`, `tests/test_classifier_scale.py`, `nb/04b_classifier_scale_test.ipynb`. f = 1.3 / 1.243 = **1.046**, so the spec's scale hypothesis predicts little change. Frame selection checked on the Mac against the cache: tuning 860 normal / 48 contamination / 225 dimming, held-out 1228 / 49 / 327 (same held-out set as `results/classifier_c2c12.md`), identical with the pre- and post-`3d0c140` manifests. Frames are only on Drive, so the run is on Colab (archive copied to local disk, per the I/O rule). **Deviation:** the live path (`culture/pipeline.py`) is not wired to the rescale option yet; it is wired, with Grad-CAM box mapping and a parity test, only if B0 passes |
+
 ## Schedule
 
 The spec's target review date (Sat Sep 26) **can't be met**. Phase A's timebox
