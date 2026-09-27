@@ -21,6 +21,8 @@ rescale:
 # demoted, the classifier still runs and its calibrated output is recorded for audit,
 # but it is shown collapsed under `label`, draws no evidence boxes, and never feeds
 # culture.rules.decide(). A missing file or key counts as demoted (culture/qc.py).
+# If this is ever switched off: since B3 the confidences are temperature-scaled
+# (T = 1.55, softer), so rules' qc_review_threshold 0.7 triggers less often than before.
 classifier:
   demoted: true
   label: >-

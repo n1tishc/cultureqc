@@ -141,7 +141,7 @@ def infer(image: np.ndarray | None, cell_line: str, target_confluency: float):
     return (
         _to_rgb(gray),
         _composite(gray, visuals.get("mask")),
-        _composite(gray, visuals.get("heatmap")),
+        _composite(gray, visuals["heatmap"]) if visuals.get("heatmap") else None,
         verdict,
         detail,
         record,
