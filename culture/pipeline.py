@@ -25,8 +25,9 @@ def config_hashes() -> dict:
     there (e.g. a Space without configs/) is left out, not faked."""
     from culture.qc import QC_CONFIG_PATH
     from culture import detectability
+    from culture.anomaly import ANOMALY_CONFIG_PATH
     paths = {"qc.yaml": QC_CONFIG_PATH, "calibration.yaml": DEFAULT_CALIBRATION_PATH,
-             "detectability.yaml": detectability.DEFAULT_PATH}
+             "detectability.yaml": detectability.DEFAULT_PATH, "anomaly.yaml": ANOMALY_CONFIG_PATH}
     return {name: hash_file(p) for name, p in paths.items() if os.path.exists(p)}
 
 
@@ -68,6 +69,15 @@ def analyze(
     emit({"stage": "segmentation", "status": "complete", "visuals": dict(visuals),
           "confluency_pct": conf_result.pct})
 
+    # ── Per-image anomaly (B2): shown for review, never used by decide() ──
+    from culture.anomaly import score_frame
+    from culture.visuals import anomaly_tile_view, png
+    emit({"stage": "anomaly", "status": "running"})
+    anomaly = score_frame(img, conf_result.pct)
+    if anomaly.status == "ok" and (observer or details is not None):
+        visuals["anomaly_tile"] = png(anomaly_tile_view(img, anomaly))
+    emit({"stage": "anomaly", "status": "complete", "anomaly_status": anomaly.status})
+
     # ── QC classification ──
     # The classifier expects ~256x256 tiles. For a full flask image,
     # tile it and aggregate. For now, center-crop to 256x256.
@@ -90,7 +100,7 @@ def analyze(
     qc_result = qc_classify(tile, run_gradcam=not demoted, **(
         {"on_visual": cam_ready} if not demoted and (observer or details is not None) else {}))
     if details is not None:
-        details.update(qc=qc_result, visuals=visuals)
+        details.update(qc=qc_result, anomaly=anomaly, visuals=visuals)
     emit({"stage": "qc", "status": "complete", "visuals": dict(visuals)})
 
     # ── Rules ──
@@ -139,6 +149,7 @@ def analyze(
         "qc_rationale": rat["rationale"],
         "qc_calibrated": qc_result.calibrated,
         "qc_used_in_decision": not demoted,
+        **anomaly.record_fields(),
         "growth_trend": None,  # would come from time-series mode
         "eta_to_target_hours": None,
         "recommended_action": action,
@@ -147,6 +158,7 @@ def analyze(
         "model_versions": {
             "seg": conf_result.model_version,
             "qc": qc_result.model_version,
+            "dino": anomaly.model_version,
             "vlm": rat["method"],
         },
         "model_weights_hash": None,

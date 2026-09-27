@@ -81,7 +81,17 @@ def test_classifier_calibrated_and_demoted(record):
     assert record["qc_evidence_bbox"] is None                     # no Grad-CAM while demoted
     assert "QC flag" not in record["action_reason"]
     assert record["qc_rationale"].startswith("Confluency ")
-    assert set(record["config_hashes"]) == {"qc.yaml", "calibration.yaml", "detectability.yaml"}
+    assert set(record["config_hashes"]) == {"qc.yaml", "calibration.yaml", "detectability.yaml", "anomaly.yaml"}
+
+
+def test_anomaly_recorded_not_decided(record):
+    # B2: the per-image anomaly check is recorded for review, never used by the rules.
+    assert record["anomaly_used_in_decision"] is False
+    assert record["anomaly_status"] in {"ok", "unavailable"}
+    if record["anomaly_status"] == "ok":
+        assert record["anomaly_flag"] == (record["anomaly_score"] > record["anomaly_threshold"])
+        assert record["model_versions"]["dino"] == "facebook/dinov2-small"
+    assert "anomal" not in record["qc_rationale"].lower()
 
 
 def test_image_hash_matches_fixture(record):

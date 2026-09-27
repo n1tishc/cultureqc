@@ -1,0 +1,11 @@
+image_sha256,kind,seq,frame_idx,bin_label,pct,severity,score_binned,z_binned,flag_binned,zip_path
+9fb8e6e8b2cf05396a99fd6c90cebeab32c542585c6eb683e401351076a401ca,normal,c2c12_090318_exp1_F0003_Data,589,0-20,16.82,,0.231172,-0.0498906,False,/content/data/c2c12/png/c2c12_090318_exp1_F0003_Data/00589.png
+35d466eb11aad0759843dd4f58173d424821b4b68d6619994c10e84f7f95abb6,normal,c2c12_090325_exp1_F0003_Data,373,0-20,13.76,,0.239213,0.140533,False,/content/data/c2c12/png/c2c12_090325_exp1_F0003_Data/00373.png
+d859aad2ba840be1ece5803022c91b81f97d66e191825e766563b5ceb557a179,normal,c2c12_090325_exp1_F0013_Data,889,20-40,39.41,,0.220552,-0.835984,False,/content/data/c2c12/png/c2c12_090325_exp1_F0013_Data/00889.png
+26d74d8a47f174a76b9d78c27e510555550be5d7fdce23716413a689441386d2,normal,c2c12_090318_exp1_F0011_Data,433,20-40,25.81,,0.236254,-0.425557,False,/content/data/c2c12/png/c2c12_090318_exp1_F0011_Data/00433.png
+fdbbf70aa4216bbc7cf8c827a91df276d15eab0371675306863a95b8b11c475a,normal,c2c12_090318_exp1_F0013_Data,1045,40-100,51.45,,0.263383,-0.348745,False,/content/data/c2c12/png/c2c12_090318_exp1_F0013_Data/01045.png
+9605c29f71614c064bd8481e48729272fdca0aff4d0e581591e48cd614debca5,normal,c2c12_090303_exp1_F0003_Data,913,40-100,40.61,,0.264702,-0.328045,False,/content/data/c2c12/png/c2c12_090303_exp1_F0003_Data/00913.png
+92fad07b5d16a1e0872ac5cd07ef468983ab2ad39fee51829a3ad0e5e7df03bf,contamination_onset,c2c12_090325_exp1_F0013_Data__fault_contam,637,40-100,86.65,246.417,0.623414,5.29908,True,/content/data/c2c12_faults/png/c2c12_090325_exp1_F0013_Data__fault_contam/00637.png
+b5f67decd6da40888f688722f2d8ffe99a97417ec9785d24ff1be6afe7fd6d1b,contamination_onset,c2c12_090318_exp1_F0005_Data__fault_contam,769,40-100,88.63,400,0.639067,5.54463,True,/content/data/c2c12_faults/png/c2c12_090318_exp1_F0005_Data__fault_contam/00769.png
+d8d75a864d57486ac3803342a8be1e928483255911774962b8956b20b692bde5,lamp_dimming,c2c12_090318_exp1_F0016_Data__fault_dim,841,0-20,14.01,0.65,0.262002,0.680234,False,/content/data/c2c12_faults/png/c2c12_090318_exp1_F0016_Data__fault_dim/00841.png
+00ee04b2cc49a7a0b234de40cfd2382938b474179b8120401ec0f5a508c89631,lamp_dimming,c2c12_090318_exp1_F0003_Data__fault_dim,841,20-40,33.23,0.65,0.241089,-0.299178,False,/content/data/c2c12_faults/png/c2c12_090318_exp1_F0003_Data__fault_dim/00841.png

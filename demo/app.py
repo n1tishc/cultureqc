@@ -28,6 +28,8 @@ from culture.rules import decide, LineConfig
 from culture.records import RecordWriter, verify_chain, hash_file
 from culture.rationale import generate_rationale
 from culture import detectability
+from culture.anomaly import LIVE_LIMITS, score_frame
+from culture.visuals import anomaly_tile_view, outline_scored_region, png
 from demo import replay_timeline
 from demo.theme import CultureQCTheme
 
@@ -166,6 +168,7 @@ def run_analysis(original_path, cell_line, target_confluency):
 
     conf_result = cpsam_confluency(img, method="probmap")
     threshold_confluency(img)  # baseline computed for parity; not shown in this surface
+    anomaly = score_frame(img, conf_result.pct)   # B2: shown for review, never used by decide()
 
     h, w = img.shape[:2]
     if h >= TILE_SIZE and w >= TILE_SIZE:
@@ -201,6 +204,8 @@ def run_analysis(original_path, cell_line, target_confluency):
         evidence_boxes = _scale_bboxes(qc_result.evidence_bboxes, h, w)
 
     overlay = _build_overlay(img, cell_mask, evidence_boxes)
+    if anomaly.status == "ok":
+        overlay = outline_scored_region(overlay, h, w)
     overlay_path = os.path.join(WORK_DIR, f"overlay_{next(tempfile._get_candidate_names())}.png")
     cv2.imwrite(overlay_path, cv2.cvtColor(overlay, cv2.COLOR_RGB2BGR))
 
@@ -237,6 +242,7 @@ def run_analysis(original_path, cell_line, target_confluency):
         "qc_rationale": rat["rationale"],
         "qc_calibrated": qc_result.calibrated,
         "qc_used_in_decision": not demoted,
+        **anomaly.record_fields(),
         "growth_trend": None,
         "eta_to_target_hours": None,
         "recommended_action": action,
@@ -245,6 +251,7 @@ def run_analysis(original_path, cell_line, target_confluency):
         "model_versions": {
             "seg": conf_result.model_version,
             "qc": qc_result.model_version,
+            "dino": anomaly.model_version,
             "vlm": rat["method"],
         },
         "model_weights_hash": None,
@@ -256,6 +263,7 @@ def run_analysis(original_path, cell_line, target_confluency):
     chain_ok, _ = verify_chain(LOG_PATH)
 
     results_html = render_results(
+        anomaly_html=render_anomaly(img, anomaly),
         demoted=demoted,
         qc_calibrated=qc_result.calibrated,
         qc_flag=qc_result.flag,
@@ -276,7 +284,42 @@ def run_analysis(original_path, cell_line, target_confluency):
     return overlay_path, gr.update(visible=True, value="Overlay"), results_html, overlay_path
 
 
+def render_anomaly(img, anomaly):
+    """The per-image anomaly card (B2): flag, score vs the bin's threshold, the
+    zoomed tile heatmap, and the known limits. Review only."""
+    limits = "".join(f"<li>{html.escape(t)}</li>" for t in LIVE_LIMITS)
+    if anomaly.status != "ok":
+        return f"""
+  <div class="rc-card anomaly-card" style="animation-delay:100ms">
+    <div class="anomaly-head"><span class="anomaly-title">Anomaly check</span>
+      <span class="anomaly-state muted">Unavailable</span></div>
+    <div class="classifier-note">{html.escape(anomaly.reason or "")}</div>
+  </div>"""
+    color = STATUS_COLORS["red"] if anomaly.flag else STATUS_COLORS["green"]
+    state = "Flagged for review" if anomaly.flag else "Within the normal range"
+    ratio = anomaly.score / anomaly.threshold
+    tile_uri = png(cv2.cvtColor(anomaly_tile_view(img, anomaly), cv2.COLOR_RGB2BGR))
+    return f"""
+  <div class="rc-card anomaly-card" style="animation-delay:100ms;border-color:{_tint(color, 0.35)}">
+    <div class="anomaly-head"><span class="anomaly-title">Anomaly check</span>
+      <span class="anomaly-state" style="color:{color}">{state}</span></div>
+    <div class="anomaly-body">
+      <img class="anomaly-tile" src="{tile_uri}" alt="Patch distances on the centre tile">
+      <div class="anomaly-metrics">
+        <div><span class="anomaly-k">Score</span> <span class="anomaly-v">{anomaly.score:.3f}</span></div>
+        <div><span class="anomaly-k">Threshold</span> <span class="anomaly-v">{anomaly.threshold:.3f}</span></div>
+        <div><span class="anomaly-k">Score / threshold</span> <span class="anomaly-v">{ratio:.2f}</span></div>
+        <div><span class="anomaly-k">Confluency bin</span> <span class="anomaly-v">{html.escape(anomaly.bin_label)}%</span></div>
+        <div class="classifier-note">DINOv2 patch distance to the nearest normal C2C12 patch, on the outlined
+        centre region only. Boxes: the patches that set the score.</div>
+      </div>
+    </div>
+    <ul class="anomaly-limits">{limits}</ul>
+  </div>"""
+
+
 def render_results(
+    anomaly_html,
     demoted,
     qc_calibrated,
     qc_flag,
@@ -351,11 +394,13 @@ def render_results(
     </div>
   </div>
 
-  <div class="rc-card action-card" style="animation-delay:100ms">
+{anomaly_html}
+
+  <div class="rc-card action-card" style="animation-delay:200ms">
     <span class="action-badge" style="background:{_tint(action_color, 0.15)};color:{action_color}">{html.escape(action_label)}</span>
   </div>
 
-  <div class="rc-card rationale" style="animation-delay:200ms">{html.escape(rationale)}</div>
+  <div class="rc-card rationale" style="animation-delay:250ms">{html.escape(rationale)}</div>
 
   <details class="rc-card audit-details classifier-details" style="animation-delay:300ms">
     <summary><span class="audit-chevron"></span>QC classifier (not used in the recommendation)</summary>

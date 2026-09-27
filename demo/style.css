@@ -529,3 +529,16 @@ footer { display: none !important; }
 /* Flask Timeline (B1) */
 .replay-credit { font-size: 12px; color: var(--text-muted); }
 .replay-table td { font-family: var(--mono); font-size: 12px; }
+
+/* Per-image anomaly check (B2) */
+.anomaly-card { padding: 14px 16px; border: 1px solid var(--border); background: var(--bg-card); }
+.anomaly-head { display: flex; align-items: baseline; gap: 10px; }
+.anomaly-title { font-size: 13px; color: var(--text-secondary); }
+.anomaly-state { margin-left: auto; font-size: 16px; font-weight: 600; }
+.anomaly-state.muted { color: var(--text-muted); }
+.anomaly-body { display: grid; grid-template-columns: 160px 1fr; gap: 14px; margin-top: 12px; align-items: start; }
+.anomaly-tile { width: 160px; height: 160px; border-radius: 6px; image-rendering: pixelated; }
+.anomaly-metrics { display: flex; flex-direction: column; gap: 5px; font-size: 13px; }
+.anomaly-k { color: var(--text-secondary); }
+.anomaly-v { font-family: var(--mono); color: var(--text-primary); }
+.anomaly-limits { margin: 12px 0 0; padding-left: 18px; font-size: 12px; line-height: 1.5; color: var(--text-muted); }

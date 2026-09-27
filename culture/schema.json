@@ -110,6 +110,21 @@
       "type": "boolean",
       "description": "false while the classifier is demoted (configs/qc.yaml): recorded, not used by the rules"
     },
+    "anomaly_status": {
+      "type": "string",
+      "enum": ["ok", "unavailable"],
+      "description": "per-image anomaly check (culture/anomaly.py); unavailable when the banks are missing or unverified"
+    },
+    "anomaly_score": {"type": ["number", "null"]},
+    "anomaly_z": {"type": ["number", "null"]},
+    "anomaly_bin": {"type": ["string", "null"]},
+    "anomaly_threshold": {"type": ["number", "null"]},
+    "anomaly_flag": {"type": ["boolean", "null"]},
+    "anomaly_bank_sha256": {"type": ["string", "null"]},
+    "anomaly_used_in_decision": {
+      "type": "boolean",
+      "description": "always false: the anomaly flag is shown for review and never changes the recommended action"
+    },
     "growth_trend": {
       "type": ["string", "null"],
       "enum": ["rising", "flat", "falling", "unknown", null]
@@ -132,6 +147,7 @@
       "properties": {
         "seg": {"type": "string"},
         "qc": {"type": "string"},
+        "dino": {"type": "string"},
         "vlm": {"type": ["string", "null"]}
       }
     },
