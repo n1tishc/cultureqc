@@ -15,7 +15,8 @@ replay is on screen; say "live" only after pressing Analyze.
 - [ ] Space on the GPU tier; the log shows `cuda: True`, `anomaly banks verified` and the warm-up time.
 - [ ] `results/live_latency_gpu.md` from the Thu Oct 1 dry run is committed; quote its median, not a guess.
 - [ ] One live Analyze done after the warm-up, so the first click on the call isn't a cold start.
-- [ ] Browser zoom so the 3D views fit; hardware acceleration on (the 3D views use WebGL).
+- [ ] Browser zoom so the 3D views fit; hardware acceleration on (the 3D views use WebGL). Open both 3D views on the GPU Space in the browser used on the call.
+- [ ] The dry run's selfcheck table: live vs stored map points across the cutoff should be small; read it before the call.
 - [ ] Fallback tab open: the same Space works on CPU for everything precomputed.
 
 ## 1. What it is (30 s)
@@ -55,17 +56,21 @@ person steps in on exceptions and audits the trail.
    - `image_hash`: SHA-256 of the image bytes;
    - `model_versions` and `config_hashes`: exactly which models and configs
      produced the number;
-   - `confluency_map_hash`: the SHA-256 of the map drawn in the 3D view. The
-     3D note says "matches the record", so the picture you just rotated is
-     provably the one the number came from;
+   - `confluency_map_hash`: the SHA-256 of the map drawn in the 3D view (a
+     1/4-resolution copy of the map the number was counted from). The 3D note
+     says "matches the record": the map drawn is the one the record hashes,
+     and the record is chained;
    - `prev_record_hash` and `record_hash`: each record is chained to the one
      before, so editing any past record breaks every later link.
    - `anomaly_used_in_decision: false`, `qc_used_in_decision: false`: the
      record says what drove the action and what didn't.
-2. Upload a C2C12 frame (or press **Analyze** on the example) to run it
-   **live** on the GPU. A new record is appended; the card shows "Chain
-   intact" and the record count going up. Precomputed examples are never
-   written into this chain, and the card says so.
+2. Press **Analyze** on the example shown to run it **live** on the GPU
+   (to upload a different image instead, switch the view to Overlay first:
+   the 3D view hides the upload area). A new record is appended; the card
+   shows "Chain intact" and the record count going up, and the 3D note now
+   says the map is held in memory for this view while the record keeps its
+   hash. Precomputed examples are never written into this chain, and the card
+   says so.
 
 ## 4. Contamination, honestly (1 min)
 

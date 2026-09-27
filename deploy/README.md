@@ -180,9 +180,11 @@ python deploy/sync_space.py                     # mirrors culture/, config/, con
    the console still works on its precomputed examples and replays.
 3. Dry run: set the Space variable `CULTUREQC_SELFCHECK=5` and restart. At
    startup `demo/selfcheck.py` re-runs 5 examples live (C2C12 first), compares
-   confluency, anomaly score/flag and action with the stored outputs, times each
-   stage, and prints the report to the log; save it as
-   `results/live_latency_gpu.md`. Remove the variable afterwards.
+   confluency, anomaly score/flag, action and the 3D view's map (points across
+   the cutoff) with the stored outputs, times each stage, and prints the report
+   to the log; save it as `results/live_latency_gpu.md`. Remove the variable
+   afterwards. Then open both 3D views (Analyze → 3D, Flask Timeline → 3D)
+   in the browser that will be used on the call: they need WebGL.
 4. **After the call, switch the hardware back to CPU.** To restore the
    raw-output page, set `app_file: app.py` and `sdk_version: "5.50.0"` in
    `hf-space-demo/README.md` and publish again.
