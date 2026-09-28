@@ -29,7 +29,9 @@ def startup_report() -> None:
 
     cuda = torch.cuda.is_available()
     device = torch.cuda.get_device_name(0) if cuda else "cpu"
-    print(f"cultureQC console: cuda: {cuda} ({device}), torch {torch.__version__}", flush=True)
+    mps = os.environ.get("CULTUREQC_DEVICE") == "mps" and torch.backends.mps.is_available()
+    print(f"cultureQC console: cuda: {cuda} ({device}), torch {torch.__version__}"
+          + (", Cellpose-SAM on Apple MPS" if mps else ""), flush=True)
 
     from culture.anomaly import load_anomaly_config, load_banks
 
@@ -38,8 +40,9 @@ def startup_report() -> None:
     print(f"cultureQC console: anomaly banks {'verified' if banks else 'UNAVAILABLE: ' + reason}", flush=True)
 
     # Load the models before the first click. On CPU this would mean a
-    # multi-minute Cellpose-SAM pass, so warm up only on a GPU.
-    if cuda and os.environ.get("CULTUREQC_WARMUP", "1") == "1":
+    # multi-minute Cellpose-SAM pass, so warm up only on a GPU (CUDA, or Apple
+    # MPS on the Mac backup).
+    if (cuda or mps) and os.environ.get("CULTUREQC_WARMUP", "1") == "1":
         import numpy as np
 
         from demo.analysis import analyze_image

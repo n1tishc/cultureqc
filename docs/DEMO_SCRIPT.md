@@ -18,6 +18,9 @@ replay is on screen; say "live" only after pressing Analyze.
 - [ ] Browser zoom so the 3D views fit; hardware acceleration on (the 3D views use WebGL). Open both 3D views on the GPU Space in the browser used on the call.
 - [ ] The dry run's selfcheck table: live vs stored map points across the cutoff should be small; read it before the call.
 - [ ] Fallback tab open: the same Space works on CPU for everything precomputed.
+- [ ] Mac backup started once that day (`deploy/run_console_mac.sh`, then
+      http://127.0.0.1:7860 in the call browser). It needs no Hugging Face:
+      Cellpose-SAM runs on Apple's GPU from local weights.
 
 ## 1. What it is (30 s)
 
@@ -86,6 +89,10 @@ person steps in on exceptions and audits the trail.
    says the map is held in memory for this view while the record keeps its
    hash. Precomputed examples are never written into this chain, and the card
    says so.
+   - On the Mac backup, the 51.4% frame reads confidence 0.015 live against
+     0.013 stored (Apple's GPU; still below the floor, still human_review).
+     If asked, the live-vs-stored table is `results/live_latency_mac_mps.md`:
+     flag and action the same as stored on 7 of 7 examples.
 
 ## 4. Contamination, honestly (1 min)
 
@@ -134,6 +141,10 @@ That is estimated, never replayed, and needs confirming on their data.
 
 ## If something breaks
 
+- **The Space is down (5xx, as on 2026-09-28):** switch to the Mac tab
+  (`deploy/run_console_mac.sh`). Same console, same examples and replays;
+  live Analyze takes a median 16.63 s per C2C12 frame there
+  (`results/live_latency_mac_mps.md`). Say it is running on the laptop.
 - **Live Analyze is slow or errors:** stay on the precomputed examples and
   replays; they need no model. Say they are precomputed. The CPU time for a
   full frame is minutes (V9), so don't press Analyze on CPU.

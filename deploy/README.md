@@ -192,6 +192,25 @@ python deploy/sync_space.py                     # mirrors culture/, config/, con
 4. **After the call, switch the console Space's hardware back to CPU.** The
    raw-output page was never replaced; it is still on `cultureqc-demo`.
 
+### Backup: the Mac (no Hugging Face at run time)
+
+If the Space is down on the day (it returned 5xx for hours on 2026-09-28,
+across unrelated Spaces), run the same console on the Mac:
+
+```bash
+deploy/run_console_mac.sh              # http://127.0.0.1:7860; share the browser window
+deploy/run_console_mac.sh --selfcheck  # dry run -> results/live_latency_mac_mps.md
+```
+
+It syncs and runs `hf-space-demo/console.py`, with Cellpose-SAM on Apple's
+GPU (`CULTUREQC_DEVICE=mps`; DINOv2 and the classifier stay on CPU) and the
+Hugging Face offline flags set, so the weights come from the local caches
+(`~/.cellpose/models`, `~/.cache/huggingface`). It was checked with the
+network blocked: all 7 examples re-run live with the same anomaly flag and
+action as stored, and a live Analyze appends to the chain. Timings and
+live-vs-stored values are in `results/live_latency_mac_mps.md`; quote them
+from there. The run log is per boot, in a temp directory.
+
 `demo/` and `cache/anomaly/banks.npz` inside `hf-space-demo/` are written by
 the sync and git-ignored (the banks are not in git at all; they come from
 `scripts/eval_anomaly.py`). The Hub stores the 67 MB banks file through LFS.

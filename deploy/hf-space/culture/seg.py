@@ -14,6 +14,7 @@ Usage:
 from __future__ import annotations
 
 import json
+import os
 import sys
 from dataclasses import asdict, dataclass
 from typing import Literal
@@ -96,7 +97,12 @@ def _get_model():
         # Device selection, not analysis logic: the deployment target is a CPU-only
         # container, where a hard gpu=True asks cellpose for a device that is not
         # there. Segmentation behaviour and the reported confluency are unchanged.
-        _cp_model = models.CellposeModel(gpu=torch.cuda.is_available())
+        # CULTUREQC_DEVICE=mps opts in to Apple's GPU (the call-day Mac backup,
+        # deploy/README.md); the default stays CUDA-if-present, else CPU.
+        if os.environ.get("CULTUREQC_DEVICE") == "mps" and torch.backends.mps.is_available():
+            _cp_model = models.CellposeModel(gpu=True, device=torch.device("mps"))
+        else:
+            _cp_model = models.CellposeModel(gpu=torch.cuda.is_available())
     return _cp_model
 
 
