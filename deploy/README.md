@@ -211,6 +211,30 @@ action as stored, and a live Analyze appends to the chain. Timings and
 live-vs-stored values are in `results/live_latency_mac_mps.md`; quote them
 from there. The run log is per boot, in a temp directory.
 
+### Backup: Colab GPU
+
+For a CUDA dry run or a second machine without the Space:
+
+```bash
+python scripts/make_console_bundle.py   # -> ../cultureqc_console_bundle.zip (~1.4 GB)
+```
+
+The zip holds the synced `hf-space-demo/` plus the three models' weights
+(Cellpose-SAM, DINOv2-small, the QC checkpoint) and a manifest with every
+file's SHA-256. Upload it to `MyDrive/cultureqc/` and run
+`nb/05_console_colab.ipynb` on a T4 runtime:
+- It copies the zip to Colab's local disk, checks the manifest, and installs
+  the packages from PyPI.
+- It runs `demo.selfcheck` over all 7 examples offline, which gives
+  `live_latency_colab_gpu.md` (commit it under `results/`).
+- It opens the console through Colab's own port proxy.
+
+The bundle was checked on the Mac by unzipping it and running the self-check
+with an empty `HOME` (no local model caches) and the network blocked. The
+notebook itself has not been run on Colab yet. A public `gradio.live` link
+(`CULTUREQC_SHARE=1`) goes through Gradio's share servers, which Hugging Face
+runs, so the Colab proxy window is the one to rely on.
+
 `demo/` and `cache/anomaly/banks.npz` inside `hf-space-demo/` are written by
 the sync and git-ignored (the banks are not in git at all; they come from
 `scripts/eval_anomaly.py`). The Hub stores the 67 MB banks file through LFS.

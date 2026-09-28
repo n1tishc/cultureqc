@@ -67,4 +67,8 @@ from demo.theme import CultureQCTheme  # noqa: E402
 # Spaces turn on server-side rendering by default (a Node proxy on :7860 in
 # front of Python). Off, so the Space serves the page the way every local
 # check ran it, straight from Python.
-demo.launch(theme=CultureQCTheme(), css=CSS, footer_links=[], ssr_mode=False)
+# CULTUREQC_SHARE=1 asks Gradio for a public share link (the Colab backup,
+# nb/05_console_colab.ipynb); off otherwise, including inside Colab, where
+# Gradio would turn it on by itself.
+demo.launch(theme=CultureQCTheme(), css=CSS, footer_links=[], ssr_mode=False,
+            share=os.environ.get("CULTUREQC_SHARE") == "1")
