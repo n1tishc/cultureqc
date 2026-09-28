@@ -525,7 +525,10 @@ with gr.Blocks(
                     "error case against the dataset's own expert masks. "
                     + " · ".join(sorted({e["credit"] for e in EXAMPLES}))
                 )
-                gr.Examples(
+                # Spaces set GRADIO_CACHE_EXAMPLES=true; caching would write the
+                # stored maps into Gradio's CSV log (over its field limit) and
+                # adds nothing, since on_example is already precomputed.
+                EXAMPLES_UI = gr.Examples(
                     examples=[[precomputed.image_path(e)] for e in EXAMPLES],
                     example_labels=[e["label"] for e in EXAMPLES],
                     inputs=[image_view],
@@ -533,6 +536,7 @@ with gr.Blocks(
                              target_conf, map_state],
                     fn=on_example,
                     run_on_click=True,
+                    cache_examples=False,
                     label="",
                 )
 

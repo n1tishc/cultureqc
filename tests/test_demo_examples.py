@@ -139,3 +139,17 @@ def test_3d_note_flags_a_map_that_does_not_match():
     m[0, 0] += 1
     note = confluency_3d.landscape_note(m, ex["confluency"], ex["record"]["confluency_map_hash"], True)
     assert "does NOT match" in note
+
+
+def test_examples_are_not_cached_on_spaces():
+    """Hugging Face Spaces set GRADIO_CACHE_EXAMPLES=true; caching the examples
+    failed at startup on the Space (the stored maps exceed Gradio's CSV field
+    limit), so the app must opt out whatever the environment says."""
+    import subprocess
+    import sys
+
+    code = "from demo import app; assert app.EXAMPLES_UI.cache_examples is False"
+    env = {**os.environ, "GRADIO_CACHE_EXAMPLES": "true"}
+    repo = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    r = subprocess.run([sys.executable, "-c", code], cwd=repo, env=env, capture_output=True, text=True, timeout=300)
+    assert r.returncode == 0, r.stderr[-2000:]
