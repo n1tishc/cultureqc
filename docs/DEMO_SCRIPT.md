@@ -15,7 +15,7 @@ replay is on screen; say "live" only after pressing Analyze.
 - [ ] Space on ZeroGPU; the log shows `ZeroGPU`, `anomaly banks verified` and `models loaded`.
 - [ ] `results/live_latency_zerogpu.md` from the dry run (`scripts/space_dry_run.py`) is committed; quote its numbers, not a guess.
 - [ ] Signed in to huggingface.co in the call browser, Space opened from huggingface.co/spaces/LongGrainRice/cultureqc-console (Analyze then uses the PRO GPU quota).
-- [ ] One live Analyze done a few minutes before the call, so the first click on the call isn't the slow first attach.
+- [ ] Space opened 10 minutes early (it sleeps after 48 h without visitors; a boot takes minutes) and one live Analyze done; in the dry run one of 7 took 15.36 s against a median 4.98 s.
 - [ ] Browser zoom so the 3D views fit; hardware acceleration on (the 3D views use WebGL). Open both 3D views on the GPU Space in the browser used on the call.
 - [ ] The dry run's table: live vs stored confluency, flag and action; read it before the call.
 - [ ] Fallback tab open: the same Space works on CPU for everything precomputed.

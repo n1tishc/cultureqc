@@ -182,8 +182,9 @@ python deploy/sync_space.py                     # mirrors culture/, config/, con
 nothing beyond the PRO plan, needs no switching on before the call or back to
 CPU after it, and stays fast after the call if the link is opened again. The
 same models already run on ZeroGPU in `cultureqc-demo`. The costs: a GPU is
-attached per live Analyze (the first one after a quiet spell is slower), each
-Analyze draws on the viewer's ZeroGPU quota, and the startup self-check cannot
+attached per live Analyze (in the dry run one of 7 took 15.36 s against a
+median 4.98 s, cause not measured), each Analyze draws on the viewer's ZeroGPU
+quota (a signed-out Analyze also ran, checked once on EVICAN PC3), and the startup self-check cannot
 run (no GPU at startup), so the dry run is `scripts/space_dry_run.py` from
 outside instead. `zerogpu.py` is active only when `SPACES_ZERO_GPU` is set, so
 switching the Space to a dedicated GPU tier instead needs no code change (then
@@ -200,6 +201,9 @@ the startup self-check, `CULTUREQC_SELFCHECK=5`, works as before).
    need WebGL.
 3. On the call, open the Space **signed in, from huggingface.co/spaces/…**,
    so Analyze uses the PRO quota. Precomputed examples and replays use no GPU.
+   The Space sleeps after 48 h without visitors and a boot takes minutes
+   (models loaded in 73.4 s after the build, Cellpose-SAM download included):
+   open it 10 minutes before the call and check the log shows `models loaded`.
 4. `@spaces.GPU(duration=60)` in `zerogpu.py`: tune from the dry run's times,
    not guesses.
 
