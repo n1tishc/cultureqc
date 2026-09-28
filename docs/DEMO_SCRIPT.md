@@ -35,8 +35,10 @@ person steps in on exceptions and audits the trail.
 1. Click **C2C12 normal, 20-40% bin** (precomputed). Cellpose-SAM reads
    39.4%, confidence 0.512; the rules say hold. Point at the provenance card:
    which script, which machine, when.
-2. Switch the view to **3D**. The height is the model's cell-probability
-   logit, not cell thickness; phase contrast does not measure height.
+2. Switch the view to **3D**. It turns once around on its own (about 26 s)
+   and stops where it started; click or drag it to stop sooner and take
+   over. The height is the model's cell-probability logit, not cell
+   thickness; phase contrast does not measure height.
    - Green, above the plane: counted as cell. The confluency is that share of
      the full-resolution map.
    - Amber, the band around the plane: borderline pixels, 12.21% here. Their
@@ -126,7 +128,9 @@ detection claim.
    the recording actually crossed at 83.2 h. The caption gives the backtest it
    belongs to: n = 5 sequences, median error 9.0 h, 4 of 5 intervals covered,
    so this is one example, not a validated accuracy.
-2. Switch to **3D: space × time**. Each layer is one visit; green is where the
+2. Switch to **3D: space × time**. The stack builds up visit by visit, in
+   time order, while the camera turns once; click the plot to show every
+   layer and stop the turn before hovering. Each layer is one visit; green is where the
    frame's map counts cell; blue boxes are the 3 FOVs the visit's number came
    from. The boxes land somewhere different each visit, and that is the
    measurement noise: 6.593 pp SD for fields this size. Hovering a layer shows

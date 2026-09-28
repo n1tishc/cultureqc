@@ -21,8 +21,24 @@ import numpy as np
 import plotly.graph_objects as go
 
 from culture.cache import PROBMAP_DOWNSAMPLE, probmap_sha256
+from demo import viz3d
 
 MAX_POINTS_PER_SIDE = 180          # drawn resolution cap; the hash covers the full stored map
+
+# The opening camera per precomputed example (also used when the same image is
+# analyzed live), chosen by eye so the first view reads without dragging; any
+# other image gets DEFAULT_EYE. The page script turns the camera once around
+# from here (demo/viz3d.py).
+DEFAULT_EYE = dict(x=0.95, y=-1.05, z=0.7)
+CAMERA_PRESETS: dict[str, dict] = {
+    "c2c12_normal_0_20": dict(x=0.72, y=-0.82, z=0.52),      # close and low: separate cells stand out
+    "c2c12_normal_20_40": dict(x=0.8, y=-0.9, z=0.55),
+    "c2c12_normal_40_100": dict(x=0.82, y=-0.92, z=0.78),    # higher: the amber borderline shelf
+    "c2c12_contamination_1": dict(x=0.85, y=-0.95, z=0.85),  # higher: the near-uniform carpet
+    "c2c12_contamination_2": dict(x=0.85, y=-0.95, z=0.85),
+    "evican_pc3": dict(x=0.7, y=-0.8, z=0.5),                # few cells: come close
+    "evican_ht29": dict(x=0.75, y=-0.85, z=0.58),
+}
 
 CELL = "#22c55e"                   # the overlay's cell green
 BORDER = "#f59e0b"
@@ -36,7 +52,8 @@ def _classes(logit: np.ndarray, thr: float, band: float) -> np.ndarray:
     return c
 
 
-def landscape_figure(prob_x1000: np.ndarray, thr: float = 0.0, band: float = 1.0) -> go.Figure:
+def landscape_figure(prob_x1000: np.ndarray, thr: float = 0.0, band: float = 1.0,
+                     example_id: str | None = None) -> go.Figure:
     h, w = prob_x1000.shape
     stride = max(1, math.ceil(max(h, w) / MAX_POINTS_PER_SIDE))
     logit = prob_x1000[::stride, ::stride].astype(np.float32) / 1000.0
@@ -67,10 +84,11 @@ def landscape_figure(prob_x1000: np.ndarray, thr: float = 0.0, band: float = 1.0
             yaxis=dict(axis, title="y (px)", autorange="reversed"),
             zaxis=dict(axis, title="logit (not height)"),
             aspectmode="manual", aspectratio=dict(x=1.0, y=h / w, z=0.4),
-            camera=dict(eye=dict(x=0.95, y=-1.05, z=0.7)),
+            camera=dict(eye=CAMERA_PRESETS.get(example_id, DEFAULT_EYE)),
         ),
         paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
         font=dict(color="#cbd5e1"), margin=dict(l=0, r=0, t=0, b=0), height=380, showlegend=False,
+        meta=viz3d.meta("landscape"),
     )
     return fig
 

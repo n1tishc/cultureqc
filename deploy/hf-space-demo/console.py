@@ -87,6 +87,7 @@ startup_report()
 
 import demo.app as app_module  # noqa: E402
 from demo.app import CSS, demo  # noqa: E402
+from demo.viz3d import HEAD  # noqa: E402
 from demo.theme import CultureQCTheme  # noqa: E402
 
 if zerogpu.ZERO_GPU:
@@ -98,5 +99,6 @@ if zerogpu.ZERO_GPU:
 # CULTUREQC_SHARE=1 asks Gradio for a public share link (the Colab backup,
 # nb/05_console_colab.ipynb); off otherwise, including inside Colab, where
 # Gradio would turn it on by itself.
-demo.launch(theme=CultureQCTheme(), css=CSS, footer_links=[], ssr_mode=False,
+# HEAD: the 3D views' camera turn and timeline build-up (demo/viz3d.py).
+demo.launch(theme=CultureQCTheme(), css=CSS, head=HEAD, footer_links=[], ssr_mode=False,
             share=os.environ.get("CULTUREQC_SHARE") == "1")

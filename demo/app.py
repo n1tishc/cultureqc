@@ -26,7 +26,7 @@ from culture.records import RecordWriter, verify_chain
 from culture import detectability
 from culture.anomaly import LIVE_LIMITS
 from culture.visuals import anomaly_tile_view, png
-from demo import confluency_3d, precomputed, replay_3d, replay_timeline
+from demo import confluency_3d, precomputed, replay_3d, replay_timeline, viz3d
 from demo.analysis import analyze_image, build_record
 from demo.theme import CultureQCTheme
 
@@ -141,8 +141,10 @@ def run_analysis(original_path, cell_line, target_confluency):
         record_count=writer.record_count,
     )
 
+    known = precomputed.match(original_path, EXAMPLES)   # same image as an example: same opening camera
     map_view = {"prob": a.probmap_x1000, "confluency": a.confluency.to_dict(),
-                "map_hash": finalized["confluency_map_hash"], "precomputed": False}
+                "map_hash": finalized["confluency_map_hash"], "precomputed": False,
+                "id": known["id"] if known else None}
     return overlay_path, gr.update(visible=True, value="Overlay"), results_html, overlay_path, map_view
 
 
@@ -406,7 +408,7 @@ def on_example(path):
     prob = precomputed.probmap(ex)
     map_view = None if prob is None else {
         "prob": prob, "confluency": ex["confluency"], "map_hash": ex["record"].get("confluency_map_hash"),
-        "precomputed": True}
+        "precomputed": True, "id": ex["id"]}
     return (overlay, gr.update(visible=True, value="Overlay"), show_example(ex), precomputed.image_path(ex),
             overlay, ex["cell_line"], ex["target_confluency"], map_view)
 
@@ -415,7 +417,8 @@ def switch_view(choice, original_path, overlay_path, map_view):
     """Original / Overlay show the image; 3D swaps in the confluency landscape."""
     if choice == "3D" and map_view is not None:
         return (gr.update(visible=False),
-                gr.update(value=confluency_3d.landscape_figure(map_view["prob"]), visible=True),
+                gr.update(value=confluency_3d.landscape_figure(map_view["prob"], example_id=map_view.get("id")),
+                          visible=True),
                 gr.update(value=confluency_3d.landscape_note(map_view["prob"], map_view["confluency"],
                                                              map_view["map_hash"], map_view["precomputed"]),
                           visible=True))
@@ -484,7 +487,7 @@ with gr.Blocks(
 ) as demo:
     original_state = gr.State(None)
     overlay_state = gr.State(None)
-    map_state = gr.State(None)        # the 3D view's map: {"prob", "confluency", "map_hash", "precomputed"}
+    map_state = gr.State(None)        # the 3D view's map: {"prob", "confluency", "map_hash", "precomputed", "id"}
 
     with gr.Row(elem_classes="topbar"):
         gr.HTML('<div class="wordmark"><span class="wordmark-dot"></span>cultureQC</div>')
@@ -618,4 +621,4 @@ with gr.Blocks(
 
 
 if __name__ == "__main__":
-    demo.launch(theme=CultureQCTheme(), css=CSS, footer_links=[])
+    demo.launch(theme=CultureQCTheme(), css=CSS, head=viz3d.HEAD, footer_links=[])
