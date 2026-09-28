@@ -15,7 +15,9 @@ replay is on screen; say "live" only after pressing Analyze.
 - [ ] Space on ZeroGPU; the log shows `ZeroGPU`, `anomaly banks verified` and `models loaded`.
 - [ ] `results/live_latency_zerogpu.md` from the dry run (`scripts/space_dry_run.py`) is committed; quote its numbers, not a guess.
 - [ ] Signed in to huggingface.co in the call browser, Space opened from huggingface.co/spaces/LongGrainRice/cultureqc-console (Analyze then uses the PRO GPU quota).
-- [ ] Space opened 10 minutes early (it sleeps after 48 h without visitors; a boot takes minutes) and one live Analyze done; in the dry run one of 7 took 15.36 s against a median 4.98 s.
+- [ ] Space opened 10 minutes early (it sleeps after 48 h without visitors; a boot takes minutes) and one live Analyze done; in the dry run one of 7 took 18.50 s against a median 3.82 s.
+- [ ] Expect a small "Successfully acquired a GPU" toast (top right) on each live Analyze: that is ZeroGPU attaching
+      the GPU. If asked, it is the live run on a GPU, not a precomputed result.
 - [ ] Browser zoom so the 3D views fit; hardware acceleration on (the 3D views use WebGL). Open both 3D views on the GPU Space in the browser used on the call.
 - [ ] The dry run's table: live vs stored confluency, flag and action; read it before the call.
 - [ ] Fallback tab open: the same Space works on CPU for everything precomputed.
@@ -95,7 +97,7 @@ person steps in on exceptions and audits the trail.
    says the map is held in memory for this view while the record keeps its
    hash. Precomputed examples are never written into this chain, and the card
    says so.
-   - On the Space (ZeroGPU) a live Analyze took a median 4.98 s in the dry
+   - On the Space (ZeroGPU) a live Analyze took a median 3.82 s in the dry
      run (`results/live_latency_zerogpu.md`); the 51.4% frame read confidence
      0.014 live against 0.013 stored, still human_review.
    - On the Mac backup, the 51.4% frame reads confidence 0.015 live against
@@ -163,7 +165,7 @@ That is estimated, never replayed, and needs confirming on their data.
 
 - **The Space is down (5xx, as on 2026-09-28):** switch to the Mac tab
   (`deploy/run_console_mac.sh`). Same console, same examples and replays;
-  live Analyze takes a median 16.63 s per C2C12 frame there
+  live Analyze takes a median 16.46 s per C2C12 frame there
   (`results/live_latency_mac_mps.md`). Say it is running on the laptop.
 - **Live Analyze is slow or errors:** stay on the precomputed examples and
   replays; they need no model. Say they are precomputed. The CPU time for a

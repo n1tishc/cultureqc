@@ -1,7 +1,7 @@
 # cultureQC: everything done on the upgrade branch
 
-As of 2026-09-28. Branch `slice-1b-compute-cache` (71 commits ahead of `main`,
-latest `b55e8ec`). Nothing is merged to `main`; that happens only when the
+As of 2026-09-28. Branch `slice-1b-compute-cache` (`git log main..HEAD` for
+the full list). Nothing is merged to `main`; that happens only when the
 owner says so. The detailed, row-by-row log is `docs/STATUS.md`; this file is
 the readable overview. Every number here is copied from the results file named
 next to it.
@@ -38,6 +38,7 @@ on Hugging Face.
 | Sep 25–26 | Phase A: C2C12 time-lapse data (`nb/03`), replay fleet, checks V1–V10, report | `d8f8395` … `68c490a` |
 | Sep 26–27 | Phase B: classifier scale test (B0), detectability matrix (B4), calibration + demotion (B3), real replays (B1), anomaly check (B2) | `a0af827` … `6120328` |
 | Sep 27–28 | B8: review console, 3D views, demo script, review rate, console Space, backups, ZeroGPU | `73e5441` … `b55e8ec` |
+| Sep 28 | Rules v0.3 (a flag holds a passage); 3D motion and per-example cameras | `2bd61df`, `444fdee` |
 
 ## 3. Data and the compute cache (Slices 0, 1, 1b)
 
@@ -109,8 +110,9 @@ slow for a live demo, so the demo needs a GPU (section 8).
   Detectability tab; its hash goes in every record. `tests/test_claims.py`
   enforces the wording.
 - **B2, per-image anomaly check:** DINOv2-small patch distance to banks of
-  normal C2C12 patches, per confluency bin. Review only: it never changes the
-  action (owner default). Held-out normal flag rate 10.0%
+  normal C2C12 patches, per confluency bin. Since `rules_v0.3` (owner
+  decision, 2026-09-28) a flag holds a passage for human review; hold and
+  feed are unchanged. Held-out normal flag rate 10.0%
   (`results/anomaly_summary.md`). Live and cached scores agree (largest
   difference 0.00015 on 10 real frames).
 - **B1, Flask Timeline on real replays:** 5 held-out C2C12 flasks (normal ×2,
@@ -128,7 +130,7 @@ slow for a live demo, so the demo needs a GPU (section 8).
   any image live. Cards: confluency with confidence, anomaly check with a
   zoomed heatmap, recommended action, rationale, and the hash-chained audit
   record ("Chain intact · record #N").
-- **3D views (already built, B8 part 2):**
+- **3D views (B8 part 2; motion added 2026-09-28):**
   - **Analyze → 3D:** Cellpose-SAM's cell-probability map as a surface
     (height = logit, labelled "not cell thickness"), the cutoff plane, the
     borderline band that sets the confidence. The map's SHA-256 is a record
@@ -137,10 +139,17 @@ slow for a live demo, so the demo needs a GPU (section 8).
   - **Flask Timeline → 3D space × time:** one layer per visit from the cache's
     own maps, the 3 FOV boxes each visit's number came from, gate failures in
     red, fault onset marked; each layer re-hashed when drawn.
+  - **Motion** (`demo/viz3d.py`): each example opens at its own camera angle
+    (chosen from rendered candidates); the camera turns once, slowly, and
+    stops where it started; the timeline stack builds up visit by visit. A
+    click or drag stops it; nothing moves for viewers who ask for reduced
+    motion; without the script the figures are complete and still.
 - **Detectability:** the matrix from B4.
 - **Review rate** (`results/review_rate.md`): the 0.30 confidence floor sends
   5.7% of held-out frames to human review, but 43.8% of those at 40–60%
-  confluency.
+  confluency. The anomaly hold adds 1 of 14 passage-eligible held-out frames at
+  the 50% target (total 5.8%) and holds all 76 passage-eligible simulated
+  contamination frames.
 - **GMP scope** (in the demo script): tamper-evident with provenance, not
   Part 11 compliant on its own; `decided_by`, `reviewed_by`,
   `review_outcome` are there for the platform layer (`docs/audit_mapping.md`).
@@ -151,8 +160,8 @@ slow for a live demo, so the demo needs a GPU (section 8).
 
 | Where | How | Live Analyze | Source |
 |---|---|---|---|
-| **Space `LongGrainRice/cultureqc-console`** (main) | ZeroGPU, a GPU attached per Analyze | median 4.98 s; 7 of 7 examples same flag and action as stored | `results/live_latency_zerogpu.md` |
-| **Mac backup** | `deploy/run_console_mac.sh`, Cellpose-SAM on Apple's GPU, no Hugging Face at run time | median 16.63 s; 7 of 7 same | `results/live_latency_mac_mps.md` |
+| **Space `LongGrainRice/cultureqc-console`** (main) | ZeroGPU, a GPU attached per Analyze | median 3.82 s; 7 of 7 examples same flag and action as stored | `results/live_latency_zerogpu.md` |
+| **Mac backup** | `deploy/run_console_mac.sh`, Cellpose-SAM on Apple's GPU, no Hugging Face at run time | median 16.46 s; 7 of 7 same | `results/live_latency_mac_mps.md` |
 | **Colab backup** | `nb/05_console_colab.ipynb` + `~/Desktop/projs/cultureqc_console_bundle.zip` (console + all weights) | not yet run on Colab | — |
 | CPU (for reference) | — | 689 s per FOV | `results/live_latency.md` |
 
@@ -165,22 +174,27 @@ slow for a live demo, so the demo needs a GPU (section 8).
   outage, which is why the backups exist; after a hardware switch the old
   container keeps serving until the new one is up.
 - **Checked on the live Space:** all 7 examples open, both 3D views match
-  their hashes, no page errors; a signed-out Analyze also works.
+  their hashes, the 3D motion runs and stops on a click, no page errors; a
+  signed-out Analyze also works (contamination 1 live: Human Review under
+  `rules_v0.3`). ZeroGPU shows a small "Successfully acquired a GPU" toast on
+  each live Analyze.
 - `cultureqc-demo` and `cultureqc-api` never changed.
 
 ## 9. Tests
 
-`pytest tests`: 255 passed, 1 expected failure (2026-09-28). Includes the
+`pytest` (the `tests/` suite plus the API Space's tests): 265 passed, 1
+expected failure (2026-09-28). Includes the
 README provenance check, the claims check, demo example parity, replay
-re-export, device selection (`tests/test_seg_device.py`) and the ZeroGPU mode
-(`tests/test_console_zerogpu.py`).
+re-export, device selection (`tests/test_seg_device.py`), the ZeroGPU mode
+(`tests/test_console_zerogpu.py`), the v0.3 rule (`tests/test_rules_anomaly.py`)
+and the 3D figures' motion contract (`tests/test_viz3d.py`).
 
 ## 10. Open decisions
 
-1. **Contamination examples:** both read 86.6% / 88.6% confluency because the
-   pasted bacteria count as cells, so the rules say **passage** while the
-   anomaly flag says **review**. Currently captioned, action unchanged (owner
-   default: the flag never changes the action).
+1. ~~Contamination examples~~ **Resolved 2026-09-28:** the flag now holds the
+   passage (`rules_v0.3`), so both contamination examples recommend human
+   review. Their confluency still reads 86.6% / 88.6% (pasted bacteria count
+   as cells), which the caption says.
 2. Shifted synthetic tiles and V5(a) patch embeddings (`docs/STATUS.md`, open
    questions): defaults hold (not done).
 
