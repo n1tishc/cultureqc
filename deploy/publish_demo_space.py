@@ -3,10 +3,12 @@
 Run `.venv/bin/python deploy/publish_demo_space.py`. Authentication uses the
 existing Hugging Face login; no token is stored here.
 
-This targets `LongGrainRice/cultureqc-demo`, a separate Space from
-`LongGrainRice/cultureqc-api` (see deploy/publish_space.py). It now runs the
-review console for the call day (console.py; see its README). Nothing here
-touches the production Space.
+This targets `LongGrainRice/cultureqc-console`, the call-day review console
+(console.py; see its README), creating it on first use. It is a new Space so
+that the ones already running are left as they are: `LongGrainRice/cultureqc-demo`
+keeps the raw model demo, and `LongGrainRice/cultureqc-api` (see
+deploy/publish_space.py) keeps serving the product frontend. Nothing here
+touches either.
 
 Before uploading it syncs the mirrors (including the untracked `demo/` and
 anomaly banks), checks the tracked ones, and refuses to publish unless the
@@ -21,6 +23,7 @@ import sys
 import tempfile
 
 ROOT = Path(__file__).resolve().parent.parent
+SPACE_ID = "LongGrainRice/cultureqc-console"
 
 
 def main():
@@ -40,8 +43,10 @@ def main():
         stage = Path(tmp) / "space"
         shutil.copytree(ROOT / "deploy/hf-space-demo", stage,
                         ignore=shutil.ignore_patterns(".git", "__pycache__", ".pytest_cache", "*.pyc"))
-        commit = HfApi().upload_folder(
-            repo_id="LongGrainRice/cultureqc-demo", repo_type="space",
+        api = HfApi()
+        api.create_repo(SPACE_ID, repo_type="space", space_sdk="gradio", exist_ok=True)
+        commit = api.upload_folder(
+            repo_id=SPACE_ID, repo_type="space",
             folder_path=stage,
             commit_message="cultureQC review console (call day)",
         )

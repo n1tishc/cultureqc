@@ -1,5 +1,5 @@
 ---
-title: cultureQC Demo
+title: cultureQC Review Console
 emoji: 🧫
 colorFrom: green
 colorTo: blue
@@ -60,9 +60,12 @@ restart, so `prev_record_hash` links records within one boot only.
 
 ## Call-day console (`console.py`, current `app_file`)
 
-For the dry run (Thu Oct 1), the rehearsal and the call, this Space runs the
+For the dry run (Thu Oct 1), the rehearsal and the call, this folder is
+published as its own Space, `LongGrainRice/cultureqc-console`, running the
 review console, `demo/app.py`, through `console.py`: Analyze with precomputed
-examples, Flask Timeline, Detectability. `deploy/sync_space.py` mirrors
+examples, Flask Timeline, Detectability. The raw-output page described above
+stays live on `LongGrainRice/cultureqc-demo`, which the console publish does
+not touch. `deploy/sync_space.py` mirrors
 `culture/`, `config/`, `configs/`, `demo/` and the anomaly banks in; the
 publish script refuses to upload unless the banks match `configs/anomaly.yaml`.
 

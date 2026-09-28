@@ -44,6 +44,14 @@ person steps in on exceptions and audits the trail.
    return **human_review** instead of a number-driven action. This is the
    confluency QC: the system shows when not to trust its own measurement,
    and the picture shows why.
+   - Expect "how often does it send work to a person?" From the cache, no
+     model run (`results/review_rate.md`): 5.7% of held-out C2C12 frames
+     (70 of 1228, 14 sequences), but 43.8% of the 160 frames at 40-60%
+     confluency, the densest these recordings get (57.0% at most). Dense
+     frames are where the amber shelf grows, as on the 51.4% frame, so
+     review lands where passage decisions are made. Say it
+     varies by sequence: at 40% or more, 4 of the 8 sequences sent none.
+     C2C12 never reaches 60%, so there is no number above that.
 4. Click **EVICAN HT29 (real, error case)**. Expert masks say 51.6%;
    Cellpose-SAM reads 29.4%, and its confidence (0.266) is also below the
    floor, so it goes to review. On real held-out EVICAN images the mean
@@ -64,6 +72,12 @@ person steps in on exceptions and audits the trail.
      before, so editing any past record breaks every later link.
    - `anomaly_used_in_decision: false`, `qc_used_in_decision: false`: the
      record says what drove the action and what didn't.
+   - Scope, said before he asks: the record is tamper-evident with full
+     provenance; it is not Part 11 compliant on its own. Signed-in users,
+     electronic signatures with their meaning, access control and system
+     validation belong to the platform it attaches to (Bioflow's layer); the
+     record has `decided_by`, `reviewed_by` and `review_outcome` for that
+     layer to fill. The field-by-field mapping is `docs/audit_mapping.md`.
 2. Press **Analyze** on the example shown to run it **live** on the GPU
    (to upload a different image instead, switch the view to Overlay first:
    the 3D view hides the upload area). A new record is appended; the card

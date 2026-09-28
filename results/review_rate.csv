@@ -1,0 +1,10 @@
+group,sequences,n,n_review,review_pct,note
+"C2C12 held-out, full frames",14,1228,70,5.7,
+"C2C12 tuning, full frames",10,860,47,5.5,comparison only
+"C2C12 held-out, confluency 0-20%",14,750,0,0.0,
+"C2C12 held-out, confluency 20-40%",13,318,0,0.0,
+"C2C12 held-out, confluency 40-60%",8,160,70,43.8,
+"EVICAN eval2019 (real, expert masks)",0,98,3,3.1,
+C2C12 simulated lamp dimming,24,552,60,10.9,simulated fault frames
+C2C12 simulated contamination,4,97,13,13.4,simulated fault frames
+"C2C12 held-out, 0.25-frame FOV crops",14,4912,451,9.2,"each crop segmented on its own, as the replay visits are"

@@ -161,11 +161,15 @@ Two things worth knowing before relying on this for speed:
   `quota exceeded` before the call even starts, too small risks the run being
   cut off.
 
-## Call-day console — `LongGrainRice/cultureqc-demo` on a GPU
+## Call-day console — `LongGrainRice/cultureqc-console` on a GPU
 
 For the dry run (Thu Oct 1), the rehearsal (Mon Oct 5) and the call (Tue Oct 6)
-the demo Space runs the review console (`console.py` → `demo/app.py`) instead of
-the raw-output page. Nothing is pushed without the owner's go-ahead.
+the review console (`console.py` → `demo/app.py`) runs on its own Space,
+`LongGrainRice/cultureqc-console`, published from `deploy/hf-space-demo/`. It
+is a separate Space so that nothing already running changes:
+`LongGrainRice/cultureqc-demo` keeps the raw-output page on ZeroGPU and
+`LongGrainRice/cultureqc-api` keeps serving the frontend. Nothing is pushed
+without the owner's go-ahead.
 
 ```bash
 python deploy/sync_space.py                     # mirrors culture/, config/, configs/, demo/, banks
@@ -185,9 +189,8 @@ python deploy/sync_space.py                     # mirrors culture/, config/, con
    to the log; save it as `results/live_latency_gpu.md`. Remove the variable
    afterwards. Then open both 3D views (Analyze → 3D, Flask Timeline → 3D)
    in the browser that will be used on the call: they need WebGL.
-4. **After the call, switch the hardware back to CPU.** To restore the
-   raw-output page, set `app_file: app.py` and `sdk_version: "5.50.0"` in
-   `hf-space-demo/README.md` and publish again.
+4. **After the call, switch the console Space's hardware back to CPU.** The
+   raw-output page was never replaced; it is still on `cultureqc-demo`.
 
 `demo/` and `cache/anomaly/banks.npz` inside `hf-space-demo/` are written by
 the sync and git-ignored (the banks are not in git at all; they come from
