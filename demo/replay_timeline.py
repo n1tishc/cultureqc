@@ -21,6 +21,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import pandas as pd
 
+from culture.rules import RULES_VERSION
 from demo.theme import ACCENT, BG_CARD, BORDER, TEXT_PRIMARY, TEXT_SECONDARY
 
 REPLAY_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "replays")
@@ -116,6 +117,11 @@ def forecast_text(doc: dict) -> str:
     if doc.get("recorded_crossing_hours") is not None:
         text += (f" Recorded full-frame crossing: {doc['recorded_crossing_hours']:.0f} h. "
                  f"{fc['target_pct']:.0f}% here is as Cellpose-SAM measures it, which reads about 8 pp low (V1).")
+    made_at = next((v for v in doc["visits"] if v["visit"] == fc["made_at_visit"]), None)
+    if made_at is not None and made_at.get("anomaly_flag"):
+        text += (f" **Passage held:** the anomaly check flagged the visit this forecast was made at, so under "
+                 f"{RULES_VERSION} a passage is sent to human review, not recommended. The forecast is the growth "
+                 "fit only, not an action.")
     return text
 
 

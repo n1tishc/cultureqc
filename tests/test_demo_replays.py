@@ -73,3 +73,13 @@ def test_reexport_is_byte_identical(tmp_path):
     assert sorted(os.listdir(tmp_path)) == committed
     for name in committed:
         assert filecmp.cmp(tmp_path / name, os.path.join(REPO, "demo", "replays", name), shallow=False), name
+
+
+def test_forecast_on_a_flagged_visit_says_the_passage_is_held():
+    for name, doc in REPLAYS.items():
+        fc = doc["forecast"]
+        text = replay_timeline.forecast_text(doc)
+        flagged = fc["status"] == "predicted" and any(
+            v["visit"] == fc["made_at_visit"] and v.get("anomaly_flag") for v in doc["visits"])
+        assert ("Passage held" in text) == flagged, name
+    assert "Passage held" in replay_timeline.forecast_text(REPLAYS["contamination"])
