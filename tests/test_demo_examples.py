@@ -16,7 +16,7 @@ import pytest
 
 from culture.cache import PROBMAP_DOWNSAMPLE, downsample_probmap, probmap_sha256
 from culture.records import hash_file
-from culture.rules import LineConfig, decide
+from culture.rules import RULES_VERSION, LineConfig, decide
 from demo import precomputed
 from demo.analysis import DEFAULT_HOURS_SINCE_FEED, DEFAULT_HOURS_SINCE_PASSAGE
 
@@ -36,7 +36,8 @@ def test_example_is_self_consistent(ex):
     assert os.path.exists(precomputed.overlay_path(ex))
     rec = ex["record"]
     assert rec["confluency_pct"] == ex["confluency"]["pct"]
-    assert rec["anomaly_used_in_decision"] is False
+    assert rec["anomaly_used_in_decision"] is (ex["anomaly"]["status"] == "ok")
+    assert rec["decided_by"] == RULES_VERSION
     assert rec["qc_used_in_decision"] is (not ex["demoted"])
     assert rec["recommended_action"] == ex["action"]
     a = ex["anomaly"]
@@ -47,7 +48,8 @@ def test_example_is_self_consistent(ex):
     action, _ = decide(confluency_pct=ex["confluency"]["pct"], confluency_confidence=ex["confluency"]["confidence"],
                        qc_flag=None, qc_confidence=None,
                        line_config=LineConfig(cell_line=ex["cell_line"], target_confluency=ex["target_confluency"]),
-                       hours_since_passage=DEFAULT_HOURS_SINCE_PASSAGE, hours_since_feed=DEFAULT_HOURS_SINCE_FEED)
+                       hours_since_passage=DEFAULT_HOURS_SINCE_PASSAGE, hours_since_feed=DEFAULT_HOURS_SINCE_FEED,
+                       anomaly_flag=a["flag"] if a["status"] == "ok" else None)
     assert action == ex["action"]
     for key in ("caption", "credit", "generated_at", "device", "timings_s"):
         assert ex[key], key

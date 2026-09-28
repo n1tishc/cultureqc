@@ -153,7 +153,7 @@ LIVE_LIMITS = [
     "16.5× their real size). The pasted bacteria shift measured confluency by a median +59.4 pp, so 88% of "
     "those frames land in a different bin.",
     "Simulated lamp dimming is not caught by this flag (AUROC 0.47 at intensity ≤ 0.7).",
-    "Shown for review only: it does not change the recommended action.",
+    "A flag holds a passage for human review (a flagged flask is not passaged automatically); it does not change hold or feed. On cell types other than C2C12 the flag is uncalibrated, so it can hold a passage on a healthy flask.",
 ]
 
 
@@ -174,7 +174,9 @@ class AnomalyResult:
     def record_fields(self) -> dict:
         return {"anomaly_status": self.status, "anomaly_score": self.score, "anomaly_z": self.z,
                 "anomaly_bin": self.bin_label, "anomaly_threshold": self.threshold, "anomaly_flag": self.flag,
-                "anomaly_bank_sha256": self.bank_sha256, "anomaly_used_in_decision": False}
+                "anomaly_bank_sha256": self.bank_sha256,
+                # An input to the rules (v0.3, rule 3) whenever the check ran.
+                "anomaly_used_in_decision": self.status == "ok" and self.flag is not None}
 
 
 def load_anomaly_config(path: str | None = None) -> dict | None:

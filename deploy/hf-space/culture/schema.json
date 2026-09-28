@@ -127,7 +127,7 @@
     "anomaly_bank_sha256": {"type": ["string", "null"]},
     "anomaly_used_in_decision": {
       "type": "boolean",
-      "description": "always false: the anomaly flag is shown for review and never changes the recommended action"
+      "description": "true when the anomaly check ran and its flag was an input to the rules (rules_v0.3: a flag turns passage into human_review; hold and feed are unchanged); false when the check was unavailable"
     },
     "growth_trend": {
       "type": ["string", "null"],

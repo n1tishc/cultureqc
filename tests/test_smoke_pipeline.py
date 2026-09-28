@@ -84,14 +84,17 @@ def test_classifier_calibrated_and_demoted(record):
     assert set(record["config_hashes"]) == {"qc.yaml", "calibration.yaml", "detectability.yaml", "anomaly.yaml"}
 
 
-def test_anomaly_recorded_not_decided(record):
-    # B2: the per-image anomaly check is recorded for review, never used by the rules.
-    assert record["anomaly_used_in_decision"] is False
+def test_anomaly_recorded_and_an_input_to_the_rules(record):
+    # B2 + rules v0.3: the anomaly check is recorded, and its flag is an input to
+    # the rules (it holds a passage) whenever the check ran.
     assert record["anomaly_status"] in {"ok", "unavailable"}
+    assert record["anomaly_used_in_decision"] is (record["anomaly_status"] == "ok")
+    assert record["decided_by"] == "rules_v0.3"
     if record["anomaly_status"] == "ok":
         assert record["anomaly_flag"] == (record["anomaly_score"] > record["anomaly_threshold"])
         assert record["model_versions"]["dino"] == "facebook/dinov2-small"
-    assert "anomal" not in record["qc_rationale"].lower()
+    # the rationale mentions the anomaly check exactly when it flagged the image
+    assert ("anomaly check flagged" in record["qc_rationale"]) is bool(record["anomaly_flag"])
 
 
 def test_image_hash_matches_fixture(record):

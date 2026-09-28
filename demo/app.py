@@ -148,7 +148,7 @@ def run_analysis(original_path, cell_line, target_confluency):
 
 def render_anomaly(img, anomaly):
     """The per-image anomaly card (B2): flag, score vs the bin's threshold, the
-    zoomed tile heatmap, and the known limits. Review only."""
+    zoomed tile heatmap, and the known limits. A flag holds a passage (rules v0.3)."""
     limits = "".join(f"<li>{html.escape(t)}</li>" for t in LIVE_LIMITS)
     if anomaly.status != "ok":
         return f"""
@@ -184,12 +184,16 @@ def render_provenance(ex):
     """The label every precomputed example carries (claims policy: precomputed
     outputs are never presented as live)."""
     t = ex["timings_s"]
+    rd = ex.get("decision_rederived")
+    rederived = ("" if not rd else
+                 f" Recommendation re-derived {html.escape(rd['at'])} under {html.escape(rd['rules'])} from these "
+                 "stored outputs (rules change only; no model re-run).")
     return f"""
   <div class="rc-card precomputed-card">
     <div class="precomputed-head">Precomputed example</div>
     <div class="classifier-note">Produced by <code>scripts/export_demo_examples.py</code> with the same code as
     the Analyze button, on {html.escape(ex["device"].upper())} ({t["wall"]:.0f} s),
-    {html.escape(ex["generated_at"][:10])}. Press Analyze to run this image live.</div>
+    {html.escape(ex["generated_at"][:10])}.{rederived} Press Analyze to run this image live.</div>
     <div class="precomputed-caption">{html.escape(ex["caption"])}</div>
     <div class="classifier-note">{html.escape(ex["credit"])}</div>
   </div>"""

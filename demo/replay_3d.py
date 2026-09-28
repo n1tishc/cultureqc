@@ -97,13 +97,13 @@ def figure(scenario: str, doc: dict) -> go.Figure:
             f"visit {L['visit']} · {z:.1f} h<br>3-FOV mean {L['fov_mean_recorded']:.1f}% "
             f"(crops {', '.join(f'{p:.1f}' for p in L['fov_pct_recorded'])})<br>"
             f"full frame {L['frame_pct_recorded']:.1f}%<br>{html.escape(gate)}"
-            f"{'<br>anomaly flag (review only)' if flags.get(L['visit']) else ''}"
+            f"{'<br>anomaly flag' if flags.get(L['visit']) else ''}"
             f"<br>frame {L['image_sha256'][:12]}… map {L['map_sha256'][:12]}…")
 
     traces = [go.Scatter3d(
         x=np.concatenate(cx), y=np.concatenate(cy), z=np.concatenate(cz), mode="markers",
         marker=dict(size=1.6, color=CELL, opacity=0.55), hoverinfo="skip", name="counted as cell")]
-    styles = {"ok": (FRAME, "solid", "visit (quality gate pass)"), "flag": (FLAG, "solid", "anomaly flag (review only)"),
+    styles = {"ok": (FRAME, "solid", "visit (quality gate pass)"), "flag": (FLAG, "solid", "anomaly flag"),
               "reimage": (REIMAGE, "dash", "REIMAGE (quality gate fail)")}
     for kind, (x, y, z) in frames.items():
         if x:

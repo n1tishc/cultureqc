@@ -1,8 +1,10 @@
-# Human-review rate from the confluency confidence floor
+# Human-review rate: confidence floor and anomaly hold
 
-Generated 2026-09-28T16:48:04Z by `scripts/review_rate.py`. No model runs: confidences are the compute cache's (Cellpose-SAM cpsam_v2, Colab GPU, nb/03), full resolution, same formula as the live path. C2C12 images: Ker et al., *Sci Data* 5:180237 (2018), CC BY 4.0; fault frames are simulated from them.
+Generated 2026-09-28T19:28:44Z by `scripts/review_rate.py`. No model runs: confidences are the compute cache's (Cellpose-SAM cpsam_v2, Colab GPU, nb/03), full resolution, same formula as the live path. C2C12 images: Ker et al., *Sci Data* 5:180237 (2018), CC BY 4.0; fault frames are simulated from them.
 
-Rule: confidence below the floor (0.30, `culture/rules.py` default) returns `human_review`. With the classifier demoted it is the only rule that does; the anomaly flag is review-only and does not change the action, and quality-gate failures return REIMAGE (`results/quality_gate_c2c12.md`). Frames within a sequence are not independent; n sequences is the sample size.
+Rules: `rules_v0.3`. With the classifier demoted, two rules return `human_review`: confidence below the floor (0.30, `culture/rules.py` default), and, since `rules_v0.3`, the anomaly hold (confluency at or above the target, but the anomaly check flagged the image). Quality-gate failures return REIMAGE (`results/quality_gate_c2c12.md`). Frames within a sequence are not independent; n sequences is the sample size.
+
+## Confidence floor
 
 | group | sequences | images | sent to review | note |
 |---|---|---|---|---|
@@ -19,3 +21,18 @@ Rule: confidence below the floor (0.30, `culture/rules.py` default) returns `hum
 Held-out C2C12 review rate per sequence: 090303_exp1_F0003 8.2%, 090303_exp1_F0014 0%, 090318_exp1_F0001 0%, 090318_exp1_F0003 0%, 090318_exp1_F0005 0%, 090318_exp1_F0007 0%, 090318_exp1_F0011 31.5%, 090318_exp1_F0013 24.7%, 090318_exp1_F0016 0%, 090325_exp1_F0003 0%, 090325_exp1_F0007 0%, 090325_exp1_F0011 14.9%, 090325_exp1_F0013 0%, 090325_exp1_F0018 0%.
 
 Highest held-out C2C12 confluency: 57.0%, so no frame reaches the 60-100% bins. Held-out frames at 40% or more, per sequence (sent to review / frames): 090303_exp1_F0003 7/9, 090318_exp1_F0001 0/14, 090318_exp1_F0003 0/11, 090318_exp1_F0011 28/38, 090318_exp1_F0013 22/44, 090325_exp1_F0003 0/16, 090325_exp1_F0011 13/16, 090325_exp1_F0013 0/12.
+
+## Anomaly hold (rules_v0.3)
+
+Frames with an anomaly score (A4). Passage-eligible: confidence at or above the floor and confluency at or above the target (time since passage assumed long enough). Held: passage-eligible and flagged, so sent to review instead of passage. Total: floor or held.
+
+| target | group | images | below floor | passage-eligible | held by the anomaly flag | total to review |
+|---|---|---|---|---|---|---|
+| 80% | C2C12 held-out, normal | 1228 | 70 | 0 | 0 | 70 (5.7%) |
+| 80% | C2C12 tuning, normal (comparison only) | 860 | 47 | 0 | 0 | 47 (5.5%) |
+| 80% | C2C12 simulated contamination | 97 | 13 | 64 | 64 | 77 (79.4%) |
+| 80% | C2C12 simulated lamp dimming | 552 | 60 | 0 | 0 | 60 (10.9%) |
+| 50% | C2C12 held-out, normal | 1228 | 70 | 14 | 1 | 71 (5.8%) |
+| 50% | C2C12 tuning, normal (comparison only) | 860 | 47 | 8 | 0 | 47 (5.5%) |
+| 50% | C2C12 simulated contamination | 97 | 13 | 76 | 76 | 89 (91.8%) |
+| 50% | C2C12 simulated lamp dimming | 552 | 60 | 11 | 0 | 60 (10.9%) |

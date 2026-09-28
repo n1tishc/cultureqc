@@ -2,7 +2,7 @@
 demo/analysis.py — one image through the console's live path: Cellpose-SAM
 confluency (one pass; the overlay mask is the same probability map), the QC
 classifier (recorded; kept out of the action while demoted), the per-image
-anomaly check (review only) and the action rules.
+anomaly check (shown for review; a flag holds a passage) and the action rules.
 
 demo/app.py runs it live; scripts/export_demo_examples.py runs it once per
 precomputed example, so the two show the same computation.
@@ -24,7 +24,7 @@ from culture.pipeline import config_hashes
 from culture.qc import QCResult, classifier_demoted, qc_classify
 from culture.rationale import generate_rationale
 from culture.records import hash_file
-from culture.rules import LineConfig, decide
+from culture.rules import RULES_VERSION, LineConfig, decide
 from culture.seg import ConfluencyResult, cpsam_confluency, threshold_confluency
 from culture.visuals import outline_scored_region
 
@@ -97,7 +97,8 @@ def analyze_image(img: np.ndarray, image_path: str, cell_line: str, target_confl
     t["segmentation"] = time.perf_counter() - t0
 
     t0 = time.perf_counter()
-    anomaly = score_frame(img, conf.pct)   # B2: shown for review, never used by decide()
+    anomaly = score_frame(img, conf.pct)   # B2: shown for review; a flag holds a passage (rules v0.3)
+    anomaly_flag = anomaly.flag if anomaly.status == "ok" else None
     t["anomaly"] = time.perf_counter() - t0
 
     h, w = img.shape[:2]
@@ -124,6 +125,7 @@ def analyze_image(img: np.ndarray, image_path: str, cell_line: str, target_confl
         line_config=LineConfig(cell_line=cell_line, target_confluency=target_confluency),
         hours_since_passage=DEFAULT_HOURS_SINCE_PASSAGE,
         hours_since_feed=DEFAULT_HOURS_SINCE_FEED,
+        anomaly_flag=anomaly_flag,
     )
 
     evidence_boxes = []
@@ -143,6 +145,7 @@ def analyze_image(img: np.ndarray, image_path: str, cell_line: str, target_confl
         tile_size=TILE_SIZE,
         use_vlm=False,
         image_path=image_path,
+        anomaly_flag=anomaly_flag,
     )
     t["total"] = sum(t.values())
     return Analysis(confluency=conf, qc=qc, demoted=demoted, anomaly=anomaly, action=action, reason=reason,
@@ -178,7 +181,7 @@ def build_record(a: Analysis, image_path: str, cell_line: str, captured_at: str 
         "eta_to_target_hours": None,
         "recommended_action": a.action,
         "action_reason": a.reason,
-        "decided_by": "rules_v0.2",
+        "decided_by": RULES_VERSION,
         "model_versions": {
             "seg": a.confluency.model_version,
             "qc": a.qc.model_version,

@@ -84,6 +84,7 @@ def template_rationale(
     action: str = "hold",
     growth_trend: str | None = None,
     tile_size: int = 256,
+    anomaly_flag: bool | None = None,
 ) -> str:
     """
     Deterministic two-sentence rationale built from classifier output + Grad-CAM.
@@ -94,6 +95,8 @@ def template_rationale(
 
     qc_flag=None (classifier demoted, configs/qc.yaml): no sentence about
     what the classifier saw, only confluency and the action.
+    anomaly_flag=True adds a sentence saying the anomaly check flagged the
+    image (rules v0.3: a flag holds a passage for human review).
     """
     quadrant = _bbox_quadrant(evidence_bbox, tile_size)
     flag_phrase = _FLAG_PHRASES.get(qc_flag, f"QC flag '{qc_flag}' raised")
@@ -126,6 +129,11 @@ def template_rationale(
         f"Confluency {confluency_pct:.1f}% {conf_vs_target}{trend_str}; "
         f"recommend {action_phrase}."
     )
+
+    if anomaly_flag:
+        s2 += (" The anomaly check flagged this image, so it is not passaged automatically."
+               if action == "human_review" and confluency_pct >= target_confluency
+               else " The anomaly check flagged this image for review.")
 
     return f"{s1} {s2}" if s1 else s2
 
@@ -267,6 +275,7 @@ def generate_rationale(
     tile_size: int = 256,
     use_vlm: bool = False,
     image_path: str | None = None,
+    anomaly_flag: bool | None = None,
 ) -> dict:
     """
     Generate a rationale. Returns dict with:
@@ -301,6 +310,7 @@ def generate_rationale(
             action=action,
             growth_trend=growth_trend,
             tile_size=tile_size,
+            anomaly_flag=anomaly_flag,
         )
 
     return {

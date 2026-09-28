@@ -29,7 +29,7 @@ def test_caption_numbers_come_from_the_report():
     for fact in ["binned 10.0%", "target 5%", "F0016 69%", "+59.4 pp", "88% of these frames", "| 0.47 |"]:
         assert fact in report, fact
     text = " ".join(anomaly.LIVE_LIMITS)
-    for n in ["10.0%", "5% target", "69%", "+59.4 pp", "88%", "0.47", "16.5×", "does not change the recommended"]:
+    for n in ["10.0%", "5% target", "69%", "+59.4 pp", "88%", "0.47", "16.5×", "holds a passage for human review", "uncalibrated"]:
         assert n in text, n
 
 

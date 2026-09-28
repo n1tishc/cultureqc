@@ -56,7 +56,9 @@ person steps in on exceptions and audits the trail.
      review is concentrated around the replays' 50% passage target. Say it
      varies by sequence: at 40% or more, 4 of the 8 sequences sent none.
      C2C12 never reaches 60%, so the review rate at the Analyze tab's 80%
-     target is unknown; say so rather than guess.
+     target is unknown; say so rather than guess. The anomaly hold (section 4)
+     adds little on healthy flasks: at the 50% target it held 1 of 14
+     passage-eligible held-out frames (review 5.8% instead of 5.7%).
 4. Click **EVICAN HT29 (real, error case)**. Expert masks say 51.6%;
    Cellpose-SAM reads 29.4%, and its confidence (0.266) is also below the
    floor, so it goes to review. On real held-out EVICAN images the mean
@@ -75,8 +77,9 @@ person steps in on exceptions and audits the trail.
      and the record is chained;
    - `prev_record_hash` and `record_hash`: each record is chained to the one
      before, so editing any past record breaks every later link.
-   - `anomaly_used_in_decision: false`, `qc_used_in_decision: false`: the
-     record says what drove the action and what didn't.
+   - `anomaly_used_in_decision: true`, `qc_used_in_decision: false`,
+     `decided_by: rules_v0.3`: the record says what fed the action, what
+     didn't, and which version of the rules decided.
    - Scope, said before he asks: the record is tamper-evident with full
      provenance; it is not Part 11 compliant on its own. Signed-in users,
      electronic signatures with their meaning, access control and system
@@ -100,12 +103,21 @@ person steps in on exceptions and audits the trail.
 
 ## 4. Contamination, honestly (1 min)
 
-Click **C2C12 simulated contamination 1** (precomputed). The anomaly check
-flags it for review, but the rules say **Passage**, because the pasted
-bacteria are counted as cells (86.6%). That is why the flag is review-only by
-design: an image-level flag goes to a person rather than silently changing
-an action. Say plainly that the bacteria were pasted at 16.5× their real size,
-so this is a stress test, not a detection claim.
+Click **C2C12 simulated contamination 1** (precomputed). Cellpose-SAM reads
+86.6% because the pasted bacteria are counted as cells, so on confluency alone
+this flask is past the 80% target. The anomaly check flags it, and a flagged
+image is never passaged automatically: the rules return **human review**
+(`rules_v0.3`). The flag only holds a passage; it doesn't change hold or feed,
+where nothing irreversible happens. Point at the confluency number: it is still
+wrong, which is exactly why a person has to look. Say plainly that the bacteria
+were pasted at 16.5× their real size, so this is a stress test, not a
+detection claim.
+- If asked what it costs: all 76 passage-eligible simulated contamination
+  frames were held, and 1 of 14 passage-eligible healthy held-out frames at
+  the 50% target (`results/review_rate.md`).
+- If asked about other cell lines: the anomaly banks hold only C2C12, so
+  elsewhere the flag is uncalibrated and can hold a healthy flask; it fails
+  safe, and a site calibrates it (`scripts/site_calibrate.py`).
 
 ## 5. The flask over time (2 min), Flask Timeline tab
 

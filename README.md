@@ -18,8 +18,8 @@ from culture.pipeline import analyze
 
 record = analyze("field.tif", flask_id="F-01", cell_line="Huh7")
 record["confluency_pct"]            # 13.45
-record["anomaly_flag"]              # True / False: shown for review
-record["anomaly_used_in_decision"]  # always False
+record["anomaly_flag"]              # True / False: shown for review; a flag holds a passage
+record["anomaly_used_in_decision"]  # True whenever the check ran (rules_v0.3)
 record["qc_used_in_decision"]       # False while the classifier is demoted
 record["recommended_action"]        # "passage" / "feed" / "hold" / "human_review"
 record["record_hash"]               # sha256 over the canonical JSON, linked to the previous record
@@ -70,8 +70,14 @@ for C2C12 is Cellpose-SAM's own full-frame reading, which V1 found reads about
 **What changed because of it** (owner decisions, 2026-09-26):
 
 - The QC classifier is demoted: recorded and shown collapsed, not used for the action.
-- The anomaly check stays as a per-image flag, for review only. Anomaly
+- The anomaly check stays as a per-image flag, for review. Anomaly
   scores and class probabilities are no longer trended over time.
+- Since 2026-09-28 (`rules_v0.3`), a flag holds a passage: an image at or
+  above the target that the anomaly check flags goes to human review instead
+  of passage. Hold and feed are unchanged. At the replays' 50% target this
+  held 1 of 14 passage-eligible held-out normal frames (review 5.8% instead of
+  5.7%) and all 76 passage-eligible simulated contamination frames
+  (`results/review_rate.md`).
 - SPC and the instrument-drift monitor stay in code and in the report, not in
   product decisions.
 - Growth stalls are a stated limitation at the tested setup, turned into an
@@ -97,7 +103,8 @@ checks that every number in the "Number" column appears in its source file.
 | Anomaly flag vs contamination (V5) | AUROC 1.00 (simulated faults, n = 2 sequences) | simulated faults | `results/anomaly_summary.md` |
 | Anomaly flag vs lamp dimming | AUROC 0.47 (simulated faults) | simulated faults | `results/anomaly_summary.md` |
 | Quality gate fail rate | normal 12.1%; contamination 91.8%; dimming 51.1% | real + simulated faults | `results/quality_gate_c2c12.md` |
-| Sent to human review (confidence below 0.30), held-out frames | 5.7% of 1228; 43.8% of the 160 at 40-60% confluency (14 sequences) | real (C2C12) | `results/review_rate.md` |
+| Sent to human review, held-out frames: confidence below 0.30 | 5.7% of 1228; 43.8% of the 160 at 40-60% confluency (14 sequences) | real (C2C12) | `results/review_rate.md` |
+| Sent to human review, held-out frames: anomaly hold (`rules_v0.3`), 50% target | 1 of 14 passage-eligible normal frames; total 71 (5.8%); simulated contamination 76 of 76 | real (C2C12) + simulated faults | `results/review_rate.md` |
 | SPC (V6; not in the product) | 3.75 false alarms / 100 visits; contamination 0/2; stall 0/2 | simulated faults | `results/spc_summary.md` |
 | QC classifier accuracy, synthetic test tiles | 0.9801 (n = 653) | synthetic | `results/calibration_summary.md` |
 | QC classifier calibration (V8) | ECE 0.0139 (T = 1.5536) | synthetic | `results/calibration_summary.md` |
@@ -118,8 +125,8 @@ drove, and the proof cannot drift apart.
 | Output | Detail |
 |---|---|
 | **Confluency** | Cellpose-SAM (`cpsam_v2`) probability map. 8.35 pp mean absolute error on real held-out EVICAN images, reading low (V1). A threshold baseline is computed alongside for comparison. |
-| **Anomaly check** | DINOv2-small patch distances on the 256 px centre tile against banks of normal C2C12 patches, one per confluency bin; flag = score above the bin's 5%-FPR threshold, with a patch heatmap (`culture/anomaly.py`, `configs/anomaly.yaml`). Shown for review only: it never changes the action. Uncalibrated outside the tested imaging setup; see [Site calibration](#site-calibration). |
-| **Action** | Deterministic rules over confluency and timing (plus the QC flag only when the classifier is not demoted): `passage`, `feed`, `hold`, `human_review`. No model decides this. |
+| **Anomaly check** | DINOv2-small patch distances on the 256 px centre tile against banks of normal C2C12 patches, one per confluency bin; flag = score above the bin's 5%-FPR threshold, with a patch heatmap (`culture/anomaly.py`, `configs/anomaly.yaml`). Shown for review; a flag turns `passage` into `human_review` (hold and feed unchanged). Uncalibrated outside the tested imaging setup; see [Site calibration](#site-calibration). |
+| **Action** | Deterministic rules (`rules_v0.3`) over confluency, timing and the anomaly flag (plus the QC flag only when the classifier is not demoted): `passage`, `feed`, `hold`, `human_review`. No model decides this. |
 | **QC classifier (demoted)** | EfficientNet-B0 over the centred 256 px tile: `normal`, `contamination_suspected`, `detachment`, `image_quality`. Trained on synthetic tiles only; accuracy 0.9801 on synthetic test tiles, but 5.0% of real held-out C2C12 normal frames are called normal. Temperature-scaled (`configs/calibration.yaml`). Recorded and shown collapsed; not used for the action, and no Grad-CAM evidence is drawn while demoted (`configs/qc.yaml`). |
 | **Record** | Appended to a hash-chained JSONL log (`culture/records.py`, 40-field schema in `culture/schema.json`), with the model versions and the SHA-256 of every config it used. The console's records also carry `confluency_map_hash`, the SHA-256 of the Cellpose-SAM map the confluency was counted from (1/4 resolution, int16), so the 3D view below can be checked against the record. Every record carries the SHA-256 of the one before it, so altering any record breaks every link after it. |
 
@@ -295,9 +302,13 @@ healthy EVICAN PC3 example in the console is flagged for that reason. The banks
 **Simulated contamination inflates confluency.** Cellpose-SAM counts the pasted
 bacteria as cells: they shift measured confluency by a median +59.4 pp
 (`results/anomaly_summary.md`), so the contaminated examples read far above
-their base frames and the confluency rules can recommend passaging them. The
-anomaly flag is review-only and does not override that. The same effect can
-trigger the passage forecast in the contamination replay.
+their base frames and confluency alone is above the passage target. Since
+`rules_v0.3` the anomaly flag holds that passage for human review, so the two
+contamination examples recommend `human_review`. The confluency number itself
+is still inflated, and the same effect can trigger the passage forecast in the
+contamination replay. Because the banks hold only C2C12 frames, on other cell
+types the flag is uncalibrated and can also hold a passage on a healthy flask
+(it fails safe: a person looks).
 
 **The QC classifier is demoted.** On held-out C2C12 frames it calls 2.9–5.0% of
 normal frames normal, against an 80% bar, and rescaling the input to the

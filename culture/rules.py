@@ -9,7 +9,10 @@ Order of precedence:
   1. QC flag != normal with confidence >= threshold -> human_review
      (skipped when qc_flag is None: the classifier is demoted, configs/qc.yaml)
   2. Confluency confidence < 0.3 -> human_review (uncertain measurement)
-  3. Confluency >= target and hours since passage >= min_hours -> passage
+  3. Confluency >= target and hours since passage >= min_hours -> passage,
+     unless the per-image anomaly check flagged the image: then human_review
+     (a flagged flask is never passaged automatically; the flag does not
+     change hold or feed, where nothing irreversible happens)
   4. Hours since feed >= feed_interval -> feed
   5. Else -> hold
 
@@ -32,6 +35,9 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass, field
 
+# Written into every record's decided_by. v0.3 (2026-09-28): the anomaly flag
+# holds a passage for human review (rule 3).
+RULES_VERSION = "rules_v0.3"
 
 # ---------------------------------------------------------------------------
 # Per-line configuration
@@ -95,12 +101,15 @@ def decide(
     line_config: LineConfig | None = None,
     hours_since_passage: float | None = None,
     hours_since_feed: float | None = None,
+    anomaly_flag: bool | None = None,
 ) -> tuple[str, str]:
     """
     Deterministic action decision.
 
     qc_flag=None leaves the classifier out of the decision (rule 1 is
     skipped); pass that when it is demoted rather than a made-up "normal".
+    anomaly_flag=None (the check was unavailable) leaves rule 3 as a plain
+    confluency check; pass the flag whenever the anomaly check ran.
 
     Returns:
         (action, reason) where action is one of:
@@ -132,6 +141,12 @@ def decide(
         hours_since_passage is None
         or hours_since_passage >= cfg.min_hours_since_passage
     )
+    if passage_ready and hours_ok and anomaly_flag:
+        return (
+            "human_review",
+            f"Confluency {confluency_pct:.1f}% >= target {cfg.target_confluency:.0f}%, "
+            f"but the anomaly check flagged this image; passage held for human review."
+        )
     if passage_ready and hours_ok:
         return (
             "passage",

@@ -1,14 +1,21 @@
 #!/usr/bin/env python3
 """
-How often the rules send an image to human review because the confluency
-measurement itself is uncertain (culture/rules.py rule 2: confidence below the
-line's floor, 0.30 by default). With the classifier demoted this is the only
-rule that returns human_review in the live path; the anomaly flag is shown for
-review but does not change the action, and the quality gate returns REIMAGE
-(results/quality_gate_c2c12.md), so neither is counted here.
+How often the rules send an image to human review. With the classifier
+demoted, two rules can (culture/rules.py, rules_v0.3):
+  - the confidence floor (rule 2): the confluency measurement itself is
+    uncertain (confidence below the line's floor, 0.30 by default);
+  - the anomaly hold (rule 3, since v0.3): confluency is at or above the
+    target but the per-image anomaly check flagged the image, so the passage
+    is held for review. This depends on the target, so it is reported at the
+    default 80% and at the replays' 50%.
+The quality gate returns REIMAGE (results/quality_gate_c2c12.md), not review,
+so it is not counted.
 
 No model runs: the confidence is the one the compute cache stored with each
-frame's Cellpose-SAM confluency (cache/confluency.parquet, cpsam_v2 on Colab
+frame's Cellpose-SAM confluency, and the anomaly flag is A4's
+(cache/anomaly/scores.parquet: held-out frames against the tuning banks, which
+are the deployed ones; tuning frames against banks without their own
+sequence) (cache/confluency.parquet, cpsam_v2 on Colab
 GPU, nb/03), computed at full resolution with the same formula as the live
 path (culture/seg.py). C2C12 base sequences are split as in
 results/replay_fleet_split.csv; the floor was not set on C2C12, so both halves
@@ -32,12 +39,13 @@ import pandas as pd
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, REPO)
 
-from culture.rules import DEFAULT_CONFIG  # noqa: E402
+from culture.rules import DEFAULT_CONFIG, RULES_VERSION  # noqa: E402
 
 CACHE = os.path.join(REPO, "cache")
 RESULTS = os.path.join(REPO, "results")
 BINS = [0, 20, 40, 60, 80, 100.01]
 CROP_FRAC = 0.25
+TARGETS = (80.0, 50.0)               # the default target, and the replays' (results/growth_backtest.md)
 
 
 def rate(df: pd.DataFrame, floor: float) -> dict:
@@ -84,6 +92,29 @@ def main():
     add(f"C2C12 held-out, {CROP_FRAC:g}-frame FOV crops", crops[crops.split == "heldout"],
         "each crop segmented on its own, as the replay visits are")
 
+    # Anomaly hold: frames with an A4 anomaly score, joined to their cached confidence.
+    scores = pd.read_parquet(os.path.join(CACHE, "anomaly", "scores.parquet"))[
+        ["image_sha256", "kind", "split", "flag_binned"]]
+    scored = scores.merge(full[["image_sha256", "pct", "confidence"]], on="image_sha256", how="left",
+                          validate="one_to_one")
+    assert scored.confidence.notna().all()
+    groups = [("C2C12 held-out, normal", (scored.kind == "normal") & (scored.split == "heldout")),
+              ("C2C12 tuning, normal (comparison only)", (scored.kind == "normal") & (scored.split == "tuning")),
+              ("C2C12 simulated contamination", scored.kind == "contamination_onset"),
+              ("C2C12 simulated lamp dimming", scored.kind == "lamp_dimming")]
+    hold_rows = []
+    for target in TARGETS:
+        for name, mask in groups:
+            g = scored[mask]
+            low = g.confidence < floor
+            eligible = (~low) & (g.pct >= target)
+            held_back = eligible & g.flag_binned
+            n = len(g)
+            hold_rows.append({"target": target, "group": name, "n": n, "floor": int(low.sum()),
+                              "eligible": int(eligible.sum()), "hold": int(held_back.sum()),
+                              "total": int((low | held_back).sum()),
+                              "total_pct": round(100 * int((low | held_back).sum()) / n, 1)})
+
     per_seq = {s: rate(g, floor)["review_pct"] for s, g in held.groupby("sequence_id")}
     dense = held[held.pct >= 40]
     per_seq_dense = {s: rate(g, floor) for s, g in dense.groupby("sequence_id")}
@@ -94,15 +125,17 @@ def main():
         w.writerows(rows)
 
     lines = [
-        "# Human-review rate from the confluency confidence floor", "",
+        "# Human-review rate: confidence floor and anomaly hold", "",
         f"Generated {time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())} by `scripts/review_rate.py`. "
         "No model runs: confidences are the compute cache's (Cellpose-SAM cpsam_v2, Colab GPU, nb/03), "
         "full resolution, same formula as the live path. C2C12 images: Ker et al., *Sci Data* 5:180237 (2018), "
         "CC BY 4.0; fault frames are simulated from them.", "",
-        f"Rule: confidence below the floor ({floor:.2f}, `culture/rules.py` default) returns `human_review`. "
-        "With the classifier demoted it is the only rule that does; the anomaly flag is review-only and does "
-        "not change the action, and quality-gate failures return REIMAGE (`results/quality_gate_c2c12.md`). "
-        "Frames within a sequence are not independent; n sequences is the sample size.", "",
+        f"Rules: `{RULES_VERSION}`. With the classifier demoted, two rules return `human_review`: confidence "
+        f"below the floor ({floor:.2f}, `culture/rules.py` default), and, since `rules_v0.3`, the anomaly hold "
+        "(confluency at or above the target, but the anomaly check flagged the image). Quality-gate failures "
+        "return REIMAGE (`results/quality_gate_c2c12.md`). Frames within a sequence are not independent; "
+        "n sequences is the sample size.", "",
+        "## Confidence floor", "",
         "| group | sequences | images | sent to review | note |", "|---|---|---|---|---|",
     ]
     for r in rows:
@@ -113,7 +146,17 @@ def main():
               f"Highest held-out C2C12 confluency: {held.pct.max():.1f}%, so no frame reaches the 60-100% bins. "
               "Held-out frames at 40% or more, per sequence (sent to review / frames): " + ", ".join(
                   f"{s.replace('c2c12_', '').replace('_Data', '')} {r['n_review']}/{r['n']}"
-                  for s, r in sorted(per_seq_dense.items())) + ".", ""]
+                  for s, r in sorted(per_seq_dense.items())) + ".", "",
+              "## Anomaly hold (rules_v0.3)", "",
+              "Frames with an anomaly score (A4). Passage-eligible: confidence at or above the floor and confluency "
+              "at or above the target (time since passage assumed long enough). Held: passage-eligible and "
+              "flagged, so sent to review instead of passage. Total: floor or held.", "",
+              "| target | group | images | below floor | passage-eligible | held by the anomaly flag | total to review |",
+              "|---|---|---|---|---|---|---|"]
+    for r in hold_rows:
+        lines.append(f"| {r['target']:g}% | {r['group']} | {r['n']} | {r['floor']} | {r['eligible']} | {r['hold']} "
+                     f"| {r['total']} ({r['total_pct']}%) |")
+    lines.append("")
     with open(os.path.join(RESULTS, "review_rate.md"), "w") as f:
         f.write("\n".join(lines))
     print("\n".join(lines))

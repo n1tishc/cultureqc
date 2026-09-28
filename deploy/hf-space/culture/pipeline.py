@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 from culture.seg import cpsam_confluency
 from culture.qc import qc_classify, classifier_demoted, CLASS_NAMES
 from culture.calibration import DEFAULT_CALIBRATION_PATH
-from culture.rules import decide, LineConfig, DEFAULT_CONFIG
+from culture.rules import decide, LineConfig, DEFAULT_CONFIG, RULES_VERSION
 from culture.records import RecordWriter, hash_file
 from culture.rationale import generate_rationale
 
@@ -69,7 +69,7 @@ def analyze(
     emit({"stage": "segmentation", "status": "complete", "visuals": dict(visuals),
           "confluency_pct": conf_result.pct})
 
-    # ── Per-image anomaly (B2): shown for review, never used by decide() ──
+    # ── Per-image anomaly (B2): shown for review; a flag holds a passage (rules v0.3) ──
     from culture.anomaly import score_frame
     from culture.visuals import anomaly_tile_view, png
     emit({"stage": "anomaly", "status": "running"})
@@ -113,6 +113,7 @@ def analyze(
         line_config=cfg,
         hours_since_passage=hours_since_passage,
         hours_since_feed=hours_since_feed,
+        anomaly_flag=anomaly.flag if anomaly.status == "ok" else None,
     )
 
     # ── Rationale ──
@@ -126,6 +127,7 @@ def analyze(
         tile_size=256,
         use_vlm=False,  # set True to try VLM; falls back to template on failure
         image_path=image_path,
+        anomaly_flag=anomaly.flag if anomaly.status == "ok" else None,
     )
 
     # ── Build record ──
@@ -154,7 +156,7 @@ def analyze(
         "eta_to_target_hours": None,
         "recommended_action": action,
         "action_reason": reason,
-        "decided_by": "rules_v0.2",
+        "decided_by": RULES_VERSION,
         "model_versions": {
             "seg": conf_result.model_version,
             "qc": qc_result.model_version,

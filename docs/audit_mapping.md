@@ -22,7 +22,7 @@ The cultureQC audit record is designed so that each field maps to a specific
 | `image_hash` (SHA-256) | (e) Audit trails — independent of record | Link the record to the original data | SHA-256 of the raw image bytes; proves which image was analysed |
 | `model_versions` | (a) Validation — system reproducibility | Ensure accuracy, reliability, and ability to discern invalid records | Exact model identifiers (e.g. `cpsam_v2`, `qc_effnetb0_v1`) |
 | `model_weights_hash` | (a) Validation — reproducibility | | SHA-256 of each weights file; proves which exact checkpoint produced the output |
-| `decided_by` | (d) Limiting system access | Authority checks and device checks | Records whether the decision was made by `rules_v0.2` (deterministic) or a human reviewer |
+| `decided_by` | (d) Limiting system access | Authority checks and device checks | Records whether the decision was made by the deterministic rules, with their version (`rules_v0.3` since 2026-09-28), or a human reviewer |
 | `reviewed_by` | (g) and (h) Authority checks, device checks | Persons who develop, maintain, or use the system | Nullable; filled by the human who reviewed the automated decision; `null` = unreviewed |
 | `review_outcome` | (g) Authority checks | | Records the human's accept/reject/override of the automated recommendation |
 | `confluency_method` | (a) Validation | | Which algorithm produced the confluency number (`cpsam_v2_probmap`, `threshold_baseline`) |

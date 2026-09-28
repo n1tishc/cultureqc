@@ -28,6 +28,15 @@ under cache.probmap_sign_disagree_pct.
 Usage (needs data/c2c12_picks/ from nb/04c_fetch_c2c12_frames.ipynb, and the
 cache for the parity columns):
     python scripts/export_demo_examples.py [--only ID ...]
+
+After a change to the rules only (culture/rules.py), re-derive the decisions
+from the stored model outputs, with no model run:
+    python scripts/export_demo_examples.py --rederive
+The action, reason, rationale, caption and the record's decision fields are
+recomputed; the records are re-chained in their original order (record_id and
+timestamps kept, so every record_hash changes with decided_by); the example
+gains decision_rederived = {"at", "rules"}, shown on the precomputed card.
+Model outputs (confluency, maps, anomaly, classifier, overlay) are untouched.
 """
 
 from __future__ import annotations
@@ -50,6 +59,8 @@ REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, REPO)
 
 from culture.cache import probmap_sha256  # noqa: E402
+from culture.rationale import generate_rationale  # noqa: E402
+from culture.rules import RULES_VERSION, LineConfig, decide  # noqa: E402
 from culture.records import RecordWriter, hash_file  # noqa: E402
 from demo.analysis import analyze_image, build_record  # noqa: E402
 
@@ -107,16 +118,59 @@ def caption(e: dict, rec: dict) -> str:
                 "The anomaly banks hold only C2C12 frames, so on other cell types the flag is uncalibrated.")
     if e["kind"] == "c2c12_normal":
         return f"Held-out normal frame ({e['sequence']}, frame {e['frame']}); {conf}; {an}."
+    held = rec["recommended_action"] == "human_review" and flag
     return (f"Held-out frame with simulated contamination ({e['severity']:.0f} bacteria pasted at 16.5× their "
-            f"real size); {an}. {conf}: the pasted bacteria are counted as cells, so the confluency rules "
-            f"recommend {rec['recommended_action']}. The flag is shown for review only and does not change "
-            "the action.")
+            f"real size); {an}. {conf}: the pasted bacteria are counted as cells, so confluency alone is above "
+            f"the target"
+            + ("; the anomaly flag holds the passage, and the rules recommend human review." if held
+               else f", and the rules recommend {rec['recommended_action']}."))
+
+
+def rederive(date: str) -> None:
+    """Re-derive every example's decision under the current rules from its stored
+    outputs (no model run); see the module docstring."""
+    from demo.analysis import DEFAULT_HOURS_SINCE_FEED, DEFAULT_HOURS_SINCE_PASSAGE
+
+    with open(OUT_JSON) as f:
+        doc = json.load(f)
+    writer = RecordWriter(os.path.join(tempfile.mkdtemp(prefix="cultureqc_examples_"), "records.jsonl"))
+    for ex in doc["examples"]:
+        a, conf, qc = ex["anomaly"], ex["confluency"], ex["qc"]
+        flag = a["flag"] if a["status"] == "ok" else None
+        demoted = ex["demoted"]
+        action, reason = decide(
+            confluency_pct=conf["pct"], confluency_confidence=conf["confidence"],
+            qc_flag=None if demoted else qc["flag"], qc_confidence=None if demoted else qc["confidence"],
+            line_config=LineConfig(cell_line=ex["cell_line"], target_confluency=ex["target_confluency"]),
+            hours_since_passage=DEFAULT_HOURS_SINCE_PASSAGE, hours_since_feed=DEFAULT_HOURS_SINCE_FEED,
+            anomaly_flag=flag)
+        rationale = generate_rationale(
+            qc_flag=None if demoted else qc["flag"], qc_confidence=None if demoted else qc["confidence"],
+            evidence_bbox=(qc.get("evidence_bboxes") or [None])[0], confluency_pct=conf["pct"],
+            target_confluency=ex["target_confluency"], action=action, tile_size=256, use_vlm=False,
+            anomaly_flag=flag)["rationale"]
+        old_action = ex["action"]
+        rec = dict(ex["record"], recommended_action=action, action_reason=reason, qc_rationale=rationale,
+                   decided_by=RULES_VERSION, anomaly_used_in_decision=flag is not None)
+        rec = writer.append(rec)
+        ex.update(action=action, action_reason=reason, rationale=rationale, record=rec,
+                  caption=caption(ex, rec), decision_rederived={"at": date, "rules": RULES_VERSION})
+        print(f"{ex['id']}: {old_action} -> {action}")
+    with open(OUT_JSON, "w") as f:
+        json.dump(doc, f, indent=1, sort_keys=True)
+        f.write("\n")
+    print(f"wrote {os.path.relpath(OUT_JSON, REPO)} ({len(doc['examples'])} examples, decisions under {RULES_VERSION})")
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--only", nargs="*", help="example ids to (re)run; the rest are kept from examples.json")
+    ap.add_argument("--rederive", action="store_true",
+                    help="re-derive decisions from the stored outputs under the current rules; no model run")
     args = ap.parse_args()
+    if args.rederive:
+        rederive(datetime.now(timezone.utc).date().isoformat())
+        return
 
     import torch
 
