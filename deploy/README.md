@@ -161,7 +161,7 @@ Two things worth knowing before relying on this for speed:
   `quota exceeded` before the call even starts, too small risks the run being
   cut off.
 
-## Call-day console — `LongGrainRice/cultureqc-console` on a GPU
+## Call-day console — `LongGrainRice/cultureqc-console` on ZeroGPU
 
 For the dry run (Thu Oct 1), the rehearsal (Mon Oct 5) and the call (Tue Oct 6)
 the review console (`console.py` → `demo/app.py`) runs on its own Space,
@@ -173,24 +173,35 @@ without the owner's go-ahead.
 
 ```bash
 python deploy/sync_space.py                     # mirrors culture/, config/, configs/, demo/, banks
-.venv/bin/python -m pytest deploy/hf-space/test_api.py -q
+.venv/bin/python -m pytest deploy/hf-space/test_api.py tests/test_console_zerogpu.py -q
 .venv/bin/python deploy/publish_demo_space.py   # refuses unless the banks match configs/anomaly.yaml
+.venv/bin/python scripts/space_dry_run.py       # live Analyze on the Space, timed and compared
 ```
 
-1. **Owner:** switch the Space's hardware to a dedicated GPU tier (Settings →
-   Hardware; not ZeroGPU) and wait for the build.
-2. The Space log should show `cuda: True (<device>)`, `anomaly banks verified`
-   and `models warmed up in … s`. If it shows `cuda: False` or `UNAVAILABLE`,
-   the console still works on its precomputed examples and replays.
-3. Dry run: set the Space variable `CULTUREQC_SELFCHECK=5` and restart. At
-   startup `demo/selfcheck.py` re-runs 5 examples live (C2C12 first), compares
-   confluency, anomaly score/flag, action and the 3D view's map (points across
-   the cutoff) with the stored outputs, times each stage, and prints the report
-   to the log; save it as `results/live_latency_gpu.md`. Remove the variable
-   afterwards. Then open both 3D views (Analyze → 3D, Flask Timeline → 3D)
-   in the browser that will be used on the call: they need WebGL.
-4. **After the call, switch the console Space's hardware back to CPU.** The
-   raw-output page was never replaced; it is still on `cultureqc-demo`.
+**Why ZeroGPU rather than a dedicated GPU tier** (chosen 2026-09-28): it costs
+nothing beyond the PRO plan, needs no switching on before the call or back to
+CPU after it, and stays fast after the call if the link is opened again. The
+same models already run on ZeroGPU in `cultureqc-demo`. The costs: a GPU is
+attached per live Analyze (the first one after a quiet spell is slower), each
+Analyze draws on the viewer's ZeroGPU quota, and the startup self-check cannot
+run (no GPU at startup), so the dry run is `scripts/space_dry_run.py` from
+outside instead. `zerogpu.py` is active only when `SPACES_ZERO_GPU` is set, so
+switching the Space to a dedicated GPU tier instead needs no code change (then
+the startup self-check, `CULTUREQC_SELFCHECK=5`, works as before).
+
+1. The Space log should show `ZeroGPU (a GPU per live Analyze …)`, `anomaly
+   banks verified` and `models loaded in … s`.
+2. Dry run: `scripts/space_dry_run.py` uploads each of the 7 precomputed
+   examples' images, runs Analyze live on the Space signed in with the local
+   token (the owner's quota), times each one from the client and compares
+   the record with the stored example; it writes
+   `results/live_latency_zerogpu.md`. Then open both 3D views (Analyze → 3D,
+   Flask Timeline → 3D) in the browser that will be used on the call: they
+   need WebGL.
+3. On the call, open the Space **signed in, from huggingface.co/spaces/…**,
+   so Analyze uses the PRO quota. Precomputed examples and replays use no GPU.
+4. `@spaces.GPU(duration=60)` in `zerogpu.py`: tune from the dry run's times,
+   not guesses.
 
 ### Backup: the Mac (no Hugging Face at run time)
 

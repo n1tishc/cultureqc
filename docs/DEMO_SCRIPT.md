@@ -12,11 +12,12 @@ replay is on screen; say "live" only after pressing Analyze.
 
 ## Before the call
 
-- [ ] Space on the GPU tier; the log shows `cuda: True`, `anomaly banks verified` and the warm-up time.
-- [ ] `results/live_latency_gpu.md` from the Thu Oct 1 dry run is committed; quote its median, not a guess.
-- [ ] One live Analyze done after the warm-up, so the first click on the call isn't a cold start.
+- [ ] Space on ZeroGPU; the log shows `ZeroGPU`, `anomaly banks verified` and `models loaded`.
+- [ ] `results/live_latency_zerogpu.md` from the dry run (`scripts/space_dry_run.py`) is committed; quote its numbers, not a guess.
+- [ ] Signed in to huggingface.co in the call browser, Space opened from huggingface.co/spaces/LongGrainRice/cultureqc-console (Analyze then uses the PRO GPU quota).
+- [ ] One live Analyze done a few minutes before the call, so the first click on the call isn't the slow first attach.
 - [ ] Browser zoom so the 3D views fit; hardware acceleration on (the 3D views use WebGL). Open both 3D views on the GPU Space in the browser used on the call.
-- [ ] The dry run's selfcheck table: live vs stored map points across the cutoff should be small; read it before the call.
+- [ ] The dry run's table: live vs stored confluency, flag and action; read it before the call.
 - [ ] Fallback tab open: the same Space works on CPU for everything precomputed.
 - [ ] Mac backup started once that day (`deploy/run_console_mac.sh`, then
       http://127.0.0.1:7860 in the call browser). It needs no Hugging Face:
@@ -89,6 +90,9 @@ person steps in on exceptions and audits the trail.
    says the map is held in memory for this view while the record keeps its
    hash. Precomputed examples are never written into this chain, and the card
    says so.
+   - On the Space (ZeroGPU) a live Analyze took a median 4.98 s in the dry
+     run (`results/live_latency_zerogpu.md`); the 51.4% frame read confidence
+     0.014 live against 0.013 stored, still human_review.
    - On the Mac backup, the 51.4% frame reads confidence 0.015 live against
      0.013 stored (Apple's GPU; still below the floor, still human_review).
      If asked, the live-vs-stored table is `results/live_latency_mac_mps.md`:
