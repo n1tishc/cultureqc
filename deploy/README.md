@@ -242,7 +242,8 @@ file's SHA-256. Upload it to `MyDrive/cultureqc/` and run
   the packages from PyPI.
 - It runs `demo.selfcheck` over all 7 examples offline, which gives
   `live_latency_colab_gpu.md` (commit it under `results/`).
-- It opens the console through Colab's own port proxy.
+- It opens the console through Colab's own port proxy: a full-tab URL (printed)
+  and the same console inline below the cell.
 
 The bundle was checked on the Mac by unzipping it and running the self-check
 with an empty `HOME` (no local model caches) and the network blocked. The
