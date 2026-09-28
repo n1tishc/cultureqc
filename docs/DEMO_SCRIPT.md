@@ -49,9 +49,10 @@ person steps in on exceptions and audits the trail.
      (70 of 1228, 14 sequences), but 43.8% of the 160 frames at 40-60%
      confluency, the densest these recordings get (57.0% at most). Dense
      frames are where the amber shelf grows, as on the 51.4% frame, so
-     review lands where passage decisions are made. Say it
+     review is concentrated around the replays' 50% passage target. Say it
      varies by sequence: at 40% or more, 4 of the 8 sequences sent none.
-     C2C12 never reaches 60%, so there is no number above that.
+     C2C12 never reaches 60%, so the review rate at the Analyze tab's 80%
+     target is unknown; say so rather than guess.
 4. Click **EVICAN HT29 (real, error case)**. Expert masks say 51.6%;
    Cellpose-SAM reads 29.4%, and its confidence (0.266) is also below the
    floor, so it goes to review. On real held-out EVICAN images the mean
