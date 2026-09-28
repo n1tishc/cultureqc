@@ -18,6 +18,8 @@ replay is on screen; say "live" only after pressing Analyze.
 - [ ] Space opened 10 minutes early (it sleeps after 48 h without visitors; a boot takes minutes) and one live Analyze done; in the dry run one of 7 took 18.50 s against a median 3.82 s.
 - [ ] Expect a small "Successfully acquired a GPU" toast (top right) on each live Analyze: that is ZeroGPU attaching
       the GPU. If asked, it is the live run on a GPU, not a precomputed result.
+- [ ] The 3D views turn on their own at the dry run. If they don't, check macOS System Settings →
+      Accessibility → Display → Reduce motion: the page honours it and stays still when it is on.
 - [ ] Browser zoom so the 3D views fit; hardware acceleration on (the 3D views use WebGL). Open both 3D views on the GPU Space in the browser used on the call.
 - [ ] The dry run's table: live vs stored confluency, flag and action; read it before the call.
 - [ ] Fallback tab open: the same Space works on CPU for everything precomputed.

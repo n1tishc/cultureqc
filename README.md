@@ -104,7 +104,7 @@ checks that every number in the "Number" column appears in its source file.
 | Anomaly flag vs lamp dimming | AUROC 0.47 (simulated faults) | simulated faults | `results/anomaly_summary.md` |
 | Quality gate fail rate | normal 12.1%; contamination 91.8%; dimming 51.1% | real + simulated faults | `results/quality_gate_c2c12.md` |
 | Sent to human review, held-out frames: confidence below 0.30 | 5.7% of 1228; 43.8% of the 160 at 40-60% confluency (14 sequences) | real (C2C12) | `results/review_rate.md` |
-| Sent to human review, held-out frames: anomaly hold (`rules_v0.3`), 50% target | 1 of 14 passage-eligible normal frames; total 71 (5.8%); simulated contamination 76 of 76 | real (C2C12) + simulated faults | `results/review_rate.md` |
+| Sent to human review: anomaly hold (`rules_v0.3`), 50% target | held-out normal frames: 1 of 14 passage-eligible, total 71 (5.8%); simulated contamination (4 sequences, both splits): 76 of 76 passage-eligible | real (C2C12) + simulated faults | `results/review_rate.md` |
 | SPC (V6; not in the product) | 3.75 false alarms / 100 visits; contamination 0/2; stall 0/2 | simulated faults | `results/spc_summary.md` |
 | QC classifier accuracy, synthetic test tiles | 0.9801 (n = 653) | synthetic | `results/calibration_summary.md` |
 | QC classifier calibration (V8) | ECE 0.0139 (T = 1.5536) | synthetic | `results/calibration_summary.md` |
