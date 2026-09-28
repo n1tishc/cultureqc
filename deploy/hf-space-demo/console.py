@@ -61,4 +61,7 @@ startup_report()
 from demo.app import CSS, demo  # noqa: E402
 from demo.theme import CultureQCTheme  # noqa: E402
 
-demo.launch(theme=CultureQCTheme(), css=CSS, footer_links=[])
+# Spaces turn on server-side rendering by default (a Node proxy on :7860 in
+# front of Python); on the first publish the proxy mostly returned 502. Serve
+# the page as the local checks did, straight from Python.
+demo.launch(theme=CultureQCTheme(), css=CSS, footer_links=[], ssr_mode=False)
