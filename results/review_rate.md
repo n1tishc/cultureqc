@@ -1,6 +1,6 @@
 # Human-review rate: confidence floor and anomaly hold
 
-Generated 2026-09-28T19:28:44Z by `scripts/review_rate.py`. No model runs: confidences are the compute cache's (Cellpose-SAM cpsam_v2, Colab GPU, nb/03), full resolution, same formula as the live path. C2C12 images: Ker et al., *Sci Data* 5:180237 (2018), CC BY 4.0; fault frames are simulated from them.
+Generated 2026-09-28T23:17:44Z by `scripts/review_rate.py`. No model runs: confidences are the compute cache's (Cellpose-SAM cpsam_v2, Colab GPU, nb/03), full resolution, same formula as the live path. C2C12 images: Ker et al., *Sci Data* 5:180237 (2018), CC BY 4.0; fault frames are simulated from them.
 
 Rules: `rules_v0.3`. With the classifier demoted, two rules return `human_review`: confidence below the floor (0.30, `culture/rules.py` default), and, since `rules_v0.3`, the anomaly hold (confluency at or above the target, but the anomaly check flagged the image). Quality-gate failures return REIMAGE (`results/quality_gate_c2c12.md`). Frames within a sequence are not independent; n sequences is the sample size.
 
@@ -15,7 +15,7 @@ Rules: `rules_v0.3`. With the classifier demoted, two rules return `human_review
 | C2C12 held-out, confluency 40-60% | 8 | 160 | 70 (43.8%) | — |
 | EVICAN eval2019 (real, expert masks) | — | 98 | 3 (3.1%) | — |
 | C2C12 simulated lamp dimming | 24 | 552 | 60 (10.9%) | simulated fault frames |
-| C2C12 simulated contamination | 4 | 97 | 13 (13.4%) | simulated fault frames |
+| C2C12 simulated contamination, bacteria 16.5× too large | 4 | 97 | 13 (13.4%) | simulated fault frames; at real size see results/contamination_scale.md |
 | C2C12 held-out, 0.25-frame FOV crops | 14 | 4912 | 451 (9.2%) | each crop segmented on its own, as the replay visits are |
 
 Held-out C2C12 review rate per sequence: 090303_exp1_F0003 8.2%, 090303_exp1_F0014 0%, 090318_exp1_F0001 0%, 090318_exp1_F0003 0%, 090318_exp1_F0005 0%, 090318_exp1_F0007 0%, 090318_exp1_F0011 31.5%, 090318_exp1_F0013 24.7%, 090318_exp1_F0016 0%, 090325_exp1_F0003 0%, 090325_exp1_F0007 0%, 090325_exp1_F0011 14.9%, 090325_exp1_F0013 0%, 090325_exp1_F0018 0%.
@@ -30,9 +30,9 @@ Frames with an anomaly score (A4). Passage-eligible: confidence at or above the 
 |---|---|---|---|---|---|---|
 | 80% | C2C12 held-out, normal | 1228 | 70 | 0 | 0 | 70 (5.7%) |
 | 80% | C2C12 tuning, normal (comparison only) | 860 | 47 | 0 | 0 | 47 (5.5%) |
-| 80% | C2C12 simulated contamination | 97 | 13 | 64 | 64 | 77 (79.4%) |
+| 80% | C2C12 simulated contamination, bacteria 16.5× too large | 97 | 13 | 64 | 64 | 77 (79.4%) |
 | 80% | C2C12 simulated lamp dimming | 552 | 60 | 0 | 0 | 60 (10.9%) |
 | 50% | C2C12 held-out, normal | 1228 | 70 | 14 | 1 | 71 (5.8%) |
 | 50% | C2C12 tuning, normal (comparison only) | 860 | 47 | 8 | 0 | 47 (5.5%) |
-| 50% | C2C12 simulated contamination | 97 | 13 | 76 | 76 | 89 (91.8%) |
+| 50% | C2C12 simulated contamination, bacteria 16.5× too large | 97 | 13 | 76 | 76 | 89 (91.8%) |
 | 50% | C2C12 simulated lamp dimming | 552 | 60 | 11 | 0 | 60 (10.9%) |

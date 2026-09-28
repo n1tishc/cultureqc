@@ -84,7 +84,8 @@ def main():
             add(f"C2C12 held-out, confluency {label}%", held[cut == label])
     add("EVICAN eval2019 (real, expert masks)", full[full.dataset == "evican_eval2019"])
     add("C2C12 simulated lamp dimming", full[full.dataset == "c2c12_fault_dim"], "simulated fault frames")
-    add("C2C12 simulated contamination", full[full.dataset == "c2c12_fault_contam"], "simulated fault frames")
+    add("C2C12 simulated contamination, bacteria 16.5× too large", full[full.dataset == "c2c12_fault_contam"],
+        "simulated fault frames; at real size see results/contamination_scale.md")
 
     crops = conf[conf.crop_spec.str.startswith(f"crop_f{CROP_FRAC}_")].merge(images, on="image_sha256")
     crops = crops[crops.dataset == "c2c12"].copy()
@@ -100,7 +101,7 @@ def main():
     assert scored.confidence.notna().all()
     groups = [("C2C12 held-out, normal", (scored.kind == "normal") & (scored.split == "heldout")),
               ("C2C12 tuning, normal (comparison only)", (scored.kind == "normal") & (scored.split == "tuning")),
-              ("C2C12 simulated contamination", scored.kind == "contamination_onset"),
+              ("C2C12 simulated contamination, bacteria 16.5× too large", scored.kind == "contamination_onset"),
               ("C2C12 simulated lamp dimming", scored.kind == "lamp_dimming")]
     hold_rows = []
     for target in TARGETS:
