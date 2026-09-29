@@ -221,7 +221,8 @@ and the 3D figures' motion contract (`tests/test_viz3d.py`).
 
 | When | What | Who |
 |---|---|---|
-| Before Thu | Upload the bundle to `MyDrive/cultureqc/`, run `nb/05` on a T4, commit `live_latency_colab_gpu.md` | owner, then commit |
+| Now | Republish the console Space (`.venv/bin/python deploy/publish_demo_space.py`), then `scripts/space_dry_run.py` | owner, then dry run |
+| Before Thu | Re-upload the bundle (rebuilt at `8253750`, 95 files) to `MyDrive/cultureqc/`, run `nb/05` on a T4, commit `live_latency_colab_gpu.md` | owner, then commit |
 | Thu Oct 1 | Dry run: `scripts/space_dry_run.py` again; open both 3D views in the call browser | |
 | Fri Oct 2 | Freeze | |
 | Mon Oct 5 | Rehearsal with `docs/DEMO_SCRIPT.md` | |
