@@ -40,6 +40,7 @@ CELL_LINES = ["A172", "BT474", "BV2", "Huh7", "MCF7", "SHSY5Y", "SKOV3", "SkBr3"
 # and EVICAN frames run once through demo/analysis.py, shown instantly and
 # labelled as precomputed; Analyze re-runs them live.
 EXAMPLES = precomputed.load()
+CONTAMINATION_FIGURE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "figures", "contamination_scale.png")
 
 STATUS_COLORS = {"green": "#22c55e", "amber": "#f59e0b", "red": "#ef4444"}
 
@@ -576,6 +577,15 @@ with gr.Blocks(
 
         with gr.Tab("Detectability"):
             gr.HTML(detectability.to_html())
+            if os.path.exists(CONTAMINATION_FIGURE):
+                gr.Image(CONTAMINATION_FIGURE, label="Simulated bacterial contamination, oversized and at real size",
+                         interactive=False, show_label=True, container=True)
+                gr.Markdown(
+                    '<p class="detect-note">The anomaly check\'s 256 px tile of one late held-out frame. Left to '
+                    "right: no fault; the stress test the contamination examples come from (bacteria 16.5× too "
+                    "large); the same bacteria at their real size, with and without the simulator's haze. At real "
+                    "size the per-visit flag is at chance and confluency does not rise: bacterial contamination is "
+                    "not detectable per visit at this magnification (results/contamination_scale.md).</p>")
 
     gr.HTML(
         '<div class="app-footer">cultureQC v0.1 &middot; Cellpose-SAM &middot; DINOv2-small (anomaly check) '

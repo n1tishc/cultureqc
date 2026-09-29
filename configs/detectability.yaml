@@ -15,10 +15,15 @@ provenance_note: >-
 rows:
   - issue: Bacterial contamination
     detectable_here: >-
-      Per visit, in an exaggerated-scale simulation only; realistic scale not tested
+      No, at realistic bacterial size (per-visit flag at chance); caught per visit
+      only in an exaggerated-scale simulation
     evidence: >-
-      V5(b): per-visit anomaly flag AUROC 1.00 at ≥ 150 sprites per tile area,
-      n = 2 held-out sequences, simulated faults with sprites 16.5× real size
+      At realistic size (results/contamination_scale.md, simulated, 4 sequences,
+      up to 400 bacteria per 256 px tile area): held-out AUROC 0.48; flag on 1 of
+      97 frames, against 4 of 97 for the same frames without bacteria; the quality gate
+      fails no more often than without them; confluency reads a median 4.3 pp lower.
+      Simulated at 16.5× real size,
+      V5(b): AUROC 1.00 at ≥ 150 sprites per tile area, n = 2 held-out sequences
       (results/anomaly_summary.md); the quality gate fails 91.8% of those frames
       (results/quality_gate_c2c12.md)
     confirm_with: Culture / Gram stain / PCR

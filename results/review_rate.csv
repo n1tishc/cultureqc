@@ -6,5 +6,5 @@ group,sequences,n,n_review,review_pct,note
 "C2C12 held-out, confluency 40-60%",8,160,70,43.8,
 "EVICAN eval2019 (real, expert masks)",0,98,3,3.1,
 C2C12 simulated lamp dimming,24,552,60,10.9,simulated fault frames
-C2C12 simulated contamination,4,97,13,13.4,simulated fault frames
+"C2C12 simulated contamination, bacteria 16.5× too large",4,97,13,13.4,simulated fault frames; at real size see results/contamination_scale.md
 "C2C12 held-out, 0.25-frame FOV crops",14,4912,451,9.2,"each crop segmented on its own, as the replay visits are"

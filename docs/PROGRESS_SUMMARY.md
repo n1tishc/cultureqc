@@ -82,7 +82,7 @@ Full report: `docs/ARCHITECTURE_VALIDATION.md`. Summary (from the README):
 | V2 Growth between visits vs FOV noise | 0.35 / 0.65 at 1 FOV (6 h / 12 h); needs 2 | Fail |
 | V3 Passage forecast | median abs. error 1.9–9.0 h (n = 5 sequences, 50% target) | No verdict: too few sequences |
 | V4 Density-conditioned anomaly | Spearman ρ −0.16 binned vs −0.09 global | Fail |
-| V5 Anomaly flag vs contamination | AUROC 1.00 (n = 2, bacteria pasted 16.5× too large) | Pass, small and exaggerated |
+| V5 Anomaly flag vs contamination | AUROC 1.00 (n = 2, bacteria pasted 16.5× too large); 0.48 with the same bacteria at real size | Pass, small and exaggerated; **Fail** at real size |
 | V6 SPC on residuals | 3.75 false alarms / 100 visits; contamination 0/2, stall 0/2 | Fail |
 | V7 Instrument vs culture drift | normal fleet drifts too | Fail for single flasks |
 | V8 Classifier calibration | ECE 0.0139 (T = 1.5536) | Pass, synthetic only |
@@ -100,6 +100,16 @@ slow for a live demo, so the demo needs a GPU (section 8).
   (`results/classifier_scale_test.md`). Found on the way: the simulated
   bacteria are pasted 16.5× too large, so every contamination number is on an
   exaggerated fault, and the docs say so.
+- **Contamination at real size (2026-09-28, after external feedback):** the
+  same 97 frames rebuilt with the bacteria at their real size, same seed and
+  density, frozen thresholds, scored on the Mac against the same frames with
+  no fault (`scripts/contamination_scale.py`, `results/contamination_scale.md`).
+  The flag is at chance (held-out AUROC 0.48; 1 of 97 flagged, 4 of 97 without
+  bacteria), the quality gate fails no more often, and confluency reads a
+  median 4.3 pp lower. Per visit, bacterial contamination is not detectable at
+  this magnification, so the v0.3 hold gives no protection against it. The
+  detectability row, README limits, validation report, anomaly card and demo
+  script say so; the console's Detectability tab shows the side-by-side image.
 - **B3, classifier demoted:** it still runs and is recorded, but the
   recommended action ignores it (`qc_used_in_decision: false`), its
   probabilities are temperature-scaled (T = 1.5536), and the UI shows it
@@ -195,7 +205,10 @@ and the 3D figures' motion contract (`tests/test_viz3d.py`).
    passage (`rules_v0.3`), so both contamination examples recommend human
    review. Their confluency still reads 86.6% / 88.6% (pasted bacteria count
    as cells), which the caption says.
-2. Shifted synthetic tiles and V5(a) patch embeddings (`docs/STATUS.md`, open
+2. **Contamination examples in the Analyze gallery** (open, 2026-09-28): the
+   two stress-test examples still show bacteria 16.5× too large. Keep,
+   replace with the same frames at real size, or remove.
+3. Shifted synthetic tiles and V5(a) patch embeddings (`docs/STATUS.md`, open
    questions): defaults hold (not done).
 
 ## 11. What's left

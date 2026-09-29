@@ -66,3 +66,11 @@ def test_haze_switch_changes_only_the_haze():
     cs.inject(img, sprites, 400.0, synth, rng_a, haze=True)
     cs.inject(img, sprites, 400.0, synth, rng_b, haze=False)
     assert rng_a.random() == rng_b.random()                     # same stream afterwards: same next frame
+
+
+def test_console_figure_is_the_reported_one():
+    import filecmp
+    res = os.path.join(REPO, "results", "contamination_scale_examples.png")
+    assert filecmp.cmp(res, cs.DEMO_FIGURE, shallow=False)
+    with open(os.path.join(REPO, "demo", "app.py")) as f:
+        assert "CONTAMINATION_FIGURE" in f.read()

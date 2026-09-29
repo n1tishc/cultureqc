@@ -47,7 +47,7 @@ every result below is on held-out. Full report, with each number's script:
 | V2 Growth between visits vs FOV noise | median growth step ÷ FOV noise 0.35 (6 h) and 0.65 (12 h) at 1 FOV; 0.61 and 1.12 at 3 FOVs; needs 2 | **Fail** |
 | V3 Passage forecast | median absolute error 1.9–9.0 h across visit settings (n = 5 sequences, 50% target) | No verdict: too few sequences, none reach 60–80% |
 | V4 Density-conditioned anomaly removes the growth confound | Spearman ρ −0.16 binned vs −0.09 global | **Fail** |
-| V5 Per-image anomaly flag vs contamination | AUROC 1.00 on simulated faults (n = 2 sequences, bacteria pasted at 16.5× their real size) | Pass, on a small and exaggerated test |
+| V5 Per-image anomaly flag vs contamination | AUROC 1.00 on simulated faults (n = 2 sequences, bacteria pasted at 16.5× their real size); 0.48 with the same simulated bacteria at their real size | Pass, on a small and exaggerated test; **Fail** at real size |
 | V6 SPC on residuals | 3.75 false alarms per 100 visits; simulated contamination 0/2 and growth stall 0/2 detected | **Fail** |
 | V7 Instrument vs culture | simulated lamp dimming raised the drift signal, but so did the normal fleet | **Fail** for single flasks |
 | V8 Classifier calibration | ECE 0.0139 on synthetic test tiles (T = 1.5536) | Pass, synthetic only |
@@ -77,7 +77,9 @@ for C2C12 is Cellpose-SAM's own full-frame reading, which V1 found reads about
   of passage. Hold and feed are unchanged. At the replays' 50% target this
   held 1 of 14 passage-eligible held-out normal frames (review 5.8% instead of
   5.7%) and all 76 passage-eligible simulated contamination frames
-  (`results/review_rate.md`).
+  (`results/review_rate.md`). Those frames have bacteria 16.5× too large; at
+  their real size the flag does not fire and the hold gives no protection
+  (`results/contamination_scale.md`).
 - SPC and the instrument-drift monitor stay in code and in the report, not in
   product decisions.
 - Growth stalls are a stated limitation at the tested setup, turned into an
@@ -100,11 +102,12 @@ checks that every number in the "Number" column appears in its source file.
 | Growth step ÷ FOV noise (V2) | 0.35 / 0.65 at 1 FOV; 0.61 / 1.12 at 3 FOVs (6 h / 12 h) | real, simulated visits | `results/growth_signal_summary.md` |
 | Passage forecast, 6 h visits, 3 FOVs (V3) | median absolute error 9.0 h; 90% interval covered 4/5 (n = 5 sequences, 50% target) | real, simulated visits | `results/growth_backtest.md` |
 | Anomaly flag rate, held-out normal frames | 10.0% (target 5%) | real (C2C12) | `results/anomaly_summary.md` |
-| Anomaly flag vs contamination (V5) | AUROC 1.00 (simulated faults, n = 2 sequences) | simulated faults | `results/anomaly_summary.md` |
+| Anomaly flag vs contamination (V5), bacteria 16.5× too large | AUROC 1.00 (simulated faults, n = 2 sequences) | simulated faults | `results/anomaly_summary.md` |
+| Anomaly flag vs contamination, bacteria at real size | AUROC 0.48 (simulated faults, n = 2 held-out sequences); flagged on 1 of 97 frames, 4 of 97 without the bacteria; confluency a median 4.3 pp lower | simulated faults | `results/contamination_scale.md` |
 | Anomaly flag vs lamp dimming | AUROC 0.47 (simulated faults) | simulated faults | `results/anomaly_summary.md` |
 | Quality gate fail rate | normal 12.1%; contamination 91.8%; dimming 51.1% | real + simulated faults | `results/quality_gate_c2c12.md` |
 | Sent to human review, held-out frames: confidence below 0.30 | 5.7% of 1228; 43.8% of the 160 at 40-60% confluency (14 sequences) | real (C2C12) | `results/review_rate.md` |
-| Sent to human review: anomaly hold (`rules_v0.3`), 50% target | held-out normal frames: 1 of 14 passage-eligible, total 71 (5.8%); simulated contamination (4 sequences, both splits): 76 of 76 passage-eligible | real (C2C12) + simulated faults | `results/review_rate.md` |
+| Sent to human review: anomaly hold (`rules_v0.3`), 50% target | held-out normal frames: 1 of 14 passage-eligible, total 71 (5.8%); simulated contamination with bacteria 16.5× too large (4 sequences, both splits): 76 of 76 passage-eligible; at real size no frame reaches the target | real (C2C12) + simulated faults | `results/review_rate.md` |
 | SPC (V6; not in the product) | 3.75 false alarms / 100 visits; contamination 0/2; stall 0/2 | simulated faults | `results/spc_summary.md` |
 | QC classifier accuracy, synthetic test tiles | 0.9801 (n = 653) | synthetic | `results/calibration_summary.md` |
 | QC classifier calibration (V8) | ECE 0.0139 (T = 1.5536) | synthetic | `results/calibration_summary.md` |
@@ -114,8 +117,12 @@ checks that every number in the "Number" column appears in its source file.
 | Live latency, Mac backup (Cellpose-SAM on Apple MPS) | median 16.46 s per 1392×1040 C2C12 frame (n = 5); flag and action the same as stored on 7 of 7 examples | real (C2C12, EVICAN) | `results/live_latency_mac_mps.md` |
 
 The contamination faults paste DeepBacs bacteria imaged at 79 nm/px into
-1.3 µm/px frames, so they are 16.5× too large; contamination at a realistic
-scale is not tested ([report, V5](docs/ARCHITECTURE_VALIDATION.md#v5--per-visit-anomaly-separation)).
+1.3 µm/px frames, so they are 16.5× too large. Rebuilt with the bacteria at
+their real size (same frames, seed and density, frozen thresholds), the flag is
+at chance and confluency does not rise
+([report, V5](docs/ARCHITECTURE_VALIDATION.md#v5--per-visit-anomaly-separation);
+`results/contamination_scale.md`, with a side-by-side image in
+`results/contamination_scale_examples.png`).
 
 ## The outputs
 
@@ -212,8 +219,9 @@ SHA-256 is recorded in every analysis record) lists each issue with the Phase A
 check behind it, or "not tested". In short, at the tested setup (replayed
 C2C12, 0.25-frame fields, 1–3 per visit, every 6–12 h): image-quality defects
 are caught by the quality gate; growth stalls and instrument drift are **not**
-reliably detectable; bacterial contamination was caught per visit only in an
-exaggerated-scale simulation (bacteria 16.5× real size); yeast, fungi and
+reliably detectable; bacterial contamination is **not** detectable per visit
+at real bacterial size, and was caught only in an exaggerated-scale simulation
+(bacteria 16.5× real size); yeast, fungi and
 detachment on real images are not tested; mycoplasma is not optically
 detectable.
 
@@ -299,16 +307,23 @@ healthy EVICAN PC3 example in the console is flagged for that reason. The banks
 (`cache/anomaly/banks.npz`, 67 MB) are not in git; they are regenerated by
 `scripts/eval_anomaly.py` and shipped with the Space.
 
-**Simulated contamination inflates confluency.** Cellpose-SAM counts the pasted
-bacteria as cells: they shift measured confluency by a median +59.4 pp
-(`results/anomaly_summary.md`), so the contaminated examples read far above
-their base frames and confluency alone is above the passage target. Since
-`rules_v0.3` the anomaly flag holds that passage for human review, so the two
-contamination examples recommend `human_review`. The confluency number itself
-is still inflated, and the same effect can trigger the passage forecast in the
-contamination replay. Because the banks hold only C2C12 frames, on other cell
-types the flag is uncalibrated and can also hold a passage on a healthy flask
-(it fails safe: a person looks).
+**Bacterial contamination is not detectable per visit.** With the simulated
+bacteria at their real size, the anomaly flag is at chance (held-out AUROC 0.48;
+flagged on 1 of 97 frames, against 4 of 97 for the same frames without them),
+the quality gate fails no more often, and confluency reads a median 4.3 pp
+lower (`results/contamination_scale.md`). So the anomaly hold (`rules_v0.3`)
+gives no protection against it: a realistically contaminated flask that
+reached its target would be recommended for passage. Contamination has to be
+confirmed by culture, Gram stain or PCR. The hold still stops a passage when
+the flag fires for any reason; because the banks hold only C2C12 frames, on
+other cell types it can also hold a healthy flask (it fails safe: a person
+looks).
+
+The oversized simulation behaves differently: Cellpose-SAM counts the 16.5×
+bacteria as cells, which shifts measured confluency by a median +59.4 pp
+(`results/anomaly_summary.md`), so confluency alone is above the passage target
+and the flag holds it. That is what the two contamination examples and the
+contamination replay show; both are captioned as the exaggerated stress test.
 
 **The QC classifier is demoted.** On held-out C2C12 frames it calls 2.9–5.0% of
 normal frames normal, against an 80% bar, and rescaling the input to the

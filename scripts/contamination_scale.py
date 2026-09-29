@@ -61,6 +61,7 @@ REALISTIC = round(0.079 / 1.3, 6)          # DeepBacs 79 nm/px -> C2C12 1.3 µm/
 SIDECARS = os.path.join(REPO, "cache", "sidecars")
 WORK = os.path.join(REPO, "data", "contamination_scale")
 SPRITE_DIR = os.path.join(REPO, "data", "sprites", "bacteria")
+DEMO_FIGURE = os.path.join(REPO, "demo", "figures", "contamination_scale.png")
 
 
 def variant_name(scale: float, haze: bool) -> str:
@@ -476,7 +477,11 @@ def cmd_report(a):
     p_o, s_o, ag_o, n_o = vs_cache(sc[orig_v], by_original=True)
     p_c, s_c, ag_c, n_c = vs_cache(sc["clean"])
     length = _bacterium_length_px(a.sprite_dir)
-    fig_note = example_figure(a.work, variants, os.path.join(REPO, "results", "contamination_scale_examples.png"))
+    fig_png = os.path.join(REPO, "results", "contamination_scale_examples.png")
+    fig_note = example_figure(a.work, variants, fig_png)
+    os.makedirs(os.path.dirname(DEMO_FIGURE), exist_ok=True)
+    import shutil
+    shutil.copyfile(fig_png, DEMO_FIGURE)             # shown in the console's Detectability tab
 
     lines = [
         "# Contamination at a realistic bacterial size",
@@ -584,7 +589,8 @@ def cmd_report(a):
         "Reference, from `results/anomaly_summary.md`: held-out normal frames are flagged at 14.7% in the "
         "0–20% bin, 3.8% in 20–40% and 0.6% in 40–100% (thresholds set for 5% on tuning normals).",
         "",
-        f"Plot: `results/contamination_scale_examples.png`, the anomaly check's 256 px centre tile of {fig_note}.",
+        f"Plot: `results/contamination_scale_examples.png` (copied to `demo/figures/contamination_scale.png` for "
+        f"the console's Detectability tab), the anomaly check's 256 px centre tile of {fig_note}.",
         "",
         "## Per-frame scores",
         "",

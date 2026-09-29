@@ -1,6 +1,6 @@
 # Contamination at a realistic bacterial size
 
-Generated 2026-09-29T00:36:50Z by `scripts/contamination_scale.py` on the Mac (Apple MPS), with the live path's models: Cellpose-SAM (cpsam_v2), the quality gate (C2C12 thresholds), and DINOv2-small with the frozen anomaly calibration in `configs/anomaly.yaml`. C2C12 images: Ker et al., *Sci Data* 5:180237 (2018), CC BY 4.0. Bacteria: DeepBacs (Zenodo 5550935), 79 nm/px.
+Generated 2026-09-29T00:45:24Z by `scripts/contamination_scale.py` on the Mac (Apple MPS), with the live path's models: Cellpose-SAM (cpsam_v2), the quality gate (C2C12 thresholds), and DINOv2-small with the frozen anomaly calibration in `configs/anomaly.yaml`. C2C12 images: Ker et al., *Sci Data* 5:180237 (2018), CC BY 4.0. Bacteria: DeepBacs (Zenodo 5550935), 79 nm/px.
 
 ## Why
 
@@ -52,7 +52,7 @@ All 97 frames (4 sequences, both splits) unless marked held-out (49 frames, 2 se
 
 Reference, from `results/anomaly_summary.md`: held-out normal frames are flagged at 14.7% in the 0–20% bin, 3.8% in 20–40% and 0.6% in 40–100% (thresholds set for 5% on tuning normals).
 
-Plot: `results/contamination_scale_examples.png`, the anomaly check's 256 px centre tile of c2c12_090318_exp1_F0005_Data__fault_contam, frame 1057.
+Plot: `results/contamination_scale_examples.png` (copied to `demo/figures/contamination_scale.png` for the console's Detectability tab), the anomaly check's 256 px centre tile of c2c12_090318_exp1_F0005_Data__fault_contam, frame 1057.
 
 ## Per-frame scores
 

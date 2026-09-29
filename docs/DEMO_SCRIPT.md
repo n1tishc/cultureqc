@@ -107,20 +107,32 @@ person steps in on exceptions and audits the trail.
      If asked, the live-vs-stored table is `results/live_latency_mac_mps.md`:
      flag and action the same as stored on 7 of 7 examples.
 
-## 4. Contamination, honestly (1 min)
+## 4. Contamination, honestly (1–2 min)
 
-Click **C2C12 simulated contamination 1** (precomputed). Cellpose-SAM reads
-86.6% because the pasted bacteria are counted as cells, so on confluency alone
-this flask is past the 80% target. The anomaly check flags it, and a flagged
-image is never passaged automatically: the rules return **human review**
-(`rules_v0.3`). The flag only holds a passage; it doesn't change hold or feed,
-where nothing irreversible happens. Point at the confluency number: it is still
-wrong, which is exactly why a person has to look. Say plainly that the bacteria
-were pasted at 16.5× their real size, so this is a stress test, not a
-detection claim.
-- If asked what it costs: all 76 passage-eligible simulated contamination
-  frames were held, and 1 of 14 passage-eligible healthy held-out frames at
-  the 50% target (`results/review_rate.md`).
+Say the limit first, before anything is on screen: per visit, at this
+magnification, cultureQC does not detect bacterial contamination. Open the
+**Detectability** tab: the contamination row says so, and the image under the
+table shows why. Left to right: a clean tile; the stress test the contamination
+examples come from, with bacteria pasted 16.5× too large (each cell-sized rod is
+one "bacterium"); the same bacteria at their real size, with and without the
+simulator's haze. At real size the anomaly flag is at chance (held-out AUROC
+0.48; flagged on 1 of 97 frames, against 4 of 97 for the same frames without
+the bacteria) and confluency reads a median 4.3 pp lower, not higher
+(`results/contamination_scale.md`). So a realistically contaminated flask that
+reached its target would be recommended for passage. Contamination is confirmed
+by culture, Gram stain or PCR, which the row names.
+
+Then the rule, if there is time or he asks: click **C2C12 simulated
+contamination 1** (the stress test). Cellpose-SAM counts the oversized bacteria
+as cells and reads 86.6%, past the 80% target; the anomaly check flags it, and
+a flagged image is never passaged automatically: **human review**
+(`rules_v0.3`). This is a safety precedence, not a contamination detector:
+whenever the flag fires, for any reason, the one irreversible action waits for
+a person; hold and feed are unchanged.
+- If asked what it costs: at the 50% target, 1 of 14 passage-eligible healthy
+  held-out frames was held (`results/review_rate.md`). All 76 passage-eligible
+  stress-test frames were held too, which says nothing about real
+  contamination.
 - If asked about other cell lines: the anomaly banks hold only C2C12, so
   elsewhere the flag is uncalibrated and can hold a healthy flask; it fails
   safe, and a site calibrates it (`scripts/site_calibrate.py`).
