@@ -259,49 +259,45 @@ the sync and git-ignored (the banks are not in git at all; they come from
 
 ## Frontend — Vercel
 
-React 18 on Vite. The API URL is a module constant rather than an environment
-variable:
+Two Vercel projects build this repo. `cultureqc` (production from `main`,
+`cultureqc.vercel.app`) is the v0.2 site and is left as it is. The v0.3 site
+is its own project whose production branch is `slice-1b-compute-cache`, so it
+gets a public URL while `main` stays untouched; its domain is set in
+`site/index.html` (`canonical`, `og:url`, `og:image`, which crawlers need
+absolute). Preview deployments sit behind Vercel's login; the production
+domain is public.
 
-```js
-// site/src/config.js
-export const ANALYSIS_API = "https://longgrainrice-cultureqc-api.hf.space";
-```
-
-Change it and rebuild; nothing else has to move. `site/index.html` carries the
-`og:image` and `canonical` tags, which need the absolute site URL because
-crawlers do not resolve relative ones.
+The v0.3 site has no analysis path of its own. The v0.2 API Space
+(`cultureqc-api`) runs the old pipeline on CPU, where Cellpose-SAM takes
+minutes per frame (V9), so the page shows the pipeline's stored output and
+links to the console Space for a live run.
 
 ```bash
-cd site
 npm install
 npm run build     # -> site/dist
 npm run preview   # serve that build locally before pushing
 ```
 
-Import the repo into Vercel. `vercel.json` already sets the framework, the build
-and install commands and `outputDirectory: site/dist`, so no dashboard
-configuration and no environment variables are needed.
+`vercel.json` sets the build and `outputDirectory: site/dist`; no dashboard
+configuration and no environment variables are needed. The footer names the
+commit from `VERCEL_GIT_COMMIT_SHA`.
 
-### Why no `VITE_API_URL`
+### Regenerating the page's data
 
-An env var would put the deployed page's endpoint somewhere the repo cannot see,
-so a checkout would no longer tell you what the live page talks to — and a
-missing variable fails at runtime, in the browser, as a page that silently
-cannot analyse. A constant fails at review time instead. It also keeps preview
-deployments and production pointing at the same Space without per-environment
-configuration, which is what you want here: there is only one Space.
-
-### Regenerating the page's reference data
-
-`site/src/data.json` and `site/public/img/` are generated from real pipeline
-output committed under `site/assets/`:
+`site/src/data.json` and `site/public/img/v3/` are generated from the repo's
+own output (the console's examples and records, the replays and their maps,
+`configs/detectability.yaml`, and the README's two results tables, whose
+numbers `tests/test_readme_provenance.py` checks against their sources):
 
 ```bash
-python site/assets/build_data.py
+python site/assets/build_data.py            # data.json
+python site/assets/build_data.py --images   # and the layers, thumbnails, maps, og.jpg
 ```
 
-CI re-runs this and fails if the committed output differs, because a hand-edited
-`data.json` would make the page display records the pipeline never wrote.
+Each record ships as the exact canonical JSON `culture/records.py` hashed; the
+generator checks every SHA-256 on export, and the page re-hashes the same bytes
+in the browser (`site/src/lib/verify.js`, tested by `site/tests/verify.test.js`).
+CI re-runs the generator and fails if `data.json` differs.
 
 ## Local development
 

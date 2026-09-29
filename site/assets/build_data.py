@@ -1,141 +1,349 @@
-"""Build the page's reference data: real pipeline output → site/src/data.json.
+"""Build the v0.3 site's data from the repo's real output → site/src/data.json.
 
-This replaces the old assemble.py, which inlined everything as base64 into a
-single 767 KB index.html. Vite bundles the app now, so the images are copied to
-site/public/img/ as real files the browser can cache, and the JSON carries their
-URLs instead of their bytes.
+    python site/assets/build_data.py            # data.json only (what CI re-runs and diffs)
+    python site/assets/build_data.py --images   # also re-render site/public/img/v3/
 
-    python site/assets/build_data.py
+Nothing here is typed in by hand. Sources:
 
-The arithmetic below (fix_boxes, fix_rationale, canonical) is carried over
-unchanged. `canonical()` in particular must stay byte-identical to what
-culture/records.py hashes, because the page recomputes those digests in the
-browser and shows them failing if they disagree.
+- demo/examples/examples.json (+ .png/.jpg, _probmap.npz): the console's seven
+  precomputed examples and their hash-chained records.
+- demo/replays/*.json and demo/replay_maps/: the five held-out C2C12 flask
+  replays and the Cellpose-SAM map at every visit.
+- configs/detectability.yaml: what was tested, per fault.
+- README.md: the V1-V10 table and the results table, whose numbers
+  tests/test_readme_provenance.py checks against their source files.
+- demo/figures/contamination_scale.png: the real-size contamination figure.
+
+Each record's canonical JSON (sorted keys, compact, ASCII) is written out as
+the exact string culture/records.py hashed, and its SHA-256 is checked here, so
+the browser re-hashes the same bytes and needs no float formatting of its own.
 """
-import base64, json, os, re, shutil
+import argparse
+import csv
+import hashlib
+import json
+import os
+import re
+
+import numpy as np
+import yaml
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SITE = os.path.dirname(HERE)
-WEB = os.path.join(HERE, "web")
-SRC = os.path.join(HERE, "pipeline-output")
-LAD = os.path.join(HERE, "ladder")
-IMG_OUT = os.path.join(SITE, "public", "img")
+REPO = os.path.dirname(SITE)
 DATA_OUT = os.path.join(SITE, "src", "data.json")
+IMG_OUT = os.path.join(SITE, "public", "img", "v3")
+IMG_URL = "img/v3"
 
-results = json.load(open(os.path.join(SRC, "results.json")))["results"]
-records = [json.loads(l) for l in open(os.path.join(SRC, "events.jsonl")) if l.strip()]
-ladder = json.load(open(os.path.join(LAD, "ladder.json")))
+CONSOLE_URL = "https://huggingface.co/spaces/LongGrainRice/cultureqc-console"
+REPO_URL = "https://github.com/n1tishc/cultureqc"
+C2C12_UM_PER_PX = 1.3        # README "Imaging requirement": C2C12, 5× objective, 1.3 µm/px
+TILE_PX, CROP_PX, PATCH_PX = 256, 224, 14   # culture/anomaly.py: qctile, DINOv2 centre crop, 16×16 patches
+BAND_LOGIT = 1.0             # culture/seg.py confidence_band (logits) around the 0 cutoff
+CONF_FLOOR = 0.30            # culture/rules.py review floor; README review-rate row
 
-
-def img(name):
-    """Copy a webp into public/ and return the URL the page will request."""
-    src = os.path.join(WEB, name)
-    os.makedirs(IMG_OUT, exist_ok=True)
-    shutil.copy2(src, os.path.join(IMG_OUT, name))
-    return "/img/" + name
-
-
-# canonical JSON exactly as culture/records.py hashes it
-def canonical(rec):
-    r = dict(rec)
-    r.pop("record_hash", None)
-    return json.dumps(r, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
+EXAMPLE_ORDER = ["c2c12_normal_20_40", "c2c12_normal_0_20", "c2c12_normal_40_100",
+                 "c2c12_contamination_real_size", "c2c12_contamination_1", "evican_pc3", "evican_ht29"]
+REPLAY_ORDER = ["normal_1", "normal_2", "contamination", "stall", "dimming"]
 
 
-TILE = 256
-
-QUAD_RE = re.compile(r"\bin the (?:upper|lower|centre|center)-(?:left|right|centre|center) quadrant\b")
-
-
-def fix_rationale(text, tile_bbox):
-    """A box covering essentially the whole analysed tile has no quadrant; say so."""
-    if not tile_bbox:
-        return text
-    _, _, bw, bh = tile_bbox
-    if (bw * bh) / float(TILE * TILE) >= 0.85:
-        return QUAD_RE.sub("across the whole analysed field", text)
-    return text
+def rel(*p):
+    return os.path.join(REPO, *p)
 
 
-def fix_boxes(boxes, w, h):
+def canonical(record):
+    body = {k: v for k, v in record.items() if k != "record_hash"}
+    return json.dumps(body, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
+
+
+def r3(x):
+    return None if x is None else round(float(x), 3)
+
+
+# ── README tables (numbers already provenance-checked by the test suite) ──
+
+def md_table(text, header_start):
+    lines = text.splitlines()
+    i = next(k for k, l in enumerate(lines) if l.startswith(header_start))
+    head = [c.strip() for c in lines[i].strip("|").split("|")]
+    rows = []
+    for l in lines[i + 2:]:
+        if not l.startswith("|"):
+            break
+        cells = [c.strip() for c in l.strip().strip("|").split("|")]
+        rows.append(dict(zip(head, cells)))
+    return rows
+
+
+def clean_md(s):
+    s = re.sub(r"\*\*(.+?)\*\*", r"\1", s)
+    return s.replace("`", "")
+
+
+def validation_rows(readme):
     out = []
-    for b in boxes:
-        bw = b["w"] * TILE / w if w > TILE else b["w"]
-        bh = b["h"] * TILE / h if h > TILE else b["h"]
-        x, y = b["x"], b["y"]
-        bw, bh = min(bw, 1.0 - x), min(bh, 1.0 - y)
-        out.append({"x": round(x, 5), "y": round(y, 5),
-                    "w": round(max(bw, 0.01), 5), "h": round(max(bh, 0.01), 5)})
+    for r in md_table(readme, "| Check | Held-out result | Verdict |"):
+        m = re.match(r"(V\d+)\s+(.*)", r["Check"])
+        verdict = clean_md(r["Verdict"])
+        v = verdict.lower()
+        kind = ("mixed" if v.startswith("pass") and "fail" in v else
+                "fail" if v.startswith("fail") else
+                "info" if v.startswith("informational") else
+                "none" if v.startswith("no verdict") else "pass")
+        out.append({"id": m.group(1), "check": m.group(2), "result": clean_md(r["Held-out result"]),
+                    "verdict": verdict, "kind": kind})
     return out
 
 
-ORDER = ["BV2", "A172", "Huh7", "BT474", "Huh7contam", "contam", "detach", "imgq", "normal"]
-SHORT = {
-    "BV2": "BV2", "A172": "A172", "Huh7": "HUH7", "BT474": "BT474",
-    "Huh7contam": "HUH7+C", "contam": "CONTAM", "detach": "DETACH",
-    "imgq": "IMGQ", "normal": "CLEAN",
-}
-TITLE = {
-    "A172": "A172 glioblastoma",
-    "BT474": "BT474 breast carcinoma",
-    "BV2": "BV2 microglia",
-    "Huh7": "Huh7 hepatocytes",
-    "Huh7contam": "Huh7 hepatocytes",
-    "contam": "Contamination challenge tile",
-    "detach": "Detachment challenge tile",
-    "imgq": "Image-quality challenge tile",
-    "normal": "Clean control tile",
-}
-KIND = {
-    "A172": "real field", "BT474": "real field", "BV2": "real field", "Huh7": "real field",
-    "Huh7contam": "real field, contamination composited in",
-    "contam": "challenge tile", "detach": "challenge tile",
-    "imgq": "challenge tile", "normal": "challenge tile",
-}
+def readme_bullets(readme, lead):
+    """The bullet list that follows a bold lead-in line, joined across wrapped lines."""
+    lines = readme.splitlines()
+    i = next(k for k, l in enumerate(lines) if l.startswith(lead))
+    items, cur = [], None
+    for l in lines[i + 1:]:
+        if l.startswith("- "):
+            if cur:
+                items.append(cur)
+            cur = l[2:].strip()
+        elif l.startswith("  ") and cur is not None:
+            cur += " " + l.strip()
+        elif not l.strip() and cur is None:
+            continue
+        else:
+            break
+    if cur:
+        items.append(cur)
+    return [clean_md(re.sub(r"\[(.+?)\]\(.+?\)", r"\1", x)) for x in items]
 
-leaves = []
-for i, name in enumerate(ORDER):
-    r = results[name]
-    rec = records[i]
 
-    leaves.append({
-        "id": name,
-        "short": SHORT[name],
-        "title": TITLE[name],
-        "kind": KIND[name],
-        "file": r["file"],
-        "w": r["w"], "h": r["h"],
-        "img": img(f"{name}.webp"),
-        "mask": img(f"{name}_mask.webp"),
-        "confluency": r["confluency_probmap"],
-        "confluencyConf": r["confluency_confidence"],
-        "method": r["confluency_method"],
-        "baseline": r["confluency_threshold_baseline"],
-        "flag": r["qc_flag"],
-        "qcConf": r["qc_confidence"],
-        "probs": r["per_class_probs"],
-        "boxes": fix_boxes(r["boxes"], r["w"], r["h"]),
-        "action": r["action"],
-        "actionReason": r["action_reason"],
-        "rationale": fix_rationale(r["rationale"], r["record"]["qc_evidence_bbox"]),
-        "organisms": r.get("n_organisms"),
-        "record": rec,
-        "canonical": canonical(rec),
-    })
+def readme_paragraph(readme, heading):
+    """The first paragraph under a heading, unwrapped."""
+    lines = readme.splitlines()
+    i = lines.index(heading) + 1
+    while not lines[i].strip():
+        i += 1
+    para = []
+    while i < len(lines) and lines[i].strip():
+        para.append(lines[i].strip())
+        i += 1
+    text = " ".join(para)
+    text = re.sub(r"\[(.+?)\]\(.+?\)", r"\1", text)
+    return clean_md(text)
 
-lad = []
-for line in ["A172", "BT474", "BV2", "Huh7"]:
-    for sev in ["clean", "early", "mid", "late"]:
-        e = ladder[line][sev]
-        lad.append({
-            "line": line, "sev": sev, "n": e["n_sprites"], "flag": e["flag"],
-            "conf": e["confidence"], "boxes": e["boxes"],
-            "img": img(f"lad_{line}_{sev}.webp"),
+
+def readme_lead_paragraph(readme, lead):
+    """A paragraph that opens with a bold lead-in, without the lead-in."""
+    lines = readme.splitlines()
+    i = next(k for k, l in enumerate(lines) if l.startswith(lead))
+    para = []
+    while i < len(lines) and lines[i].strip():
+        para.append(lines[i].strip())
+        i += 1
+    return clean_md(" ".join(para)[len(lead):].strip())
+
+
+def results_rows(readme):
+    return [{"result": clean_md(r["Result"]), "number": clean_md(r["Number"]),
+             "provenance": r["Provenance"], "source": clean_md(r["Source"])}
+            for r in md_table(readme, "| Result | Number | Provenance | Source |")]
+
+
+# ── images ──
+
+def save_webp(src, dst, max_w=None, quality=84):
+    from PIL import Image
+    im = Image.open(src).convert("L")
+    if max_w and im.width > max_w:
+        im = im.resize((max_w, round(im.height * max_w / im.width)), Image.LANCZOS)
+    im.save(dst, "WEBP", quality=quality, method=6)
+
+
+def save_alpha(alpha, dst):
+    """A white RGBA PNG whose alpha is the layer: the page uses it as a CSS mask."""
+    from PIL import Image
+    a = np.clip(alpha * 255.0, 0, 255).astype(np.uint8)
+    rgba = np.dstack([np.full_like(a, 255)] * 3 + [a])
+    Image.fromarray(rgba, "RGBA").save(dst, optimize=True)
+
+
+def contour_path(logits):
+    """SVG path of the Cellpose-SAM cutoff (logit 0), in map pixel units."""
+    import cv2
+    mask = (logits > 0).astype(np.uint8)
+    cs, _ = cv2.findContours(mask, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+    parts = []
+    for c in cs:
+        if cv2.contourArea(c) < 1.5:
+            continue
+        c = cv2.approxPolyDP(c, 0.45, True).reshape(-1, 2)
+        if len(c) < 3:
+            continue
+        parts.append("M" + "L".join(f"{x},{y}" for x, y in c) + "Z")
+    return "".join(parts)
+
+
+def example_layers(ex, out_dir):
+    logits = np.load(rel("demo", "examples", ex["probmap"]))["prob_x1000"].astype(np.float32) / 1000.0
+    ident = ex["id"]
+    if out_dir:
+        src = rel("demo", "examples", ex["image"])
+        save_webp(src, os.path.join(out_dir, f"{ident}.webp"))
+        save_webp(src, os.path.join(out_dir, f"{ident}_thumb.webp"), max_w=320, quality=78)
+        save_alpha(1.0 / (1.0 + np.exp(-logits)), os.path.join(out_dir, f"{ident}_prob.png"))
+        save_alpha((np.abs(logits) < BAND_LOGIT).astype(np.float32), os.path.join(out_dir, f"{ident}_band.png"))
+        with open(os.path.join(out_dir, f"{ident}_contour.json"), "w") as f:
+            json.dump({"w": logits.shape[1], "h": logits.shape[0], "d": contour_path(logits)}, f, separators=(",", ":"))
+    return {"map_w": int(logits.shape[1]), "map_h": int(logits.shape[0]),
+            "band_pct_of_frame": round(float((np.abs(logits) < BAND_LOGIT).mean()) * 100, 2)}
+
+
+def og_image(out_path):
+    """The link preview: a real held-out frame with its cell-probability layer, no text."""
+    from PIL import Image
+    ident = "c2c12_normal_20_40"
+    im = Image.open(rel("demo", "examples", f"{ident}.png")).convert("L")
+    logits = np.load(rel("demo", "examples", f"{ident}_probmap.npz"))["prob_x1000"].astype(np.float32) / 1000.0
+    p = Image.fromarray((255 / (1 + np.exp(-logits))).astype(np.uint8)).resize(im.size, Image.BILINEAR)
+    g = np.asarray(im, np.float32) / 255.0
+    a = np.asarray(p, np.float32) / 255.0 * 0.55
+    cyan = np.array([44, 199, 218], np.float32) / 255.0
+    rgb = g[..., None] * (1 - a[..., None]) + (1 - (1 - g[..., None]) * (1 - cyan)) * a[..., None]
+    out = Image.fromarray(np.clip(rgb * 255, 0, 255).astype(np.uint8), "RGB")
+    w, h = out.size
+    ch = round(w * 630 / 1200)
+    out = out.crop((0, (h - ch) // 2, w, (h - ch) // 2 + ch)).resize((1200, 630), Image.LANCZOS)
+    out.save(out_path, "JPEG", quality=86, optimize=True, progressive=True)
+
+
+def replay_map_layers(name, out_dir):
+    if not out_dir:
+        return
+    z = np.load(rel("demo", "replay_maps", f"{name}.npz"))["prob_x1000"].astype(np.float32) / 1000.0
+    from PIL import Image
+    for v, logits in enumerate(z):
+        p = 1.0 / (1.0 + np.exp(-logits))
+        a = Image.fromarray(np.clip(p * 255, 0, 255).astype(np.uint8), "L")
+        a = a.resize((a.width // 2, a.height // 2), Image.LANCZOS)
+        rgba = Image.merge("RGBA", [Image.new("L", a.size, 255)] * 3 + [a])
+        rgba.save(os.path.join(out_dir, f"{name}_{v:02d}.png"), optimize=True)
+
+
+# ── builders ──
+
+def build_examples(img_dir):
+    src = json.load(open(rel("demo", "examples", "examples.json")))
+    by_id = {e["id"]: e for e in src["examples"]}
+    chain_order = [e["id"] for e in src["examples"]]
+    out = []
+    for ident in EXAMPLE_ORDER:
+        e = by_id[ident]
+        rec = e["record"]
+        canon = canonical(rec)
+        assert hashlib.sha256(canon.encode()).hexdigest() == rec["record_hash"], ident
+        layers = example_layers(e, img_dir)
+        c2c12 = e["kind"].startswith("c2c12")
+        h, w = e["height"], e["width"]
+        ty, tx = h // 2 - TILE_PX // 2, w // 2 - TILE_PX // 2
+        a = e["anomaly"]
+        out.append({
+            "id": ident, "label": e["label"], "kind": e["kind"], "caption": e["caption"], "credit": e["credit"],
+            "sequence": e.get("sequence"), "frame": e.get("frame"),
+            "width": w, "height": h, "um_per_px": C2C12_UM_PER_PX if c2c12 else None,
+            "image": f"{IMG_URL}/ex/{ident}.webp", "thumb": f"{IMG_URL}/ex/{ident}_thumb.webp",
+            "prob": f"{IMG_URL}/ex/{ident}_prob.png", "band": f"{IMG_URL}/ex/{ident}_band.png",
+            "contour": f"{IMG_URL}/ex/{ident}_contour.json", **layers,
+            "confluency": {"pct": e["confluency"]["pct"], "confidence": e["confluency"]["confidence"],
+                           "method": e["confluency"]["method"], "model": e["confluency"]["model_version"],
+                           "borderline_fraction": e["confluency"]["extra"]["borderline_fraction"],
+                           "instance_pct": e["confluency"]["extra"].get("instance_pct"),
+                           "band_logit": BAND_LOGIT, "floor": CONF_FLOOR},
+            "target": e["target_confluency"],
+            "anomaly": {"score": a["score"], "threshold": a["threshold"], "flag": a["flag"], "bin": a["bin_label"],
+                        "z": a["z"], "model": a["model_version"],
+                        "patches": [[r3(x) for x in row] for row in a["patch_distances"]],
+                        "top": a["top_patches"],
+                        "tile": {"x": tx, "y": ty, "size": TILE_PX},
+                        "crop": {"x": tx + (TILE_PX - CROP_PX) // 2, "y": ty + (TILE_PX - CROP_PX) // 2,
+                                 "size": CROP_PX, "patch": PATCH_PX}},
+            "classifier": {"flag": e["qc"]["flag"], "confidence": e["qc"]["confidence"],
+                           "model": e["qc"]["model_version"], "used_in_decision": rec["qc_used_in_decision"]},
+            "action": e["action"], "action_reason": e["action_reason"], "rationale": e["rationale"],
+            "rules": rec["decided_by"], "device": e["device"], "generated_at": e["generated_at"][:10],
+            "record": {"index": chain_order.index(ident) + 1, "canonical": canon,
+                       "record_hash": rec["record_hash"], "prev_record_hash": rec["prev_record_hash"]},
         })
+    return {"items": out, "chain_order": chain_order, "generated_by": src["generated_by"]}
 
-os.makedirs(os.path.dirname(DATA_OUT), exist_ok=True)
-with open(DATA_OUT, "w") as f:
-    json.dump({"leaves": leaves, "ladder": lad}, f, separators=(",", ":"))
 
-print(f"wrote {DATA_OUT}  {os.path.getsize(DATA_OUT)/1024:.0f} KB")
-print(f"wrote {len(os.listdir(IMG_OUT))} images to {IMG_OUT}")
+def build_replays(img_dir):
+    maps = json.load(open(rel("demo", "replay_maps", "maps.json")))
+    out = []
+    for name in REPLAY_ORDER:
+        r = json.load(open(rel("demo", "replays", f"{name}.json")))
+        layers = maps["replays"][name]["layers"]
+        replay_map_layers(name, img_dir)
+        f = r["forecast"]
+        visits = []
+        for v, L in zip(r["visits"], layers):
+            assert v["visit"] == L["visit"]
+            visits.append({
+                "visit": v["visit"], "hours": v["hours"], "mean": v["confluency_mean"], "sd": v["confluency_sd"],
+                "se": v["noise_se"], "fov": v["fov_confluency"], "fov_boxes": L["fov_boxes"],
+                "quality_pass": v["quality_pass"], "quality_reasons": v["quality_reasons"], "reimage": v["reimage"],
+                "flag": v["anomaly_flag"], "score": v["anomaly_score"], "threshold": v["anomaly_threshold"],
+                "post_onset": v.get("post_onset", False), "map": f"{IMG_URL}/tl/{name}_{v['visit']:02d}.png",
+                "map_sha256": L["map_sha256"],
+            })
+        fc = f.get("fit_curve") or {}
+        out.append({
+            "scenario": name, "banner": r["banner"], "caption": r["caption"], "credit": r["credit"],
+            "sequence": r["base_sequence_id"], "split": r["split"], "fault": r.get("fault"),
+            "noise_band": r["noise_band"], "notes": r.get("notes", []), "summary": r["summary"],
+            "frame_hw": maps["frame_hw"], "visits": visits,
+            "forecast": {"status": f.get("status"), "model": f.get("chosen_model"), "target": f.get("target_pct"), "cut": f.get("cut_pct"),
+                         "made_at_visit": f.get("made_at_visit"), "made_at_hours": f.get("made_at_hours"),
+                         "t_star": f.get("t_star_hours"), "interval": f.get("interval_hours"),
+                         "curve": [[r3(h), r3(m)] for h, m in zip(fc.get("hours", []), fc.get("mean", []))],
+                         "backtest": f.get("backtest")},
+        })
+    return out
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--images", action="store_true")
+    args = ap.parse_args()
+    img_dir = None
+    if args.images:
+        for sub in ("ex", "tl"):
+            os.makedirs(os.path.join(IMG_OUT, sub), exist_ok=True)
+        save_webp(rel("demo", "figures", "contamination_scale.png"), os.path.join(IMG_OUT, "contamination_scale.webp"))
+        og_image(os.path.join(SITE, "public", "og.jpg"))
+    readme = open(rel("README.md")).read()
+    det = yaml.safe_load(open(rel("configs", "detectability.yaml")))
+    data = {
+        "meta": {"rules": "rules_v0.3", "console_url": CONSOLE_URL, "repo_url": REPO_URL,
+                 "branch": "slice-1b-compute-cache", "generated_by": "site/assets/build_data.py"},
+        "examples": build_examples(os.path.join(IMG_OUT, "ex") if args.images else None),
+        "replays": build_replays(os.path.join(IMG_OUT, "tl") if args.images else None),
+        "detectability": {"tested_setup": det.get("tested_setup"), "note": det.get("provenance_note"),
+                          "rows": det["rows"]},
+        "validation": validation_rows(readme),
+        "validation_intro": readme_paragraph(readme, "## Architecture validation (Phase A)"),
+        "not_proven": readme_lead_paragraph(readme, "**What this does and doesn't prove.**"),
+        "oversize_factor": re.search(r"bacteria ([\d.]+)× too large", readme).group(1),
+        "results": results_rows(readme),
+        "decisions": readme_bullets(readme, "**What changed because of it**"),
+        "review_rate": [{"group": r["group"], "sequences": int(r["sequences"]), "n": int(r["n"]),
+                         "n_review": int(r["n_review"]), "pct": float(r["review_pct"]), "note": r["note"]}
+                        for r in csv.DictReader(open(rel("results", "review_rate.csv")))],
+        "contamination_figure": f"{IMG_URL}/contamination_scale.webp",
+    }
+    with open(DATA_OUT, "w") as f:
+        json.dump(data, f, indent=1, ensure_ascii=False)
+        f.write("\n")
+    print("wrote", os.path.relpath(DATA_OUT, REPO), f"{os.path.getsize(DATA_OUT) / 1024:.0f} KB")
+
+
+if __name__ == "__main__":
+    main()

@@ -49,16 +49,21 @@ jobs:
       - name: Install
         run: npm ci
 
-      - name: Stream parser tests
-        run: node --test site/tests/analysisStream.test.js
+      - name: Record chain verifies in the browser code
+        run: node --test site/tests/verify.test.js
 
       - name: Build
         run: npm run build
 
-      # site/src/data.json is generated from the pipeline output committed under
-      # site/assets/. If someone hand-edits the JSON, the page stops matching the
-      # records it claims to show — which is the one thing this page must not do.
-      - name: Reference data matches the pipeline output it came from
+      # site/src/data.json is generated from the repo's own output (examples,
+      # records, replays, detectability matrix, README tables). If someone
+      # hand-edits it, the page stops matching the records it shows.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Page data matches the repo output it came from
         run: |
-          python3 site/assets/build_data.py
-          git diff --exit-code -- site/src/data.json site/public/img
+          pip install numpy pyyaml
+          python site/assets/build_data.py
+          git diff --exit-code -- site/src/data.json

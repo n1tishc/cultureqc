@@ -50,3 +50,7 @@ The differentiator this demo needs to sell is **explainability + auditability**,
 3. Status is read by color before it's read by text — a VP glancing at the screen should get the verdict in under a second.
 4. This is exception-review software for an automated pipeline, not a bench scientist's daily driver — polish and trust signals (dark "real lab software" aesthetic, no toy defaults) matter more than dense manual controls.
 5. Visual work never changes what the backend computes or how the audit chain is built.
+
+## Brand commitments
+
+- **The v0.3 site (`site/`) is the category standard, played straight** (owner, 2026-09-29, after three rolled hands of metaphor worlds: "scientific, serving the main purpose"). No metaphor or costume: the product's own output leads, real frames, computed layers, measured numbers with n and source, the record chain. Craft bar: Allen Institute Cell Explorer, Zeiss ZEN / Leica LAS X, 10x Genomics / Benchling, Linear / Stripe docs.
