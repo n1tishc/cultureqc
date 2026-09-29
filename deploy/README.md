@@ -246,8 +246,9 @@ file's SHA-256. Upload it to `MyDrive/cultureqc/` and run
   and the same console inline below the cell.
 
 The bundle was checked on the Mac by unzipping it and running the self-check
-with an empty `HOME` (no local model caches) and the network blocked. The
-notebook itself has not been run on Colab yet. A public `gradio.live` link
+with an empty `HOME` (no local model caches) and the network blocked. On Colab (Tesla T4,
+2026-09-29) all 7 examples gave the same flag and action as stored, median
+12.06 s per C2C12 frame (`results/live_latency_colab_gpu.md`). A public `gradio.live` link
 (`CULTUREQC_SHARE=1`) goes through Gradio's share servers, which Hugging Face
 runs, so the Colab proxy window is the one to rely on.
 

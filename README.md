@@ -115,6 +115,7 @@ checks that every number in the "Number" column appears in its source file.
 | Live latency on CPU (V9) | 689 s per FOV at 1392 × 1040 | real-size input, 2-thread CPU | `results/live_latency.md` |
 | Live latency, console Space on ZeroGPU (one Analyze as the viewer waits, with the owner's token) | median 3.82 s (n = 6, after a first of 5.31 s); flag and action the same as stored on 7 of 7 examples | real (C2C12, EVICAN) | `results/live_latency_zerogpu.md` |
 | Live latency, Mac backup (Cellpose-SAM on Apple MPS) | median 16.43 s per 1392×1040 C2C12 frame (n = 5); flag and action the same as stored on 7 of 7 examples | real (C2C12, EVICAN) | `results/live_latency_mac_mps.md` |
+| Live latency, Colab backup (Tesla T4) | median 12.06 s per 1392×1040 C2C12 frame (n = 5); flag and action the same as stored on 7 of 7 examples | real (C2C12, EVICAN) | `results/live_latency_colab_gpu.md` |
 
 The contamination faults paste DeepBacs bacteria imaged at 79 nm/px into
 1.3 µm/px frames, so they are 16.5× too large. Rebuilt with the bacteria at
@@ -278,7 +279,9 @@ For the call, the console runs on a ZeroGPU Space (`deploy/hf-space-demo/`,
 viewer waits for it, GPU attach included (`results/live_latency_zerogpu.md`,
 `scripts/space_dry_run.py`). The backup is the same console on the Mac (`deploy/run_console_mac.sh`,
 Cellpose-SAM on Apple's GPU, no Hugging Face at run time): median 16.43 s per
-C2C12 frame (`results/live_latency_mac_mps.md`). Behind both, the precomputed
+C2C12 frame (`results/live_latency_mac_mps.md`); a second backup on a Colab T4
+(`nb/05_console_colab.ipynb`) took a median 12.06 s (`results/live_latency_colab_gpu.md`).
+Behind all of them, the precomputed
 examples and replays need no model at all.
 
 ## Site calibration

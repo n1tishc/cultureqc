@@ -174,7 +174,7 @@ slow for a live demo, so the demo needs a GPU (section 8).
 |---|---|---|---|
 | **Space `LongGrainRice/cultureqc-console`** (main) | ZeroGPU, a GPU attached per Analyze | median 3.82 s; 7 of 7 examples same flag and action as stored | `results/live_latency_zerogpu.md` |
 | **Mac backup** | `deploy/run_console_mac.sh`, Cellpose-SAM on Apple's GPU, no Hugging Face at run time | median 16.43 s; 7 of 7 same | `results/live_latency_mac_mps.md` |
-| **Colab backup** | `nb/05_console_colab.ipynb` + `~/Desktop/projs/cultureqc_console_bundle.zip` (console + all weights) | not yet run on Colab | — |
+| **Colab backup** | `nb/05_console_colab.ipynb` + `~/Desktop/projs/cultureqc_console_bundle.zip` (console + all weights) | median 12.06 s on a Tesla T4; 7 of 7 same | `results/live_latency_colab_gpu.md` |
 | CPU (for reference) | — | 689 s per FOV | `results/live_latency.md` |
 
 - **Why ZeroGPU** (2026-09-28): no cost beyond PRO, no switching hardware on
@@ -222,7 +222,6 @@ and the 3D figures' motion contract (`tests/test_viz3d.py`).
 | When | What | Who |
 |---|---|---|
 | Now | Republish the console Space (`.venv/bin/python deploy/publish_demo_space.py`), then `scripts/space_dry_run.py` | owner, then dry run |
-| Before Thu | Re-upload the bundle (rebuilt at `8253750`, 95 files) to `MyDrive/cultureqc/`, run `nb/05` on a T4, commit `live_latency_colab_gpu.md` | owner, then commit |
 | Thu Oct 1 | Dry run: `scripts/space_dry_run.py` again; open both 3D views in the call browser | |
 | Fri Oct 2 | Freeze | |
 | Mon Oct 5 | Rehearsal with `docs/DEMO_SCRIPT.md` | |
