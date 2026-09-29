@@ -135,8 +135,9 @@ slow for a live demo, so the demo needs a GPU (section 8).
 
 `demo/app.py`, three tabs:
 
-- **Analyze:** 7 precomputed examples (C2C12 normal ×3, simulated
-  contamination ×2, EVICAN PC3 accurate, EVICAN HT29 error case), each labelled
+- **Analyze:** 7 precomputed examples (C2C12 normal ×3, a contamination stress
+  test with bacteria 16.5× too large, the same kind of frame with the bacteria at
+  real size, EVICAN PC3 accurate, EVICAN HT29 error case), each labelled
   "Precomputed example" with script, device, date and credit; **Analyze** runs
   any image live. Cards: confluency with confidence, anomaly check with a
   zoomed heatmap, recommended action, rationale, and the hash-chained audit
@@ -206,9 +207,13 @@ and the 3D figures' motion contract (`tests/test_viz3d.py`).
    passage (`rules_v0.3`), so both contamination examples recommend human
    review. Their confluency still reads 86.6% / 88.6% (pasted bacteria count
    as cells), which the caption says.
-2. **Contamination examples in the Analyze gallery** (open, 2026-09-28): the
-   two stress-test examples still show bacteria 16.5× too large. Keep,
-   replace with the same frames at real size, or remove.
+2. ~~Contamination examples in the Analyze gallery~~ **Resolved 2026-09-28
+   (owner):** one of each. Example 1 stays as the labelled stress test (the
+   only on-screen case where the hold fires); example 2 became the same frame
+   with the bacteria at real size (`c2c12_contamination_real_size`). That
+   frame, fixed by the choice, happens to be the only one of 97 flagged at real
+   size; it was kept (swapping would be cherry-picking), and its card says the
+   flag is at chance.
 3. Shifted synthetic tiles and V5(a) patch embeddings (`docs/STATUS.md`, open
    questions): defaults hold (not done).
 

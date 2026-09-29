@@ -394,18 +394,19 @@ VARIANT_LABELS: dict[str, str] = {}
 
 
 def _example_pixel_check(work: str) -> list[tuple]:
-    """The stored contamination examples (original fault frames) vs the scale-1 rebuild."""
+    """The two original fault frames picked for the demo (results/c2c12_frame_picks.csv,
+    kept in data/c2c12_picks/) vs the scale-1 rebuild."""
     import cv2
 
-    with open(os.path.join(REPO, "demo", "examples", "examples.json")) as f:
-        ex = [e for e in json.load(f)["examples"] if e["kind"] == "c2c12_contamination"]
+    picks = pd.read_csv(os.path.join(REPO, "results", "c2c12_frame_picks.csv"))
     out = []
-    for e in ex:
-        a = cv2.imread(os.path.join(REPO, "demo", "examples", e["image"]), cv2.IMREAD_GRAYSCALE)
-        b = cv2.imread(os.path.join(work, variant_name(1.0, True), "png", e["sequence"],
-                                    f"{int(e['frame']):05d}.png"), cv2.IMREAD_GRAYSCALE)
+    for r in picks[picks.kind == "contamination_onset"].itertuples():
+        a = cv2.imread(os.path.join(REPO, "data", "c2c12_picks", f"{r.image_sha256}.png"), cv2.IMREAD_GRAYSCALE)
+        b = cv2.imread(os.path.join(work, variant_name(1.0, True), "png", r.seq, f"{int(r.frame_idx):05d}.png"),
+                       cv2.IMREAD_GRAYSCALE)
         d = np.abs(a.astype(int) - b.astype(int))
-        out.append((e["id"], int((d > 0).sum()), int(d.size), int(d.max())))
+        out.append((f"{r.seq.replace('__fault_contam', '')} frame {int(r.frame_idx)}", int((d > 0).sum()),
+                    int(d.size), int(d.max())))
     return out
 
 
@@ -532,7 +533,7 @@ def cmd_report(a):
         f"{fetch['matching']}/{fetch['n']} byte-identical to the frames in the compute cache.",
         f"- The builder at scale 1 with haze rebuilds the original fault frames: "
         f"{meta[orig_v]['same_bytes_as_original']}/{meta[orig_v]['n_frames']} byte-identical (the manifest's "
-        "sha256). The two frames kept as demo examples show why the rest are not: "
+        "sha256). The two original frames picked for the demo show why the rest are not: "
         + "; ".join(f"{k}, {n:,} of {tot:,} pixels differ, by at most {mx} grey level"
                     for k, n, tot, mx in _example_pixel_check(a.work))
         + ". The same bacteria land in the same places; the last-bit differences come from floating-point "

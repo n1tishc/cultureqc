@@ -1,6 +1,6 @@
 # Contamination at a realistic bacterial size
 
-Generated 2026-09-29T00:52:40Z by `scripts/contamination_scale.py` on the Mac (Apple MPS), with the live path's models: Cellpose-SAM (cpsam_v2), the quality gate (C2C12 thresholds), and DINOv2-small with the frozen anomaly calibration in `configs/anomaly.yaml`. C2C12 images: Ker et al., *Sci Data* 5:180237 (2018), CC BY 4.0. Bacteria: DeepBacs (Zenodo 5550935), 79 nm/px.
+Generated 2026-09-29T01:01:44Z by `scripts/contamination_scale.py` on the Mac (Apple MPS), with the live path's models: Cellpose-SAM (cpsam_v2), the quality gate (C2C12 thresholds), and DINOv2-small with the frozen anomaly calibration in `configs/anomaly.yaml`. C2C12 images: Ker et al., *Sci Data* 5:180237 (2018), CC BY 4.0. Bacteria: DeepBacs (Zenodo 5550935), 79 nm/px.
 
 ## Why
 
@@ -23,7 +23,7 @@ Changed after the first variant's output was seen, and why:
 ## Controls
 
 - Base frames re-downloaded from OSF and converted with the stored normalization: 97/97 byte-identical to the frames in the compute cache.
-- The builder at scale 1 with haze rebuilds the original fault frames: 1/97 byte-identical (the manifest's sha256). The two frames kept as demo examples show why the rest are not: c2c12_contamination_1, 5 of 1,447,680 pixels differ, by at most 1 grey level; c2c12_contamination_2, 10 of 1,447,680 pixels differ, by at most 1 grey level. The same bacteria land in the same places; the last-bit differences come from floating-point rounding on this Mac (ARM) against Colab (x86).
+- The builder at scale 1 with haze rebuilds the original fault frames: 1/97 byte-identical (the manifest's sha256). The two original frames picked for the demo show why the rest are not: c2c12_090325_exp1_F0013_Data frame 637, 5 of 1,447,680 pixels differ, by at most 1 grey level; c2c12_090318_exp1_F0005_Data frame 769, 10 of 1,447,680 pixels differ, by at most 1 grey level. The same bacteria land in the same places; the last-bit differences come from floating-point rounding on this Mac (ARM) against Colab (x86).
 - This Mac vs the cache (Colab GPU), clean frames: confluency differs by a median 0.01 pp (max 0.05), anomaly score by a median 0.0001 (max 0.0003), the flag agrees on 97/97. Original fault frames: 0.01 pp (max 0.19), 0.0001 (max 0.0003), 97/97.
 
 ## Results

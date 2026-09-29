@@ -9,7 +9,10 @@ runs the same image live.
 Examples (fixed before any output was seen):
   C2C12 normal         the first pick per confluency bin in results/c2c12_frame_picks.csv
                        (held-out, seeded; scripts/pick_c2c12_frames.py)
-  C2C12 contamination  both held-out contamination picks (simulated, 16.5× scale)
+  C2C12 contamination  the first held-out contamination pick as the stress test (simulated,
+                       bacteria 16.5× too large); the second pick's frame rebuilt with the
+                       bacteria at their real size (scripts/contamination_scale.py, haze variant,
+                       the original simulator's design; owner decision 2026-09-28)
   EVICAN               the two real-image examples the console already showed
                        (one accurate, one error case; results/confluency_real_summary.md)
 Lamp dimming is left out: this tab runs no quality gate, and the anomaly flag
@@ -74,6 +77,10 @@ CELL_LINE = "unknown"
 C2C12_CREDIT = "C2C12: Ker et al., Sci Data 5:180237 (2018), CC BY 4.0"
 EVICAN_CREDIT = "EVICAN: Bioinformatics 36(12):3863 (2020), CC BY 4.0"
 
+REAL_SIZE_VARIANT = "scale0.060769_haze"      # scripts/contamination_scale.py variant_name(REALISTIC, True)
+SCALE_DIR = os.path.join(REPO, "data", "contamination_scale")
+SCALE_CSV = os.path.join(REPO, "results", "contamination_scale.csv")
+
 EVICAN = [
     # id, file, ground truth (%, union of the dataset's expert masks), label
     ("evican_pc3", "test-data/evican_66_PC3.jpg", 5.50, "EVICAN PC3 (real, accurate)"),
@@ -88,9 +95,12 @@ def c2c12_examples() -> list[dict]:
     for r in normals.itertuples():
         out.append({"id": f"c2c12_normal_{r.bin_label.replace('-', '_')}", "kind": "c2c12_normal", "row": r,
                     "label": f"C2C12 normal, {r.bin_label}% bin"})
-    for i, r in enumerate(picks[picks.kind == "contamination_onset"].itertuples(), 1):
-        out.append({"id": f"c2c12_contamination_{i}", "kind": "c2c12_contamination", "row": r,
-                    "label": f"C2C12 simulated contamination {i}"})
+    contam = list(picks[picks.kind == "contamination_onset"].itertuples())
+    out.append({"id": "c2c12_contamination_1", "kind": "c2c12_contamination", "row": contam[0],
+                "label": "C2C12 contamination stress test (bacteria 16.5× too large)"})
+    real = contam[1]
+    man = pd.read_parquet(os.path.join(SCALE_DIR, REAL_SIZE_VARIANT, "manifest.parquet"))
+    m = man[(man.fault_sequence_id == real.seq) & (man.frame_idx == real.frame_idx)].iloc[0]
     for e in out:
         r = e.pop("row")
         e.update(src=os.path.join(FRAMES, f"{r.image_sha256}.png"), image_sha256=r.image_sha256,
@@ -98,6 +108,10 @@ def c2c12_examples() -> list[dict]:
                  credit=C2C12_CREDIT,
                  cache={"confluency_pct": float(r.pct), "anomaly_score": float(r.score_binned),
                         "anomaly_flag": bool(r.flag_binned), "anomaly_bin": r.bin_label})
+    out.append({"id": "c2c12_contamination_real_size", "kind": "c2c12_contamination_real",
+                "label": "C2C12 contamination, bacteria at real size", "src": m.png_path,
+                "image_sha256": m.image_sha256, "sequence": real.seq, "frame": int(real.frame_idx),
+                "severity": float(m.severity), "credit": C2C12_CREDIT + "; bacteria: DeepBacs, Zenodo 5550935"})
     return out
 
 
@@ -118,6 +132,19 @@ def caption(e: dict, rec: dict) -> str:
                 "The anomaly banks hold only C2C12 frames, so on other cell types the flag is uncalibrated.")
     if e["kind"] == "c2c12_normal":
         return f"Held-out normal frame ({e['sequence']}, frame {e['frame']}); {conf}; {an}."
+    if e["kind"] == "c2c12_contamination_real":
+        sc = pd.read_csv(SCALE_CSV)
+        real, clean = sc[sc.variant == REAL_SIZE_VARIANT], sc[sc.variant == "clean"]
+        clean_pct = clean[(clean.fault_sequence_id == e["sequence"]) & (clean.frame_idx == e["frame"])].pct.iloc[0]
+        n, k_real, k_clean = len(real), int(real.flag.sum()), int(clean.flag.sum())
+        chance = (f"the only one of the {n} frames flagged at real size" if flag and k_real == 1 else
+                  f"{k_real} of the {n} frames are flagged at real size") + \
+            f", against {k_clean} of {n} for the same frames without bacteria, so the flag is at chance"
+        return (f"Held-out frame with simulated contamination at the bacteria's real size ({e['severity']:.0f} per "
+                f"256 px tile area; the stress test's second pick, rebuilt); {an}: {chance} "
+                f"(results/contamination_scale.md). {conf}, against {clean_pct:.1f}% for the same frame without "
+                f"bacteria. The rules recommend {rec['recommended_action']}: the flag only holds a passage, and "
+                "this flask is far below the target.")
     held = rec["recommended_action"] == "human_review" and flag
     return (f"Held-out frame with simulated contamination ({e['severity']:.0f} bacteria pasted at 16.5× their "
             f"real size); {an}. {conf}: the pasted bacteria are counted as cells, so confluency alone is above "
@@ -152,9 +179,12 @@ def rederive(date: str) -> None:
         old_action = ex["action"]
         rec = dict(ex["record"], recommended_action=action, action_reason=reason, qc_rationale=rationale,
                    decided_by=RULES_VERSION, anomaly_used_in_decision=flag is not None)
+        changed = old_action != action or ex["record"].get("decided_by") != RULES_VERSION
         rec = writer.append(rec)
-        ex.update(action=action, action_reason=reason, rationale=rationale, record=rec,
-                  caption=caption(ex, rec), decision_rederived={"at": date, "rules": RULES_VERSION})
+        ex.update(action=action, action_reason=reason, rationale=rationale, record=rec, caption=caption(ex, rec))
+        if changed or "decision_rederived" in ex:     # an example made under the current rules is not marked
+            ex["decision_rederived"] = {"at": ex.get("decision_rederived", {}).get("at", date) if not changed
+                                        else date, "rules": RULES_VERSION}
         print(f"{ex['id']}: {old_action} -> {action}")
     with open(OUT_JSON, "w") as f:
         json.dump(doc, f, indent=1, sort_keys=True)
@@ -180,13 +210,14 @@ def main():
         with open(OUT_JSON) as f:
             old = {e["id"]: e for e in json.load(f)["examples"]}
     examples = c2c12_examples() + evican_examples()
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = ("cuda" if torch.cuda.is_available() else
+              "mps" if os.environ.get("CULTUREQC_DEVICE") == "mps" and torch.backends.mps.is_available() else "cpu")
     writer = RecordWriter(os.path.join(tempfile.mkdtemp(prefix="cultureqc_examples_"), "records.jsonl"))
     out = []
     for e in examples:
         if args.only and e["id"] not in args.only:
             if e["id"] in old:
-                out.append(old[e["id"]])
+                out.append(dict(old[e["id"]], label=e["label"]))      # labels always from this file
             continue
         ext = os.path.splitext(e["src"])[1].lower()
         image_file = f"{e['id']}{ext}"

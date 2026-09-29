@@ -35,7 +35,7 @@ CAMERA_PRESETS: dict[str, dict] = {
     "c2c12_normal_20_40": dict(x=0.8, y=-0.9, z=0.55),
     "c2c12_normal_40_100": dict(x=0.82, y=-0.92, z=0.78),    # higher: the amber borderline shelf
     "c2c12_contamination_1": dict(x=0.85, y=-0.95, z=0.85),  # higher: the near-uniform carpet
-    "c2c12_contamination_2": dict(x=0.85, y=-0.95, z=0.85),
+    "c2c12_contamination_real_size": dict(x=0.72, y=-0.82, z=0.52),  # sparse, like the 0-20% frame
     "evican_pc3": dict(x=0.7, y=-0.8, z=0.5),                # few cells: come close
     "evican_ht29": dict(x=0.75, y=-0.85, z=0.58),
 }

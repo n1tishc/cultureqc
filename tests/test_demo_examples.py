@@ -27,7 +27,22 @@ def test_examples_exist():
     ids = [e["id"] for e in EXAMPLES]
     assert 6 <= len(ids) <= 8 and len(set(ids)) == len(ids)
     kinds = {e["kind"] for e in EXAMPLES}
-    assert kinds == {"c2c12_normal", "c2c12_contamination", "evican"}
+    assert kinds == {"c2c12_normal", "c2c12_contamination", "c2c12_contamination_real", "evican"}
+
+
+@pytest.mark.skipif(not os.path.exists(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                                                    "results", "contamination_scale.csv")), reason="no scale results")
+def test_real_size_example_matches_the_scale_run():
+    """The real-size example is the same frame, variant and models as results/contamination_scale.csv."""
+    import pandas as pd
+    repo = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    sc = pd.read_csv(os.path.join(repo, "results", "contamination_scale.csv"))
+    (ex,) = [e for e in EXAMPLES if e["kind"] == "c2c12_contamination_real"]
+    row = sc[(sc.variant == "scale0.060769_haze") & (sc.image_sha256 == ex["image_sha256"])].iloc[0]
+    assert ex["confluency"]["pct"] == pytest.approx(row.pct, abs=0.01)
+    assert ex["anomaly"]["score"] == pytest.approx(row.score, abs=1e-4)
+    assert ex["anomaly"]["flag"] == row.flag
+    assert "at chance" in ex["caption"] and "16.5" not in ex["caption"]
 
 
 @pytest.mark.parametrize("ex", EXAMPLES, ids=lambda e: e["id"])

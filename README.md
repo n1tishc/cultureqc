@@ -251,7 +251,8 @@ never replayed**.
 `python demo/app.py` opens the review console, with three tabs:
 
 - **Analyze**: upload an image, or pick one of the precomputed examples (real
-  C2C12 frames, normal and with simulated contamination, and two EVICAN
+  C2C12 frames: normal, a simulated-contamination stress test with bacteria
+  16.5× too large, and a frame with the bacteria at real size; and two EVICAN
   images). Examples come from `scripts/export_demo_examples.py`, which runs
   each image once through the same code as the Analyze button
   (`demo/analysis.py`) and stores the outputs in `demo/examples/`. They show
@@ -324,7 +325,7 @@ looks).
 The oversized simulation behaves differently: Cellpose-SAM counts the 16.5×
 bacteria as cells, which shifts measured confluency by a median +59.4 pp
 (`results/anomaly_summary.md`), so confluency alone is above the passage target
-and the flag holds it. That is what the two contamination examples and the
+and the flag holds it. That is what the stress-test example and the
 contamination replay show; both are captioned as the exaggerated stress test.
 
 **The QC classifier is demoted.** On held-out C2C12 frames it calls 2.9–5.0% of

@@ -124,8 +124,16 @@ more than that. So a realistically contaminated flask that
 reached its target would be recommended for passage. Contamination is confirmed
 by culture, Gram stain or PCR, which the row names.
 
-Then the rule, if there is time or he asks: click **C2C12 simulated
-contamination 1** (the stress test). Cellpose-SAM counts the oversized bacteria
+Click **C2C12 contamination, bacteria at real size**: the stress test's second
+frame, rebuilt. Confluency 12.2%, against 16.0% for the same frame without
+bacteria, and the anomaly check happens to flag it: this is the only one of the
+97 frames flagged at real size, while the same frames without bacteria are
+flagged 4 of 97, so the flag is at chance (the card says so). The action is
+**hold**: nothing irreversible was on the table. If he picks up on the flag:
+"the one time it flagged, the clean frames flag as often."
+
+Then the rule, if there is time or he asks: click **C2C12 contamination stress
+test** (bacteria 16.5× too large). Cellpose-SAM counts the oversized bacteria
 as cells and reads 86.6%, past the 80% target; the anomaly check flags it, and
 a flagged image is never passaged automatically: **human review**
 (`rules_v0.3`). This is a safety precedence, not a contamination detector:
