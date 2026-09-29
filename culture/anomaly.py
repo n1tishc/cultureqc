@@ -152,10 +152,10 @@ LIVE_LIMITS = [
     "Simulated contamination is flagged at every severity (V5(b), n = 2 sequences, with bacteria pasted at "
     "16.5× their real size). The pasted bacteria shift measured confluency by a median +59.4 pp, so 88% of "
     "those frames land in a different bin.",
-    "At their real size the same simulated bacteria are not caught: flagged on 1 of 97 frames, against 4 of 97 "
-    "for the same frames without them, and confluency reads a median 4.3 pp lower "
-    "(results/contamination_scale.md). Per visit, at this magnification, bacterial contamination is not "
-    "detectable; confirm it by culture, Gram stain or PCR.",
+    "At their real size, up to 400 per 256 px tile area, the same simulated bacteria are not caught: flagged "
+    "on 1 of 97 frames, against 4 of 97 for the same frames without them, and confluency reads a median "
+    "4.3 pp lower (results/contamination_scale.md). Heavier contamination is not tested. Confirm "
+    "contamination by culture, Gram stain or PCR.",
     "Simulated lamp dimming is not caught by this flag (AUROC 0.47 at intensity ≤ 0.7).",
     "A flag holds a passage for human review (a flagged flask is not passaged automatically); it does not change hold or feed. On cell types other than C2C12 the flag is uncalibrated, so it can hold a passage on a healthy flask.",
 ]

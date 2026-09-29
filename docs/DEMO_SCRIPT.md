@@ -118,7 +118,9 @@ one "bacterium"); the same bacteria at their real size, with and without the
 simulator's haze. At real size the anomaly flag is at chance (held-out AUROC
 0.48; flagged on 1 of 97 frames, against 4 of 97 for the same frames without
 the bacteria) and confluency reads a median 4.3 pp lower, not higher
-(`results/contamination_scale.md`). So a realistically contaminated flask that
+(`results/contamination_scale.md`). That is up to 400 bacteria per 256 px tile
+area, the original ramp; heavier contamination was not tested, so don't claim
+more than that. So a realistically contaminated flask that
 reached its target would be recommended for passage. Contamination is confirmed
 by culture, Gram stain or PCR, which the row names.
 

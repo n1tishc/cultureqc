@@ -167,7 +167,7 @@ def captions(kind: str, onset: float | None, severity: float | None, matrix: dic
     if kind == "contamination_onset":
         return (f"Simulated contamination from {onset:.0f} h. {matrix['provenance_note']} Pasted bacteria also "
                 "raise measured confluency, so the curve jumps at onset. At their real size the same bacteria "
-                "neither raise confluency nor trip the per-visit flag (results/contamination_scale.md).")
+                "do not raise confluency, and the per-visit flag is at chance (results/contamination_scale.md).")
     if kind == "growth_stall":
         return (f"Simulated growth slowdown from {onset:.0f} h: after onset the flask replays its own recorded "
                 f"frames at {severity:.0%} speed. No flag is expected: growth stalls are not detectable at the "

@@ -584,8 +584,8 @@ with gr.Blocks(
                     '<p class="detect-note">The anomaly check\'s 256 px tile of one late held-out frame. Left to '
                     "right: no fault; the stress test the contamination examples come from (bacteria 16.5× too "
                     "large); the same bacteria at their real size, with and without the simulator's haze. At real "
-                    "size the per-visit flag is at chance and confluency does not rise: bacterial contamination is "
-                    "not detectable per visit at this magnification (results/contamination_scale.md).</p>")
+                    "size, up to 400 per 256 px tile area, the per-visit flag is at chance and confluency does not "
+                    "rise; heavier contamination is not tested (results/contamination_scale.md).</p>")
 
     gr.HTML(
         '<div class="app-footer">cultureQC v0.1 &middot; Cellpose-SAM &middot; DINOv2-small (anomaly check) '

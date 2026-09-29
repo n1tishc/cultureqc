@@ -15,8 +15,9 @@ provenance_note: >-
 rows:
   - issue: Bacterial contamination
     detectable_here: >-
-      No, at realistic bacterial size (per-visit flag at chance); caught per visit
-      only in an exaggerated-scale simulation
+      Not detected with simulated bacteria at real size, up to 400 per 256 px tile
+      area (per-visit flag at chance; heavier contamination not tested); caught per
+      visit only in an exaggerated-scale simulation
     evidence: >-
       At realistic size (results/contamination_scale.md, simulated, 4 sequences,
       up to 400 bacteria per 256 px tile area): held-out AUROC 0.48; flag on 1 of

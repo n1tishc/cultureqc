@@ -106,8 +106,9 @@ slow for a live demo, so the demo needs a GPU (section 8).
   no fault (`scripts/contamination_scale.py`, `results/contamination_scale.md`).
   The flag is at chance (held-out AUROC 0.48; 1 of 97 flagged, 4 of 97 without
   bacteria), the quality gate fails no more often, and confluency reads a
-  median 4.3 pp lower. Per visit, bacterial contamination is not detectable at
-  this magnification, so the v0.3 hold gives no protection against it. The
+  median 4.3 pp lower. Up to that density (400 per 256 px tile area; heavier
+  not tested), per-visit contamination is not detected at this magnification,
+  so the v0.3 hold gives no protection against it. The
   detectability row, README limits, validation report, anomaly card and demo
   script say so; the console's Detectability tab shows the side-by-side image.
 - **B3, classifier demoted:** it still runs and is recorded, but the
