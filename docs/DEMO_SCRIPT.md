@@ -189,7 +189,7 @@ That is estimated, never replayed, and needs confirming on their data.
 
 - **The Space is down (5xx, as on 2026-09-28):** switch to the Mac tab
   (`deploy/run_console_mac.sh`). Same console, same examples and replays;
-  live Analyze takes a median 16.46 s per C2C12 frame there
+  live Analyze takes a median 16.43 s per C2C12 frame there
   (`results/live_latency_mac_mps.md`). Say it is running on the laptop.
 - **Live Analyze is slow or errors:** stay on the precomputed examples and
   replays; they need no model. Say they are precomputed. The CPU time for a

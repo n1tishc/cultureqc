@@ -173,7 +173,7 @@ slow for a live demo, so the demo needs a GPU (section 8).
 | Where | How | Live Analyze | Source |
 |---|---|---|---|
 | **Space `LongGrainRice/cultureqc-console`** (main) | ZeroGPU, a GPU attached per Analyze | median 3.82 s; 7 of 7 examples same flag and action as stored | `results/live_latency_zerogpu.md` |
-| **Mac backup** | `deploy/run_console_mac.sh`, Cellpose-SAM on Apple's GPU, no Hugging Face at run time | median 16.46 s; 7 of 7 same | `results/live_latency_mac_mps.md` |
+| **Mac backup** | `deploy/run_console_mac.sh`, Cellpose-SAM on Apple's GPU, no Hugging Face at run time | median 16.43 s; 7 of 7 same | `results/live_latency_mac_mps.md` |
 | **Colab backup** | `nb/05_console_colab.ipynb` + `~/Desktop/projs/cultureqc_console_bundle.zip` (console + all weights) | not yet run on Colab | — |
 | CPU (for reference) | — | 689 s per FOV | `results/live_latency.md` |
 
