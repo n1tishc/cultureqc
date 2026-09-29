@@ -113,7 +113,7 @@ checks that every number in the "Number" column appears in its source file.
 | QC classifier calibration (V8) | ECE 0.0139 (T = 1.5536) | synthetic | `results/calibration_summary.md` |
 | QC classifier on real normal frames | 5.0% called normal (n = 1228) | real (C2C12) | `results/classifier_c2c12.md` |
 | Live latency on CPU (V9) | 689 s per FOV at 1392 × 1040 | real-size input, 2-thread CPU | `results/live_latency.md` |
-| Live latency, console Space on ZeroGPU (one Analyze as the viewer waits, with the owner's token) | median 3.82 s (n = 6, after a first of 5.31 s); flag and action the same as stored on 7 of 7 examples | real (C2C12, EVICAN) | `results/live_latency_zerogpu.md` |
+| Live latency, console Space on ZeroGPU (one Analyze as the viewer waits, with the owner's token) | median 3.28 s (n = 6, after a first of 6.45 s); flag and action the same as stored on 7 of 7 examples | real (C2C12, EVICAN) | `results/live_latency_zerogpu.md` |
 | Live latency, Mac backup (Cellpose-SAM on Apple MPS) | median 16.43 s per 1392×1040 C2C12 frame (n = 5); flag and action the same as stored on 7 of 7 examples | real (C2C12, EVICAN) | `results/live_latency_mac_mps.md` |
 | Live latency, Colab backup (Tesla T4) | median 12.06 s per 1392×1040 C2C12 frame (n = 5); flag and action the same as stored on 7 of 7 examples | real (C2C12, EVICAN) | `results/live_latency_colab_gpu.md` |
 
@@ -275,7 +275,7 @@ never replayed**.
 - **Detectability**: the matrix above.
 
 For the call, the console runs on a ZeroGPU Space (`deploy/hf-space-demo/`,
-`LongGrainRice/cultureqc-console`): a live Analyze took a median 3.82 s as the
+`LongGrainRice/cultureqc-console`): a live Analyze took a median 3.28 s as the
 viewer waits for it, GPU attach included (`results/live_latency_zerogpu.md`,
 `scripts/space_dry_run.py`). The backup is the same console on the Mac (`deploy/run_console_mac.sh`,
 Cellpose-SAM on Apple's GPU, no Hugging Face at run time): median 16.43 s per

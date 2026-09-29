@@ -15,7 +15,7 @@ replay is on screen; say "live" only after pressing Analyze.
 - [ ] Space on ZeroGPU; the log shows `ZeroGPU`, `anomaly banks verified` and `models loaded`.
 - [ ] `results/live_latency_zerogpu.md` from the dry run (`scripts/space_dry_run.py`) is committed; quote its numbers, not a guess.
 - [ ] Signed in to huggingface.co in the call browser, Space opened from huggingface.co/spaces/LongGrainRice/cultureqc-console (Analyze then uses the PRO GPU quota).
-- [ ] Space opened 10 minutes early (it sleeps after 48 h without visitors; a boot takes minutes) and one live Analyze done; in the dry run one of 7 took 18.50 s against a median 3.82 s.
+- [ ] Space opened 10 minutes early (it sleeps after 48 h without visitors; a boot takes minutes) and one live Analyze done; in the 2026-09-29 dry run the first took 6.45 s and the rest a median 3.28 s; in the 2026-09-28 run (commit `0210c79`) one of 7 took 18.50 s.
 - [ ] Expect a small "Successfully acquired a GPU" toast (top right) on each live Analyze: that is ZeroGPU attaching
       the GPU. If asked, it is the live run on a GPU, not a precomputed result.
 - [ ] The 3D views turn on their own at the dry run. If they don't, check macOS System Settings →
@@ -99,7 +99,7 @@ person steps in on exceptions and audits the trail.
    says the map is held in memory for this view while the record keeps its
    hash. Precomputed examples are never written into this chain, and the card
    says so.
-   - On the Space (ZeroGPU) a live Analyze took a median 3.82 s in the dry
+   - On the Space (ZeroGPU) a live Analyze took a median 3.28 s in the dry
      run (`results/live_latency_zerogpu.md`); the 51.4% frame read confidence
      0.014 live against 0.013 stored, still human_review.
    - On the Mac backup, the 51.4% frame reads confidence 0.015 live against
