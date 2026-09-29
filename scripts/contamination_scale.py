@@ -461,11 +461,19 @@ def cmd_report(a):
     hn = cache_scores[(cache_scores.kind == "normal") & (cache_scores.split == "heldout")]
     cache_cols = cache_scores[["image_sha256", "pct", "score_binned", "flag_binned"]].rename(columns={"pct": "cache_pct"})
 
-    def vs_cache(s):
+    fm = pd.read_parquet(os.path.join(SIDECARS, "fault_manifest.parquet"))
+    fm = fm[(fm.fault_type == "contamination_onset") & fm.is_modified]
+    orig_sha = dict(zip(zip(fm.fault_sequence_id, fm.frame_idx), fm.image_sha256))
+
+    def vs_cache(s, by_original=False):
+        # the scale-1 rebuild differs from the originals in the last bit, so match it by frame
+        s = s.assign(image_sha256=[orig_sha[(r.fault_sequence_id, r.frame_idx)] for r in s.itertuples()]) \
+            if by_original else s
         o = s.merge(cache_cols, on="image_sha256", how="left")
+        assert o.cache_pct.notna().all()
         return (o.pct - o.cache_pct).abs(), (o.score - o.score_binned).abs(), int((o.flag == o.flag_binned).sum()), len(o)
 
-    p_o, s_o, ag_o, n_o = vs_cache(sc[orig_v])
+    p_o, s_o, ag_o, n_o = vs_cache(sc[orig_v], by_original=True)
     p_c, s_c, ag_c, n_c = vs_cache(sc["clean"])
     length = _bacterium_length_px(a.sprite_dir)
     fig_note = example_figure(a.work, variants, os.path.join(REPO, "results", "contamination_scale_examples.png"))
@@ -486,7 +494,9 @@ def cmd_report(a):
         f"frames are rebuilt with the bacteria shrunk by 0.079 / 1.3 = {REALISTIC:.4f}, area-averaged, so a "
         "bacterium narrower than a pixel darkens part of one pixel. The median bacterium in the sprite "
         f"library is {length:.0f} px long at 79 nm/px ({length * 0.079:.1f} µm): {length:.0f} px "
-        f"({length * 1.3:.0f} µm) as originally pasted, {length * REALISTIC:.1f} px as pasted here.",
+        f"({length * 1.3:.0f} µm) as originally pasted, {length * REALISTIC:.1f} px as pasted here. Bacteria "
+        "are placed on background pixels only, and one narrower than a pixel darkens it by a few grey levels, "
+        "so fewer are visible in the plot than were placed.",
         "",
         "## Design",
         "",
@@ -565,7 +575,8 @@ def cmd_report(a):
         def elig(s, t=t):
             return s[(s.confidence >= FLOOR) & (s.pct >= t)]
         row(f"target {t:.0f}%: reach it (confidence ≥ floor)",
-            lambda s, e=elig, t=t: f"{len(e(s))}" if len(e(s)) else f"none (max {s.pct.max():.1f}%)")
+            lambda s, e=elig, t=t: f"{len(e(s))}" if len(e(s)) else
+            f"none (highest {s[s.confidence >= FLOOR].pct.max():.1f}%)")
         row(f"target {t:.0f}%: of those, held by the flag", lambda s, e=elig: f"{int(e(s).flag.sum())}" if len(e(s)) else "—")
 
     lines += [
