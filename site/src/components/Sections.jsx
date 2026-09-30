@@ -383,6 +383,7 @@ export function Changes({ data }) {
   const real = row(data, "Anomaly flag vs contamination, bacteria at real size");
   const err = row(data, "Confluency error, Cellpose-SAM");
   const cut = row(data, "Confluency error, calibrated cutoff");
+  const cutMae = cut.number.match(/MAE ([\d.]+) → ([\d.]+) pp/).slice(1);
   const rev = row(data, "Sent to human review, held-out frames: confidence");
   const fc = row(data, "Passage forecast");
   const spc = row(data, "SPC");
@@ -410,10 +411,20 @@ export function Changes({ data }) {
       kept: true,
       now: (
         <>
-          <b>Measured on real images, with a review floor.</b> Against expert masks: {err.number}. Frames below confidence {data.examples.items[0].confluency.floor.toFixed(2)} go to review: {rev.number}. Much of the under-read is the model’s cell cutoff. Recalibrated: {cut.number}. Validated, not live: it moves the review floor and anomaly bins, which are re-derived before it ships.
+          <b>Measured on real images, with a review floor.</b> It reads low against expert masks: {err.number}. Frames below confidence {data.examples.items[0].confluency.floor.toFixed(2)} go to review: {rev.number}.
         </>
       ),
-      src: `${err.source} · ${rev.source} · ${cut.source}`,
+      src: `${err.source} · ${rev.source}`,
+    },
+    {
+      was: "Not in v0.2.",
+      kept: true,
+      now: (
+        <>
+          <b>A fix for the low reading, validated and held for release.</b> Most of it comes from the model’s cell cutoff. With the cutoff recalibrated on other images, the error on the same 33 images drops from {cutMae[0]} to {cutMae[1]} pp. It is not live yet: it moves the review floor and the anomaly bins, which are re-derived first.
+        </>
+      ),
+      src: cut.source,
     },
     {
       was: "Not in v0.2.",
