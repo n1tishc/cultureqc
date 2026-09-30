@@ -64,6 +64,37 @@ export function Action({ a }) {
 
 export const actionWord = (a) => ACTION_WORD[a] || a;
 
+/* What each action means for the flask, beside the badge, so an amber "hold"
+   next to "no action needed" does not read as an alarm. */
+const ACTION_GLOSS = {
+  passage: "ready to split the culture",
+  feed: "change the medium, keep culturing",
+  hold: "keep culturing; not ready to passage",
+  human_review: "a person decides before anything happens",
+  reimage: "take the image again",
+};
+
+export const actionGloss = (a) => ACTION_GLOSS[a] || "";
+
+/* A repo path that may break only at its slashes on a narrow screen. */
+export function Path({ children }) {
+  const parts = String(children).split("/");
+  return (
+    <code>
+      {parts.map((p, i) => (
+        <span key={i}>
+          {p}
+          {i < parts.length - 1 ? (
+            <>
+              /<wbr />
+            </>
+          ) : null}
+        </span>
+      ))}
+    </code>
+  );
+}
+
 const VERDICT_ICON = { pass: "check", fail: "cross", mixed: "mixed", none: "none", info: "info", untested: "none" };
 
 export function Verdict({ k, children }) {

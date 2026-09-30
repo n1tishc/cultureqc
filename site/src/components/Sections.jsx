@@ -1,4 +1,4 @@
-import { Fig, Icon, Section, Verdict } from "./ui";
+import { Fig, Icon, Path, Section, Verdict } from "./ui";
 
 /* Every number below is looked up from data.json, which build_data.py copies
    from the README tables (checked against their sources by the test suite),
@@ -13,7 +13,7 @@ export const row = (data, prefix) => {
 const nums = (s) => (s.match(/-?\d+(?:\.\d+)?/g) || []).map(Number);
 
 function Src({ children }) {
-  return <code>{children}</code>;
+  return <Path>{children}</Path>;
 }
 
 /* ── confluency ── */
@@ -222,6 +222,12 @@ export function Limits({ data }) {
             </>
           }
         >
+          <div className="panels" aria-hidden="true">
+            <span>No fault</span>
+            <span>{data.oversize_factor}× too large</span>
+            <span>Real size, haze</span>
+            <span>Real size, no haze</span>
+          </div>
           <img className="figure-img" src={data.contamination_figure} alt={`Four versions of one 256-pixel tile: no bacteria, bacteria pasted ${data.oversize_factor} times too large, and the same bacteria at their real size with and without haze.`} />
         </Fig>
         <Fig letter="B" title="What the numbers say">
@@ -229,17 +235,17 @@ export function Limits({ data }) {
             <dt>Real size</dt>
             <dd>
               {real.number} <br />
-              <code>{real.source}</code>
+              <Src>{real.source}</Src>
             </dd>
             <dt>{data.oversize_factor}× too large</dt>
             <dd>
               {big.number} <br />
-              <code>{big.source}</code>
+              <Src>{big.source}</Src>
             </dd>
             <dt>Normal frames</dt>
             <dd>
               Flagged {flagRate.number} <br />
-              <code>{flagRate.source}</code>
+              <Src>{flagRate.source}</Src>
             </dd>
           </dl>
           <p className="legend">
@@ -261,7 +267,7 @@ export function Validation({ data }) {
   return (
     <Section
       id="validation"
-      title={`${v.length} checks on real sequences, ${count("fail")} of them failed`}
+      title={`${v.length} validation checks, ${count("fail")} of them failed`}
       lede={<p>{data.validation_intro}</p>}
     >
       <div className="table-wrap" tabIndex={0} role="region" aria-label="Validation checks V1 to V10">
@@ -354,7 +360,7 @@ export function Integration({ data }) {
                   <td>
                     {r.number}
                     <span className="verdict-note">
-                      <code>{r.source}</code>
+                      <Src>{r.source}</Src>
                     </span>
                   </td>
                 </tr>
@@ -411,7 +417,7 @@ export function Changes({ data }) {
       kept: true,
       now: (
         <>
-          <b>Per-image anomaly check, quality gate, flask history and a passage forecast.</b> Forecast backtest: {fc.number}. Under rules_v0.3 an anomaly flag holds a passage for human review.
+          <b>Per-image anomaly check, quality gate, flask history and a passage forecast.</b> Forecast backtest at the replays’ passage target: {fc.number}. Under rules_v0.3 an anomaly flag holds a passage for human review.
         </>
       ),
       src: fc.source,
@@ -421,7 +427,7 @@ export function Changes({ data }) {
       kept: true,
       now: (
         <>
-          <b>Validated V1–V10 on real sequences, fails stated,</b> and a detectability matrix whose hash rides in every record, next to the hashes of the probability map, models and configs.
+          <b>Validated V1–V10, fails stated,</b> and a detectability matrix whose hash rides in every record, next to the hashes of the probability map, models and configs.
         </>
       ),
       src: "docs/ARCHITECTURE_VALIDATION.md · configs/detectability.yaml",
@@ -451,17 +457,21 @@ export function Changes({ data }) {
         </p>
       }
     >
-      <div className="changes">
+      <div className="changes" role="table" aria-label="v0.2 against v0.3">
+        <div className="change change-head" role="row">
+          <div role="columnheader">What v0.2 showed</div>
+          <div role="columnheader">v0.3, after testing on real images</div>
+        </div>
         {items.map((c, i) => (
-          <div className="change" key={i}>
-            <div>
-              <h4>v0.2</h4>
+          <div className="change" key={i} role="row">
+            <div role="cell">
               <p className={c.kept ? "kept" : ""}>{c.was}</p>
             </div>
-            <div>
-              <h4>v0.3</h4>
+            <div role="cell">
               <p>{c.now}</p>
-              <span className="src">{c.src}</span>
+              <span className="src">
+                <Path>{c.src}</Path>
+              </span>
             </div>
           </div>
         ))}

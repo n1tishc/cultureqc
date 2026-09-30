@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Action, Icon, short } from "./ui";
+import { useEffect, useMemo, useState } from "react";
+import { Action, Icon, actionGloss, actionWord, short } from "./ui";
 
 /* The first viewport: one real frame, the layers the pipeline computed for it,
    and its stored readings. Hovering or focusing a reading lights the layer it
@@ -13,11 +13,11 @@ const LAYERS = [
 ];
 
 const SHORT = {
-  c2c12_normal_0_20: "C2C12 · sparse",
-  c2c12_normal_20_40: "C2C12 · mid",
-  c2c12_normal_40_100: "C2C12 · dense",
-  c2c12_contamination_real_size: "Bacteria, real size",
-  c2c12_contamination_1: "Bacteria, oversized",
+  c2c12_normal_0_20: "C2C12, sparse",
+  c2c12_normal_20_40: "C2C12, mid",
+  c2c12_normal_40_100: "C2C12, dense",
+  c2c12_contamination_real_size: "Real-size bacteria",
+  c2c12_contamination_1: "Oversized bacteria",
   evican_pc3: "EVICAN PC3",
   evican_ht29: "EVICAN HT29",
 };
@@ -81,10 +81,9 @@ function AnomalyLayer({ ex }) {
   );
 }
 
-function ScaleBar({ ex }) {
-  if (!ex.um_per_px) return null;
-  const um = 200;
-  const w = (um / ex.um_per_px / ex.width) * 100;
+export function ScaleBar({ umPerPx, widthPx, um = 200 }) {
+  if (!umPerPx) return null;
+  const w = (um / umPerPx / widthPx) * 100;
   return (
     <div className="scalebar" style={{ width: `${w}%` }} aria-hidden="true">
       <b />
@@ -94,12 +93,12 @@ function ScaleBar({ ex }) {
 }
 
 function Gauge({ value, mark, max, kind, left, right }) {
-  const w = Math.max(0, Math.min(1, value / max)) * 100;
+  const w = Math.max(0, Math.min(1, value / max));
   const m = Math.max(0, Math.min(1, mark / max)) * 100;
   return (
     <>
       <div className="gauge" data-kind={kind} aria-hidden="true">
-        <i style={{ transform: `scaleX(${w / 100})` }} />
+        <i style={{ transform: `scaleX(${w})` }} />
         <u style={{ left: `calc(${m}% - 1px)` }} />
       </div>
       <div className="gauge-legend">
@@ -130,19 +129,15 @@ function Reading({ link, setSolo, children }) {
 
 function VerifyLine({ v, rec, total }) {
   const state = v ? String(v.ok) : "pending";
-  const text = !v ? "Re-hashing in this browser…" : v.ok ? "Re-hashed in this browser: matches the record" : "Re-hashed in this browser: does not match";
+  const text = !v ? "Re-hashing in this browser…" : v.ok ? "Re-hashed in your browser: matches" : "Re-hashed in your browser: no match";
   return (
     <>
       <span className="verified" data-ok={state}>
         <Icon name={v && !v.ok ? "cross" : "check"} />
         {text}
       </span>
-      <p>
-        <span className="hash" title={rec.record_hash}>SHA-256 {short(rec.record_hash, 12)}</span>
-        <br />
-        <span className="hash">
-          {rec.index === 1 ? "first in the chain" : `follows #${rec.index - 1} ${short(rec.prev_record_hash, 8)}`} · {rec.index} of {total}
-        </span>
+      <p className="hash" title={rec.record_hash}>
+        SHA-256 {short(rec.record_hash, 10)} · #{rec.index} of {total}
       </p>
     </>
   );
@@ -155,7 +150,6 @@ export default function Stage({ examples, verify, liveParity }) {
   const [solo, setSolo] = useState(null);
   const ex = useMemo(() => items.find((e) => e.id === id), [items, id]);
   const contour = useContour(ex.contour);
-  const frameRef = useRef(null);
 
   const c = ex.confluency;
   const a = ex.anomaly;
@@ -171,6 +165,7 @@ export default function Stage({ examples, verify, liveParity }) {
       <div className="stage-grid">
         <div className="viewer">
           <div className="toolbar" role="group" aria-label="Layers the pipeline computed">
+            <span className="letter on-stage">A</span>
             <span className="toolbar-label">Layers</span>
             {LAYERS.map(([k, label]) => (
               <button
@@ -189,8 +184,7 @@ export default function Stage({ examples, verify, liveParity }) {
           <div className="frame-box">
             <div
               className="frame"
-              ref={frameRef}
-              style={{ aspectRatio: `${ex.width} / ${ex.height}`, width: `min(100%, calc(max(340px, 100vh - 350px) * ${ex.width / ex.height}))` }}
+              style={{ aspectRatio: `${ex.width} / ${ex.height}`, width: `min(100%, calc(max(300px, 100vh - 352px) * ${ex.width / ex.height}))` }}
               {...frameAttrs}
             >
               <img src={ex.image} width={ex.width} height={ex.height} alt={`${ex.label}: phase-contrast frame${ex.sequence ? `, ${ex.sequence} frame ${ex.frame}` : ""}`} />
@@ -200,70 +194,58 @@ export default function Stage({ examples, verify, liveParity }) {
                 {contour ? <path d={contour.d} /> : null}
               </svg>
               <AnomalyLayer ex={ex} />
-              <ScaleBar ex={ex} />
+              <ScaleBar umPerPx={ex.um_per_px} widthPx={ex.width} />
             </div>
-          </div>
-          <div className="frame-cap">
-            <span>
-              {ex.label}. {ex.credit}.
-            </span>
-            {ex.sequence ? (
-              <span className="mono">
-                {ex.sequence} · frame {ex.frame}
-              </span>
-            ) : (
-              <span className="mono">
-                {ex.width}×{ex.height} px
-              </span>
-            )}
           </div>
         </div>
 
         <div className="rail">
           <div className="rail-head">
             <h2>{ex.label}</h2>
-            <p>Stored output. Hover a reading to light the layer it was measured on.</p>
           </div>
 
           <Reading link="contour" setSolo={setSolo}>
             <div className="reading-top">
-              <span>Confluency</span>
+              <span>Confluency, above the cell cutoff</span>
               <span className="src">Cellpose-SAM</span>
             </div>
-            <div className="big num">
-              {c.pct.toFixed(1)}
-              <small>%</small>
+            <div className="big-row">
+              <div className="big num">
+                {c.pct.toFixed(1)}
+                <small>%</small>
+              </div>
+              <p>
+                target <b className="num">{ex.target.toFixed(0)}%</b>
+                <br />
+                the console’s default
+              </p>
             </div>
-            <p>
-              Share of the frame above the cell cutoff (the contour). Target <b className="num">{ex.target.toFixed(0)}%</b>.
-            </p>
-          </Reading>
-
-          <Reading link="band" setSolo={setSolo}>
-            <div className="reading-top">
-              <span>Confidence</span>
-              <span className="src num">{c.confidence.toFixed(3)}</span>
+            <div
+              className="sub"
+              data-link="band"
+              tabIndex={0}
+              title={`Confidence is 1 − 4 × the share of pixels within ±${c.band_logit} logit of the cutoff.`}
+              onMouseEnter={() => setSolo("band")}
+              onMouseLeave={() => setSolo("contour")}
+              onFocus={() => setSolo("band")}
+            >
+              <Gauge value={c.confidence} mark={c.floor} max={1} left={`confidence ${c.confidence.toFixed(3)}`} right={`review below ${c.floor.toFixed(2)}`} />
+              <p>
+                <b className="num">{(c.borderline_fraction * 100).toFixed(1)}%</b> of pixels sit on the cutoff’s edge (hatched).
+              </p>
             </div>
-            <Gauge value={c.confidence} mark={c.floor} max={1} left="0" right={`review below ${c.floor.toFixed(2)}`} />
-            <p>
-              <b className="num">{(c.borderline_fraction * 100).toFixed(1)}%</b> of pixels sit within ±{c.band_logit} logit of the cutoff (hatched). Confidence is 1 − 4 × that share.
-            </p>
           </Reading>
 
           <Reading link="anom" setSolo={setSolo}>
             <div className="reading-top">
-              <span>Anomaly check</span>
-              <span className="src">DINOv2 · {a.bin}% bin</span>
-            </div>
-            <Gauge value={a.score} mark={a.threshold} max={anomMax} kind="anom" left={`score ${a.score.toFixed(3)}`} right={`threshold ${a.threshold.toFixed(3)}`} />
-            <p>
+              <span>Anomaly check · DINOv2</span>
               <span className="flagword" data-flag={String(a.flag)}>
                 <Icon name={a.flag ? "flag" : "clear"} />
-                {a.flag ? "Flagged for review" : "Not flagged"}
+                {a.flag ? "Flagged" : "Not flagged"}
               </span>
-              <br />
-              From the {a.top.length} outlined patches of the centre tile farthest from normal C2C12 at this confluency.
-            </p>
+            </div>
+            <Gauge value={a.score} mark={a.threshold} max={anomMax} kind="anom" left={`score ${a.score.toFixed(3)} · ${a.bin}% bin`} right={`threshold ${a.threshold.toFixed(3)}`} />
+            <p>Set by the {a.top.length} outlined centre-tile patches.</p>
           </Reading>
 
           <Reading>
@@ -271,7 +253,10 @@ export default function Stage({ examples, verify, liveParity }) {
               <span>Recommended action</span>
               <span className="src">{ex.rules}</span>
             </div>
-            <Action a={ex.action} />
+            <div className="action-row">
+              <Action a={ex.action} />
+              <span className="gloss">{actionGloss(ex.action)}</span>
+            </div>
             <p>{ex.action_reason}</p>
           </Reading>
 
@@ -279,12 +264,11 @@ export default function Stage({ examples, verify, liveParity }) {
             <div className="reading-top">
               <span>Record</span>
               <a className="src" href="#records">
-                the chain ↓
+                verify the chain ↓
               </a>
             </div>
             <VerifyLine v={v} rec={ex.record} total={items.length} />
           </Reading>
-
         </div>
       </div>
 
@@ -295,7 +279,7 @@ export default function Stage({ examples, verify, liveParity }) {
             <span style={{ minWidth: 0 }}>
               <b>{SHORT[e.id] || e.label}</b>
               <small>
-                {e.confluency.pct.toFixed(1)}% · {e.action.replace("_", " ")}
+                {e.confluency.pct.toFixed(1)}% · {actionWord(e.action).toLowerCase()}
               </small>
             </span>
           </button>
@@ -303,10 +287,10 @@ export default function Stage({ examples, verify, liveParity }) {
       </div>
       <div className="stage-note">
         <p>
-          <b>QC classifier, demoted:</b> it calls this frame <span className="mono">{ex.classifier.flag.replace("_", " ")}</span> at {ex.classifier.confidence.toFixed(2)}. Recorded, never used for the action: it does not transfer to real frames.
+          Hover a reading to light the layer it came from. {ex.label}. {ex.credit}.{ex.sequence ? ` Held-out ${ex.sequence}, frame ${ex.frame}.` : ""} Precomputed with the console’s own code ({ex.device}, {ex.generated_at}). {liveParity}
         </p>
         <p>
-          Precomputed with the console’s own code ({ex.device}, {ex.generated_at}). {liveParity}
+          <b>QC classifier, demoted:</b> it calls this frame <span className="mono">{ex.classifier.flag.replace("_", " ")}</span> at {ex.classifier.confidence.toFixed(2)}. Recorded, never used for the action: it does not transfer to real frames.
         </p>
       </div>
     </div>

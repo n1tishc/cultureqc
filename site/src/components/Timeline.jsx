@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "./ui";
+import { ScaleBar } from "./Stage";
 
 /* Five held-out C2C12 flasks replayed as visits. Left: the Cellpose-SAM map
    at the selected visit and the three fields of view its number came from.
@@ -67,15 +68,15 @@ function Chart({ r, sel, setSel }) {
         <g>
           <line x1={M.l} x2={W - M.r} y1={y(f.target)} y2={y(f.target)} stroke="#6b7684" strokeDasharray="3 4" />
           <text x={W - M.r} y={y(f.target) - 6} textAnchor="end" fill="#86919d" fontFamily="var(--mono)" fontSize="11">
-            target {f.target}%
+            passage target {f.target}%
           </text>
         </g>
       ) : null}
       {r.fault ? (
         <g>
           <line x1={x(r.fault.onset_hours)} x2={x(r.fault.onset_hours)} y1={M.t} y2={H - M.b} stroke="var(--anom)" strokeOpacity="0.7" strokeDasharray="2 3" />
-          <text x={x(r.fault.onset_hours) + 5} y={M.t + 10} fill="var(--anom)" fontFamily="var(--mono)" fontSize="11">
-            fault from {r.fault.onset_hours} h
+          <text x={x(r.fault.onset_hours) - 5} y={H - M.b - 7} textAnchor="end" fill="var(--anom)" fontFamily="var(--mono)" fontSize="11">
+            fault onset {r.fault.onset_hours} h
           </text>
         </g>
       ) : null}
@@ -111,6 +112,7 @@ function MapView({ r, v }) {
   const mask = { WebkitMaskImage: `url(${v.map})`, maskImage: `url(${v.map})` };
   return (
     <div className="frame" data-prob="" style={{ aspectRatio: `${w} / ${h}` }}>
+      <span className="letter on-stage on-frame">A</span>
       <div className="layer layer-prob" data-l="prob" style={mask} />
       <svg className="fovbox" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }} aria-hidden="true">
         {v.fov_boxes.map(([by, bx, bh, bw], i) => (
@@ -122,6 +124,7 @@ function MapView({ r, v }) {
           </g>
         ))}
       </svg>
+      <ScaleBar umPerPx={r.um_per_px} widthPx={w} />
     </div>
   );
 }
@@ -240,6 +243,7 @@ export default function Timeline({ replays }) {
         </div>
 
         <div className="tl-chart">
+          <span className="letter on-stage">B</span>
           <Chart r={r} sel={sel} setSel={(i) => (stop(), setSel(i))} />
           <div className="visits" role="group" aria-label="Visits; arrow keys step through them" onKeyDown={onKey}>
             {r.visits.map((x) => (
@@ -263,7 +267,7 @@ export default function Timeline({ replays }) {
         <div>
           {f.status === "predicted" ? (
             <p className={held ? "held" : ""}>
-              Passage forecast ({f.model} fit at visit {f.made_at_visit + 1}, {f.made_at_hours} h): the {f.target}% target at <span className="num">{f.t_star} h</span>, interval{" "}
+              Passage forecast ({f.model} fit at visit {f.made_at_visit + 1}, {f.made_at_hours} h): the replays’ {f.target}% passage target at <span className="num">{f.t_star} h</span>, interval{" "}
               <span className="num">
                 {f.interval[0]}–{f.interval[1]} h
               </span>

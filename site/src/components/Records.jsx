@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { verifyChain } from "../lib/verify";
 import { Icon, actionWord, short } from "./ui";
 
@@ -23,6 +23,12 @@ function tamper(canonical) {
 }
 
 function Json({ obj, bad }) {
+  const pre = useRef(null);
+  useEffect(() => {
+    const el = pre.current;
+    const hit = el && el.querySelector(".bad");
+    if (hit) el.scrollTo({ top: Math.max(0, hit.offsetTop - el.clientHeight / 2), behavior: "smooth" });
+  }, [bad]);
   const text = JSON.stringify(obj, null, 2);
   const out = [];
   const re = /("(?:[^"\\]|\\.)*")(\s*:)?|(-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)|\b(true|false|null)\b/g;
@@ -63,7 +69,7 @@ function Json({ obj, bad }) {
   }
   out.push(text.slice(last));
   return (
-    <pre className="json" tabIndex={0} aria-label="The selected record, parsed">
+    <pre className="json" ref={pre} tabIndex={0} aria-label="The selected record, parsed">
       {out}
     </pre>
   );
@@ -106,7 +112,17 @@ export default function Records({ examples }) {
               <b>{e.label}</b>
               <span className="h">{short(recs[i].record_hash, 8)}</span>
               <span className="h">
-                {e.confluency.pct.toFixed(1)}% · {actionWord(e.action).toLowerCase()}
+                {(() => {
+                  const now = JSON.parse(recs[i].canonical).confluency_pct;
+                  return now !== e.confluency.pct ? (
+                    <b className="changed">
+                      {e.confluency.pct.toFixed(1)} → {now.toFixed(1)}%
+                    </b>
+                  ) : (
+                    `${e.confluency.pct.toFixed(1)}%`
+                  );
+                })()}{" "}
+                · {actionWord(e.action).toLowerCase()}
               </span>
               <span className="st" data-ok={ok}>
                 <Icon name={r && !r.ok ? "cross" : "check"} />

@@ -86,20 +86,16 @@ export default function App() {
               <h1 id="reading-h">Confluency QC that shows its evidence</h1>
               <div className="hero-side">
                 <p>
-                  cultureQC reads one phase-contrast image per flask visit and returns a confluency reading with its confidence, a per-image anomaly check and a recommended action, sealed into a hash-chained record. Validated on real C2C12 time-lapse and EVICAN images, with the failures stated.
+                  One phase-contrast image per flask visit in; out comes a confluency reading with its confidence, a per-image anomaly check and a recommended action, sealed into a hash-chained record. Checked on real C2C12 and EVICAN images, failures stated. For a live run on any image, open the{" "}
+                  <a href={DATA.meta.console_url} target="_blank" rel="noreferrer">
+                    console
+                  </a>
+                  .
                 </p>
-                <div className="hero-actions">
-                  <a className="btn btn-primary" href={DATA.meta.console_url} target="_blank" rel="noreferrer">
-                    Open the live console <Icon name="external" />
-                  </a>
-                  <a className="btn btn-quiet" href="#records">
-                    Re-check the records <Icon name="down" />
-                  </a>
-                </div>
               </div>
             </div>
           </div>
-          <div className="wrap" style={{ marginTop: "clamp(20px, 2.4vw, 28px)" }}>
+          <div className="wrap" style={{ marginTop: "clamp(12px, 1.4vw, 18px)" }}>
             <Stage examples={ex} verify={verify} liveParity={liveParity} />
             <p className="provenance-line">
               Everything above is the pipeline’s stored output for real frames, including the demoted classifier’s wrong call. The live console runs the same code on any image you give it.

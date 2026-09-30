@@ -150,9 +150,11 @@ def results_rows(readme):
 
 # ── images ──
 
-def save_webp(src, dst, max_w=None, quality=84):
+def save_webp(src, dst, max_w=None, quality=84, crop=None):
     from PIL import Image
     im = Image.open(src).convert("L")
+    if crop:
+        im = im.crop(crop)
     if max_w and im.width > max_w:
         im = im.resize((max_w, round(im.height * max_w / im.width)), Image.LANCZOS)
     im.save(dst, "WEBP", quality=quality, method=6)
@@ -299,7 +301,7 @@ def build_replays(img_dir):
             "scenario": name, "banner": r["banner"], "caption": r["caption"], "credit": r["credit"],
             "sequence": r["base_sequence_id"], "split": r["split"], "fault": r.get("fault"),
             "noise_band": r["noise_band"], "notes": r.get("notes", []), "summary": r["summary"],
-            "frame_hw": maps["frame_hw"], "visits": visits,
+            "frame_hw": maps["frame_hw"], "um_per_px": C2C12_UM_PER_PX, "visits": visits,
             "forecast": {"status": f.get("status"), "model": f.get("chosen_model"), "target": f.get("target_pct"), "cut": f.get("cut_pct"),
                          "made_at_visit": f.get("made_at_visit"), "made_at_hours": f.get("made_at_hours"),
                          "t_star": f.get("t_star_hours"), "interval": f.get("interval_hours"),
@@ -317,7 +319,11 @@ def main():
     if args.images:
         for sub in ("ex", "tl"):
             os.makedirs(os.path.join(IMG_OUT, sub), exist_ok=True)
-        save_webp(rel("demo", "figures", "contamination_scale.png"), os.path.join(IMG_OUT, "contamination_scale.webp"))
+        # Rows 56-446 are the four panels; the figure's own titles above them are
+        # too small at page scale, so the page sets them in HTML instead.
+        fig = rel("demo", "figures", "contamination_scale.png")
+        from PIL import Image
+        save_webp(fig, os.path.join(IMG_OUT, "contamination_scale.webp"), crop=(0, 56, Image.open(fig).width, 447))
         og_image(os.path.join(SITE, "public", "og.jpg"))
     readme = open(rel("README.md")).read()
     det = yaml.safe_load(open(rel("configs", "detectability.yaml")))

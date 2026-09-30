@@ -271,19 +271,19 @@ code,
 /* ── hero ── */
 
 .hero {
-  padding: clamp(20px, 2.6vw, 34px) 0 0;
+  padding: clamp(14px, 1.6vw, 24px) 0 0;
 }
 
 .hero-row {
   display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
   gap: 24px 56px;
   align-items: center;
 }
 
 .hero h1 {
   margin: 0;
-  font-size: clamp(31px, 3.2vw, 46px);
+  font-size: clamp(30px, 2.9vw, 42px);
   line-height: 1.02;
   letter-spacing: -0.035em;
   font-weight: 620;
@@ -292,10 +292,10 @@ code,
 }
 
 .hero-side p {
-  margin: 0 0 14px;
+  margin: 0;
   color: var(--ink-2);
-  font-size: 15px;
-  line-height: 1.55;
+  font-size: 14.5px;
+  line-height: 1.5;
   max-width: 56ch;
 }
 
@@ -527,22 +527,6 @@ code,
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
 }
 
-.frame-cap {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 10px 14px 12px;
-  border-top: 1px solid var(--stage-rule);
-  font-size: 12.5px;
-  color: var(--stage-ink-3);
-  line-height: 1.5;
-}
-
-.frame-cap .mono {
-  color: var(--stage-ink-2);
-  font-size: 12px;
-}
-
 /* the readout rail */
 
 .rail {
@@ -552,7 +536,7 @@ code,
 }
 
 .rail-head {
-  padding: 14px 18px 12px;
+  padding: 12px 18px 10px;
   border-bottom: 1px solid var(--stage-rule);
 }
 
@@ -579,7 +563,7 @@ code,
   border-bottom: 1px solid var(--stage-rule);
   color: inherit;
   font: inherit;
-  padding: 12px 18px 13px;
+  padding: 10px 18px 11px;
   cursor: default;
   transition: background 0.15s;
 }
@@ -587,6 +571,21 @@ code,
 .reading[data-link]:hover,
 .reading[data-link]:focus-visible {
   background: var(--stage-2);
+}
+
+.reading .sub {
+  margin: 8px -8px 0;
+  padding: 2px 8px 4px;
+  border-radius: 4px;
+}
+
+.reading .sub:hover,
+.reading .sub:focus-visible {
+  background: var(--stage-3);
+}
+
+.reading .sub .gauge {
+  margin-top: 6px;
 }
 
 .reading-top {
@@ -604,10 +603,97 @@ code,
 }
 
 .big {
-  font: 560 clamp(36px, 3.2vw, 46px)/1 var(--mono);
+  font: 560 clamp(36px, 3.1vw, 44px)/1 var(--mono);
   letter-spacing: -0.04em;
-  margin: 6px 0 2px;
+  margin: 4px 0 0;
   color: #fff;
+}
+
+.big-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.big-row p {
+  margin: 0 0 3px;
+  text-align: right;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.action-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.action-row .action {
+  margin-top: 0;
+  flex: none;
+}
+
+.gloss {
+  font-size: 12.5px;
+  line-height: 1.35;
+  color: var(--stage-ink-2);
+}
+
+.letter.on-stage {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 5px;
+  border: 1px solid #3d4652;
+  border-radius: 3px;
+  font: 650 12px/1 var(--mono);
+  color: var(--stage-ink);
+  flex: none;
+}
+
+.letter.on-frame {
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  z-index: 2;
+  background: rgba(10, 12, 15, 0.85);
+}
+
+.tl-chart {
+  position: relative;
+}
+
+.tl-chart > .letter {
+  position: absolute;
+  left: 12px;
+  top: 10px;
+}
+
+.panels {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 12.5px;
+  color: var(--ink-2);
+  font-weight: 550;
+}
+
+.changed {
+  color: var(--review);
+  font-weight: 650;
+}
+
+.change-head > div {
+  padding: 11px 20px !important;
+  font-size: 12.5px;
+  font-weight: 550;
+  color: var(--ink-3) !important;
+  background: #fafbfc;
+  border-bottom: 1px solid var(--rule-2);
 }
 
 .big small {
@@ -823,18 +909,12 @@ code,
   font-weight: 550;
   line-height: 1.3;
   color: inherit;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .strip small {
   display: block;
   font: 500 11.5px/1.4 var(--mono);
   color: var(--stage-ink-3);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .provenance-line {
@@ -1688,6 +1768,10 @@ td .num {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
+  .strip button:last-child:nth-child(4n + 3) {
+    grid-column: span 2;
+  }
+
   .chain {
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 8px;
@@ -1733,14 +1817,19 @@ td .num {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .strip button:last-child:nth-child(odd) {
+    grid-column: span 2;
+  }
+
+  .panels {
+    font-size: 11.5px;
+  }
+
   .stage-note {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .frame-cap {
-    flex-direction: column;
-    gap: 4px;
-  }
+
 
   .chain {
     grid-template-columns: repeat(2, minmax(0, 1fr));
