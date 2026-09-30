@@ -1,14 +1,17 @@
 # Demo script: Celltrio call, Tue Oct 6, 3 PM PDT
 
-About 9 minutes of demo, then questions. The audience named two things that
-matter most, and the order follows them: **confluency QC** first, then the
-**GMP-traceable audit record**. Everything else supports those two.
+12 to 13 minutes of demo by the section times below, then questions. The
+audience named two things that matter most, and the order follows them:
+**confluency QC** first, then the **GMP-traceable audit record**. Everything
+else supports those two.
 
 Every number below is shown on screen by the console and comes from a stored
 result: the example numbers from `demo/examples/examples.json`, the replay
 numbers from `demo/replays/*.json`, and the rest from the `results/` files
-cited in the README. Say "precomputed" whenever a precomputed example or
-replay is on screen; say "live" only after pressing Analyze.
+cited in the README. One exception, marked where it comes: the calibrated
+cutoff in section 2 is not on screen; its numbers come from
+`results/confluency_cutoff.md`. Say "precomputed" whenever a precomputed
+example or replay is on screen; say "live" only after pressing Analyze.
 
 ## Before the call
 
@@ -34,7 +37,7 @@ shown for review, a recommended action from fixed rules, and a hash-chained
 record. It is built for an instrument to call on every image it captures; a
 person steps in on exceptions and audits the trail.
 
-## 2. Confluency QC (3 min), Analyze tab
+## 2. Confluency QC (4 min), Analyze tab
 
 1. Click **C2C12 normal, 20-40% bin** (precomputed). Cellpose-SAM reads
    39.4%, confidence 0.512; the rules say hold. Point at the provenance card:
@@ -70,13 +73,35 @@ person steps in on exceptions and audits the trail.
    floor, so it goes to review. On real held-out EVICAN images the mean
    absolute error is 8.35 pp, reading low (V1). Showing the error case is
    deliberate.
+5. The fix, and why it is not live (45 s). **Not on screen**; the numbers
+   are from `results/confluency_cutoff.md`.
+   - The under-read is the cutoff: a pixel counts as cell only above logit 0,
+     and on real images that is too strict. A new cutoff was picked on the
+     65 EVICAN eval images that are not among the 33, by a rule fixed before
+     scoring: −3.5. On the 33 held-out images the error goes from 8.36 to
+     3.78 pp, and images off by more than 10 pp from 13 to 3. This HT29
+     image reads 52.9% at confidence 0.829, against the experts' 51.6%.
+   - 8.36 rather than V1's 8.35: the study reran the model, and the rerun
+     differs by 0.01 pp.
+   - It is held back on purpose. At −3.5 the confidence floor would send
+     none of the held-out C2C12 frames to review (69 on the same
+     quarter-resolution maps at the shipped cutoff; 70 at full resolution in
+     `results/review_rate.md`), and 471 of 1228 frames move anomaly bin. On
+     six dense LIVECell frames (in Cellpose-SAM's training set, so a check
+     only) it reads 3–9 pp high, where the shipped cutoff is within about
+     3 pp on five of the six. So the floor and the bins get re-derived
+     before it ships, and it goes out as a release, not a hot fix.
+   - Say "shipped 8.35, validated fix 3.78". The console runs the shipped
+     cutoff; never present 3.78 as what is running. The passage range stays
+     untested either way: EVICAN has no image at or above 66%.
 
 ## 3. The audit record (2 min)
 
 1. On the 51.4% example, open **Audit Record**. Walk through:
    - `image_hash`: SHA-256 of the image bytes;
-   - `model_versions` and `config_hashes`: exactly which models and configs
-     produced the number;
+   - `model_versions` and `config_hashes`: the models by name, and each
+     config by SHA-256. The model weights and the Cellpose-SAM cutoff are not
+     hashed yet; say so if asked;
    - `confluency_map_hash`: the SHA-256 of the map drawn in the 3D view (a
      1/4-resolution copy of the map the number was counted from). The 3D note
      says "matches the record": the map drawn is the one the record hashes,
@@ -89,9 +114,10 @@ person steps in on exceptions and audits the trail.
    - Scope, said before he asks: the record is tamper-evident with full
      provenance; it is not Part 11 compliant on its own. Signed-in users,
      electronic signatures with their meaning, access control and system
-     validation belong to the platform it attaches to (Bioflow's layer); the
-     record has `decided_by`, `reviewed_by` and `review_outcome` for that
-     layer to fill. The field-by-field mapping is `docs/audit_mapping.md`.
+     validation belong to the platform around it; the record has
+     `decided_by`, `reviewed_by` and `review_outcome` for that layer to
+     fill. Field by field and clause by clause (Part 11, the draft Annex 22):
+     `docs/audit_mapping.md`.
 2. Press **Analyze** on the example shown to run it **live** on the GPU
    (to upload a different image instead, switch the view to Overlay first:
    the 3D view hides the upload area). A new record is appended; the card
@@ -182,6 +208,12 @@ That is estimated, never replayed, and needs confirming on their data.
 - Does the instrument take z-stacks or any quantitative-phase image? That is
   what a true 3D cell view (thickness, volume) would need; today's 3D views
   show model confidence and time, not height.
+- Which imager and magnification do the confluency reads come from, and at
+  what pixel size? The tested setup is phase contrast at 1.3 µm/px.
+- What triggers a passage today: a confluency threshold, a schedule, or a
+  person? Is that trigger treated as GMP-critical?
+- How are analysis parameters (thresholds, model versions) versioned and
+  put under change control on the platform side?
 - Could a few real RoboCell sequences be shared for validation? They would
   replace C2C12 as the primary test set.
 
