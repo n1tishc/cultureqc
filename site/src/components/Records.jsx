@@ -117,15 +117,19 @@ export default function Records({ examples }) {
               <span className="h">
                 {(() => {
                   const now = JSON.parse(recs[i].canonical).confluency_pct;
+                  const act = actionWord(e.action).toLowerCase();
                   return now !== e.confluency.pct ? (
-                    <b className="changed">
-                      {e.confluency.pct.toFixed(1)} → {now.toFixed(1)}%
-                    </b>
+                    <>
+                      <b className="changed">
+                        {e.confluency.pct.toFixed(1)} → {now.toFixed(1)}%
+                      </b>
+                      <br />
+                      {act}
+                    </>
                   ) : (
-                    `${e.confluency.pct.toFixed(1)}%`
+                    `${e.confluency.pct.toFixed(1)}% · ${act}`
                   );
-                })()}{" "}
-                · {actionWord(e.action).toLowerCase()}
+                })()}
               </span>
               <span className="st" data-ok={ok}>
                 <Icon name={r && !r.ok ? "cross" : "check"} />

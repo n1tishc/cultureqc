@@ -75,7 +75,7 @@ function Chart({ r, sel, setSel }) {
       {r.fault ? (
         <g>
           <line x1={x(r.fault.onset_hours)} x2={x(r.fault.onset_hours)} y1={M.t} y2={H - M.b} stroke="var(--anom)" strokeOpacity="0.7" strokeDasharray="2 3" />
-          <text x={x(r.fault.onset_hours) - 5} y={H - M.b - 7} textAnchor="end" fill="var(--anom)" fontFamily="var(--mono)" fontSize="11">
+          <text x={x(r.fault.onset_hours) - 5} y={M.t + 10} textAnchor="end" fill="var(--anom)" fontFamily="var(--mono)" fontSize="11">
             fault onset {r.fault.onset_hours} h
           </text>
         </g>
@@ -243,7 +243,10 @@ export default function Timeline({ replays }) {
         </div>
 
         <div className="tl-chart">
-          <span className="letter on-stage">B</span>
+          <div className="chart-head">
+            <span className="letter on-stage">B</span>
+            <span>Confluency per visit, 0–{Math.round(r.visits.at(-1).hours)} h</span>
+          </div>
           <Chart r={r} sel={sel} setSel={(i) => (stop(), setSel(i))} />
           <div className="visits" role="group" aria-label="Visits; arrow keys step through them" onKeyDown={onKey}>
             {r.visits.map((x) => (
