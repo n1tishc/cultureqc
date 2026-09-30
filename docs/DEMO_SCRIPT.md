@@ -8,8 +8,9 @@ else supports those two.
 Every number below is shown on screen by the console and comes from a stored
 result: the example numbers from `demo/examples/examples.json`, the replay
 numbers from `demo/replays/*.json`, and the rest from the `results/` files
-cited in the README. One exception, marked where it comes: the calibrated
-cutoff in section 2 is not on screen; its numbers come from
+cited in the README. One exception, marked where it comes: in section 2, step 5,
+the HT29 card shows the calibrated cutoff's reading and the 8.36 to 3.78 pp
+result, but the rest of that step is not on screen; it comes from
 `results/confluency_cutoff.md`. Say "precomputed" whenever a precomputed
 example or replay is on screen; say "live" only after pressing Analyze.
 
@@ -73,8 +74,11 @@ person steps in on exceptions and audits the trail.
    floor, so it goes to review. On real held-out EVICAN images the mean
    absolute error is 8.35 pp, reading low (V1). Showing the error case is
    deliberate.
-5. The fix, and why it is not live (45 s). **Not on screen**; the numbers
-   are from `results/confluency_cutoff.md`.
+5. The fix, and why it is not live (45 s). Point at the note under the HT29
+   caption, "Calibrated cutoff: validated, not live"
+   (`demo/examples/cutoff_calibrated.json`, from
+   `results/confluency_cutoff.csv`). The floor, bin and LIVECell numbers
+   below are **not on screen**; they are from `results/confluency_cutoff.md`.
    - The under-read is the cutoff: a pixel counts as cell only above logit 0,
      and on real images that is too strict. A new cutoff was picked on the
      65 EVICAN eval images that are not among the 33, by a rule fixed before

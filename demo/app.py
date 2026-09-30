@@ -198,8 +198,27 @@ def render_provenance(ex):
     the Analyze button, on {html.escape(ex["device"].upper())} ({t["wall"]:.0f} s),
     {html.escape(ex["generated_at"][:10])}.{rederived} Press Analyze to run this image live.</div>
     <div class="precomputed-caption">{html.escape(ex["caption"])}</div>
-    <div class="classifier-note">{html.escape(ex["credit"])}</div>
+    <div class="classifier-note">{html.escape(ex["credit"])}</div>{render_cutoff_note(ex)}
   </div>"""
+
+
+def render_cutoff_note(ex, doc=None):
+    """The calibrated cutoff's reading of this image, marked validated and not
+    live: the console, the stored example and its record all use the shipped
+    cutoff. Empty for images the cutoff study did not score."""
+    doc = doc if doc is not None else precomputed.cutoff_calibrated()
+    c = (doc or {}).get("examples", {}).get(ex["id"])
+    if not c:
+        return ""
+    cut, ev = doc["cutoff"], doc["eval"]
+    return f"""
+    <div class="cutoff-note"><b>Calibrated cutoff: validated, not live.</b> In the cutoff study
+    (<code>{html.escape(doc["source"])}</code>) this image reads {c["calibrated"]["pct"]:.1f}% at confidence
+    {c["calibrated"]["confidence"]:.3f} with the Cellpose-SAM cutoff at {format(cut["calibrated"], "g").replace("-", "−")} (picked on
+    {doc["calibration_images"]} other EVICAN images), against {c["shipped"]["pct"]:.1f}% at the shipped
+    {cut["shipped"]:g}; experts {c["gt_pct"]:.1f}%. On the {ev["n"]} held-out images: mean absolute error
+    {ev["mae_shipped"]:.2f} to {ev["mae_calibrated"]:.2f} pp. Held for a release: it moves the review floor
+    and the anomaly bins, which are re-derived first. Everything above uses the shipped cutoff.</div>"""
 
 
 def show_example(ex):

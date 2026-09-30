@@ -170,3 +170,29 @@ def test_examples_are_not_cached_on_spaces():
     repo = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     r = subprocess.run([sys.executable, "-c", code], cwd=repo, env=env, capture_output=True, text=True, timeout=300)
     assert r.returncode == 0, r.stderr[-2000:]
+
+
+def test_cutoff_note_matches_the_cutoff_study():
+    """The console's calibrated-cutoff note (demo/examples/cutoff_calibrated.json)
+    is exactly what scripts/export_cutoff_examples.py derives from
+    results/confluency_cutoff.csv, is marked not live, and appears only on the
+    EVICAN examples."""
+    repo = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    csv = os.path.join(repo, "results", "confluency_cutoff.csv")
+    doc = precomputed.cutoff_calibrated()
+    if not os.path.exists(csv):
+        pytest.skip("no cutoff study results")
+    import sys
+    sys.path.insert(0, os.path.join(repo, "scripts"))
+    from export_cutoff_examples import build
+    assert doc == build(csv)
+    assert doc["status"] == "validated, not live"
+    from demo.app import render_cutoff_note
+    for ex in EXAMPLES:
+        note = render_cutoff_note(ex, doc)
+        if ex["kind"] == "evican":
+            c = doc["examples"][ex["id"]]
+            assert "validated, not live" in note and f'{c["calibrated"]["pct"]:.1f}%' in note
+            assert abs(c["shipped"]["pct"] - ex["confluency"]["pct"]) < 0.5   # same image as the stored example
+        else:
+            assert note == ""

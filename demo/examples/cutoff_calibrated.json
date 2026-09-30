@@ -1,0 +1,43 @@
+{
+ "generated_by": "scripts/export_cutoff_examples.py",
+ "source": "results/confluency_cutoff.md",
+ "status": "validated, not live",
+ "cutoff": {
+  "shipped": 0.0,
+  "calibrated": -3.5
+ },
+ "calibration_images": 65,
+ "eval": {
+  "n": 33,
+  "mae_shipped": 8.36,
+  "mae_calibrated": 3.78
+ },
+ "examples": {
+  "evican_pc3": {
+   "file": "66_PC3.jpg",
+   "split": "eval33",
+   "gt_pct": 5.5,
+   "shipped": {
+    "pct": 5.1,
+    "confidence": 0.969
+   },
+   "calibrated": {
+    "pct": 6.6,
+    "confidence": 0.966
+   }
+  },
+  "evican_ht29": {
+   "file": "48_HT29.jpg",
+   "split": "eval33",
+   "gt_pct": 51.6,
+   "shipped": {
+    "pct": 29.3,
+    "confidence": 0.265
+   },
+   "calibrated": {
+    "pct": 52.9,
+    "confidence": 0.829
+   }
+  }
+ }
+}
