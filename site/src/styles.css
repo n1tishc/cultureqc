@@ -1458,7 +1458,7 @@ td .num {
   color: var(--ink-3);
 }
 
-.link b {
+.link > b {
   font-size: 13px;
   font-weight: 560;
   line-height: 1.3;
