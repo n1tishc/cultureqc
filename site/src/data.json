@@ -6497,6 +6497,12 @@
    "source": "results/confluency_real_summary.md"
   },
   {
+   "result": "Confluency error, calibrated cutoff (validated, not shipped)",
+   "number": "MAE 8.36 → 3.78 pp on the same 33, cutoff −3.5 picked on the other 65 eval2019 images; off by more than 10 pp: 13 → 3",
+   "provenance": "real (EVICAN)",
+   "source": "results/confluency_cutoff.md"
+  },
+  {
    "result": "FOV sampling noise, 0.25-frame field",
    "number": "σ_fov = 2.828 + 0.2072 × confluency",
    "provenance": "real (C2C12)",

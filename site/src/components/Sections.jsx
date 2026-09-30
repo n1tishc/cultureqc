@@ -382,6 +382,7 @@ export function Changes({ data }) {
   const clsReal = row(data, "QC classifier on real normal frames");
   const real = row(data, "Anomaly flag vs contamination, bacteria at real size");
   const err = row(data, "Confluency error, Cellpose-SAM");
+  const cut = row(data, "Confluency error, calibrated cutoff");
   const rev = row(data, "Sent to human review, held-out frames: confidence");
   const fc = row(data, "Passage forecast");
   const spc = row(data, "SPC");
@@ -409,10 +410,10 @@ export function Changes({ data }) {
       kept: true,
       now: (
         <>
-          <b>Measured on real images, with a review floor.</b> Against expert masks: {err.number}. Frames below confidence {data.examples.items[0].confluency.floor.toFixed(2)} go to review: {rev.number}.
+          <b>Measured on real images, with a review floor.</b> Against expert masks: {err.number}. Frames below confidence {data.examples.items[0].confluency.floor.toFixed(2)} go to review: {rev.number}. Much of the under-read is the model’s cell cutoff. Recalibrated: {cut.number}. Validated, not live: it moves the review floor and anomaly bins, which are re-derived before it ships.
         </>
       ),
-      src: `${err.source} · ${rev.source}`,
+      src: `${err.source} · ${rev.source} · ${cut.source}`,
     },
     {
       was: "Not in v0.2.",
@@ -429,7 +430,7 @@ export function Changes({ data }) {
       kept: true,
       now: (
         <>
-          <b>Validated V1–V10, fails stated,</b> and a detectability matrix whose hash rides in every record, next to the hashes of the probability map, models and configs.
+          <b>Validated V1–V10, fails stated,</b> and a detectability matrix whose hash rides in every record, next to the hashes of the probability map and configs, and the model names.
         </>
       ),
       src: "docs/ARCHITECTURE_VALIDATION.md · configs/detectability.yaml",

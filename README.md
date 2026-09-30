@@ -98,6 +98,7 @@ checks that every number in the "Number" column appears in its source file.
 | Result | Number | Provenance | Source |
 |---|---|---|---|
 | Confluency error, Cellpose-SAM | MAE 8.35 pp (n = 33); threshold baseline 11.20 pp | real (EVICAN) | `results/confluency_real_summary.md` |
+| Confluency error, calibrated cutoff (validated, not shipped) | MAE 8.36 → 3.78 pp on the same 33, cutoff −3.5 picked on the other 65 eval2019 images; off by more than 10 pp: 13 → 3 | real (EVICAN) | `results/confluency_cutoff.md` |
 | FOV sampling noise, 0.25-frame field | σ_fov = 2.828 + 0.2072 × confluency | real (C2C12) | `results/growth_signal_summary.md` |
 | Growth step ÷ FOV noise (V2) | 0.35 / 0.65 at 1 FOV; 0.61 / 1.12 at 3 FOVs (6 h / 12 h) | real, simulated visits | `results/growth_signal_summary.md` |
 | Passage forecast, 6 h visits, 3 FOVs (V3) | median absolute error 9.0 h; 90% interval covered 4/5 (n = 5 sequences, 50% target) | real, simulated visits | `results/growth_backtest.md` |
@@ -342,6 +343,18 @@ synthetic tiles; known not to transfer to this imaging setup (see validation
 report)". The switch is `classifier.demoted` in `configs/qc.yaml`. It was
 trained entirely on synthetic contamination made with the same oversized
 bacteria.
+
+**A better confluency cutoff is validated but not shipped.** Much of V1's
+under-read is Cellpose-SAM's cutoff: a pixel counts as cell only above logit 0.
+A cutoff picked on the 65 eval2019 images outside the 33, by a rule fixed
+before scoring, lowers held-out MAE from 8.36 to 3.78 pp
+(`results/confluency_cutoff.md`; 8.36 is that study's rerun of V1's 8.35). It
+is held for a release because it moves what was set at the old cutoff: on
+held-out C2C12 the confidence floor would send no frame to review (69 today on
+the same quarter-resolution maps) and 471 of 1228 frames change anomaly bin.
+The floor and bins have to be re-derived first; the steps are listed in
+`docs/audit_mapping.md`. Everything else in this README, the site and the
+console uses the shipped cutoff.
 
 **The passage band is unvalidated.** C2C12 "50%" is 50% as Cellpose-SAM reads
 it, about 8 pp below true coverage (V1), and no held-out sequence reaches
