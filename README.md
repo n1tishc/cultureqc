@@ -2,7 +2,7 @@
 
 **One brightfield image in. Confluency, an anomaly check, a recommended action, and a record you can verify.**
 
-[Live demo](https://cultureqc.vercel.app) · [API](https://longgrainrice-cultureqc-api.hf.space/docs)
+[Live demo](https://cultureqc.vercel.app) · [v0.3 site](https://cultureqc-cvoy.vercel.app) · [API](https://longgrainrice-cultureqc-api.hf.space/docs)
 
 [![tests](https://github.com/n1tishc/cultureqc/actions/workflows/tests.yml/badge.svg)](https://github.com/n1tishc/cultureqc/actions/workflows/tests.yml)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)

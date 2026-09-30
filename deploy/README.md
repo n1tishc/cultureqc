@@ -262,7 +262,8 @@ the sync and git-ignored (the banks are not in git at all; they come from
 Two Vercel projects build this repo. `cultureqc` (production from `main`,
 `cultureqc.vercel.app`) is the v0.2 site and is left as it is. The v0.3 site
 is its own project whose production branch is `slice-1b-compute-cache`, so it
-gets a public URL while `main` stays untouched; its domain is set in
+gets a public URL (https://cultureqc-cvoy.vercel.app) while `main` stays
+untouched; its domain is set in
 `site/index.html` (`canonical`, `og:url`, `og:image`, which crawlers need
 absolute). Preview deployments sit behind Vercel's login; the production
 domain is public.
@@ -278,9 +279,11 @@ npm run build     # -> site/dist
 npm run preview   # serve that build locally before pushing
 ```
 
-`vercel.json` sets the build and `outputDirectory: site/dist`; no dashboard
-configuration and no environment variables are needed. The footer names the
-commit from `VERCEL_GIT_COMMIT_SHA`.
+A project rooted at the repository uses `vercel.json` (`outputDirectory:
+site/dist`); one rooted at `site/` uses `site/vercel.json` (`dist`); they set
+the same build and headers. No other dashboard configuration and no
+environment variables are needed. The footer names the commit from
+`VERCEL_GIT_COMMIT_SHA`.
 
 ### Regenerating the page's data
 

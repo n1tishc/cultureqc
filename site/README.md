@@ -1,7 +1,7 @@
 # cultureQC v0.3 site
 
 React 18 on Vite. `npm run build` (from the repo root) emits `site/dist`, which
-is what the v0.3 Vercel project serves. The v0.2 site stays on `main` and
+is what the v0.3 Vercel project serves at https://cultureqc-cvoy.vercel.app. The v0.2 site stays on `main` and
 `cultureqc.vercel.app`.
 
 ## Layout
