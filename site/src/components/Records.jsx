@@ -27,7 +27,10 @@ function Json({ obj, bad }) {
   useEffect(() => {
     const el = pre.current;
     const hit = el && el.querySelector(".bad");
-    if (hit) el.scrollTo({ top: Math.max(0, hit.offsetTop - el.clientHeight / 2), behavior: "smooth" });
+    if (hit) {
+      const top = hit.getBoundingClientRect().top - el.getBoundingClientRect().top + el.scrollTop;
+      el.scrollTo({ top: Math.max(0, top - el.clientHeight / 2), behavior: "smooth" });
+    }
   }, [bad]);
   const text = JSON.stringify(obj, null, 2);
   const out = [];
