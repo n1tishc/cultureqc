@@ -221,7 +221,8 @@ and the 3D figures' motion contract (`tests/test_viz3d.py`).
 
 | When | What | Who |
 |---|---|---|
-| Thu Oct 1 | Dry run: `scripts/space_dry_run.py` again; open both 3D views in the call browser | |
+| Before Thu | Create the v0.3 Vercel project (production branch `slice-1b-compute-cache`) and send the domain; `site/index.html` assumes `cultureqc-v3.vercel.app` | owner |
+| Thu Oct 1 | Dry run: `scripts/space_dry_run.py` again; open both 3D views in the call browser; open the v0.3 site at 1280×720 | |
 | Fri Oct 2 | Freeze | |
 | Mon Oct 5 | Rehearsal with `docs/DEMO_SCRIPT.md` | |
 | Tue Oct 6, 3 PM PDT | Call: open the Space 10 min early, signed in; Mac backup running | |
