@@ -26,7 +26,6 @@
   --cell: #2cc7da;
   --cell-ink: #04707f;
   --anom: #e357b9;
-  --anom-ink: #a12377;
 
   --passage: #1d7f45;
   --passage-l: #5fd394;
@@ -250,17 +249,6 @@ code,
 
 .btn-primary:hover {
   background: #262d36;
-}
-
-.btn-quiet {
-  background: transparent;
-  color: var(--ink);
-  border-color: var(--rule-2);
-}
-
-.btn-quiet:hover {
-  background: #fff;
-  border-color: var(--ink-3);
 }
 
 .bar .btn {
@@ -1022,18 +1010,6 @@ code,
   color: var(--ink-2);
 }
 
-.stat {
-  font: 560 clamp(28px, 2.6vw, 36px)/1.05 var(--mono);
-  letter-spacing: -0.035em;
-}
-
-.stat small {
-  font-size: 0.45em;
-  letter-spacing: 0;
-  color: var(--ink-3);
-  margin-left: 2px;
-}
-
 /* bars (review rate) */
 
 .bars {
@@ -1283,6 +1259,11 @@ td .num {
 
 .tl-read b[data-flag="true"] {
   color: var(--anom);
+}
+
+.tl-read b .ico,
+.tl-foot .held b .ico {
+  vertical-align: -0.1em;
 }
 
 .tl-read b[data-q="false"] {

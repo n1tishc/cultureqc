@@ -227,7 +227,9 @@ export default function Timeline({ replays }) {
             </div>
             <div>
               <span>Quality gate</span>
-              <b data-q={String(v.quality_pass)}>{v.quality_pass ? "Pass" : "Re-image"}</b>
+              <b data-q={String(v.quality_pass)}>
+                <Icon name={v.quality_pass ? "check" : "reimage"} /> {v.quality_pass ? "Pass" : "Re-image"}
+              </b>
             </div>
             <div>
               <span>Anomaly score / threshold</span>
@@ -237,7 +239,9 @@ export default function Timeline({ replays }) {
             </div>
             <div>
               <span>Anomaly flag</span>
-              <b data-flag={String(v.flag)}>{v.flag ? "Flagged" : "Not flagged"}</b>
+              <b data-flag={String(v.flag)}>
+                <Icon name={v.flag ? "flag" : "clear"} /> {v.flag ? "Flagged" : "Not flagged"}
+              </b>
             </div>
           </div>
         </div>
@@ -278,7 +282,10 @@ export default function Timeline({ replays }) {
               {held ? (
                 <>
                   {" "}
-                  <b>Passage held:</b> the anomaly check flagged visit {f.made_at_visit + 1}, where this forecast was made, so under rules_v0.3 a passage goes to human review.
+                  <b>
+                    <Icon name="human_review" /> Passage held:
+                  </b>{" "}
+                  the anomaly check flagged visit {f.made_at_visit + 1}, where this forecast was made, so under rules_v0.3 a passage goes to human review.
                 </>
               ) : null}
             </p>
@@ -297,7 +304,7 @@ export default function Timeline({ replays }) {
         <div className="key" aria-label="Key">
           <span>
             <i style={{ background: "var(--cell)", borderRadius: "50%" }} />
-            mean of 3 fields
+            mean of {r.visits[0].fov.length} fields
           </span>
           <span>
             <i style={{ background: "rgba(44,199,218,0.35)" }} />±1 SE noise band

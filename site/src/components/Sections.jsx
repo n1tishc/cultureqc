@@ -88,6 +88,8 @@ function ReviewFigure({ data }) {
 
 function NoiseFigure({ data }) {
   const r = row(data, "FOV sampling noise");
+  const field = r.result.split(", ").slice(1).join(", ");
+  const n = data.replays[0].visits[0].fov.length;
   const v2 = data.validation.find((v) => v.id === "V2");
   const [a, b] = nums(r.number.split("=")[1]);
   const W = 300;
@@ -103,7 +105,7 @@ function NoiseFigure({ data }) {
       title="How much one field of view wobbles"
       legend={
         <>
-          σ between 0.25-frame fields of the same C2C12 frame: {r.number}. A visit averages 3 fields. V2: {v2.result} ({v2.verdict}). Source: <Src>{r.source}</Src>.
+          σ between fields of the same C2C12 frame ({field}): {r.number}. A visit averages {n} fields. V2: {v2.result} ({v2.verdict}). Source: <Src>{r.source}</Src>.
         </>
       }
     >
@@ -122,12 +124,12 @@ function NoiseFigure({ data }) {
           </text>
         ))}
         <line x1={X(0)} y1={Y(a)} x2={X(80)} y2={Y(a + b * 80)} stroke="var(--cell-ink)" strokeWidth="2" />
-        <line x1={X(0)} y1={Y(a / Math.sqrt(3))} x2={X(80)} y2={Y((a + b * 80) / Math.sqrt(3))} stroke="var(--cell-ink)" strokeWidth="1.5" strokeDasharray="4 3" />
+        <line x1={X(0)} y1={Y(a / Math.sqrt(n))} x2={X(80)} y2={Y((a + b * 80) / Math.sqrt(n))} stroke="var(--cell-ink)" strokeWidth="1.5" strokeDasharray="4 3" />
         <text x={X(80)} y={Y(a + b * 80) - 6} textAnchor="end" fontSize="10.5" fontFamily="var(--mono)" fill="var(--ink-2)">
           1 field
         </text>
-        <text x={X(80)} y={Y((a + b * 80) / Math.sqrt(3)) + 14} textAnchor="end" fontSize="10.5" fontFamily="var(--mono)" fill="var(--ink-2)">
-          mean of 3 (÷√3)
+        <text x={X(80)} y={Y((a + b * 80) / Math.sqrt(n)) + 26} textAnchor="end" fontSize="10.5" fontFamily="var(--mono)" fill="var(--ink-2)">
+          mean of {n} (÷√{n})
         </text>
       </svg>
     </Fig>
@@ -218,7 +220,7 @@ export function Limits({ data }) {
           title="The same bacteria, oversized and at real size"
           legend={
             <>
-              The anomaly check’s 256 px centre tile of one late held-out frame. Left to right: no fault; the stress test (bacteria {data.oversize_factor}× too large, as pasted in v0.2); the same bacteria at real size, with and without the simulator’s haze. Source: <Src>results/contamination_scale.md</Src>.
+              The anomaly check’s {data.examples.items[0].anomaly.tile.size} px centre tile of one late held-out frame. Left to right: no fault; the stress test (bacteria {data.oversize_factor}× too large, as pasted in v0.2); the same bacteria at real size, with and without the simulator’s haze. Source: <Src>results/contamination_scale.md</Src>.
             </>
           }
         >
@@ -350,7 +352,7 @@ export function Integration({ data }) {
             <thead>
               <tr>
                 <th scope="col">Where it runs</th>
-                <th scope="col">Per 1392 × 1040 frame</th>
+                <th scope="col">Per frame</th>
               </tr>
             </thead>
             <tbody>

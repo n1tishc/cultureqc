@@ -264,7 +264,7 @@ export default function Stage({ examples, verify, liveParity }) {
             <div className="reading-top">
               <span>Record</span>
               <a className="src" href="#records">
-                verify the chain ↓
+                verify the chain <Icon name="down" />
               </a>
             </div>
             <VerifyLine v={v} rec={ex.record} total={items.length} />
