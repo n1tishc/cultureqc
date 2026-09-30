@@ -169,7 +169,7 @@ export default function Records({ examples }) {
       </div>
 
       <div className="scope">
-        <b>Where this sits for GMP.</b> The chain is tamper-evident and carries its provenance: image, map, models, configs and rules, each by hash. It is designed to attach to an existing Part 11 audit trail and is not Part 11 compliant on its own. Electronic signatures, access control and the review
+        <b>Where this sits for GMP.</b> The chain is tamper-evident and carries its provenance: image, map, configs and anomaly bank by hash; models and rules by name and version. It is designed to attach to an existing Part 11 audit trail and is not Part 11 compliant on its own. Electronic signatures, access control and the review
         workflow belong to the platform; <code>reviewed_by</code> and <code>review_outcome</code> are there for it to fill. Field-by-field mapping: <code>docs/audit_mapping.md</code>.
       </div>
     </>
