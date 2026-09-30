@@ -34,7 +34,7 @@
       ]
     },
     {
-      "source": "/(og|favicon).png",
+      "source": "/(og.jpg|favicon.png)",
       "headers": [
         {
           "key": "Cache-Control",
