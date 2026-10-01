@@ -52,7 +52,7 @@
  },
  "noise_band": "±1 standard error of the 3-FOV mean: sigma_fov(confluency) / sqrt(3), configs/noise.yaml C2C12 fit (the noise V2 compares one visit's growth to)",
  "notes": [
-  "6 of 6 visits before onset fail the quality gate with no fault present: false re-image requests, left out of the trend (results/quality_gate_c2c12.md).",
+  "6 of 6 visits before onset here fail the quality gate with no fault present: false re-image requests, left out of the trend. Across all held-out normal frames the gate fails 12.1% (149 of 1228, 14 sequences; results/quality_gate_c2c12.md). Its thresholds were set on 10 tuning sequences and need per-instrument calibration.",
   "No passage forecast: the visits that pass the quality gate never reach 40% (target − 10), where a forecast is first made."
  ],
  "provenance": "replay_simulated",

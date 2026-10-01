@@ -180,6 +180,18 @@ def captions(kind: str, onset: float | None, severity: float | None, matrix: dic
     raise ValueError(kind)
 
 
+def gate_rates(path: str = os.path.join(REPO, "results", "quality_gate_c2c12.md")) -> dict:
+    """The quality gate's fail rate on all held-out normal frames, and how many
+    tuning sequences its thresholds came from, from the gate's own report."""
+    with open(path) as f:
+        text = f.read()
+    import re
+    held = re.search(r"^\| held-out normal \| (\d+) \| (\d+) \| (\d+) \(([\d.]+)%\)", text, re.M)
+    tuning = re.search(r"frames of the (\d+) \*tuning\* base sequences", text)
+    return {"sequences": int(held.group(1)), "frames": int(held.group(2)), "fails": int(held.group(3)),
+            "pct": held.group(4), "tuning_sequences": int(tuning.group(1))}
+
+
 def notes_for(kind: str, onset: float | None, summary: dict, fc: dict) -> list[str]:
     """What this particular replay shows that a viewer could misread, from its
     own counts. Explanations, never suppression rules."""
@@ -192,9 +204,12 @@ def notes_for(kind: str, onset: float | None, summary: dict, fc: dict) -> list[s
                    "flag with no fault present: false alarms. Thresholds allow about 5% on tuning normals, and "
                    "calibration does not transfer across experiments (results/anomaly_summary.md).")
     if pre_reimage:
-        out.append(f"{pre_reimage} of {n_pre} visits {'before onset ' if onset is not None else ''}fail the quality "
-                   "gate with no fault present: false re-image requests, left out of the trend "
-                   "(results/quality_gate_c2c12.md).")
+        g = gate_rates()
+        out.append(f"{pre_reimage} of {n_pre} visits {'before onset ' if onset is not None else ''}here fail the "
+                   "quality gate with no fault present: false re-image requests, left out of the trend. Across all "
+                   f"held-out normal frames the gate fails {g['pct']}% ({g['fails']} of {g['frames']}, "
+                   f"{g['sequences']} sequences; results/quality_gate_c2c12.md). Its thresholds were set on "
+                   f"{g['tuning_sequences']} tuning sequences and need per-instrument calibration.")
     if fc["status"] == "cut_not_reached":
         out.append(f"No passage forecast: the visits that pass the quality gate never reach {fc['cut_pct']:.0f}% "
                    "(target − 10), where a forecast is first made.")
