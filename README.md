@@ -21,7 +21,7 @@ record["confluency_pct"]            # 13.45
 record["anomaly_flag"]              # True / False: shown for review; a flag holds a passage
 record["anomaly_used_in_decision"]  # True whenever the check ran (rules_v0.3)
 record["qc_used_in_decision"]       # False while the classifier is demoted
-record["recommended_action"]        # "passage" / "feed" / "hold" / "human_review"
+record["recommended_action"]        # "passage" / "feed" / "continue" / "human_review"
 record["record_hash"]               # sha256 over the canonical JSON, linked to the previous record
 ```
 
@@ -74,7 +74,7 @@ for C2C12 is Cellpose-SAM's own full-frame reading, which V1 found reads about
   scores and class probabilities are no longer trended over time.
 - Since 2026-09-28 (`rules_v0.3`), a flag holds a passage: an image at or
   above the target that the anomaly check flags goes to human review instead
-  of passage. Hold and feed are unchanged. At the replays' 50% target this
+  of passage. Continue and feed are unchanged. At the replays' 50% target this
   held 1 of 14 passage-eligible held-out normal frames (review 5.8% instead of
   5.7%) and all 76 passage-eligible simulated contamination frames
   (`results/review_rate.md`). Those frames have bacteria 16.5× too large; at
@@ -109,7 +109,7 @@ checks that every number in the "Number" column appears in its source file.
 | Quality gate fail rate | normal 12.1%; contamination 91.8%; dimming 51.1% | real + simulated faults | `results/quality_gate_c2c12.md` |
 | Sent to human review, held-out frames: boundary ambiguity above 0.70 (record `confidence` below 0.30) | 5.7% of 1228; 43.8% of the 160 at 40-60% confluency (14 sequences) | real (C2C12) | `results/review_rate.md` |
 | Boundary ambiguity vs the reading's error (pre-registered; the score was named "confidence") | does not predict error: Spearman ρ −0.36 (95% CI −0.69 to +0.02), AURC 7.73 vs 8.35 pp in random order (p = 0.303), n = 33; tracks density: ρ −0.61 with expert confluency, −0.95 with the reading on 1228 held-out C2C12 frames | real (EVICAN, C2C12) | `results/confidence_vs_error.md` |
-| Sent to human review: anomaly hold (`rules_v0.3`), 50% target | held-out normal frames: 1 of 14 passage-eligible, total 71 (5.8%); simulated contamination with bacteria 16.5× too large (4 sequences, both splits): 76 of 76 passage-eligible; at real size no frame reaches the target | real (C2C12) + simulated faults | `results/review_rate.md` |
+| Sent to human review: passage hold on an anomaly flag (since `rules_v0.3`), 50% target | held-out normal frames: 1 of 14 passage-eligible, total 71 (5.8%); simulated contamination with bacteria 16.5× too large (4 sequences, both splits): 76 of 76 passage-eligible; at real size no frame reaches the target | real (C2C12) + simulated faults | `results/review_rate.md` |
 | SPC (V6; not in the product) | 3.75 false alarms / 100 visits; contamination 0/2; stall 0/2 | simulated faults | `results/spc_summary.md` |
 | QC classifier accuracy, synthetic test tiles | 0.9801 (n = 653) | synthetic | `results/calibration_summary.md` |
 | QC classifier calibration (V8) | ECE 0.0139 (T = 1.5536) | synthetic | `results/calibration_summary.md` |
@@ -135,8 +135,8 @@ drove, and the proof cannot drift apart.
 | Output | Detail |
 |---|---|
 | **Confluency** | Cellpose-SAM (`cpsam_v2`) probability map. 8.35 pp mean absolute error on real held-out EVICAN images, reading low (V1). A threshold baseline is computed alongside for comparison. Shown with its **boundary ambiguity**, the share of pixels near the cutoff (min(1, 4 × share within ±1 logit); the record stores 1 − it as `confidence`). Above 0.70 the rules send the image to review. It is a density-sensitive review trigger, not an error estimate: it does not predict the reading's error ([below](#known-limits)). |
-| **Anomaly check** | DINOv2-small patch distances on the 256 px centre tile against banks of normal C2C12 patches, one per confluency bin; flag = score above the bin's 5%-FPR threshold, with a patch heatmap (`culture/anomaly.py`, `configs/anomaly.yaml`). Shown for review; a flag turns `passage` into `human_review` (hold and feed unchanged). Uncalibrated outside the tested imaging setup; see [Site calibration](#site-calibration). |
-| **Action** | Deterministic rules (`rules_v0.3`) over confluency, timing and the anomaly flag (plus the QC flag only when the classifier is not demoted): `passage`, `feed`, `hold`, `human_review`. No model decides this. |
+| **Anomaly check** | DINOv2-small patch distances on the 256 px centre tile against banks of normal C2C12 patches, one per confluency bin; flag = score above the bin's 5%-FPR threshold, with a patch heatmap (`culture/anomaly.py`, `configs/anomaly.yaml`). Shown for review; a flag turns `passage` into `human_review` (continue and feed unchanged). Uncalibrated outside the tested imaging setup; see [Site calibration](#site-calibration). |
+| **Action** | Deterministic rules (`rules_v0.4`) over confluency, timing and the anomaly flag (plus the QC flag only when the classifier is not demoted): `passage`, `feed`, `continue`, `human_review`. No model decides this. `continue` (keep culturing, no action now) was called `hold` up to `rules_v0.3`; v0.4 changed the label only, and every decision is the same ([CHANGELOG](CHANGELOG.md)). |
 | **QC classifier (demoted)** | EfficientNet-B0 over the centred 256 px tile: `normal`, `contamination_suspected`, `detachment`, `image_quality`. Trained on synthetic tiles only; accuracy 0.9801 on synthetic test tiles, but 5.0% of real held-out C2C12 normal frames are called normal. Temperature-scaled (`configs/calibration.yaml`). Recorded and shown collapsed; not used for the action, and no Grad-CAM evidence is drawn while demoted (`configs/qc.yaml`). |
 | **Record** | Appended to a hash-chained JSONL log (`culture/records.py`, 40-field schema in `culture/schema.json`), with the model versions and the SHA-256 of every config it used. The console's records also carry `confluency_map_hash`, the SHA-256 of the Cellpose-SAM map the confluency was counted from (1/4 resolution, int16), so the 3D view below can be checked against the record. Every record carries the SHA-256 of the one before it. Editing a record breaks its own hash or, if that hash is recomputed, the next link. Rewriting every later record, or deleting the newest ones, is caught only against an anchored checkpoint: the record count and head hash, stored outside the log ([audit mapping](docs/audit_mapping.md#the-chain)). |
 
@@ -333,13 +333,13 @@ bacteria at their real size, up to 400 per 256 px tile area (heavier
 contamination not tested), the anomaly flag is at chance (held-out AUROC 0.48;
 flagged on 1 of 97 frames, against 4 of 97 for the same frames without them),
 the quality gate fails no more often, and confluency reads a median 4.3 pp
-lower (`results/contamination_scale.md`). So the anomaly hold (`rules_v0.3`)
+lower (`results/contamination_scale.md`). So the passage hold (since `rules_v0.3`)
 gives no protection against it: a realistically contaminated flask that
 reached its target would be recommended for passage. Contamination has to be
-confirmed by culture, Gram stain or PCR. The hold still stops a passage when
-the flag fires for any reason; because the banks hold only C2C12 frames, on
-other cell types it can also hold a healthy flask (it fails safe: a person
-looks).
+confirmed by culture, Gram stain or PCR. The passage hold still stops a
+passage when the flag fires for any reason; because the banks hold only C2C12
+frames, on other cell types it can also stop a healthy flask's passage (it
+fails safe: a person looks).
 
 The oversized simulation behaves differently: Cellpose-SAM counts the 16.5×
 bacteria as cells, which shifts measured confluency by a median +59.4 pp

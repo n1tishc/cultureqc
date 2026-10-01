@@ -8,13 +8,22 @@ predict the output, and audit the decision without understanding the model.
 Order of precedence:
   1. QC flag != normal with confidence >= threshold -> human_review
      (skipped when qc_flag is None: the classifier is demoted, configs/qc.yaml)
-  2. Confluency confidence < 0.3 -> human_review (uncertain measurement)
+  2. Confluency confidence < 0.3, i.e. boundary ambiguity > 0.70 ->
+     human_review (many pixels near the cutoff; a density-sensitive review
+     trigger, not an error estimate: results/confidence_vs_error.md)
   3. Confluency >= target and hours since passage >= min_hours -> passage,
      unless the per-image anomaly check flagged the image: then human_review
      (a flagged flask is never passaged automatically; the flag does not
-     change hold or feed, where nothing irreversible happens)
+     change continue or feed, where nothing irreversible happens)
   4. Hours since feed >= feed_interval -> feed
-  5. Else -> hold
+  5. Else -> continue (keep culturing; no action now)
+
+Versions (decided_by in every record):
+  rules_v0.4  label-only change: `hold` renamed `continue` (it read as "put
+              the flask on hold"), and rule 2's reason names boundary
+              ambiguity. Decisions identical to v0.3.
+  rules_v0.3  an anomaly flag turns passage into human_review (owner
+              decision, 2026-09-28).
 
 Usage:
     from cultureqc.rules import decide, load_line_config, DEFAULT_CONFIG
@@ -37,7 +46,7 @@ from dataclasses import dataclass, field
 
 # Written into every record's decided_by. v0.3 (2026-09-28): the anomaly flag
 # holds a passage for human review (rule 3).
-RULES_VERSION = "rules_v0.3"
+RULES_VERSION = "rules_v0.4"
 
 # ---------------------------------------------------------------------------
 # Per-line configuration
@@ -126,7 +135,7 @@ def decide(
 
     Returns:
         (action, reason) where action is one of:
-        "human_review", "passage", "feed", "hold"
+        "human_review", "passage", "feed", "continue"
     """
     cfg = line_config or DEFAULT_CONFIG
 
@@ -139,13 +148,14 @@ def decide(
             f"Automated decisions paused until human review."
         )
 
-    # 2. Low confluency confidence -> uncertain measurement
+    # 2. Many pixels near the cutoff (boundary ambiguity above the trigger)
     if confluency_confidence < cfg.confluency_confidence_floor:
         return (
             "human_review",
-            f"Confluency confidence {confluency_confidence:.2f} is below "
-            f"floor {cfg.confluency_confidence_floor:.2f}. "
-            f"Image may be ambiguous; recommend manual inspection."
+            f"Boundary ambiguity {boundary_ambiguity(confluency_confidence):.2f} is above "
+            f"{boundary_ambiguity(cfg.confluency_confidence_floor):.2f} (record confidence "
+            f"{confluency_confidence:.2f} below floor {cfg.confluency_confidence_floor:.2f}): "
+            f"many pixels sit near the cell/background cutoff; recommend manual inspection."
         )
 
     # 3. Passage check
@@ -178,9 +188,9 @@ def decide(
             f"Confluency {confluency_pct:.1f}% (target {cfg.target_confluency:.0f}%)."
         )
 
-    # 5. Default: hold
+    # 5. Default: continue culturing
     return (
-        "hold",
+        "continue",
         f"Confluency {confluency_pct:.1f}% below target {cfg.target_confluency:.0f}%. "
         f"No action needed."
     )

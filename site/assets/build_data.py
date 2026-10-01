@@ -44,7 +44,7 @@ TILE_PX, CROP_PX, PATCH_PX = 256, 224, 14   # culture/anomaly.py: qctile, DINOv2
 BAND_LOGIT = 1.0             # culture/seg.py confidence_band (logits) around the 0 cutoff
 CONF_FLOOR = 0.30            # culture/rules.py review floor; README review-rate row
 sys.path.insert(0, REPO)
-from culture.rules import AMBIGUITY_TOOLTIP, boundary_ambiguity  # noqa: E402
+from culture.rules import AMBIGUITY_TOOLTIP, RULES_VERSION, boundary_ambiguity  # noqa: E402
 
 EXAMPLE_ORDER = ["c2c12_normal_20_40", "c2c12_normal_0_20", "c2c12_normal_40_100",
                  "c2c12_contamination_real_size", "c2c12_contamination_1", "evican_pc3", "evican_ht29"]
@@ -335,7 +335,7 @@ def main():
     readme = open(rel("README.md")).read()
     det = yaml.safe_load(open(rel("configs", "detectability.yaml")))
     data = {
-        "meta": {"rules": "rules_v0.3", "console_url": CONSOLE_URL, "repo_url": REPO_URL,
+        "meta": {"rules": RULES_VERSION, "console_url": CONSOLE_URL, "repo_url": REPO_URL,
                  "branch": "slice-1b-compute-cache", "generated_by": "site/assets/build_data.py"},
         "examples": build_examples(os.path.join(IMG_OUT, "ex") if args.images else None),
         "replays": build_replays(os.path.join(IMG_OUT, "tl") if args.images else None),

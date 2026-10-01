@@ -64,7 +64,7 @@ EVIDENCE_LABELS = {
 ACTION_META = {
     "passage": ("Passage", "green"),
     "feed": ("Feed", "amber"),
-    "hold": ("Hold", "amber"),
+    "continue": ("Continue", "amber"),
     "human_review": ("Human Review", "red"),
 }
 

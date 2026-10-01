@@ -16,7 +16,7 @@ from culture.seg import cpsam_confluency
 from culture.qc import qc_classify, classifier_demoted, CLASS_NAMES
 from culture.calibration import DEFAULT_CALIBRATION_PATH
 from culture.rules import decide, LineConfig, DEFAULT_CONFIG, RULES_VERSION
-from culture.records import RecordWriter, hash_file
+from culture.records import SCHEMA_VERSION, RecordWriter, hash_file
 from culture.rationale import generate_rationale
 
 
@@ -133,7 +133,7 @@ def analyze(
     # ── Build record ──
     now = datetime.now(timezone.utc).isoformat()
     record = {
-        "schema_version": "0.2",
+        "schema_version": SCHEMA_VERSION,
         "flask_id": flask_id,
         "cell_line": cell_line,
         "protocol_stage": protocol_stage,

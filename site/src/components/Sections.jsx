@@ -251,7 +251,7 @@ export function Limits({ data }) {
             </dd>
           </dl>
           <p className="legend">
-            At real size the per-visit flag is at chance, so the rules_v0.3 hold gives no protection against contamination at this magnification. Confirm contamination by culture, Gram stain or PCR.
+            At real size the per-visit flag is at chance, so the passage hold gives no protection against contamination at this magnification. Confirm contamination by culture, Gram stain or PCR.
           </p>
         </Fig>
       </div>

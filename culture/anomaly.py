@@ -157,7 +157,7 @@ LIVE_LIMITS = [
     "4.3 pp lower (results/contamination_scale.md). Heavier contamination is not tested. Confirm "
     "contamination by culture, Gram stain or PCR.",
     "Simulated lamp dimming is not caught by this flag (AUROC 0.47 at intensity ≤ 0.7).",
-    "A flag holds a passage for human review (a flagged flask is not passaged automatically); it does not change hold or feed. On cell types other than C2C12 the flag is uncalibrated, so it can hold a passage on a healthy flask.",
+    "A flag holds a passage for human review (a flagged flask is not passaged automatically); it does not change continue or feed. On cell types other than C2C12 the flag is uncalibrated, so it can hold a passage on a healthy flask.",
 ]
 
 

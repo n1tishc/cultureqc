@@ -41,7 +41,7 @@ person steps in on exceptions and audits the trail.
 ## 2. Confluency QC (4 min), Analyze tab
 
 1. Click **C2C12 normal, 20-40% bin** (precomputed). Cellpose-SAM reads
-   39.4%, boundary ambiguity 0.488; the rules say hold. Point at the provenance card:
+   39.4%, boundary ambiguity 0.488; the rules say continue (keep culturing). Point at the provenance card:
    which script, which machine, when.
 2. Switch the view to **3D**. It turns once around on its own (about 26 s)
    and stops where it started; click or drag it to stop sooner and take
@@ -76,7 +76,7 @@ person steps in on exceptions and audits the trail.
      review is concentrated around the replays' 50% passage target. Say it
      varies by sequence: at 40% or more, 4 of the 8 sequences sent none.
      C2C12 never reaches 60%, so the review rate at the Analyze tab's 80%
-     target is unknown; say so rather than guess. The anomaly hold (section 4)
+     target is unknown; say so rather than guess. The passage hold (section 4)
      adds little on healthy flasks: at the 50% target it held 1 of 14
      passage-eligible held-out frames (review 5.8% instead of 5.7%).
 4. Click **EVICAN HT29 (real, error case)**. Expert masks say 51.6%;
@@ -128,7 +128,7 @@ person steps in on exceptions and audits the trail.
      checkpoint (record count + head hash) kept in the platform's own audit
      trail or WORM storage, which is why the record is built to attach to one.
    - `anomaly_used_in_decision: true`, `qc_used_in_decision: false`,
-     `decided_by: rules_v0.3`: the record says what fed the action, what
+     `decided_by: rules_v0.4`: the record says what fed the action, what
      didn't, and which version of the rules decided.
    - Scope, said before he asks: the record is tamper-evident with full
      provenance; it is not Part 11 compliant on its own. Signed-in users,
@@ -174,22 +174,25 @@ frame, rebuilt. Confluency 12.2%, against 16.0% for the same frame without
 bacteria, and the anomaly check happens to flag it: this is the only one of the
 97 frames flagged at real size, while the same frames without bacteria are
 flagged 4 of 97, so the flag is at chance (the card says so). The action is
-**hold**: nothing irreversible was on the table. If he picks up on the flag:
+**continue**: nothing irreversible was on the table. If he picks up on the flag:
 "the one time it flagged, the clean frames flag as often."
 
 Then the rule, if there is time or he asks: click **C2C12 contamination stress
 test** (bacteria 16.5× too large). Cellpose-SAM counts the oversized bacteria
 as cells and reads 86.6%, past the 80% target; the anomaly check flags it, and
 a flagged image is never passaged automatically: **human review**
-(`rules_v0.3`). This is a safety precedence, not a contamination detector:
-whenever the flag fires, for any reason, the one irreversible action waits for
-a person; hold and feed are unchanged.
+(since `rules_v0.3`). This is a safety precedence, not a contamination
+detector: whenever the flag fires, for any reason, the one irreversible action
+waits for a person; continue and feed are unchanged.
+- If he asks about `continue`: it was called `hold` until `rules_v0.4`, which
+  read as "put the flask on hold". The label changed and no decision did;
+  that is in `CHANGELOG.md`, and the records' hashes changed with it.
 - If asked what it costs: at the 50% target, 1 of 14 passage-eligible healthy
   held-out frames was held (`results/review_rate.md`). All 76 passage-eligible
   stress-test frames were held too, which says nothing about real
   contamination.
 - If asked about other cell lines: the anomaly banks hold only C2C12, so
-  elsewhere the flag is uncalibrated and can hold a healthy flask; it fails
+  elsewhere the flag is uncalibrated and can stop a healthy flask's passage; it fails
   safe, and a site calibrates it (`scripts/site_calibrate.py`).
 
 ## 5. The flask over time (2 min), Flask Timeline tab

@@ -159,7 +159,7 @@ slow for a live demo, so the demo needs a GPU (section 8).
 - **Detectability:** the matrix from B4.
 - **Review rate** (`results/review_rate.md`): the 0.30 confidence floor sends
   5.7% of held-out frames to human review, but 43.8% of those at 40–60%
-  confluency. The anomaly hold adds 1 of 14 passage-eligible held-out frames at
+  confluency. The passage hold adds 1 of 14 passage-eligible held-out frames at
   the 50% target (total 5.8%) and holds all 76 passage-eligible simulated
   contamination frames.
 - **GMP scope** (in the demo script): tamper-evident with provenance, not

@@ -40,6 +40,8 @@ PY_UI_FILES = ["demo/app.py", "demo/flask_timeline.py", "demo/replay_timeline.py
     "A tamper-proof record.",
     "Confluency confidence is the probability that the reading is right.",
     "A calibrated confluency confidence.",
+    "The rules say hold.",
+    'recommended_action: "hold"',
 ])
 def test_checker_catches(text):
     assert claims.violations(text)
@@ -59,6 +61,9 @@ def test_checker_catches(text):
     "Editing a record breaks its own hash or, if that hash is recomputed, the next link.",
     "A review trigger, not a probability that the reading is right.",
     "QC classifier, temperature-scaled: qc_calibrated is true.",
+    "`continue` was called `hold` up to rules_v0.3 (label only).",
+    "The anomaly flag held the passage for human review.",
+    "The anomaly banks hold only C2C12 frames.",
 ])
 def test_checker_allows(text):
     assert not claims.violations(text)

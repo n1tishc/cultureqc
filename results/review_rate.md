@@ -1,8 +1,8 @@
-# Human-review rate: boundary-ambiguity trigger and anomaly hold
+# Human-review rate: boundary-ambiguity trigger and passage hold
 
-Generated 2026-10-01T01:16:17Z by `scripts/review_rate.py`. No model runs: confidences are the compute cache's (Cellpose-SAM cpsam_v2, Colab GPU, nb/03), full resolution, same formula as the live path. C2C12 images: Ker et al., *Sci Data* 5:180237 (2018), CC BY 4.0; fault frames are simulated from them.
+Generated 2026-10-01T01:38:07Z by `scripts/review_rate.py`. No model runs: confidences are the compute cache's (Cellpose-SAM cpsam_v2, Colab GPU, nb/03), full resolution, same formula as the live path. C2C12 images: Ker et al., *Sci Data* 5:180237 (2018), CC BY 4.0; fault frames are simulated from them.
 
-Rules: `rules_v0.3`. With the classifier demoted, two rules return `human_review`: boundary ambiguity above 0.70 (the record's `confidence` below the 0.30 floor, `culture/rules.py` default), a density-sensitive review trigger that does not predict the reading's error (`results/confidence_vs_error.md`), and, since `rules_v0.3`, the anomaly hold (confluency at or above the target, but the anomaly check flagged the image). Quality-gate failures return REIMAGE (`results/quality_gate_c2c12.md`). Frames within a sequence are not independent; n sequences is the sample size.
+Rules: `rules_v0.4`. With the classifier demoted, two rules return `human_review`: boundary ambiguity above 0.70 (the record's `confidence` below the 0.30 floor, `culture/rules.py` default), a density-sensitive review trigger that does not predict the reading's error (`results/confidence_vs_error.md`), and, since `rules_v0.3`, the passage hold (confluency at or above the target, but the anomaly check flagged the image). Quality-gate failures return REIMAGE (`results/quality_gate_c2c12.md`). Frames within a sequence are not independent; n sequences is the sample size.
 
 ## Boundary-ambiguity trigger
 
@@ -22,7 +22,7 @@ Held-out C2C12 review rate per sequence: 090303_exp1_F0003 8.2%, 090303_exp1_F00
 
 Highest held-out C2C12 confluency: 57.0%, so no frame reaches the 60-100% bins. Held-out frames at 40% or more, per sequence (sent to review / frames): 090303_exp1_F0003 7/9, 090318_exp1_F0001 0/14, 090318_exp1_F0003 0/11, 090318_exp1_F0011 28/38, 090318_exp1_F0013 22/44, 090325_exp1_F0003 0/16, 090325_exp1_F0011 13/16, 090325_exp1_F0013 0/12.
 
-## Anomaly hold (rules_v0.3)
+## Passage hold on an anomaly flag (since rules_v0.3)
 
 Frames with an anomaly score (A4). Passage-eligible: boundary ambiguity at or below the trigger and confluency at or above the target (time since passage assumed long enough). Held: passage-eligible and flagged, so sent to review instead of passage. Total: ambiguity trigger or held.
 

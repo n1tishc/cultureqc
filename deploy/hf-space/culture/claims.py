@@ -60,6 +60,10 @@ RULES = [
     Rule("latency claim", r"\b\d+(\.\d+)?\s?(s|sec|seconds|min|minutes?)\b[^.\n]{0,30}\bper (image|visit|fov|frame)\b"
          r"|\b(a|one) minute per (image|visit|frame)", "needs_context", r"V9|live_latency"),
     Rule("cell doubling time", r"cell doubling time", "unless_negated"),
+    # rules_v0.4 renamed the action hold -> continue; "passage held" stays. A quoted `hold` is allowed
+    # only where the rename is explained (continue nearby).
+    Rule("hold as an action", r"[\"'`]hold[\"'`]|\b(recommends?|recommended|action is|rules say|rules return)\s+\**hold\b",
+         "needs_context", r"\bcontinue\b"),
     # The confluency score tracks density, not the reading's error (results/confidence_vs_error.md).
     Rule("confluency score as probability",
          r"\b(confluency|measurement|reading)\s+confidence\b[^.\n]{0,40}\b(probabilit\w*|calibrat\w*)"

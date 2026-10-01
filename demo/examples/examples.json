@@ -1,7 +1,7 @@
 {
  "examples": [
   {
-   "action": "hold",
+   "action": "continue",
    "action_reason": "Confluency 16.8% below target 80%. No action needed.",
    "anomaly": {
     "bank_sha256": "870ff30ce3339db29bb9dd7aae35713c154f24b7a3a0980b7b19bf559813463a",
@@ -341,8 +341,8 @@
    },
    "credit": "C2C12: Ker et al., Sci Data 5:180237 (2018), CC BY 4.0",
    "decision_rederived": {
-    "at": "2026-09-28",
-    "rules": "rules_v0.3"
+    "at": "2026-10-01",
+    "rules": "rules_v0.4"
    },
    "demoted": true,
    "device": "cpu",
@@ -395,7 +395,7 @@
     "confluency_map_hash": "882b36a8c9215c76ffff0a2d1b1f726123c69abe5f6903837252488e3ac48166",
     "confluency_method": "probmap",
     "confluency_pct": 16.82,
-    "decided_by": "rules_v0.3",
+    "decided_by": "rules_v0.4",
     "eta_to_target_hours": null,
     "flask_id": "demo",
     "growth_trend": null,
@@ -418,12 +418,12 @@
     "qc_rationale": "Confluency 16.8% below target (80%); recommend no action required; continue monitoring.",
     "qc_severity": null,
     "qc_used_in_decision": false,
-    "recommended_action": "hold",
-    "record_hash": "d67266c7856f2f165a8dbb91711be79f467de9a9bbb2aaf6a8de0a8ce7bde445",
+    "recommended_action": "continue",
+    "record_hash": "131bb0d677f2034ecc0211d04969419221ed2f90f6a5037cad87ad74df6b8f69",
     "record_id": "69184219-ac1f-41c4-862f-26d944b9903d",
     "review_outcome": null,
     "reviewed_by": null,
-    "schema_version": "0.2"
+    "schema_version": "0.3"
    },
    "sequence": "c2c12_090318_exp1_F0003_Data",
    "severity": null,
@@ -439,7 +439,7 @@
    "width": 1392
   },
   {
-   "action": "hold",
+   "action": "continue",
    "action_reason": "Confluency 39.4% below target 80%. No action needed.",
    "anomaly": {
     "bank_sha256": "870ff30ce3339db29bb9dd7aae35713c154f24b7a3a0980b7b19bf559813463a",
@@ -779,8 +779,8 @@
    },
    "credit": "C2C12: Ker et al., Sci Data 5:180237 (2018), CC BY 4.0",
    "decision_rederived": {
-    "at": "2026-09-28",
-    "rules": "rules_v0.3"
+    "at": "2026-10-01",
+    "rules": "rules_v0.4"
    },
    "demoted": true,
    "device": "cpu",
@@ -833,7 +833,7 @@
     "confluency_map_hash": "aa852ef551a30010222d7fabcf496ba570fd1e3dfe264a61252aad02a9fb62e8",
     "confluency_method": "probmap",
     "confluency_pct": 39.41,
-    "decided_by": "rules_v0.3",
+    "decided_by": "rules_v0.4",
     "eta_to_target_hours": null,
     "flask_id": "demo",
     "growth_trend": null,
@@ -847,7 +847,7 @@
     },
     "model_weights_hash": null,
     "pixel_size_um": null,
-    "prev_record_hash": "d67266c7856f2f165a8dbb91711be79f467de9a9bbb2aaf6a8de0a8ce7bde445",
+    "prev_record_hash": "131bb0d677f2034ecc0211d04969419221ed2f90f6a5037cad87ad74df6b8f69",
     "protocol_stage": null,
     "qc_calibrated": true,
     "qc_confidence": 0.4079,
@@ -856,12 +856,12 @@
     "qc_rationale": "Confluency 39.4% below target (80%); recommend no action required; continue monitoring.",
     "qc_severity": null,
     "qc_used_in_decision": false,
-    "recommended_action": "hold",
-    "record_hash": "e4c5f0fcc3a1052b449ed825096616334d31d79760b4dbaf36b747ff4d722d2c",
+    "recommended_action": "continue",
+    "record_hash": "64806d48ee69a5bf19517c4cedcd989e9b2fc974589b4b7cee494ad15bd1aeba",
     "record_id": "fe7e2ddd-bd19-48ae-a34b-dac22ee56126",
     "review_outcome": null,
     "reviewed_by": null,
-    "schema_version": "0.2"
+    "schema_version": "0.3"
    },
    "sequence": "c2c12_090325_exp1_F0013_Data",
    "severity": null,
@@ -878,7 +878,7 @@
   },
   {
    "action": "human_review",
-   "action_reason": "Confluency confidence 0.01 is below floor 0.30. Image may be ambiguous; recommend manual inspection.",
+   "action_reason": "Boundary ambiguity 0.99 is above 0.70 (record confidence 0.01 below floor 0.30): many pixels sit near the cell/background cutoff; recommend manual inspection.",
    "anomaly": {
     "bank_sha256": "870ff30ce3339db29bb9dd7aae35713c154f24b7a3a0980b7b19bf559813463a",
     "bin_label": "40-100",
@@ -1217,8 +1217,8 @@
    },
    "credit": "C2C12: Ker et al., Sci Data 5:180237 (2018), CC BY 4.0",
    "decision_rederived": {
-    "at": "2026-09-28",
-    "rules": "rules_v0.3"
+    "at": "2026-10-01",
+    "rules": "rules_v0.4"
    },
    "demoted": true,
    "device": "cpu",
@@ -1249,7 +1249,7 @@
    },
    "rationale": "Confluency 51.4% below target (80%); recommend pause automated decisions and flag for human review.",
    "record": {
-    "action_reason": "Confluency confidence 0.01 is below floor 0.30. Image may be ambiguous; recommend manual inspection.",
+    "action_reason": "Boundary ambiguity 0.99 is above 0.70 (record confidence 0.01 below floor 0.30): many pixels sit near the cell/background cutoff; recommend manual inspection.",
     "analysed_at": "2026-09-27T23:23:33.215277+00:00",
     "anomaly_bank_sha256": "870ff30ce3339db29bb9dd7aae35713c154f24b7a3a0980b7b19bf559813463a",
     "anomaly_bin": "40-100",
@@ -1271,7 +1271,7 @@
     "confluency_map_hash": "9243d66e825673a24fa70f8bd3f29ca06898b2a6c5bc74ed1e32d0a280dfaff0",
     "confluency_method": "probmap",
     "confluency_pct": 51.42,
-    "decided_by": "rules_v0.3",
+    "decided_by": "rules_v0.4",
     "eta_to_target_hours": null,
     "flask_id": "demo",
     "growth_trend": null,
@@ -1285,7 +1285,7 @@
     },
     "model_weights_hash": null,
     "pixel_size_um": null,
-    "prev_record_hash": "e4c5f0fcc3a1052b449ed825096616334d31d79760b4dbaf36b747ff4d722d2c",
+    "prev_record_hash": "64806d48ee69a5bf19517c4cedcd989e9b2fc974589b4b7cee494ad15bd1aeba",
     "protocol_stage": null,
     "qc_calibrated": true,
     "qc_confidence": 0.3927,
@@ -1295,11 +1295,11 @@
     "qc_severity": null,
     "qc_used_in_decision": false,
     "recommended_action": "human_review",
-    "record_hash": "0e42dbc165809e6ff5ce6601d0644b1bfe39aa6a0163ec0f690d6420f2d1d4bf",
+    "record_hash": "6547a7a9e7abfe835d7c0454a296387c38f0aaac80df40e041c7663585b3ab94",
     "record_id": "9a7b34be-dc9b-4dfd-8536-966ccd3dc739",
     "review_outcome": null,
     "reviewed_by": null,
-    "schema_version": "0.2"
+    "schema_version": "0.3"
    },
    "sequence": "c2c12_090318_exp1_F0013_Data",
    "severity": null,
@@ -1655,8 +1655,8 @@
    },
    "credit": "C2C12: Ker et al., Sci Data 5:180237 (2018), CC BY 4.0",
    "decision_rederived": {
-    "at": "2026-09-28",
-    "rules": "rules_v0.3"
+    "at": "2026-10-01",
+    "rules": "rules_v0.4"
    },
    "demoted": true,
    "device": "cpu",
@@ -1709,7 +1709,7 @@
     "confluency_map_hash": "83ff967fa278898032c2a347c72b947f6903797f8e814dab25dbb3e04bec4f6e",
     "confluency_method": "probmap",
     "confluency_pct": 86.64,
-    "decided_by": "rules_v0.3",
+    "decided_by": "rules_v0.4",
     "eta_to_target_hours": null,
     "flask_id": "demo",
     "growth_trend": null,
@@ -1723,7 +1723,7 @@
     },
     "model_weights_hash": null,
     "pixel_size_um": null,
-    "prev_record_hash": "0e42dbc165809e6ff5ce6601d0644b1bfe39aa6a0163ec0f690d6420f2d1d4bf",
+    "prev_record_hash": "6547a7a9e7abfe835d7c0454a296387c38f0aaac80df40e041c7663585b3ab94",
     "protocol_stage": null,
     "qc_calibrated": true,
     "qc_confidence": 0.9897,
@@ -1733,11 +1733,11 @@
     "qc_severity": null,
     "qc_used_in_decision": false,
     "recommended_action": "human_review",
-    "record_hash": "5db5ad31d96bd959b1566ad5e747a85eb010b64e22c2281d29101ba71ed3791e",
+    "record_hash": "f683a512c43b05a00b5de34a6c399eebaa0ecaa16f87bb8426649afa0ddab97f",
     "record_id": "b5eeefd9-f734-4e05-89fc-fdad0c5b0fee",
     "review_outcome": null,
     "reviewed_by": null,
-    "schema_version": "0.2"
+    "schema_version": "0.3"
    },
    "sequence": "c2c12_090325_exp1_F0013_Data__fault_contam",
    "severity": 246.417,
@@ -1753,7 +1753,7 @@
    "width": 1392
   },
   {
-   "action": "hold",
+   "action": "continue",
    "action_reason": "Confluency 12.2% below target 80%. No action needed.",
    "anomaly": {
     "bank_sha256": "870ff30ce3339db29bb9dd7aae35713c154f24b7a3a0980b7b19bf559813463a",
@@ -2070,7 +2070,7 @@
     ],
     "z": 2.2441
    },
-   "caption": "Held-out frame with simulated contamination at the bacteria's real size (400 per 256 px tile area; the stress test's second pick, rebuilt); anomaly flagged (score 0.328, threshold 0.308): the only one of the 97 frames flagged at real size, against 4 of 97 for the same frames without bacteria, so the flag is at chance (results/contamination_scale.md). Cellpose-SAM reads 12.2%, against 16.0% for the same frame without bacteria. The rules recommend hold: the flag only holds a passage, and this flask is far below the target.",
+   "caption": "Held-out frame with simulated contamination at the bacteria's real size (400 per 256 px tile area; the stress test's second pick, rebuilt); anomaly flagged (score 0.328, threshold 0.308): the only one of the 97 frames flagged at real size, against 4 of 97 for the same frames without bacteria, so the flag is at chance (results/contamination_scale.md). Cellpose-SAM reads 12.2%, against 16.0% for the same frame without bacteria. The rules recommend continue: the flag only holds a passage, and this flask is far below the target.",
    "cell_line": "unknown",
    "confluency": {
     "confidence": 0.709,
@@ -2085,6 +2085,10 @@
     "pct": 12.18
    },
    "credit": "C2C12: Ker et al., Sci Data 5:180237 (2018), CC BY 4.0; bacteria: DeepBacs, Zenodo 5550935",
+   "decision_rederived": {
+    "at": "2026-10-01",
+    "rules": "rules_v0.4"
+   },
    "demoted": true,
    "device": "mps",
    "evidence_region_count": 0,
@@ -2136,7 +2140,7 @@
     "confluency_map_hash": "dee6f7cd120f56b36dbc148652d10afd51ba646535501fcf3253bb7a6a1c8019",
     "confluency_method": "probmap",
     "confluency_pct": 12.18,
-    "decided_by": "rules_v0.3",
+    "decided_by": "rules_v0.4",
     "eta_to_target_hours": null,
     "flask_id": "demo",
     "growth_trend": null,
@@ -2150,7 +2154,7 @@
     },
     "model_weights_hash": null,
     "pixel_size_um": null,
-    "prev_record_hash": "5db5ad31d96bd959b1566ad5e747a85eb010b64e22c2281d29101ba71ed3791e",
+    "prev_record_hash": "f683a512c43b05a00b5de34a6c399eebaa0ecaa16f87bb8426649afa0ddab97f",
     "protocol_stage": null,
     "qc_calibrated": true,
     "qc_confidence": 0.9731,
@@ -2159,12 +2163,12 @@
     "qc_rationale": "Confluency 12.2% below target (80%); recommend no action required; continue monitoring. The anomaly check flagged this image for review.",
     "qc_severity": null,
     "qc_used_in_decision": false,
-    "recommended_action": "hold",
-    "record_hash": "ae48b8292a8aaa519068e0da25292198a78ecda4bf0ef2c3a3e8c7da8593b543",
+    "recommended_action": "continue",
+    "record_hash": "950f35cbe2faa8cf748e958847aaa1b73d7dafd3ee8abb6f74bed1aa0009e32e",
     "record_id": "a45b181a-bfc6-49fc-8d7b-7a910cd05f24",
     "review_outcome": null,
     "reviewed_by": null,
-    "schema_version": "0.2"
+    "schema_version": "0.3"
    },
    "sequence": "c2c12_090318_exp1_F0005_Data__fault_contam",
    "severity": 400.0,
@@ -2180,7 +2184,7 @@
    "width": 1392
   },
   {
-   "action": "hold",
+   "action": "continue",
    "action_reason": "Confluency 5.1% below target 80%. No action needed.",
    "anomaly": {
     "bank_sha256": "870ff30ce3339db29bb9dd7aae35713c154f24b7a3a0980b7b19bf559813463a",
@@ -2513,8 +2517,8 @@
    },
    "credit": "EVICAN: Bioinformatics 36(12):3863 (2020), CC BY 4.0",
    "decision_rederived": {
-    "at": "2026-09-28",
-    "rules": "rules_v0.3"
+    "at": "2026-10-01",
+    "rules": "rules_v0.4"
    },
    "demoted": true,
    "device": "cpu",
@@ -2567,7 +2571,7 @@
     "confluency_map_hash": "2d6d82480ab6ba6ad1b9f862425046751f980c58eed37b2acb36d368bf5152ae",
     "confluency_method": "probmap",
     "confluency_pct": 5.13,
-    "decided_by": "rules_v0.3",
+    "decided_by": "rules_v0.4",
     "eta_to_target_hours": null,
     "flask_id": "demo",
     "growth_trend": null,
@@ -2581,7 +2585,7 @@
     },
     "model_weights_hash": null,
     "pixel_size_um": null,
-    "prev_record_hash": "ae48b8292a8aaa519068e0da25292198a78ecda4bf0ef2c3a3e8c7da8593b543",
+    "prev_record_hash": "950f35cbe2faa8cf748e958847aaa1b73d7dafd3ee8abb6f74bed1aa0009e32e",
     "protocol_stage": null,
     "qc_calibrated": true,
     "qc_confidence": 0.9998,
@@ -2590,12 +2594,12 @@
     "qc_rationale": "Confluency 5.1% below target (80%); recommend no action required; continue monitoring. The anomaly check flagged this image for review.",
     "qc_severity": null,
     "qc_used_in_decision": false,
-    "recommended_action": "hold",
-    "record_hash": "5aadfee3b75af82a405f533c82bc9b27604d09e4cc5b3700a8a787b9edd87752",
+    "recommended_action": "continue",
+    "record_hash": "da4eebf2c67f91612e56273290be008c81b953648c25d75b16c247bb8d4b6e94",
     "record_id": "0e19f6f6-98e2-4725-a24b-72ff5d08bf07",
     "review_outcome": null,
     "reviewed_by": null,
-    "schema_version": "0.2"
+    "schema_version": "0.3"
    },
    "target_confluency": 80.0,
    "timings_s": {
@@ -2610,7 +2614,7 @@
   },
   {
    "action": "human_review",
-   "action_reason": "Confluency confidence 0.27 is below floor 0.30. Image may be ambiguous; recommend manual inspection.",
+   "action_reason": "Boundary ambiguity 0.73 is above 0.70 (record confidence 0.27 below floor 0.30): many pixels sit near the cell/background cutoff; recommend manual inspection.",
    "anomaly": {
     "bank_sha256": "870ff30ce3339db29bb9dd7aae35713c154f24b7a3a0980b7b19bf559813463a",
     "bin_label": "20-40",
@@ -2942,8 +2946,8 @@
    },
    "credit": "EVICAN: Bioinformatics 36(12):3863 (2020), CC BY 4.0",
    "decision_rederived": {
-    "at": "2026-09-28",
-    "rules": "rules_v0.3"
+    "at": "2026-10-01",
+    "rules": "rules_v0.4"
    },
    "demoted": true,
    "device": "cpu",
@@ -2974,7 +2978,7 @@
    },
    "rationale": "Confluency 29.4% below target (80%); recommend pause automated decisions and flag for human review.",
    "record": {
-    "action_reason": "Confluency confidence 0.27 is below floor 0.30. Image may be ambiguous; recommend manual inspection.",
+    "action_reason": "Boundary ambiguity 0.73 is above 0.70 (record confidence 0.27 below floor 0.30): many pixels sit near the cell/background cutoff; recommend manual inspection.",
     "analysed_at": "2026-09-27T23:40:46.207769+00:00",
     "anomaly_bank_sha256": "870ff30ce3339db29bb9dd7aae35713c154f24b7a3a0980b7b19bf559813463a",
     "anomaly_bin": "20-40",
@@ -2996,7 +3000,7 @@
     "confluency_map_hash": "496989e812a06c11a8cff83b7e0d89ad512adcb62f1ce3f951f112e3c3964348",
     "confluency_method": "probmap",
     "confluency_pct": 29.35,
-    "decided_by": "rules_v0.3",
+    "decided_by": "rules_v0.4",
     "eta_to_target_hours": null,
     "flask_id": "demo",
     "growth_trend": null,
@@ -3010,7 +3014,7 @@
     },
     "model_weights_hash": null,
     "pixel_size_um": null,
-    "prev_record_hash": "5aadfee3b75af82a405f533c82bc9b27604d09e4cc5b3700a8a787b9edd87752",
+    "prev_record_hash": "da4eebf2c67f91612e56273290be008c81b953648c25d75b16c247bb8d4b6e94",
     "protocol_stage": null,
     "qc_calibrated": true,
     "qc_confidence": 0.6352,
@@ -3020,11 +3024,11 @@
     "qc_severity": null,
     "qc_used_in_decision": false,
     "recommended_action": "human_review",
-    "record_hash": "02899063f409f87b2d37f6e0923b7f90b189148d84707c09663cdd59f841c63e",
+    "record_hash": "a3aea8576f5aa60a3829dd9614103b11df31374eed7f415a8a5959e00afaa83e",
     "record_id": "ba42f8e0-3474-4121-9734-71d4806f9f28",
     "review_outcome": null,
     "reviewed_by": null,
-    "schema_version": "0.2"
+    "schema_version": "0.3"
    },
    "target_confluency": 80.0,
    "timings_s": {

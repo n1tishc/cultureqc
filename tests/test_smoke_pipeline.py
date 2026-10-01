@@ -24,6 +24,7 @@ require_module("cellpose")
 from culture.pipeline import analyze  # noqa: E402
 from culture.qc import CLASS_NAMES  # noqa: E402
 from culture.records import verify_chain  # noqa: E402
+from culture.rules import RULES_VERSION  # noqa: E402
 
 FIXTURE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                         "test-data", "contam_00015.png")
@@ -63,7 +64,7 @@ def test_qc_confidence_in_range(record):
 
 
 def test_recommended_action_is_valid(record):
-    assert record["recommended_action"] in {"human_review", "passage", "feed", "hold"}
+    assert record["recommended_action"] in {"human_review", "passage", "feed", "continue"}
 
 
 def test_rationale_is_nonempty_and_deterministic_template(record):
@@ -88,11 +89,11 @@ def test_classifier_calibrated_and_demoted(record):
 
 
 def test_anomaly_recorded_and_an_input_to_the_rules(record):
-    # B2 + rules v0.3: the anomaly check is recorded, and its flag is an input to
+    # B2 + rules v0.3 on: the anomaly check is recorded, and its flag is an input to
     # the rules (it holds a passage) whenever the check ran.
     assert record["anomaly_status"] in {"ok", "unavailable"}
     assert record["anomaly_used_in_decision"] is (record["anomaly_status"] == "ok")
-    assert record["decided_by"] == "rules_v0.3"
+    assert record["decided_by"] == RULES_VERSION == "rules_v0.4"
     if record["anomaly_status"] == "ok":
         assert record["anomaly_flag"] == (record["anomaly_score"] > record["anomaly_threshold"])
         assert record["model_versions"]["dino"] == "facebook/dinov2-small"
@@ -113,18 +114,6 @@ def test_record_is_hash_chained_and_verifies(record):
     assert ok, f"chain broken at line {bad_line}"
 
 
-@pytest.mark.xfail(
-    reason="culture/schema.json's confluency_method enum "
-           "(['cpsam_v2_probmap','cpsam_v2_instance','threshold_baseline']) doesn't match "
-           "what culture/seg.py actually writes ('probmap'/'instance'/'threshold', see "
-           "ConfluencyResult.method). Nothing in the repo currently validates a live record "
-           "against this schema (docs/REPO_MAP.md §6) so this drift went unnoticed until this "
-           "smoke test. Recon-only slice (Slice 0) — not fixed here; flagged for whoever "
-           "touches schema.json/seg.py next (Slice 2's visit-summary schema is the natural "
-           "place). strict=True: if this starts passing, that means the drift was fixed and "
-           "this xfail should be deleted, not left stale.",
-    strict=True,
-)
 def test_record_matches_schema(record):
     import jsonschema
 
@@ -133,9 +122,7 @@ def test_record_matches_schema(record):
     with open(schema_path) as f:
         schema = json.load(f)
 
-    # Also excludes "record_hash": schema.json has additionalProperties: false
-    # but doesn't list record_hash as a property, even though
-    # RecordWriter.append() (culture/records.py) always adds it — a second,
-    # separate drift from the one this test is xfail'd for above.
-    clean = {k: v for k, v in record.items() if not k.startswith("_") and k != "record_hash"}
+    # schema.json was aligned with what the pipeline writes in schema 0.3
+    # (confluency_method values, record_hash); this test was a strict xfail before.
+    clean = {k: v for k, v in record.items() if not k.startswith("_")}
     jsonschema.validate(clean, schema)

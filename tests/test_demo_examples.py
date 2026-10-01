@@ -8,6 +8,7 @@ examples (demo/examples/, scripts/export_demo_examples.py).
 - The 3D view's map is the one the record hashes (confluency_map_hash).
 """
 
+import json
 import math
 import os
 
@@ -69,6 +70,13 @@ def test_example_is_self_consistent(ex):
     assert action == ex["action"]
     for key in ("caption", "credit", "generated_at", "device", "timings_s"):
         assert ex[key], key
+
+
+@pytest.mark.parametrize("ex", EXAMPLES, ids=lambda e: e["id"])
+def test_stored_record_matches_the_schema(ex):
+    jsonschema = pytest.importorskip("jsonschema")
+    with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "culture", "schema.json")) as f:
+        jsonschema.validate(ex["record"], json.load(f))
 
 
 @pytest.mark.parametrize("ex", [e for e in EXAMPLES if "cache" in e], ids=lambda e: e["id"])

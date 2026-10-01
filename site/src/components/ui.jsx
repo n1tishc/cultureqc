@@ -32,8 +32,8 @@ export function Icon({ name }) {
       return <svg {...common}><path {...P} d="M8 1.8l6.2 6.2L8 14.2 1.8 8z" /></svg>;
     case "passage":
       return <svg {...common}><path {...P} d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg>;
-    case "hold":
-      return <svg {...common}><path {...P} d="M5.5 3.5v9M10.5 3.5v9" /></svg>;
+    case "continue":
+      return <svg {...common}><path {...P} d="M5 3.4l7 4.6-7 4.6z" /></svg>;
     case "human_review":
       return <svg {...common}><circle {...P} cx="8" cy="5.6" r="2.6" /><path {...P} d="M3 13.6c.8-2.6 2.7-3.8 5-3.8s4.2 1.2 5 3.8" /></svg>;
     case "reimage":
@@ -48,7 +48,7 @@ export function Icon({ name }) {
 const ACTION_WORD = {
   passage: "Passage",
   feed: "Feed",
-  hold: "Hold",
+  continue: "Continue",
   human_review: "Human review",
   reimage: "Re-image",
 };
@@ -64,12 +64,12 @@ export function Action({ a }) {
 
 export const actionWord = (a) => ACTION_WORD[a] || a;
 
-/* What each action means for the flask, beside the badge, so an amber "hold"
-   next to "no action needed" does not read as an alarm. */
+/* What each action means for the flask, beside the badge, so an amber
+   "continue" next to "no action needed" does not read as an alarm. */
 const ACTION_GLOSS = {
   passage: "ready to split the culture",
   feed: "change the medium, keep culturing",
-  hold: "keep culturing; not ready to passage",
+  continue: "keep culturing; not ready to passage",
   human_review: "a person decides before anything happens",
   reimage: "take the image again",
 };

@@ -340,7 +340,7 @@ Almost entirely neutral, with color spent exclusively on QC status — never on 
 
 #### Status (Green / Amber / Red)
 - **Status Green** (`#22c55e`): `normal` QC flag, `passage` action, confluency-bar fill once actual ≥ target, and the predicted-class row's bar/label in the evidence breakdown when the flag is `normal`.
-- **Status Amber** (`#f59e0b`): `detachment` and `image_quality` QC flags, `feed`/`hold` actions.
+- **Status Amber** (`#f59e0b`): `detachment` and `image_quality` QC flags, `feed`/`continue` actions (`continue` was `hold` until rules_v0.4).
 - **Status Red** (`#ef4444`): `contamination_suspected` QC flag, `human_review` action, the evidence bounding boxes drawn on the image overlay, and the evidence-region-count dot in the status card. Red is reserved for this one meaning system-wide.
 
 #### Named Rules
@@ -358,7 +358,7 @@ Neutral cool greys on two grounds, with colour reserved for two computed layers 
 #### Secondary — actions
 Each action has a print value for the paper and a lifted `-l` value for a stage, where the print value would disappear.
 - **Passage Green** (`site-passage` / `site-passage-l`): passage.
-- **Hold Amber** (`site-hold` / `site-hold-l`): feed and hold.
+- **Hold Amber** (`site-hold` / `site-hold-l`): feed and continue (the action called hold until rules_v0.4).
 - **Review Red** (`site-review` / `site-review-l`): human review; also the review-rate bars (frames sent to a person) and the tamper switch's on state, because tampering is what forces review.
 - **Re-image Indigo** (`site-reimage` / `site-reimage-l`): re-image, and the quality-gate failure that triggers it (outlined visit squares, hatched visit buttons).
 
@@ -372,7 +372,7 @@ Each action has a print value for the paper and a lifted `-l` value for a stage,
 #### Named Rules
 **The Who-Computed-It Rule.** Cyan is the segmentation model and magenta is the anomaly check. A layer, gauge, chart mark or word takes one of these only if that model produced it. Cyan also marks the interface's current selection and focus (the focus ring, `::selection`, the active example, the current visit, the pressed chain tile's tint), because the selected thing is always a view onto computed output; nothing else borrows either hue, and magenta never marks selection.
 
-**The Action Hue Rule.** The four action hues mean go (passage), wait (feed/hold), stop for a person (human review) and take it again (re-image). They are never decoration and never an accent. Every action appears as hue + its own icon + its word — the icons are an arrow for passage, a drop for feed, a pause for hold, a person for human review and a cycle for re-image — and an action badge sits next to a plain-language gloss of what it means for the flask. The same go/stop/partial hues also colour the site's pass/fail verdicts (validation checks, the detectability matrix, chain verification), always through the verdict component's shape icon and word (see The Shape-and-Word Rule); they never colour anything that is neither an action nor a pass/fail result.
+**The Action Hue Rule.** The four action hues mean go (passage), wait (feed/continue), stop for a person (human review) and take it again (re-image). They are never decoration and never an accent. Every action appears as hue + its own icon + its word — the icons are an arrow for passage, a drop for feed, a pause for hold, a person for human review and a cycle for re-image — and an action badge sits next to a plain-language gloss of what it means for the flask. The same go/stop/partial hues also colour the site's pass/fail verdicts (validation checks, the detectability matrix, chain verification), always through the verdict component's shape icon and word (see The Shape-and-Word Rule); they never colour anything that is neither an action nor a pass/fail result.
 
 ## Typography
 

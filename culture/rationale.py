@@ -58,7 +58,7 @@ _FLAG_PHRASES = {
 _ACTION_PHRASES = {
     "passage": "proceed with passage",
     "feed": "perform media exchange",
-    "hold": "no action required; continue monitoring",
+    "continue": "no action required; continue monitoring",
     "human_review": "pause automated decisions and flag for human review",
 }
 
@@ -81,7 +81,7 @@ def template_rationale(
     evidence_bbox: tuple | list | None,
     confluency_pct: float,
     target_confluency: float = 80.0,
-    action: str = "hold",
+    action: str = "continue",
     growth_trend: str | None = None,
     tile_size: int = 256,
     anomaly_flag: bool | None = None,
@@ -149,7 +149,7 @@ def vlm_rationale(
     evidence_bbox: tuple | list | None,
     confluency_pct: float,
     target_confluency: float = 80.0,
-    action: str = "hold",
+    action: str = "continue",
     model_name: str = "Qwen/Qwen2-VL-2B-Instruct",
     max_retries: int = 1,
 ) -> str | None:
@@ -270,7 +270,7 @@ def generate_rationale(
     evidence_bbox: tuple | list | None,
     confluency_pct: float,
     target_confluency: float = 80.0,
-    action: str = "hold",
+    action: str = "continue",
     growth_trend: str | None = None,
     tile_size: int = 256,
     use_vlm: bool = False,

@@ -48,6 +48,7 @@ from datetime import datetime, timezone
 
 
 GENESIS_HASH = "0" * 64
+SCHEMA_VERSION = "0.3"  # culture/schema.json; stamped by culture/pipeline.py and demo/analysis.py
 
 
 def _canonical_json(record: dict) -> str:

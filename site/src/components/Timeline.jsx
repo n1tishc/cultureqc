@@ -285,7 +285,7 @@ export default function Timeline({ replays }) {
                   <b>
                     <Icon name="human_review" /> Passage held:
                   </b>{" "}
-                  the anomaly check flagged visit {f.made_at_visit + 1}, where this forecast was made, so under rules_v0.3 a passage goes to human review.
+                  the anomaly check flagged visit {f.made_at_visit + 1}, where this forecast was made, so since rules_v0.3 a passage goes to human review.
                 </>
               ) : null}
             </p>

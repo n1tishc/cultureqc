@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
 How often the rules send an image to human review. With the classifier
-demoted, two rules can (culture/rules.py, rules_v0.3):
+demoted, two rules can (culture/rules.py, rules_v0.4):
   - the boundary-ambiguity trigger (rule 2): many pixels sit near the
     Cellpose-SAM cutoff (the record's confidence below the line's floor, 0.30
     by default; boundary ambiguity above 0.70). It is a density-sensitive
     review trigger and does not predict the reading's error
     (results/confidence_vs_error.md);
-  - the anomaly hold (rule 3, since v0.3): confluency is at or above the
+  - the passage hold (rule 3, since v0.3): confluency is at or above the
     target but the per-image anomaly check flagged the image, so the passage
     is held for review. This depends on the target, so it is reported at the
     default 80% and at the replays' 50%.
@@ -96,7 +96,7 @@ def main():
     add(f"C2C12 held-out, {CROP_FRAC:g}-frame FOV crops", crops[crops.split == "heldout"],
         "each crop segmented on its own, as the replay visits are")
 
-    # Anomaly hold: frames with an A4 anomaly score, joined to their cached confidence.
+    # Passage hold: frames with an A4 anomaly score, joined to their cached confidence.
     scores = pd.read_parquet(os.path.join(CACHE, "anomaly", "scores.parquet"))[
         ["image_sha256", "kind", "split", "flag_binned"]]
     scored = scores.merge(full[["image_sha256", "pct", "confidence"]], on="image_sha256", how="left",
@@ -129,7 +129,7 @@ def main():
         w.writerows(rows)
 
     lines = [
-        "# Human-review rate: boundary-ambiguity trigger and anomaly hold", "",
+        "# Human-review rate: boundary-ambiguity trigger and passage hold", "",
         f"Generated {time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())} by `scripts/review_rate.py`. "
         "No model runs: confidences are the compute cache's (Cellpose-SAM cpsam_v2, Colab GPU, nb/03), "
         "full resolution, same formula as the live path. C2C12 images: Ker et al., *Sci Data* 5:180237 (2018), "
@@ -137,7 +137,7 @@ def main():
         f"Rules: `{RULES_VERSION}`. With the classifier demoted, two rules return `human_review`: boundary "
         f"ambiguity above {1 - floor:.2f} (the record's `confidence` below the {floor:.2f} floor, `culture/rules.py` "
         "default), a density-sensitive review trigger that does not predict the reading's error "
-        "(`results/confidence_vs_error.md`), and, since `rules_v0.3`, the anomaly hold "
+        "(`results/confidence_vs_error.md`), and, since `rules_v0.3`, the passage hold "
         "(confluency at or above the target, but the anomaly check flagged the image). Quality-gate failures "
         "return REIMAGE (`results/quality_gate_c2c12.md`). Frames within a sequence are not independent; "
         "n sequences is the sample size.", "",
@@ -153,7 +153,7 @@ def main():
               "Held-out frames at 40% or more, per sequence (sent to review / frames): " + ", ".join(
                   f"{s.replace('c2c12_', '').replace('_Data', '')} {r['n_review']}/{r['n']}"
                   for s, r in sorted(per_seq_dense.items())) + ".", "",
-              "## Anomaly hold (rules_v0.3)", "",
+              "## Passage hold on an anomaly flag (since rules_v0.3)", "",
               "Frames with an anomaly score (A4). Passage-eligible: boundary ambiguity at or below the trigger and confluency "
               "at or above the target (time since passage assumed long enough). Held: passage-eligible and "
               "flagged, so sent to review instead of passage. Total: ambiguity trigger or held.", "",

@@ -64,7 +64,7 @@ sys.path.insert(0, REPO)
 from culture.cache import probmap_sha256  # noqa: E402
 from culture.rationale import generate_rationale  # noqa: E402
 from culture.rules import RULES_VERSION, LineConfig, decide  # noqa: E402
-from culture.records import RecordWriter, hash_file  # noqa: E402
+from culture.records import SCHEMA_VERSION, RecordWriter, hash_file  # noqa: E402
 from demo.analysis import analyze_image, build_record  # noqa: E402
 
 OUT_DIR = os.path.join(REPO, "demo", "examples")
@@ -178,7 +178,8 @@ def rederive(date: str) -> None:
             anomaly_flag=flag)["rationale"]
         old_action = ex["action"]
         rec = dict(ex["record"], recommended_action=action, action_reason=reason, qc_rationale=rationale,
-                   decided_by=RULES_VERSION, anomaly_used_in_decision=flag is not None)
+                   decided_by=RULES_VERSION, anomaly_used_in_decision=flag is not None,
+                   schema_version=SCHEMA_VERSION)
         changed = old_action != action or ex["record"].get("decided_by") != RULES_VERSION
         rec = writer.append(rec)
         ex.update(action=action, action_reason=reason, rationale=rationale, record=rec, caption=caption(ex, rec))

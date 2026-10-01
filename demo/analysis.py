@@ -23,7 +23,7 @@ from culture.cache import downsample_probmap, probmap_sha256
 from culture.pipeline import config_hashes
 from culture.qc import QCResult, classifier_demoted, qc_classify
 from culture.rationale import generate_rationale
-from culture.records import hash_file
+from culture.records import SCHEMA_VERSION, hash_file
 from culture.rules import RULES_VERSION, LineConfig, decide
 from culture.seg import ConfluencyResult, cpsam_confluency, threshold_confluency
 from culture.visuals import outline_scored_region
@@ -157,7 +157,7 @@ def analyze_image(img: np.ndarray, image_path: str, cell_line: str, target_confl
 def build_record(a: Analysis, image_path: str, cell_line: str, captured_at: str | None = None) -> dict:
     """The analysis record, before the writer adds its chain hashes."""
     return {
-        "schema_version": "0.2",
+        "schema_version": SCHEMA_VERSION,
         "flask_id": "demo",
         "cell_line": cell_line,
         "protocol_stage": None,
