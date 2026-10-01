@@ -46,7 +46,7 @@ import glob
 import json
 import os
 
-from culture.records import RecordWriter, verify_chain
+from culture.records import ChainResult, RecordWriter, verify_chain
 
 EVENT_TYPES = {"SEEDED", "FED", "PASSAGED", "HARVESTED", "NOTE"}
 
@@ -153,10 +153,10 @@ class History:
 
     # -- integrity ----------------------------------------------------------
 
-    def verify_lineage(self, lineage_id: str) -> tuple[bool, int | None]:
-        """(True, None) if the lineage's hash chain is intact, else
-        (False, 1-indexed bad line number). Reuses records.verify_chain
-        directly — same chain format, same verifier."""
+    def verify_lineage(self, lineage_id: str) -> ChainResult:
+        """records.verify_chain on the lineage's log: same chain format, same
+        verifier. Unpacks as (ok, 1-indexed bad line or None); a lineage with
+        no log yet is `missing_log`, not intact."""
         return verify_chain(self._path(lineage_id))
 
     # -- trend ----------------------------------------------------------------

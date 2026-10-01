@@ -153,6 +153,10 @@ export default function Records({ examples }) {
               : `All ${nOk} of 7 records re-hash to their stored SHA-256 and link to the one before.`}
         </span>
       </div>
+      <p className="tamper-limit">
+        A chain alone can’t detect a full rewrite (one record changed and every later hash recomputed) or a deleted tail. An
+        anchored checkpoint can: the record count and head hash, stored outside the log. See <code>docs/audit_mapping.md</code>.
+      </p>
 
       <div className="rec-grid">
         <Json obj={obj} bad={broken && sel === 2 ? "confluency_pct" : null} />
@@ -169,7 +173,7 @@ export default function Records({ examples }) {
       </div>
 
       <div className="scope">
-        <b>Where this sits for GMP.</b> The chain is tamper-evident and carries its provenance: image, map, configs and anomaly bank by hash; models and rules by name and version. It is designed to attach to an existing Part 11 audit trail and is not Part 11 compliant on its own. Electronic signatures, access control and the review
+        <b>Where this sits for GMP.</b> The chain catches an edited, inserted or reordered record and carries its provenance: image, map, configs and anomaly bank by hash; models and rules by name and version. It is designed to attach to an existing Part 11 audit trail, which is also where its checkpoint belongs, and is not Part 11 compliant on its own. Electronic signatures, access control and the review
         workflow belong to the platform; <code>reviewed_by</code> and <code>review_outcome</code> are there for it to fill. Field-by-field mapping: <code>docs/audit_mapping.md</code>.
       </div>
     </>

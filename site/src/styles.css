@@ -1510,6 +1510,14 @@ td .num {
   color: var(--ink-2);
 }
 
+.tamper-limit {
+  margin: 8px 0 0;
+  max-width: 72ch;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ink-3);
+}
+
 .switch {
   display: inline-flex;
   align-items: center;

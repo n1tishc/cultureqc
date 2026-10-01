@@ -111,7 +111,12 @@ person steps in on exceptions and audits the trail.
      says "matches the record": the map drawn is the one the record hashes,
      and the record is chained;
    - `prev_record_hash` and `record_hash`: each record is chained to the one
-     before, so editing any past record breaks every later link.
+     before, so editing a past record breaks its own hash or the next link.
+     Say the limit before he finds it: someone who rewrites a record and
+     recomputes every later hash, or deletes the newest records, leaves a
+     chain that still verifies. That is caught against an anchored
+     checkpoint (record count + head hash) kept in the platform's own audit
+     trail or WORM storage, which is why the record is built to attach to one.
    - `anomaly_used_in_decision: true`, `qc_used_in_decision: false`,
      `decided_by: rules_v0.3`: the record says what fed the action, what
      didn't, and which version of the rules decided.

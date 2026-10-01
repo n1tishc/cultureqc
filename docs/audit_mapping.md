@@ -49,11 +49,41 @@ stored example records (`demo/examples/examples.json`).
 record's `record_hash` is the SHA-256 of its canonical JSON (every other field,
 including `prev_record_hash`); the first record links to `"0" * 64`.
 `culture/records.py::verify_chain` recomputes every hash and stops at the first
-mismatch, so an edit, insertion, deletion or reordering is detected. The site
-does the same in the browser (`site/src/lib/verify.js`): raise one reading by
-10 points and that record's hash and the next record's link both fail.
+mismatch. The site does the same in the browser (`site/src/lib/verify.js`):
+raise one reading by 10 points and that record's hash and the next record's
+link both fail.
 
-This is tamper evidence, not non-repudiation: nothing is signed.
+What the chain alone catches, and what it doesn't (one test per row in
+`tests/test_records_chain.py`):
+
+| Change to the log | Chain alone | Against a checkpoint |
+|---|---|---|
+| Edit a record, leave its hash | Caught at that record | Caught |
+| Edit a record and recompute its own hash | Caught at the next record's link | Caught |
+| Insert or reorder records | Caught | Caught |
+| Edit a record and recompute **every later hash** | **Passes** | Caught (`rewritten`) |
+| Delete the **newest** records | **Passes** | Caught (`truncated`) |
+| Log missing, or empty | Fails (`missing_log`, `empty_chain`) | Fails |
+
+The two rows that pass are a property of any unkeyed hash chain: whoever can
+write the file can recompute it. They close only against a **checkpoint**, the
+log's record count and head hash (`python -m culture.records checkpoint`),
+stored outside the log's trust boundary. Fewer records than the checkpoint
+counted is a truncation; a record at that position with a different hash is a
+rewrite. Records appended after the checkpoint still pass, so checkpoints are
+taken periodically, or one per record.
+
+**Where the anchor lives.** In the intended deployment, each `record_hash`, or
+a periodic checkpoint, is written into the platform's own audit trail or into
+WORM storage. That copy is the anchor, and it is the reason the record is
+designed to attach to an existing Part 11 audit trail rather than stand alone.
+A checkpoint kept next to the log can be rewritten along with it. The
+checkpoint can carry an HMAC-SHA256 (`--sign`, key from
+`CULTUREQC_CHECKPOINT_KEY`, off by default) so an edited checkpoint file is
+rejected, but that doesn't protect against anyone who holds the key; a separate
+trust domain (the platform's trail, WORM storage, an RFC 3161 timestamp) does.
+
+This is tamper evidence, not non-repudiation: records are not signed.
 
 ---
 
@@ -61,7 +91,7 @@ This is tamper evidence, not non-repudiation: nothing is signed.
 
 | §11.10 | Requirement (short) | What cultureQC provides | Left to the platform |
 |---|---|---|---|
-| (a) | Validation; ability to discern invalid or altered records | The hash chain and its two verifiers (above); V1–V10 in the README | System validation (IQ/OQ/PQ) |
+| (a) | Validation; ability to discern invalid or altered records | The hash chain, its two verifiers and the checkpoint (above; the checkpoint needs an anchor outside the log); V1–V10 in the README | System validation (IQ/OQ/PQ) |
 | (b) | Accurate, complete copies, human-readable and electronic | Each record is one self-contained JSON line | Export and inspection copies |
 | (c) | Protection and retrieval through the retention period | Append-only file | Storage, backup, retention |
 | (d) | Limiting system access to authorised individuals | Nothing | Access control |
@@ -135,6 +165,7 @@ Until then the live path runs the shipped cutoff (0.0).
 - **Not a validated GMP system.** Formal validation (IQ/OQ/PQ, risk assessment per GAMP 5 / ICH Q9) is outside scope.
 - **Not Part 11 compliant on its own.** Access control, signatures, SOPs, training and backup are procedural and platform controls, not this software.
 - **Not signed.** The chain gives tamper evidence, not non-repudiation.
+- **Not anchored on its own.** A full rewrite or a deleted tail passes the chain alone; it is caught only against a checkpoint stored in the platform's trail or WORM storage ([The chain](#the-chain)).
 - **Not a substitute for expertise.** It recommends; a qualified person decides on exceptions and audits the trail.
 
 The value is the pattern: a structured, versioned, hash-chained record that says what

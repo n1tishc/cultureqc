@@ -20,7 +20,8 @@ docs and deploy.
 
 | # | Item | Commit | Result |
 |---|---|---|---|
-| 1 | Specs untracked, private notes ignored, demo script retitled, names listed (C1); CI on this branch (C2) | (the commit adding this table) | See "CI on this branch" and "Names in tracked files" below |
+| 1 | Specs untracked, private notes ignored, demo script retitled, names listed (C1); CI on this branch (C2) | `1e6b77e` | See "CI on this branch" and "Names in tracked files" below. The first CI run on the branch is pending the push |
+| 2 | Audit chain: wording, missing/empty logs fail, anchored checkpoint (A2.1–A2.3) | (the commit adding this row) | `verify_chain` returns a structured result (still unpacks as `(ok, bad_line)`); a missing log is `missing_log` and an empty one `empty_chain`, no longer intact. `checkpoint()` and `verify_chain(..., checkpoint=)` catch the two rows a bare chain passes (full rewrite → `rewritten`, deleted tail → `truncated`); optional HMAC, off by default. CLI: `python -m culture.records verify|checkpoint`. 19 tests in `tests/test_records_chain.py`, one per tamper row. README, audit mapping, demo script and the site's Records section no longer say an edit "breaks every link after it"; the claims checker now forbids that wording |
 
 ### CI on this branch
 

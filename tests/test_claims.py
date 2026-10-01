@@ -35,6 +35,9 @@ PY_UI_FILES = ["demo/app.py", "demo/flask_timeline.py", "demo/replay_timeline.py
     "QUARANTINE_RECOMMENDED",
     "About a minute per image on 2 vCPU.",
     "Reports the cell doubling time.",
+    "Altering any record breaks every link after it.",
+    "Editing any past record breaks every later link.",
+    "A tamper-proof record.",
 ])
 def test_checker_catches(text):
     assert claims.violations(text)
@@ -51,6 +54,7 @@ def test_checker_catches(text):
     "689 s per FOV at 2 threads (V9, results/live_latency.md).",
     "area doubling time, never cell doubling time",
     "Live demo",
+    "Editing a record breaks its own hash or, if that hash is recomputed, the next link.",
 ])
 def test_checker_allows(text):
     assert not claims.violations(text)

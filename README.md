@@ -137,10 +137,12 @@ drove, and the proof cannot drift apart.
 | **Anomaly check** | DINOv2-small patch distances on the 256 px centre tile against banks of normal C2C12 patches, one per confluency bin; flag = score above the bin's 5%-FPR threshold, with a patch heatmap (`culture/anomaly.py`, `configs/anomaly.yaml`). Shown for review; a flag turns `passage` into `human_review` (hold and feed unchanged). Uncalibrated outside the tested imaging setup; see [Site calibration](#site-calibration). |
 | **Action** | Deterministic rules (`rules_v0.3`) over confluency, timing and the anomaly flag (plus the QC flag only when the classifier is not demoted): `passage`, `feed`, `hold`, `human_review`. No model decides this. |
 | **QC classifier (demoted)** | EfficientNet-B0 over the centred 256 px tile: `normal`, `contamination_suspected`, `detachment`, `image_quality`. Trained on synthetic tiles only; accuracy 0.9801 on synthetic test tiles, but 5.0% of real held-out C2C12 normal frames are called normal. Temperature-scaled (`configs/calibration.yaml`). Recorded and shown collapsed; not used for the action, and no Grad-CAM evidence is drawn while demoted (`configs/qc.yaml`). |
-| **Record** | Appended to a hash-chained JSONL log (`culture/records.py`, 40-field schema in `culture/schema.json`), with the model versions and the SHA-256 of every config it used. The console's records also carry `confluency_map_hash`, the SHA-256 of the Cellpose-SAM map the confluency was counted from (1/4 resolution, int16), so the 3D view below can be checked against the record. Every record carries the SHA-256 of the one before it, so altering any record breaks every link after it. |
+| **Record** | Appended to a hash-chained JSONL log (`culture/records.py`, 40-field schema in `culture/schema.json`), with the model versions and the SHA-256 of every config it used. The console's records also carry `confluency_map_hash`, the SHA-256 of the Cellpose-SAM map the confluency was counted from (1/4 resolution, int16), so the 3D view below can be checked against the record. Every record carries the SHA-256 of the one before it. Editing a record breaks its own hash or, if that hash is recomputed, the next link. Rewriting every later record, or deleting the newest ones, is caught only against an anchored checkpoint: the record count and head hash, stored outside the log ([audit mapping](docs/audit_mapping.md#the-chain)). |
 
 ```bash
-python -m culture.records events.jsonl
+python -m culture.records verify events.jsonl                  # the chain alone
+python -m culture.records checkpoint events.jsonl -o cp.json   # store cp.json outside the log
+python -m culture.records verify events.jsonl --checkpoint cp.json
 ```
 
 ## Flask timeline: replays of recorded time-lapse

@@ -60,6 +60,8 @@ RULES = [
     Rule("latency claim", r"\b\d+(\.\d+)?\s?(s|sec|seconds|min|minutes?)\b[^.\n]{0,30}\bper (image|visit|fov|frame)\b"
          r"|\b(a|one) minute per (image|visit|frame)", "needs_context", r"V9|live_latency"),
     Rule("cell doubling time", r"cell doubling time", "unless_negated"),
+    # A bare hash chain misses a full rewrite and a deleted tail (docs/audit_mapping.md, "The chain").
+    Rule("chain overclaim", r"\bbreaks?\b[^.\n]{0,25}\bevery\b[^.\n]{0,15}\blinks?\b|tamper[- ]?proof", "forbid"),
 ]
 
 
