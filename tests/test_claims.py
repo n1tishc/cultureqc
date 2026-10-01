@@ -87,3 +87,28 @@ def test_detectability_rows_cite_evidence():
         assert re.search(r"\bV\d|results/|tests/|not tested|not optically detectable", r["evidence"], re.I), r["issue"]
     assert re.fullmatch(r"[0-9a-f]{64}", detectability.config_hash())
     assert detectability.config_hash()[:16] in detectability.to_html()
+
+
+def test_every_3_78_sits_next_to_its_disclosure():
+    """The calibrated cutoff's 3.78 pp is not fully blind (results/confluency_cutoff.md). Wherever a
+    viewer reads the number, the disclosure is within a few lines; the console and the site render
+    both from demo/examples/cutoff_calibrated.json."""
+    import json
+
+    window = 8
+    missing = []
+    for path in TEXT_FILES + PY_UI_FILES:
+        with open(os.path.join(REPO, path)) as f:
+            lines = f.read().splitlines()
+        for i, line in enumerate(lines):
+            if "3.78" in line and "not fully blind" not in "\n".join(lines[max(0, i - window):i + window + 1]).lower():
+                missing.append(f"{path}:{i + 1}")
+    assert not missing, "3.78 without the not-fully-blind disclosure nearby:\n" + "\n".join(missing)
+
+    with open(os.path.join(REPO, "demo", "examples", "cutoff_calibrated.json")) as f:
+        text = json.load(f)["disclosure"]["text"]
+    assert text.startswith("Not fully blind")
+    with open(os.path.join(REPO, "site", "src", "data.json")) as f:
+        assert json.load(f)["cutoff_disclosure"] == text
+    with open(os.path.join(REPO, "site", "src", "components", "Sections.jsx")) as f:
+        assert "{data.cutoff_disclosure}" in f.read()

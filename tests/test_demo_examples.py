@@ -205,6 +205,12 @@ def test_cutoff_note_matches_the_cutoff_study():
         if ex["kind"] == "evican":
             c = doc["examples"][ex["id"]]
             assert "validated, not live" in note and f'{c["calibrated"]["pct"]:.1f}%' in note
-            assert abs(c["shipped"]["pct"] - ex["confluency"]["pct"]) < 0.5   # same image as the stored example
+            assert "Not fully blind" in note
+            # Compared as displayed: the note's shipped reading is the card's, digit for digit, or the
+            # note says it is the study's rerun and shows the card's number too (HT29: 29.3 vs 29.4).
+            shipped, stored = f'{c["shipped"]["pct"]:.1f}%', f'{ex["confluency"]["pct"]:.1f}%'
+            assert shipped in note
+            if shipped != stored:
+                assert "rerun" in note and f"stored reading: {stored}" in note, ex["id"]
         else:
             assert note == ""

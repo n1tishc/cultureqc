@@ -12,6 +12,18 @@
   "mae_shipped": 8.36,
   "mae_calibrated": 3.78
  },
+ "disclosure": {
+  "eval_best_cutoff": -3.0,
+  "eval_best_mae": 3.4,
+  "pick_mae": 3.78,
+  "calib_flat_from": -3.5,
+  "calib_flat_to": -2.5,
+  "calib_mae_min": 6.95,
+  "calib_mae_max": 7.0,
+  "eval_px_under": 500000,
+  "calib_larger": 28,
+  "text": "Not fully blind: the cutoff idea came from error analysis of these 33 images, and a quarter-resolution sweep showing the evaluation curve was seen before the rule was written. The rule picked −3.5, which is not the evaluation-best (−3.0 gives 3.40 pp); calibration MAE is flat from −3.5 to −2.5 (6.95–7.00 pp). The 33 are all under 500,000 px, while 28 of the 65 calibration images are larger."
+ },
  "examples": {
   "evican_pc3": {
    "file": "66_PC3.jpg",

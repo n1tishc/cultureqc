@@ -13,6 +13,8 @@ Nothing here is typed in by hand. Sources:
 - README.md: the V1-V10 table and the results table, whose numbers
   tests/test_readme_provenance.py checks against their source files.
 - demo/figures/contamination_scale.png: the real-size contamination figure.
+- demo/examples/cutoff_calibrated.json: the calibrated cutoff's not-fully-blind
+  disclosure (scripts/export_cutoff_examples.py, from results/confluency_cutoff.md).
 
 Each record's canonical JSON (sorted keys, compact, ASCII) is written out as
 the exact string culture/records.py hashed, and its SHA-256 is checked here, so
@@ -346,6 +348,8 @@ def main():
         "not_proven": readme_lead_paragraph(readme, "**What this does and doesn't prove.**"),
         "oversize_factor": re.search(r"bacteria ([\d.]+)× too large", readme).group(1),
         "results": results_rows(readme),
+        # scripts/export_cutoff_examples.py, from results/confluency_cutoff.md: why 3.78 pp is not fully blind
+        "cutoff_disclosure": json.load(open(rel("demo", "examples", "cutoff_calibrated.json")))["disclosure"]["text"],
         "decisions": readme_bullets(readme, "**What changed because of it**"),
         "review_rate": [{"group": r["group"], "sequences": int(r["sequences"]), "n": int(r["n"]),
                          "n_review": int(r["n_review"]), "pct": float(r["review_pct"]), "note": r["note"]}

@@ -382,6 +382,7 @@ export function Changes({ data }) {
   const clsReal = row(data, "QC classifier on real normal frames");
   const real = row(data, "Anomaly flag vs contamination, bacteria at real size");
   const err = row(data, "Confluency error, Cellpose-SAM");
+  const v02 = row(data, "Confluency error, v0.2 headline");
   const cut = row(data, "Confluency error, calibrated cutoff");
   const cutMae = cut.number.match(/MAE ([\d.]+) → ([\d.]+) pp/).slice(1);
   const rev = row(data, "Sent to human review, held-out frames: boundary ambiguity");
@@ -389,6 +390,15 @@ export function Changes({ data }) {
   const fc = row(data, "Passage forecast");
   const spc = row(data, "SPC");
   const items = [
+    {
+      was: `Confluency error ${v02.number}.`,
+      now: (
+        <>
+          <b>Measured on real images instead:</b> {err.number}, on 33 held-out EVICAN images with expert masks. The v0.2 numbers did not hold on real images.
+        </>
+      ),
+      src: `${v02.source} · ${err.source}`,
+    },
     {
       was: "The QC classifier led the page: its accuracy and contamination recall, measured on synthetic test tiles.",
       now: (
@@ -411,17 +421,17 @@ export function Changes({ data }) {
       was: "Confluency with a per-image confidence.",
       now: (
         <>
-          <b>Measured on real images; the “confidence” is now “boundary ambiguity”.</b> The reading is low against expert masks: {err.number}. Checked by a rule fixed in advance, the per-image score {amb.number}. So it is shown as a review trigger, not a confidence. Frames above {data.examples.items[0].confluency.ambiguity_ceiling.toFixed(2)} go to review: {rev.number}.
+          <b>The “confidence” is now “boundary ambiguity”.</b> Checked by a rule fixed in advance, the per-image score {amb.number}. So it is shown as a review trigger, not a confidence. Frames above {data.examples.items[0].confluency.ambiguity_ceiling.toFixed(2)} go to review: {rev.number}.
         </>
       ),
-      src: `${err.source} · ${amb.source} · ${rev.source}`,
+      src: `${amb.source} · ${rev.source}`,
     },
     {
       was: "Not in v0.2.",
       kept: true,
       now: (
         <>
-          <b>A fix for the low reading, validated and held for release.</b> Most of it comes from the model’s cell cutoff. With the cutoff recalibrated on other images, the error on the same 33 images drops from {cutMae[0]} to {cutMae[1]} pp. It is not live yet: it moves the review floor and the anomaly bins, which are re-derived first.
+          <b>A fix for the low reading, validated and held for release.</b> Most of it comes from the model’s cell cutoff. With the cutoff recalibrated on other images, the error on the same 33 images drops from {cutMae[0]} to {cutMae[1]} pp. {data.cutoff_disclosure} It is not live yet: it moves the review trigger and the anomaly bins, which are re-derived first.
         </>
       ),
       src: cut.source,
@@ -431,7 +441,7 @@ export function Changes({ data }) {
       kept: true,
       now: (
         <>
-          <b>Per-image anomaly check, quality gate, flask history and a passage forecast.</b> Forecast backtest at the replays’ passage target: {fc.number}. Under rules_v0.3 an anomaly flag holds a passage for human review.
+          <b>Per-image anomaly check, quality gate, flask history and a passage forecast.</b> Forecast backtest at the replays’ passage target: {fc.number}. Since rules_v0.3 an anomaly flag holds a passage for human review.
         </>
       ),
       src: fc.source,

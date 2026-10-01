@@ -10,7 +10,8 @@ result: the example numbers from `demo/examples/examples.json`, the replay
 numbers from `demo/replays/*.json`, and the rest from the `results/` files
 cited in the README. One exception, marked where it comes: in section 2, step 5,
 the HT29 card shows the calibrated cutoff's reading and the 8.36 to 3.78 pp
-result, but the rest of that step is not on screen; it comes from
+result, marked not fully blind, but the rest of that step is not on screen;
+it comes from
 `results/confluency_cutoff.md`. Say "precomputed" whenever a precomputed
 example or replay is on screen; say "live" only after pressing Analyze.
 
@@ -95,8 +96,17 @@ person steps in on exceptions and audits the trail.
      scoring: −3.5. On the 33 held-out images the error goes from 8.36 to
      3.78 pp, and images off by more than 10 pp from 13 to 3. This HT29
      image reads 52.9% at boundary ambiguity 0.171, against the experts' 51.6%.
+   - Say it is **not fully blind** before he asks (the card says so too): the
+     cutoff idea came from error analysis of these 33 images, and a
+     quarter-resolution sweep showing the evaluation curve was seen before the
+     rule was written. The rule picked −3.5, which is not the evaluation-best
+     (−3.0 gives 3.40 pp); calibration MAE is flat from −3.5 to −2.5
+     (6.95–7.00 pp). The 33 are all under 500,000 px, while 28 of the 65
+     calibration images are larger. That is why it is "validated", not
+     "proven": a clean test needs images nobody has looked at.
    - 8.36 rather than V1's 8.35: the study reran the model, and the rerun
-     differs by 0.01 pp.
+     differs by 0.01 pp. On HT29 the rerun reads 29.3% where the card's stored
+     reading is 29.4%; the note says so.
    - It is held back on purpose. At −3.5 the ambiguity trigger would send
      none of the held-out C2C12 frames to review (69 on the same
      quarter-resolution maps at the shipped cutoff; 70 at full resolution in
@@ -105,7 +115,7 @@ person steps in on exceptions and audits the trail.
      only) it reads 3–9 pp high, where the shipped cutoff is within about
      3 pp on five of the six. So the trigger and the bins get re-derived
      before it ships, and it goes out as a release, not a hot fix.
-   - Say "shipped 8.35, validated fix 3.78". The console runs the shipped
+   - Say "shipped 8.35, validated fix 3.78, not fully blind". The console runs the shipped
      cutoff; never present 3.78 as what is running. The passage range stays
      untested either way: EVICAN has no image at or above 66%.
 

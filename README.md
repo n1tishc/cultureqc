@@ -98,7 +98,8 @@ checks that every number in the "Number" column appears in its source file.
 | Result | Number | Provenance | Source |
 |---|---|---|---|
 | Confluency error, Cellpose-SAM | MAE 8.35 pp (n = 33); threshold baseline 11.20 pp | real (EVICAN) | `results/confluency_real_summary.md` |
-| Confluency error, calibrated cutoff (validated, not shipped) | MAE 8.36 → 3.78 pp on the same 33, cutoff −3.5 picked on the other 65 eval2019 images; off by more than 10 pp: 13 → 3 | real (EVICAN) | `results/confluency_cutoff.md` |
+| Confluency error, v0.2 headline (superseded) | 2.3 pp vs ~31 pp for thresholding, measured on synthetic tiles | synthetic | `results/v02_headline.md` |
+| Confluency error, calibrated cutoff (validated, not shipped; not fully blind, see Known limits) | MAE 8.36 → 3.78 pp on the same 33, cutoff −3.5 picked on the other 65 eval2019 images; off by more than 10 pp: 13 → 3 | real (EVICAN) | `results/confluency_cutoff.md` |
 | FOV sampling noise, 0.25-frame field | σ_fov = 2.828 + 0.2072 × confluency | real (C2C12) | `results/growth_signal_summary.md` |
 | Growth step ÷ FOV noise (V2) | 0.35 / 0.65 at 1 FOV; 0.61 / 1.12 at 3 FOVs (6 h / 12 h) | real, simulated visits | `results/growth_signal_summary.md` |
 | Passage forecast, 6 h visits, 3 FOVs (V3) | median absolute error 9.0 h; 90% interval covered 4/5 (n = 5 sequences, 50% target) | real, simulated visits | `results/growth_backtest.md` |
@@ -363,8 +364,13 @@ bacteria.
 under-read is Cellpose-SAM's cutoff: a pixel counts as cell only above logit 0.
 A cutoff picked on the 65 eval2019 images outside the 33, by a rule fixed
 before scoring, lowers held-out MAE from 8.36 to 3.78 pp
-(`results/confluency_cutoff.md`; 8.36 is that study's rerun of V1's 8.35). It
-is held for a release because it moves what was set at the old cutoff: on
+(`results/confluency_cutoff.md`; 8.36 is that study's rerun of V1's 8.35).
+**Not fully blind:** the cutoff idea came from error analysis of these 33
+images, and a quarter-resolution sweep showing the evaluation curve was seen
+before the rule was written. The rule picked −3.5, which is not the
+evaluation-best (−3.0 gives 3.40 pp); calibration MAE is flat from −3.5 to −2.5
+(6.95–7.00 pp). The 33 are all under 500,000 px, while 28 of the 65
+calibration images are larger. It is held for a release because it moves what was set at the old cutoff: on
 held-out C2C12 the ambiguity trigger would send no frame to review (69 today on
 the same quarter-resolution maps) and 471 of 1228 frames change anomaly bin.
 The floor and bins have to be re-derived first; the steps are listed in
@@ -384,7 +390,7 @@ replays only, so a dimmed or blurred single image is not flagged there.
 704×520 image and 689 s for a 1392×1040 C2C12 frame on an Apple M2 Pro limited
 to 2 threads to approximate the 2-vCPU Space (V9, `results/live_latency.md`; an
 approximation, not a measurement on the Space). `culture/seg.py` uses a GPU
-when one is present; GPU latency has not been measured yet.
+when one is present; GPU and Apple-GPU times are in the results table above.
 
 **`demo/analysis.py::_scale_bboxes` over-scales evidence boxes** on images
 larger than 256 px (only drawn when the classifier is not demoted). The

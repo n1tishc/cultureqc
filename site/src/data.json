@@ -6518,7 +6518,13 @@
    "source": "results/confluency_real_summary.md"
   },
   {
-   "result": "Confluency error, calibrated cutoff (validated, not shipped)",
+   "result": "Confluency error, v0.2 headline (superseded)",
+   "number": "2.3 pp vs ~31 pp for thresholding, measured on synthetic tiles",
+   "provenance": "synthetic",
+   "source": "results/v02_headline.md"
+  },
+  {
+   "result": "Confluency error, calibrated cutoff (validated, not shipped; not fully blind, see Known limits)",
    "number": "MAE 8.36 → 3.78 pp on the same 33, cutoff −3.5 picked on the other 65 eval2019 images; off by more than 10 pp: 13 → 3",
    "provenance": "real (EVICAN)",
    "source": "results/confluency_cutoff.md"
@@ -6638,6 +6644,7 @@
    "source": "results/live_latency_colab_gpu.md"
   }
  ],
+ "cutoff_disclosure": "Not fully blind: the cutoff idea came from error analysis of these 33 images, and a quarter-resolution sweep showing the evaluation curve was seen before the rule was written. The rule picked −3.5, which is not the evaluation-best (−3.0 gives 3.40 pp); calibration MAE is flat from −3.5 to −2.5 (6.95–7.00 pp). The 33 are all under 500,000 px, while 28 of the 65 calibration images are larger.",
  "decisions": [
   "The QC classifier is demoted: recorded and shown collapsed, not used for the action.",
   "The anomaly check stays as a per-image flag, for review. Anomaly scores and class probabilities are no longer trended over time.",
