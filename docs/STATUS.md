@@ -20,10 +20,10 @@ docs and deploy.
 
 | # | Item | Commit | Result |
 |---|---|---|---|
-| 1 | Specs untracked, private notes ignored, demo script retitled, names listed (C1); CI on this branch (C2) | `1e6b77e` | See "CI on this branch" and "Names in tracked files" below. The first CI run on the branch is pending the push |
+| 1 | Specs untracked, private notes ignored, demo script retitled, names listed (C1); CI on this branch (C2) | `1e6b77e` | See "CI on this branch" and "Names in tracked files" below. First CI run on the branch: [36802691436](https://github.com/n1tishc/cultureqc/actions/runs/36802691436) at `ea63b3f`, all three jobs green |
 | 2 | Audit chain: wording, missing/empty logs fail, anchored checkpoint (A2.1–A2.3) | `8542add` | `verify_chain` returns a structured result (still unpacks as `(ok, bad_line)`); a missing log is `missing_log` and an empty one `empty_chain`, no longer intact. `checkpoint()` and `verify_chain(..., checkpoint=)` catch the two rows a bare chain passes (full rewrite → `rewritten`, deleted tail → `truncated`); optional HMAC, off by default. CLI: `python -m culture.records verify|checkpoint`. 19 tests in `tests/test_records_chain.py`, one per tamper row. README, audit mapping, demo script and the site's Records section no longer say an edit "breaks every link after it"; the claims checker now forbids that wording |
 | 3 | Does the confluency confidence predict error? (B2) | `3a15fda` (pre-registration, alone), `1d64ee5` (script + result), `f5532f5` (rename), `a307395` (wording fix) | **Fails the pre-registered rule; renamed.** On the 33 held-out EVICAN images: ρ(confidence, \|error\|) −0.36, 95% CI [−0.69, +0.02] (fails (a)); AURC 7.73 vs 8.35 pp random, oracle 3.26, permutation p = 0.303 (fails (b)); partial ρ given GT confluency +0.02; ρ with GT confluency −0.61; ρ with the reading on 1,228 held-out C2C12 frames −0.95. Displayed label is now **boundary ambiguity** (1 − `confidence`, `culture.rules.boundary_ambiguity`) in the console, the site, README, demo script, audit mapping, schema description and `results/review_rate.md`; the record field stays `confidence`, the floor and the rules are unchanged. Post hoc, not tested: a 0% reading scores as unambiguous (3 of 33, 6 of 65). **Interim:** the stored records' `action_reason` still says "Confluency confidence … is below floor" until item 4 regenerates them with `rules_v0.4` |
-| 4 | `hold` → `continue`, `rules_v0.4`, records regenerated; schema aligned (B1) | (the commit adding this row; see `CHANGELOG.md`) | Label-only rules change: `--rederive` from stored model outputs (no model run) gives the same seven decisions (four `hold` → `continue`, three `human_review`). Rule 2's reason now names boundary ambiguity, which ends item 3's interim state. `culture/schema.json` matches what the pipeline writes (`confluency_method` values, `record_hash`, `continue`), `schema_version` 0.2 → 0.3 (`culture.records.SCHEMA_VERSION`); stored records validate against it, and the smoke test's strict xfail is gone. Every stored `record_hash` changed (re-chained, `record_id` and timestamps kept); `CHANGELOG.md` says so. The claims checker forbids `hold` as an action label unless the rename is explained next to it |
+| 4 | `hold` → `continue`, `rules_v0.4`, records regenerated; schema aligned (B1) | `ea63b3f` (see `CHANGELOG.md`) | Label-only rules change: `--rederive` from stored model outputs (no model run) gives the same seven decisions (four `hold` → `continue`, three `human_review`). Rule 2's reason now names boundary ambiguity, which ends item 3's interim state. `culture/schema.json` matches what the pipeline writes (`confluency_method` values, `record_hash`, `continue`), `schema_version` 0.2 → 0.3 (`culture.records.SCHEMA_VERSION`); stored records validate against it, and the smoke test's strict xfail is gone. Every stored `record_hash` changed (re-chained, `record_id` and timestamps kept); `CHANGELOG.md` says so. The claims checker forbids `hold` as an action label unless the rename is explained next to it |
 
 ### CI on this branch
 
@@ -45,8 +45,8 @@ in three jobs:
 
 So CI does **not** run the model: the smoke pipeline, cache parity, live
 calibration and the console run only locally, where the full suite was
-242 passed, 1 xfailed on 2026-09-30 before this pass. The README badge points
-at this branch's runs.
+242 passed, 1 xfailed on 2026-09-30 before this pass (283 passed after item 4,
+the schema xfail gone). The README badge points at this branch's runs.
 
 ### Names in tracked files
 
