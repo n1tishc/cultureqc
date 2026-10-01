@@ -204,7 +204,17 @@ def zero_reads(df: pd.DataFrame) -> dict:
             "conf": ", ".join(f"{v:.2f}" for v in sorted(z.confidence)) or "—"}
 
 
-def results_md(p: dict, s: dict, c: dict, d: dict, zeros: list[tuple[str, dict]]) -> str:
+def top_scored(df: pd.DataFrame, k: int = 3) -> dict:
+    g = df.assign(err=(df.pct - df.gt_pct).abs()).sort_values("confidence", ascending=False, kind="stable")
+    g = g.reset_index(drop=True)
+    worst = g.loc[g.err.idxmax()]
+    return {"k": k, "errs": ", ".join(f"{v:.1f}" for v in sorted(g.err.head(k), reverse=True)),
+            "max": float(worst.err), "conf": float(worst.confidence),
+            "at_least": int((g.confidence >= worst.confidence).sum()), "of": len(g)}
+
+
+def results_md(p: dict, s: dict, c: dict, d: dict, zeros: list[tuple[str, dict]],
+               tops: list[tuple[str, dict]]) -> str:
     verdict = ("**Keep the name \"confidence\".**" if d["keep"] else
                "**Rename: the displayed label becomes \"Boundary ambiguity\" (1 − confidence).**")
     lines = [
@@ -252,7 +262,11 @@ def results_md(p: dict, s: dict, c: dict, d: dict, zeros: list[tuple[str, dict]]
         "### Post hoc, not pre-registered",
         "",
         "Found by reading the risk–coverage plot after the decision above; it is an observation, not a test. "
-        "In both sets the highest-scoring images include the largest errors. When Cellpose-SAM reads 0% "
+        "The risk–coverage curves start high because the highest-scoring images include large misses: "
+        + "; ".join(f"on the {name}, the top {t['k']} by score are off by {t['errs']} pp, and the largest error "
+                    f"({t['max']:.1f} pp) scores {t['conf']:.3f}, a score {t['at_least']} of {t['of']} images "
+                    "reach or exceed" for name, t in tops)
+        + ". When Cellpose-SAM reads 0% "
         "(no pixel above the cutoff), few pixels are near the cutoff either, so the score is high and the "
         "frame is not sent to review:",
         "",
@@ -286,7 +300,8 @@ def main():
         prereg = f.read().split(RESULTS_HEADER)[0].rstrip("\n") + "\n"
     with open(OUT_MD, "w") as f:
         f.write(prereg + results_md(p, s, c, d, [("33 held-out", zero_reads(p_df)),
-                                                 ("65 calibration", zero_reads(s_df))]))
+                                                 ("65 calibration", zero_reads(s_df))],
+                                    [("33 held-out", top_scored(p_df)), ("65 calibration", top_scored(s_df, 4))]))
 
     print(f"rho(conf, |err|) = {p['rho_err']:+.3f} CI [{p['rho_err_ci']['lo']:+.3f}, {p['rho_err_ci']['hi']:+.3f}]; "
           f"partial {p['partial']:+.3f}; rho(conf, GT) {p['rho_gt']:+.3f}; AURC {p['aurc']:.2f} vs random "

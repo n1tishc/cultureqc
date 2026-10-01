@@ -312,8 +312,8 @@ Stated here rather than discovered later.
 **The per-image score is a review trigger, not a confidence.** It was shown as
 "confidence" until a pre-registered check of whether it predicts the reading's
 error failed: on the 33 held-out EVICAN images, Spearman ρ with the absolute
-error is −0.36 with a 95% CI reaching +0.02, sorting by it beats random order
-with p = 0.303, and with expert confluency held fixed the correlation is +0.02.
+error is −0.36 with a 95% CI reaching +0.02, sorting by it is no better than
+random order (AURC 7.73 vs 8.35 pp, p = 0.303), and with expert confluency held fixed the correlation is +0.02.
 It tracks density instead (ρ −0.61 with expert confluency, −0.95 with the
 reading on held-out C2C12), which is why review piles up at 40–60%. It is now
 shown as **boundary ambiguity** (1 − the record's `confidence`), with the

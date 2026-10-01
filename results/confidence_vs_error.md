@@ -134,7 +134,7 @@ Spearman ρ(confidence, Cellpose-SAM's own reading) = **-0.95**, 95% CI [-0.98, 
 
 ### Post hoc, not pre-registered
 
-Found by reading the risk–coverage plot after the decision above; it is an observation, not a test. In both sets the highest-scoring images include the largest errors. When Cellpose-SAM reads 0% (no pixel above the cutoff), few pixels are near the cutoff either, so the score is high and the frame is not sent to review:
+Found by reading the risk–coverage plot after the decision above; it is an observation, not a test. The risk–coverage curves start high because the highest-scoring images include large misses: on the 33 held-out, the top 3 by score are off by 19.4, 15.8, 12.3 pp, and the largest error (23.4 pp) scores 0.836, a score 23 of 33 images reach or exceed; on the 65 calibration, the top 4 by score are off by 65.1, 32.0, 12.3, 5.9 pp, and the largest error (65.1 pp) scores 1.000, a score 4 of 65 images reach or exceed. When Cellpose-SAM reads 0% (no pixel above the cutoff), few pixels are near the cutoff either, so the score is high and the frame is not sent to review:
 
 | Set | Images read as 0.0% | Their GT confluency | Their confidence |
 |---|---|---|---|

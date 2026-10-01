@@ -60,8 +60,8 @@ person steps in on exceptions and audits the trail.
    - Say what the trigger is before he asks. It was called "confidence"
      until a check fixed in advance asked whether it predicts the reading's
      error, and it failed: on the 33 held-out EVICAN images, Spearman ρ
-     −0.36 with a 95% CI reaching +0.02, and sorting by it beats random
-     order with p = 0.303 (`results/confidence_vs_error.md`). It tracks
+     −0.36 with a 95% CI reaching +0.02, and sorting by it is no better
+     than random order (p = 0.303; `results/confidence_vs_error.md`). It tracks
      density instead (ρ −0.95 with the reading on held-out C2C12), so it is
      a density-sensitive review trigger, not an error estimate, and it is
      labelled that way now.

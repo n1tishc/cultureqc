@@ -411,7 +411,7 @@ export function Changes({ data }) {
       was: "Confluency with a per-image confidence.",
       now: (
         <>
-          <b>Measured on real images; the “confidence” is now “boundary ambiguity”.</b> The reading is low against expert masks: {err.number}. The per-image score failed a check fixed in advance of whether it predicts the reading’s error: {amb.number}. It tracks density, so it is shown as a review trigger. Frames above {data.examples.items[0].confluency.ambiguity_ceiling.toFixed(2)} go to review: {rev.number}.
+          <b>Measured on real images; the “confidence” is now “boundary ambiguity”.</b> The reading is low against expert masks: {err.number}. Checked by a rule fixed in advance, the per-image score {amb.number}. So it is shown as a review trigger, not a confidence. Frames above {data.examples.items[0].confluency.ambiguity_ceiling.toFixed(2)} go to review: {rev.number}.
         </>
       ),
       src: `${err.source} · ${amb.source} · ${rev.source}`,
