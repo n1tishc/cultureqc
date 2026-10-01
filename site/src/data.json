@@ -35,7 +35,10 @@
      "borderline_fraction": 0.1221,
      "instance_pct": 38.66,
      "band_logit": 1.0,
-     "floor": 0.3
+     "floor": 0.3,
+     "ambiguity": 0.488,
+     "ambiguity_ceiling": 0.7,
+     "ambiguity_tooltip": "Share of pixels near the cell/background cutoff, as min(1, 4 × share within ±1 logit); rises with density; a review trigger, not a probability that the reading is right."
     },
     "target": 80.0,
     "anomaly": {
@@ -407,7 +410,10 @@
      "borderline_fraction": 0.0563,
      "instance_pct": 16.4,
      "band_logit": 1.0,
-     "floor": 0.3
+     "floor": 0.3,
+     "ambiguity": 0.225,
+     "ambiguity_ceiling": 0.7,
+     "ambiguity_tooltip": "Share of pixels near the cell/background cutoff, as min(1, 4 × share within ±1 logit); rises with density; a review trigger, not a probability that the reading is right."
     },
     "target": 80.0,
     "anomaly": {
@@ -779,7 +785,10 @@
      "borderline_fraction": 0.2467,
      "instance_pct": 47.36,
      "band_logit": 1.0,
-     "floor": 0.3
+     "floor": 0.3,
+     "ambiguity": 0.987,
+     "ambiguity_ceiling": 0.7,
+     "ambiguity_tooltip": "Share of pixels near the cell/background cutoff, as min(1, 4 × share within ±1 logit); rises with density; a review trigger, not a probability that the reading is right."
     },
     "target": 80.0,
     "anomaly": {
@@ -1151,7 +1160,10 @@
      "borderline_fraction": 0.0727,
      "instance_pct": 10.35,
      "band_logit": 1.0,
-     "floor": 0.3
+     "floor": 0.3,
+     "ambiguity": 0.291,
+     "ambiguity_ceiling": 0.7,
+     "ambiguity_tooltip": "Share of pixels near the cell/background cutoff, as min(1, 4 × share within ±1 logit); rises with density; a review trigger, not a probability that the reading is right."
     },
     "target": 80.0,
     "anomaly": {
@@ -1523,7 +1535,10 @@
      "borderline_fraction": 0.0856,
      "instance_pct": 79.89,
      "band_logit": 1.0,
-     "floor": 0.3
+     "floor": 0.3,
+     "ambiguity": 0.342,
+     "ambiguity_ceiling": 0.7,
+     "ambiguity_tooltip": "Share of pixels near the cell/background cutoff, as min(1, 4 × share within ±1 logit); rises with density; a review trigger, not a probability that the reading is right."
     },
     "target": 80.0,
     "anomaly": {
@@ -1895,7 +1910,10 @@
      "borderline_fraction": 0.0077,
      "instance_pct": 5.13,
      "band_logit": 1.0,
-     "floor": 0.3
+     "floor": 0.3,
+     "ambiguity": 0.031,
+     "ambiguity_ceiling": 0.7,
+     "ambiguity_tooltip": "Share of pixels near the cell/background cutoff, as min(1, 4 × share within ±1 logit); rises with density; a review trigger, not a probability that the reading is right."
     },
     "target": 80.0,
     "anomaly": {
@@ -2267,7 +2285,10 @@
      "borderline_fraction": 0.1835,
      "instance_pct": 27.92,
      "band_logit": 1.0,
-     "floor": 0.3
+     "floor": 0.3,
+     "ambiguity": 0.734,
+     "ambiguity_ceiling": 0.7,
+     "ambiguity_tooltip": "Share of pixels near the cell/background cutoff, as min(1, 4 × share within ±1 logit); rises with density; a review trigger, not a probability that the reading is right."
     },
     "target": 80.0,
     "anomaly": {
@@ -6551,10 +6572,16 @@
    "source": "results/quality_gate_c2c12.md"
   },
   {
-   "result": "Sent to human review, held-out frames: confidence below 0.30",
+   "result": "Sent to human review, held-out frames: boundary ambiguity above 0.70 (record confidence below 0.30)",
    "number": "5.7% of 1228; 43.8% of the 160 at 40-60% confluency (14 sequences)",
    "provenance": "real (C2C12)",
    "source": "results/review_rate.md"
+  },
+  {
+   "result": "Boundary ambiguity vs the reading's error (pre-registered; the score was named \"confidence\")",
+   "number": "does not predict error: Spearman ρ −0.36 (95% CI −0.69 to +0.02), AURC 7.73 vs 8.35 pp in random order (p = 0.303), n = 33; tracks density: ρ −0.61 with expert confluency, −0.95 with the reading on 1228 held-out C2C12 frames",
+   "provenance": "real (EVICAN, C2C12)",
+   "source": "results/confidence_vs_error.md"
   },
   {
    "result": "Sent to human review: anomaly hold (rules_v0.3), 50% target",

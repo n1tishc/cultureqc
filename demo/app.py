@@ -23,6 +23,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from culture.qc import demoted_label
 from culture.records import RecordWriter, verify_chain
+from culture.rules import AMBIGUITY_TOOLTIP, boundary_ambiguity
 from culture import detectability
 from culture.anomaly import LIVE_LIMITS
 from culture.visuals import anomaly_tile_view, png
@@ -213,11 +214,11 @@ def render_cutoff_note(ex, doc=None):
     cut, ev = doc["cutoff"], doc["eval"]
     return f"""
     <div class="cutoff-note"><b>Calibrated cutoff: validated, not live.</b> In the cutoff study
-    (<code>{html.escape(doc["source"])}</code>) this image reads {c["calibrated"]["pct"]:.1f}% at confidence
-    {c["calibrated"]["confidence"]:.3f} with the Cellpose-SAM cutoff at {format(cut["calibrated"], "g").replace("-", "−")} (picked on
+    (<code>{html.escape(doc["source"])}</code>) this image reads {c["calibrated"]["pct"]:.1f}% at boundary ambiguity
+    {boundary_ambiguity(c["calibrated"]["confidence"]):.3f} with the Cellpose-SAM cutoff at {format(cut["calibrated"], "g").replace("-", "−")} (picked on
     {doc["calibration_images"]} other EVICAN images), against {c["shipped"]["pct"]:.1f}% at the shipped
     {cut["shipped"]:g}; experts {c["gt_pct"]:.1f}%. On the {ev["n"]} held-out images: mean absolute error
-    {ev["mae_shipped"]:.2f} to {ev["mae_calibrated"]:.2f} pp. Held for a release: it moves the review floor
+    {ev["mae_shipped"]:.2f} to {ev["mae_calibrated"]:.2f} pp. Held for a release: it moves the review trigger
     and the anomaly bins, which are re-derived first. Everything above uses the shipped cutoff.</div>"""
 
 
@@ -325,7 +326,7 @@ def render_results(
     </div>
     <div class="confluency-meta">
       <span>Target: {target_confluency:.0f}%</span>
-      <span>Confidence: {confluency_confidence:.2f}</span>
+      <span title="{html.escape(AMBIGUITY_TOOLTIP)}">Boundary ambiguity: {boundary_ambiguity(confluency_confidence):.2f}</span>
       <span>Method: {html.escape(confluency_method)}</span>
     </div>
   </div>
@@ -380,7 +381,7 @@ def render_results(
     </div>
     <div class="confluency-meta">
       <span>Target: {target_confluency:.0f}%</span>
-      <span>Confidence: {confluency_confidence:.2f}</span>
+      <span title="{html.escape(AMBIGUITY_TOOLTIP)}">Boundary ambiguity: {boundary_ambiguity(confluency_confidence):.2f}</span>
       <span>Method: {html.escape(confluency_method)}</span>
     </div>
   </div>

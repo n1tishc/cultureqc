@@ -57,15 +57,15 @@ function ReviewFigure({ data }) {
   const all = rr.find((r) => r.group === "C2C12 held-out, full frames");
   const bins = rr.filter((r) => /^C2C12 held-out, confluency/.test(r.group));
   const max = Math.max(...bins.map((b) => b.pct), 10);
-  const floor = data.examples.items[0].confluency.floor;
+  const ceiling = data.examples.items[0].confluency.ambiguity_ceiling;
   const worst = bins.reduce((a, b) => (b.pct > a.pct ? b : a)).group.replace("C2C12 held-out, confluency ", "");
   return (
     <Fig
       letter="B"
-      title="Where the confidence floor sends frames to review"
+      title="Where the ambiguity trigger sends frames to review"
       legend={
         <>
-          Held-out C2C12 frames below confidence {floor.toFixed(2)}, by confluency. Overall {all.pct}% of {all.n} frames ({all.sequences} sequences); the uncertainty sits in the {worst} band, where passage decisions are made. Source: <Src>results/review_rate.csv</Src>.
+          Held-out C2C12 frames with boundary ambiguity above {ceiling.toFixed(2)}, by confluency. Overall {all.pct}% of {all.n} frames ({all.sequences} sequences). The score rises with density, so review piles up in the {worst} band, where passage decisions are made; it is a review trigger, not a measure of the reading’s error. Source: <Src>results/review_rate.csv</Src>.
         </>
       }
     >
@@ -137,14 +137,14 @@ function NoiseFigure({ data }) {
 }
 
 export function Confluency({ data }) {
-  const floor = data.examples.items[0].confluency.floor;
+  const ceiling = data.examples.items[0].confluency.ambiguity_ceiling;
   return (
     <Section
       id="confluency"
       title="How far to trust one confluency reading"
       lede={
         <p>
-          Cellpose-SAM’s probability map gives the number; the share of pixels close to its cutoff gives the confidence, and a frame below {floor.toFixed(2)} goes to a person. Each was measured on real images before anything was built on it.
+          Cellpose-SAM’s probability map gives the number; the share of pixels close to its cutoff gives the boundary ambiguity, and a frame above {ceiling.toFixed(2)} goes to a person. Both were measured on real images: the number against expert masks, and the ambiguity against the number’s error, which it does not predict. It tracks density, so it is a review trigger, not a confidence.
         </p>
       }
     >
@@ -384,7 +384,8 @@ export function Changes({ data }) {
   const err = row(data, "Confluency error, Cellpose-SAM");
   const cut = row(data, "Confluency error, calibrated cutoff");
   const cutMae = cut.number.match(/MAE ([\d.]+) → ([\d.]+) pp/).slice(1);
-  const rev = row(data, "Sent to human review, held-out frames: confidence");
+  const rev = row(data, "Sent to human review, held-out frames: boundary ambiguity");
+  const amb = row(data, "Boundary ambiguity vs the reading's error");
   const fc = row(data, "Passage forecast");
   const spc = row(data, "SPC");
   const items = [
@@ -408,13 +409,12 @@ export function Changes({ data }) {
     },
     {
       was: "Confluency with a per-image confidence.",
-      kept: true,
       now: (
         <>
-          <b>Measured on real images, with a review floor.</b> It reads low against expert masks: {err.number}. Frames below confidence {data.examples.items[0].confluency.floor.toFixed(2)} go to review: {rev.number}.
+          <b>Measured on real images; the “confidence” is now “boundary ambiguity”.</b> The reading is low against expert masks: {err.number}. The per-image score failed a check fixed in advance of whether it predicts the reading’s error: {amb.number}. It tracks density, so it is shown as a review trigger. Frames above {data.examples.items[0].confluency.ambiguity_ceiling.toFixed(2)} go to review: {rev.number}.
         </>
       ),
-      src: `${err.source} · ${rev.source}`,
+      src: `${err.source} · ${amb.source} · ${rev.source}`,
     },
     {
       was: "Not in v0.2.",

@@ -224,12 +224,12 @@ export default function Stage({ examples, verify, liveParity }) {
               className="sub"
               data-link="band"
               tabIndex={0}
-              title={`Confidence is 1 − 4 × the share of pixels within ±${c.band_logit} logit of the cutoff.`}
+              title={c.ambiguity_tooltip}
               onMouseEnter={() => setSolo("band")}
               onMouseLeave={() => setSolo("contour")}
               onFocus={() => setSolo("band")}
             >
-              <Gauge value={c.confidence} mark={c.floor} max={1} left={`confidence ${c.confidence.toFixed(3)}`} right={`review below ${c.floor.toFixed(2)}`} />
+              <Gauge value={c.ambiguity} mark={c.ambiguity_ceiling} max={1} left={`boundary ambiguity ${c.ambiguity.toFixed(3)}`} right={`review above ${c.ambiguity_ceiling.toFixed(2)}`} />
               <p>
                 <b className="num">{(c.borderline_fraction * 100).toFixed(1)}%</b> of pixels sit on the cutoff’s edge (hatched).
               </p>

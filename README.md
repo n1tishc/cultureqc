@@ -107,7 +107,8 @@ checks that every number in the "Number" column appears in its source file.
 | Anomaly flag vs contamination, bacteria at real size | AUROC 0.48 (simulated faults, n = 2 held-out sequences); flagged on 1 of 97 frames, 4 of 97 without the bacteria; confluency a median 4.3 pp lower | simulated faults | `results/contamination_scale.md` |
 | Anomaly flag vs lamp dimming | AUROC 0.47 (simulated faults) | simulated faults | `results/anomaly_summary.md` |
 | Quality gate fail rate | normal 12.1%; contamination 91.8%; dimming 51.1% | real + simulated faults | `results/quality_gate_c2c12.md` |
-| Sent to human review, held-out frames: confidence below 0.30 | 5.7% of 1228; 43.8% of the 160 at 40-60% confluency (14 sequences) | real (C2C12) | `results/review_rate.md` |
+| Sent to human review, held-out frames: boundary ambiguity above 0.70 (record `confidence` below 0.30) | 5.7% of 1228; 43.8% of the 160 at 40-60% confluency (14 sequences) | real (C2C12) | `results/review_rate.md` |
+| Boundary ambiguity vs the reading's error (pre-registered; the score was named "confidence") | does not predict error: Spearman ρ −0.36 (95% CI −0.69 to +0.02), AURC 7.73 vs 8.35 pp in random order (p = 0.303), n = 33; tracks density: ρ −0.61 with expert confluency, −0.95 with the reading on 1228 held-out C2C12 frames | real (EVICAN, C2C12) | `results/confidence_vs_error.md` |
 | Sent to human review: anomaly hold (`rules_v0.3`), 50% target | held-out normal frames: 1 of 14 passage-eligible, total 71 (5.8%); simulated contamination with bacteria 16.5× too large (4 sequences, both splits): 76 of 76 passage-eligible; at real size no frame reaches the target | real (C2C12) + simulated faults | `results/review_rate.md` |
 | SPC (V6; not in the product) | 3.75 false alarms / 100 visits; contamination 0/2; stall 0/2 | simulated faults | `results/spc_summary.md` |
 | QC classifier accuracy, synthetic test tiles | 0.9801 (n = 653) | synthetic | `results/calibration_summary.md` |
@@ -133,7 +134,7 @@ drove, and the proof cannot drift apart.
 
 | Output | Detail |
 |---|---|
-| **Confluency** | Cellpose-SAM (`cpsam_v2`) probability map. 8.35 pp mean absolute error on real held-out EVICAN images, reading low (V1). A threshold baseline is computed alongside for comparison. |
+| **Confluency** | Cellpose-SAM (`cpsam_v2`) probability map. 8.35 pp mean absolute error on real held-out EVICAN images, reading low (V1). A threshold baseline is computed alongside for comparison. Shown with its **boundary ambiguity**, the share of pixels near the cutoff (min(1, 4 × share within ±1 logit); the record stores 1 − it as `confidence`). Above 0.70 the rules send the image to review. It is a density-sensitive review trigger, not an error estimate: it does not predict the reading's error ([below](#known-limits)). |
 | **Anomaly check** | DINOv2-small patch distances on the 256 px centre tile against banks of normal C2C12 patches, one per confluency bin; flag = score above the bin's 5%-FPR threshold, with a patch heatmap (`culture/anomaly.py`, `configs/anomaly.yaml`). Shown for review; a flag turns `passage` into `human_review` (hold and feed unchanged). Uncalibrated outside the tested imaging setup; see [Site calibration](#site-calibration). |
 | **Action** | Deterministic rules (`rules_v0.3`) over confluency, timing and the anomaly flag (plus the QC flag only when the classifier is not demoted): `passage`, `feed`, `hold`, `human_review`. No model decides this. |
 | **QC classifier (demoted)** | EfficientNet-B0 over the centred 256 px tile: `normal`, `contamination_suspected`, `detachment`, `image_quality`. Trained on synthetic tiles only; accuracy 0.9801 on synthetic test tiles, but 5.0% of real held-out C2C12 normal frames are called normal. Temperature-scaled (`configs/calibration.yaml`). Recorded and shown collapsed; not used for the action, and no Grad-CAM evidence is drawn while demoted (`configs/qc.yaml`). |
@@ -265,7 +266,7 @@ never replayed**.
   cell-probability map as a surface: height is the map's logit, not cell
   thickness (phase contrast does not measure height). Points above the cutoff
   plane are counted as cell, and the borderline band around it is what sets
-  the confidence. The view recomputes the map's SHA-256 and shows whether it
+  the boundary ambiguity. The view recomputes the map's SHA-256 and shows whether it
   matches the record's `confluency_map_hash` (`demo/confluency_3d.py`).
 - **Flask Timeline**: the five precomputed replays above, as a curve or in
   **3D space × time**: one layer per visit, showing where the frame's map
@@ -307,6 +308,18 @@ dozens of images per bin. `configs/` is never overwritten.
 ## Known limits
 
 Stated here rather than discovered later.
+
+**The per-image score is a review trigger, not a confidence.** It was shown as
+"confidence" until a pre-registered check of whether it predicts the reading's
+error failed: on the 33 held-out EVICAN images, Spearman ρ with the absolute
+error is −0.36 with a 95% CI reaching +0.02, sorting by it beats random order
+with p = 0.303, and with expert confluency held fixed the correlation is +0.02.
+It tracks density instead (ρ −0.61 with expert confluency, −0.95 with the
+reading on held-out C2C12), which is why review piles up at 40–60%. It is now
+shown as **boundary ambiguity** (1 − the record's `confidence`), with the
+review trigger unchanged. Seen after the check, not tested: an image the model
+reads as 0% scores as unambiguous, so a complete miss is not sent to review
+(3 of the 33, all at 12–19% expert confluency; `results/confidence_vs_error.md`).
 
 **The anomaly check is calibrated for one setup.** On held-out normal C2C12
 frames it flags 10.0% against a 5% target, and one 090318 sequence 69%
@@ -352,7 +365,7 @@ A cutoff picked on the 65 eval2019 images outside the 33, by a rule fixed
 before scoring, lowers held-out MAE from 8.36 to 3.78 pp
 (`results/confluency_cutoff.md`; 8.36 is that study's rerun of V1's 8.35). It
 is held for a release because it moves what was set at the old cutoff: on
-held-out C2C12 the confidence floor would send no frame to review (69 today on
+held-out C2C12 the ambiguity trigger would send no frame to review (69 today on
 the same quarter-resolution maps) and 471 of 1228 frames change anomaly bin.
 The floor and bins have to be re-derived first; the steps are listed in
 `docs/audit_mapping.md`. Everything else in this README, the site and the

@@ -56,6 +56,19 @@ class LineConfig:
 
 DEFAULT_CONFIG = LineConfig()
 
+AMBIGUITY_TOOLTIP = ("Share of pixels near the cell/background cutoff, as min(1, 4 × share within ±1 logit); "
+                     "rises with density; a review trigger, not a probability that the reading is right.")
+
+
+def boundary_ambiguity(confluency_confidence: float) -> float:
+    """What the console and the site show for the record's confluency
+    `confidence`: 1 − confidence = min(1, 4 × share of pixels within ±1 logit
+    of the cutoff), higher = more ambiguous. Shown under this name because the
+    score tracks density, not the reading's error (results/confidence_vs_error.md).
+    The record keeps the field `confidence`; the rules still compare it with
+    the floor, so "confidence below 0.30" is "ambiguity above 0.70"."""
+    return round(1.0 - float(confluency_confidence), 3)
+
 
 def load_line_config(yaml_path: str) -> LineConfig:
     """Load a per-line YAML config. Falls back to defaults for missing fields."""

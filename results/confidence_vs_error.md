@@ -132,6 +132,15 @@ The 65 are the cutoff study's rerun of the same call (float16 maps), reported, n
 
 Spearman ρ(confidence, Cellpose-SAM's own reading) = **-0.95**, 95% CI [-0.98, -0.93] (sequence bootstrap), on 1228 full frames from 14 held-out sequences, readings up to 57.0%. The density proxy is the model's reading, not an expert mask.
 
+### Post hoc, not pre-registered
+
+Found by reading the risk–coverage plot after the decision above; it is an observation, not a test. In both sets the highest-scoring images include the largest errors. When Cellpose-SAM reads 0% (no pixel above the cutoff), few pixels are near the cutoff either, so the score is high and the frame is not sent to review:
+
+| Set | Images read as 0.0% | Their GT confluency | Their confidence |
+|---|---|---|---|
+| 33 held-out | 3 of 33 | 12.3%, 15.8%, 19.4% | 0.97, 1.00, 1.00 |
+| 65 calibration | 6 of 65 | 5.9%, 12.3%, 24.7%, 29.8%, 32.0%, 65.1% | 0.94, 0.96, 1.00, 1.00, 1.00, 1.00 |
+
 ### Caveat
 
 n = 33, 23 of them below 20% GT (range 2.9–58.6%); low power; the set does not cover the passage band. A pass would be weak evidence; a fail on (a) or (b) is a failed check of the name, not proof that the score carries no information.

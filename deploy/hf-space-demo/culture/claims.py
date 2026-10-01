@@ -60,6 +60,11 @@ RULES = [
     Rule("latency claim", r"\b\d+(\.\d+)?\s?(s|sec|seconds|min|minutes?)\b[^.\n]{0,30}\bper (image|visit|fov|frame)\b"
          r"|\b(a|one) minute per (image|visit|frame)", "needs_context", r"V9|live_latency"),
     Rule("cell doubling time", r"cell doubling time", "unless_negated"),
+    # The confluency score tracks density, not the reading's error (results/confidence_vs_error.md).
+    Rule("confluency score as probability",
+         r"\b(confluency|measurement|reading)\s+confidence\b[^.\n]{0,40}\b(probabilit\w*|calibrat\w*)"
+         r"|\b(probabilit\w*|calibrated)\b[^.\n]{0,20}\b(confluency|measurement|reading)\s+confidence\b"
+         r"|\bconfidence\b[^.\n]{0,15}\bthat the (reading|confluency|number) is (right|correct)", "forbid"),
     # A bare hash chain misses a full rewrite and a deleted tail (docs/audit_mapping.md, "The chain").
     Rule("chain overclaim", r"\bbreaks?\b[^.\n]{0,25}\bevery\b[^.\n]{0,15}\blinks?\b|tamper[- ]?proof", "forbid"),
 ]

@@ -86,7 +86,7 @@ export default function App() {
               <h1 id="reading-h">Confluency QC that shows its evidence</h1>
               <div className="hero-side">
                 <p>
-                  One phase-contrast image per flask visit in; out comes a confluency reading with its confidence, a per-image anomaly check and a recommended action, sealed into a hash-chained record. Checked on real C2C12 and EVICAN images, failures stated. For a live run on any image, open the{" "}
+                  One phase-contrast image per flask visit in; out comes a confluency reading with a boundary-ambiguity review trigger, a per-image anomaly check and a recommended action, sealed into a hash-chained record. Checked on real C2C12 and EVICAN images, failures stated. For a live run on any image, open the{" "}
                   <a href={DATA.meta.console_url} target="_blank" rel="noreferrer">
                     console
                   </a>

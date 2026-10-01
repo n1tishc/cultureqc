@@ -25,6 +25,8 @@ import json
 import os
 import re
 
+import sys
+
 import numpy as np
 import yaml
 
@@ -41,6 +43,8 @@ C2C12_UM_PER_PX = 1.3        # README "Imaging requirement": C2C12, 5× objectiv
 TILE_PX, CROP_PX, PATCH_PX = 256, 224, 14   # culture/anomaly.py: qctile, DINOv2 centre crop, 16×16 patches
 BAND_LOGIT = 1.0             # culture/seg.py confidence_band (logits) around the 0 cutoff
 CONF_FLOOR = 0.30            # culture/rules.py review floor; README review-rate row
+sys.path.insert(0, REPO)
+from culture.rules import AMBIGUITY_TOOLTIP, boundary_ambiguity  # noqa: E402
 
 EXAMPLE_ORDER = ["c2c12_normal_20_40", "c2c12_normal_0_20", "c2c12_normal_40_100",
                  "c2c12_contamination_real_size", "c2c12_contamination_1", "evican_pc3", "evican_ht29"]
@@ -258,7 +262,10 @@ def build_examples(img_dir):
                            "method": e["confluency"]["method"], "model": e["confluency"]["model_version"],
                            "borderline_fraction": e["confluency"]["extra"]["borderline_fraction"],
                            "instance_pct": e["confluency"]["extra"].get("instance_pct"),
-                           "band_logit": BAND_LOGIT, "floor": CONF_FLOOR},
+                           "band_logit": BAND_LOGIT, "floor": CONF_FLOOR,
+                           "ambiguity": boundary_ambiguity(e["confluency"]["confidence"]),
+                           "ambiguity_ceiling": boundary_ambiguity(CONF_FLOOR),
+                           "ambiguity_tooltip": AMBIGUITY_TOOLTIP},
             "target": e["target_confluency"],
             "anomaly": {"score": a["score"], "threshold": a["threshold"], "flag": a["flag"], "bin": a["bin_label"],
                         "z": a["z"], "model": a["model_version"],

@@ -41,7 +41,7 @@ person steps in on exceptions and audits the trail.
 ## 2. Confluency QC (4 min), Analyze tab
 
 1. Click **C2C12 normal, 20-40% bin** (precomputed). Cellpose-SAM reads
-   39.4%, confidence 0.512; the rules say hold. Point at the provenance card:
+   39.4%, boundary ambiguity 0.488; the rules say hold. Point at the provenance card:
    which script, which machine, when.
 2. Switch the view to **3D**. It turns once around on its own (about 26 s)
    and stops where it started; click or drag it to stop sooner and take
@@ -50,14 +50,24 @@ person steps in on exceptions and audits the trail.
    - Green, above the plane: counted as cell. The confluency is that share of
      the full-resolution map.
    - Amber, the band around the plane: borderline pixels, 12.21% here. Their
-     share sets the confidence (1 − 4 × borderline fraction), and the note
-     shows the arithmetic.
+     share sets the boundary ambiguity (4 × borderline fraction, capped at 1),
+     and the note shows the arithmetic.
 3. Click **C2C12 normal, 40-100% bin** and switch to 3D again. It reads
    51.4%, but 24.67% of the map is borderline: a wide amber shelf instead of
-   clean cliffs. Confidence is 0.013, below the 0.30 floor, so the rules
-   return **human_review** instead of a number-driven action. This is the
-   confluency QC: the system shows when not to trust its own measurement,
-   and the picture shows why.
+   clean cliffs. Boundary ambiguity is 0.987, above 0.70, so the rules
+   return **human_review** instead of a number-driven action, and the
+   picture shows why the trigger fired.
+   - Say what the trigger is before he asks. It was called "confidence"
+     until a check fixed in advance asked whether it predicts the reading's
+     error, and it failed: on the 33 held-out EVICAN images, Spearman ρ
+     −0.36 with a 95% CI reaching +0.02, and sorting by it beats random
+     order with p = 0.303 (`results/confidence_vs_error.md`). It tracks
+     density instead (ρ −0.95 with the reading on held-out C2C12), so it is
+     a density-sensitive review trigger, not an error estimate, and it is
+     labelled that way now.
+   - Its known gap, seen after the check: a frame the model reads as 0%
+     scores as unambiguous, so a complete miss is not sent to review (3 of
+     the 33, all at 12–19% expert confluency).
    - Expect "how often does it send work to a person?" From the cache, no
      model run (`results/review_rate.md`): 5.7% of held-out C2C12 frames
      (70 of 1228, 14 sequences), but 43.8% of the 160 frames at 40-60%
@@ -70,30 +80,30 @@ person steps in on exceptions and audits the trail.
      adds little on healthy flasks: at the 50% target it held 1 of 14
      passage-eligible held-out frames (review 5.8% instead of 5.7%).
 4. Click **EVICAN HT29 (real, error case)**. Expert masks say 51.6%;
-   Cellpose-SAM reads 29.4%, and its confidence (0.266) is also below the
-   floor, so it goes to review. On real held-out EVICAN images the mean
+   Cellpose-SAM reads 29.4%, and its boundary ambiguity (0.734) is also
+   above 0.70, so it goes to review. On real held-out EVICAN images the mean
    absolute error is 8.35 pp, reading low (V1). Showing the error case is
    deliberate.
 5. The fix, and why it is not live (45 s). Point at the note under the HT29
    caption, "Calibrated cutoff: validated, not live"
    (`demo/examples/cutoff_calibrated.json`, from
-   `results/confluency_cutoff.csv`). The floor, bin and LIVECell numbers
+   `results/confluency_cutoff.csv`). The review-trigger, bin and LIVECell numbers
    below are **not on screen**; they are from `results/confluency_cutoff.md`.
    - The under-read is the cutoff: a pixel counts as cell only above logit 0,
      and on real images that is too strict. A new cutoff was picked on the
      65 EVICAN eval images that are not among the 33, by a rule fixed before
      scoring: −3.5. On the 33 held-out images the error goes from 8.36 to
      3.78 pp, and images off by more than 10 pp from 13 to 3. This HT29
-     image reads 52.9% at confidence 0.829, against the experts' 51.6%.
+     image reads 52.9% at boundary ambiguity 0.171, against the experts' 51.6%.
    - 8.36 rather than V1's 8.35: the study reran the model, and the rerun
      differs by 0.01 pp.
-   - It is held back on purpose. At −3.5 the confidence floor would send
+   - It is held back on purpose. At −3.5 the ambiguity trigger would send
      none of the held-out C2C12 frames to review (69 on the same
      quarter-resolution maps at the shipped cutoff; 70 at full resolution in
      `results/review_rate.md`), and 471 of 1228 frames move anomaly bin. On
      six dense LIVECell frames (in Cellpose-SAM's training set, so a check
      only) it reads 3–9 pp high, where the shipped cutoff is within about
-     3 pp on five of the six. So the floor and the bins get re-derived
+     3 pp on five of the six. So the trigger and the bins get re-derived
      before it ships, and it goes out as a release, not a hot fix.
    - Say "shipped 8.35, validated fix 3.78". The console runs the shipped
      cutoff; never present 3.78 as what is running. The passage range stays
@@ -135,10 +145,10 @@ person steps in on exceptions and audits the trail.
    hash. Precomputed examples are never written into this chain, and the card
    says so.
    - On the Space (ZeroGPU) a live Analyze took a median 3.28 s in the dry
-     run (`results/live_latency_zerogpu.md`); the 51.4% frame read confidence
-     0.014 live against 0.013 stored, still human_review.
-   - On the Mac backup, the 51.4% frame reads confidence 0.015 live against
-     0.013 stored (Apple's GPU; still below the floor, still human_review).
+     run (`results/live_latency_zerogpu.md`); the 51.4% frame read boundary
+     ambiguity 0.986 live against 0.987 stored, still human_review.
+   - On the Mac backup, the 51.4% frame reads boundary ambiguity 0.985 live
+     against 0.987 stored (Apple's GPU; still above 0.70, still human_review).
      If asked, the live-vs-stored table is `results/live_latency_mac_mps.md`:
      flag and action the same as stored on 7 of 7 examples.
 
@@ -216,7 +226,7 @@ That is estimated, never replayed, and needs confirming on their data.
 - Image format, bit depth and resolution.
 - Does the instrument take z-stacks or any quantitative-phase image? That is
   what a true 3D cell view (thickness, volume) would need; today's 3D views
-  show model confidence and time, not height.
+  show the model's cell-probability logit and time, not height.
 - Which imager and magnification do the confluency reads come from, and at
   what pixel size? The tested setup is phase contrast at 1.3 µm/px.
 - What triggers a passage today: a confluency threshold, a schedule, or a

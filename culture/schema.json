@@ -72,7 +72,8 @@
     "confluency_confidence": {
       "type": "number",
       "minimum": 0,
-      "maximum": 1
+      "maximum": 1,
+      "description": "1 - min(1, 4 x share of pixels within 1 logit of the Cellpose-SAM cutoff). Shown as boundary ambiguity (1 - this value): it tracks density and does not predict the reading's error (results/confidence_vs_error.md). The rules send the image to review below 0.30. Not a probability that the reading is right."
     },
     "confluency_method": {
       "type": "string",

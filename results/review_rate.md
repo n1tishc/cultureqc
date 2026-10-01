@@ -1,10 +1,10 @@
-# Human-review rate: confidence floor and anomaly hold
+# Human-review rate: boundary-ambiguity trigger and anomaly hold
 
-Generated 2026-09-28T23:17:44Z by `scripts/review_rate.py`. No model runs: confidences are the compute cache's (Cellpose-SAM cpsam_v2, Colab GPU, nb/03), full resolution, same formula as the live path. C2C12 images: Ker et al., *Sci Data* 5:180237 (2018), CC BY 4.0; fault frames are simulated from them.
+Generated 2026-10-01T01:16:17Z by `scripts/review_rate.py`. No model runs: confidences are the compute cache's (Cellpose-SAM cpsam_v2, Colab GPU, nb/03), full resolution, same formula as the live path. C2C12 images: Ker et al., *Sci Data* 5:180237 (2018), CC BY 4.0; fault frames are simulated from them.
 
-Rules: `rules_v0.3`. With the classifier demoted, two rules return `human_review`: confidence below the floor (0.30, `culture/rules.py` default), and, since `rules_v0.3`, the anomaly hold (confluency at or above the target, but the anomaly check flagged the image). Quality-gate failures return REIMAGE (`results/quality_gate_c2c12.md`). Frames within a sequence are not independent; n sequences is the sample size.
+Rules: `rules_v0.3`. With the classifier demoted, two rules return `human_review`: boundary ambiguity above 0.70 (the record's `confidence` below the 0.30 floor, `culture/rules.py` default), a density-sensitive review trigger that does not predict the reading's error (`results/confidence_vs_error.md`), and, since `rules_v0.3`, the anomaly hold (confluency at or above the target, but the anomaly check flagged the image). Quality-gate failures return REIMAGE (`results/quality_gate_c2c12.md`). Frames within a sequence are not independent; n sequences is the sample size.
 
-## Confidence floor
+## Boundary-ambiguity trigger
 
 | group | sequences | images | sent to review | note |
 |---|---|---|---|---|
@@ -24,9 +24,9 @@ Highest held-out C2C12 confluency: 57.0%, so no frame reaches the 60-100% bins. 
 
 ## Anomaly hold (rules_v0.3)
 
-Frames with an anomaly score (A4). Passage-eligible: confidence at or above the floor and confluency at or above the target (time since passage assumed long enough). Held: passage-eligible and flagged, so sent to review instead of passage. Total: floor or held.
+Frames with an anomaly score (A4). Passage-eligible: boundary ambiguity at or below the trigger and confluency at or above the target (time since passage assumed long enough). Held: passage-eligible and flagged, so sent to review instead of passage. Total: ambiguity trigger or held.
 
-| target | group | images | below floor | passage-eligible | held by the anomaly flag | total to review |
+| target | group | images | above the ambiguity trigger | passage-eligible | held by the anomaly flag | total to review |
 |---|---|---|---|---|---|---|
 | 80% | C2C12 held-out, normal | 1228 | 70 | 0 | 0 | 70 (5.7%) |
 | 80% | C2C12 tuning, normal (comparison only) | 860 | 47 | 0 | 0 | 47 (5.5%) |

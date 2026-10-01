@@ -198,7 +198,13 @@ def fmt_ci(c: dict) -> str:
     return out + (f" ({c['dropped']} undefined resamples dropped)" if c["dropped"] else "")
 
 
-def results_md(p: dict, s: dict, c: dict, d: dict) -> str:
+def zero_reads(df: pd.DataFrame) -> dict:
+    z = df[df.pct == 0]
+    return {"n": len(z), "of": len(df), "gt": ", ".join(f"{v:.1f}%" for v in sorted(z.gt_pct)) or "—",
+            "conf": ", ".join(f"{v:.2f}" for v in sorted(z.confidence)) or "—"}
+
+
+def results_md(p: dict, s: dict, c: dict, d: dict, zeros: list[tuple[str, dict]]) -> str:
     verdict = ("**Keep the name \"confidence\".**" if d["keep"] else
                "**Rename: the displayed label becomes \"Boundary ambiguity\" (1 − confidence).**")
     lines = [
@@ -243,6 +249,17 @@ def results_md(p: dict, s: dict, c: dict, d: dict) -> str:
         f"(sequence bootstrap), on {c['n']} full frames from {c['sequences']} held-out sequences, readings up to "
         f"{c['pct_max']:.1f}%. The density proxy is the model's reading, not an expert mask.",
         "",
+        "### Post hoc, not pre-registered",
+        "",
+        "Found by reading the risk–coverage plot after the decision above; it is an observation, not a test. "
+        "In both sets the highest-scoring images include the largest errors. When Cellpose-SAM reads 0% "
+        "(no pixel above the cutoff), few pixels are near the cutoff either, so the score is high and the "
+        "frame is not sent to review:",
+        "",
+        "| Set | Images read as 0.0% | Their GT confluency | Their confidence |",
+        "|---|---|---|---|",
+        *[f"| {name} | {z['n']} of {z['of']} | {z['gt']} | {z['conf']} |" for name, z in zeros],
+        "",
         "### Caveat",
         "",
         f"n = 33, {p['below20']} of them below 20% GT (range {p['gt_min']:.1f}–{p['gt_max']:.1f}%); low power; the set "
@@ -268,7 +285,8 @@ def main():
     with open(OUT_MD) as f:
         prereg = f.read().split(RESULTS_HEADER)[0].rstrip("\n") + "\n"
     with open(OUT_MD, "w") as f:
-        f.write(prereg + results_md(p, s, c, d))
+        f.write(prereg + results_md(p, s, c, d, [("33 held-out", zero_reads(p_df)),
+                                                 ("65 calibration", zero_reads(s_df))]))
 
     print(f"rho(conf, |err|) = {p['rho_err']:+.3f} CI [{p['rho_err_ci']['lo']:+.3f}, {p['rho_err_ci']['hi']:+.3f}]; "
           f"partial {p['partial']:+.3f}; rho(conf, GT) {p['rho_gt']:+.3f}; AURC {p['aurc']:.2f} vs random "

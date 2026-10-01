@@ -28,7 +28,7 @@ stored example records (`demo/examples/examples.json`).
 | `analysed_at` | UTC timestamp, set by the code at analysis time | |
 | `captured_at` | Capture time | Set to analysis time in this prototype; in use it should come from the imager |
 | `image_hash` | SHA-256 of the image bytes read | Identifies the bytes, not the instrument that made them |
-| `confluency_pct`, `confluency_confidence` | The reading and its confidence (1 − 4 × share of pixels within ±1 logit of the cutoff) | |
+| `confluency_pct`, `confluency_confidence` | The reading, and `confidence` = 1 − min(1, 4 × share of pixels within ±1 logit of the cutoff). The console and the site show 1 − it as **boundary ambiguity**: a pre-registered check found the score tracks density and does not predict the reading's error (`results/confidence_vs_error.md`). The field keeps its name so the schema doesn't change before the freeze | The name: it is a review trigger, not a confidence in the reading |
 | `confluency_method` | `probmap` | |
 | `confluency_map_hash` | SHA-256 of the probability map drawn in the console (a 1/4-resolution copy of the map the number was counted from) | The drawn map can be checked against the record |
 | `anomaly_*` | Status, density bin, score, z, threshold, flag, `anomaly_bank_sha256`, `anomaly_used_in_decision` | The bank's hash is checked before use (below) |
@@ -139,8 +139,8 @@ Ten principles. The ones this project can show evidence against:
 | **7.3 Deviations** | Deviations documented and justified | Written into the results files, e.g. 33 of 98 images under a time budget, the LIVECell ground-truth switch in the cutoff study | |
 | **8.1 Feature attribution** | Heat maps or attribution showing what drove the outcome | The probability map behind each reading is drawn (2D overlay and 3D), and its hash is in the record; the anomaly check shows its most distant patches | The demoted classifier's Grad-CAM is off |
 | **8.2 Feature justification** | Review of those features as part of test approval | — | Not done formally |
-| **9.1 Confidence score** | Log confidence for each prediction | `confluency_confidence`, anomaly score, z and threshold, `qc_confidence`, in every record | |
-| **9.2 Threshold, "undecided"** | Low confidence flagged undecided rather than predicted | Confidence below 0.30 returns `human_review` instead of a number-driven action (`rules_v0.3`): 70 of 1228 held-out C2C12 frames, 5.7% (`results/review_rate.md`) | Low confidence is not the same as wrong: EVICAN 15_Caco-2 (expert 65.1%) reads 0.0% at confidence 1.0, because its map never comes within 1 logit of the cutoff. The floor was set at the shipped cutoff and must be re-derived with any new one (next row) |
+| **9.1 Confidence score** | Log confidence for each prediction | `confluency_confidence`, anomaly score, z and threshold, `qc_confidence`, in every record | `confluency_confidence` does not predict the reading's error (`results/confidence_vs_error.md`); no per-reading error estimate is logged |
+| **9.2 Threshold, "undecided"** | Low confidence flagged undecided rather than predicted | Boundary ambiguity above 0.70 (the record's `confidence` below 0.30) returns `human_review` instead of a number-driven action (`rules_v0.3`): 70 of 1228 held-out C2C12 frames, 5.7% (`results/review_rate.md`) | The trigger tracks density, not error, and a complete miss reads as unambiguous: EVICAN 15_Caco-2 (expert 65.1%) reads 0.0% at confidence 1.0 (ambiguity 0), because its map never comes within 1 logit of the cutoff. The floor was set at the shipped cutoff and must be re-derived with any new one (next row) |
 | **10.1 Change control** | Changes to model, system or process documented and assessed for retest | Model names, rules version, config and bank hashes in every record; git history. Worked case: a cutoff calibrated off the evaluation images lowers held-out MAE from 8.36 to 3.78 pp (n = 33, `results/confluency_cutoff.md`) and is **held back**: at that cutoff the floor would send none of the held-out C2C12 frames to review, and 471 of 1228 frames change anomaly bin, so the floor, the bins, the examples and the replays must be re-derived and retested before it ships | The cutoff and band are code defaults, not in a hashed config; `schema_version` was not bumped for v0.3 |
 | **10.2 Configuration control** | Detect unauthorised change | The anomaly banks are checked against the SHA-256 in `configs/anomaly.yaml` before use; a mismatch returns `unavailable`, never a score. Config hashes are written into every record | Model weights are not hashed (`model_weights_hash: null`); config hashes are recorded, not checked against an approved set |
 | **10.3 Performance monitoring** | Regular monitoring to detect deterioration, e.g. a lighting change | Replays run a per-visit quality gate that sends failed frames to REIMAGE (simulated lamp dimming in the Flask Timeline) | No ongoing accuracy monitoring. The Analyze path runs no quality gate. Separating instrument drift from culture change failed for single flasks (V7) |
@@ -152,7 +152,7 @@ Ten principles. The ones this project can show evidence against:
 Drawn from the gaps above (clauses 9.2, 10.1, 10.2):
 
 1. The cutoff and band move from code into a config that is hashed into `config_hashes`.
-2. The confidence floor and the anomaly bins are re-derived at the new cutoff, on tuning data only.
+2. The review trigger (the `confidence` floor) and the anomaly bins are re-derived at the new cutoff, on tuning data only.
 3. The examples, replays and review rate are regenerated, and V1 re-scored once, recorded as a fourth use of the 33.
 4. `model_weights_hash` is filled and `schema_version` bumped.
 

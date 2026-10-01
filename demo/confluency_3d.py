@@ -21,6 +21,7 @@ import numpy as np
 import plotly.graph_objects as go
 
 from culture.cache import PROBMAP_DOWNSAMPLE, probmap_sha256
+from culture.rules import boundary_ambiguity
 from demo import viz3d
 
 MAX_POINTS_PER_SIDE = 180          # drawn resolution cap; the hash covers the full stored map
@@ -113,8 +114,9 @@ def landscape_note(prob_x1000: np.ndarray, confluency: dict, record_map_hash: st
     conf_line = ""
     if bf is not None:
         conf_line = (f" <span class=\"c-border\">Amber</span>: within ±{band:g} of the cutoff, "
-                     f"{bf * 100:.2f}% of pixels, so confidence = 1 − 4 × {bf:.4f} = "
-                     f"<strong>{confluency['confidence']:.3f}</strong>.")
+                     f"{bf * 100:.2f}% of pixels, so boundary ambiguity = min(1, 4 × {bf:.4f}) = "
+                     f"<strong>{boundary_ambiguity(confluency['confidence']):.3f}</strong> (a review trigger "
+                     "that rises with density, not an error estimate).")
     return (
         '<div class="map-note">'
         "<strong>3D confluency view.</strong> Height is Cellpose-SAM's cell-probability logit at each point, "
