@@ -100,3 +100,38 @@ n = 33, most of them sparse (the count below 20% GT is printed with the
 result); low power; the set does not cover the passage band. A pass would be
 weak evidence; a fail on (a) or (b) is a failed check of the name, not proof
 that the score carries no information.
+
+## Results
+
+Computed by `scripts/confidence_vs_error.py` after the pre-registration above (commit `3a15fda`); nothing above this section was changed. Per-image values: `results/confidence_vs_error.csv`. Curves: `results/confidence_vs_error.png`.
+
+### Decision (on the 33 held-out images)
+
+- (a) ρ(confidence, |error|) = **-0.36**, 95% CI [-0.69, +0.02]: fails (needs ≤ −0.30 with the CI below 0).
+- (b) AURC **7.73** pp vs random 8.35 pp, permutation p = **0.303**: fails (needs p < 0.05).
+
+**Rename: the displayed label becomes "Boundary ambiguity" (1 − confidence).**
+
+### All metrics
+
+| Metric | 33 held-out (primary) | 65 calibration (secondary) |
+|---|---|---|
+| ρ(confidence, \|error\|), 95% CI | -0.36 [-0.69, +0.02] | -0.18 [-0.44, +0.11] |
+| Partial ρ, controlling for GT confluency | +0.02 [-0.42, +0.38] | +0.17 [-0.07, +0.38] |
+| ρ(confidence, GT confluency) | -0.61 [-0.79, -0.31] | -0.41 [-0.64, -0.14] |
+| AURC by confidence (pp) | 7.73 | 12.96 |
+| AURC, random order = MAE (pp) | 8.35 | 10.24 |
+| AURC, oracle (pp) | 3.26 | 3.32 |
+| Permutation p, AURC vs random | 0.303 | 0.965 |
+| Confidence range (distinct values) | 0.000–1.000 (28) | 0.230–1.000 (59) |
+| GT confluency range; images below 20% | 2.9–58.6%; 23 | 1.3–65.1%; 43 |
+
+The 65 are the cutoff study's rerun of the same call (float16 maps), reported, not used for the decision.
+
+### Density on held-out C2C12 frames (metric 3)
+
+Spearman ρ(confidence, Cellpose-SAM's own reading) = **-0.95**, 95% CI [-0.98, -0.93] (sequence bootstrap), on 1228 full frames from 14 held-out sequences, readings up to 57.0%. The density proxy is the model's reading, not an expert mask.
+
+### Caveat
+
+n = 33, 23 of them below 20% GT (range 2.9–58.6%); low power; the set does not cover the passage band. A pass would be weak evidence; a fail on (a) or (b) is a failed check of the name, not proof that the score carries no information.
