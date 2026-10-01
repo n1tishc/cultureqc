@@ -42,3 +42,10 @@ events*.jsonl
 # ── Console Space: untracked mirrors (deploy/sync_space.py writes them; the publish script uploads them) ──
 deploy/hf-space-demo/demo/
 deploy/hf-space-demo/cache/
+
+# ── Private notes and working specs (kept on disk, out of the public repo) ──
+# Earlier specs stay readable in history: git show 4a82657:cultureQC_upgrade.md
+/CULTUREQC_*.md
+/CULTUREQC-*.md
+/cultureQC_upgrade*.md
+/cultureQC_*spec*.md

@@ -10,8 +10,10 @@ import subprocess
 import sys
 
 import pytest
+from conftest import require_module
 
-from demo import replay_timeline
+require_module("gradio")
+from demo import replay_timeline  # noqa: E402
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 REPLAYS = replay_timeline.load_replays()

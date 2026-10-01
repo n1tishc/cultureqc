@@ -13,6 +13,7 @@ import os
 
 import numpy as np
 import pytest
+from conftest import requires
 
 from culture.cache import PROBMAP_DOWNSAMPLE, downsample_probmap, probmap_sha256
 from culture.records import hash_file
@@ -80,6 +81,7 @@ def test_c2c12_examples_match_the_cache(ex):
     assert ex["anomaly"]["flag"] == c["anomaly_flag"]
 
 
+@requires("gradio")
 def test_showing_an_example_runs_no_model(monkeypatch):
     import culture.qc
     import culture.seg
@@ -158,6 +160,7 @@ def test_3d_note_flags_a_map_that_does_not_match():
     assert "does NOT match" in note
 
 
+@requires("gradio")
 def test_examples_are_not_cached_on_spaces():
     """Hugging Face Spaces set GRADIO_CACHE_EXAMPLES=true; caching the examples
     failed at startup on the Space (the stored maps exceed Gradio's CSV field
@@ -172,6 +175,7 @@ def test_examples_are_not_cached_on_spaces():
     assert r.returncode == 0, r.stderr[-2000:]
 
 
+@requires("gradio")
 def test_cutoff_note_matches_the_cutoff_study():
     """The console's calibrated-cutoff note (demo/examples/cutoff_calibrated.json)
     is exactly what scripts/export_cutoff_examples.py derives from

@@ -1,9 +1,82 @@
 # cultureQC — upgrade status
 
-Governing spec: `cultureQC_upgrade_spec.md` (v3.1). Checked against the repo on
-branch `slice-1b-compute-cache`, starting from `e86ce93`, on 2026-09-25;
-updated 2026-09-26 after `nb/03` and the A2 fleet.
-Nothing is merged to `main`.
+Governing spec for Phase A: `cultureQC_upgrade_spec.md` (v3.1). Checked against
+the repo on branch `slice-1b-compute-cache`, starting from `e86ce93`, on
+2026-09-25; updated 2026-09-26 after `nb/03` and the A2 fleet, and from
+2026-09-30 by the pre-freeze pass below. Nothing is merged to `main`.
+
+**Where the specs are.** Code comments cite `cultureQC_upgrade.md` (v2.1) and
+`cultureQC_upgrade_spec.md` (v3.1) by section. Both were untracked in the
+pre-freeze pass and stay in history: `git show 4a82657:cultureQC_upgrade.md`
+(and `:cultureQC_upgrade_spec.md`). Later specs (v3.2 on, and the pre-freeze
+fix list) were never tracked. History was not rewritten, because commit hashes
+are cited throughout the docs.
+
+## Pre-freeze pass (2026-09-30 to the freeze, end of Fri Oct 2)
+
+Fixes from a self-review and an outside review, applied in order: fix what is
+wrong or under-disclosed, add no capability. Every item lands with its tests,
+docs and deploy.
+
+| # | Item | Commit | Result |
+|---|---|---|---|
+| 1 | Specs untracked, private notes ignored, demo script retitled, names listed (C1); CI on this branch (C2) | (the commit adding this table) | See "CI on this branch" and "Names in tracked files" below |
+
+### CI on this branch
+
+`.github/workflows/tests.yml` runs on every push to `main` and to this branch,
+in three jobs:
+
+- **API contract:** `deploy/hf-space/test_api.py` with the models stubbed, and
+  `deploy/sync_space.py --check` (the Space mirrors match `culture/`,
+  `config/`, `configs/`).
+- **Site build:** the browser chain verifier's tests, `npm run build`, and
+  `site/src/data.json` regenerated from the repo with no diff.
+- **Python tests:** `pytest tests` **without** torch, cellpose, gradio or the
+  compute cache. Tests that need one skip with a stated reason
+  (`tests/conftest.py`). On a clean clone: 177 passed, 21 skipped: 7 test
+  files need torch or gradio at import (smoke pipeline, live calibration,
+  console ZeroGPU, segmentation device, replays, replay maps, 3D views),
+  7 more tests need torch or gradio inside, and 7 need the compute cache or
+  downloaded data.
+
+So CI does **not** run the model: the smoke pipeline, cache parity, live
+calibration and the console run only locally, where the full suite was
+242 passed, 1 xfailed on 2026-09-30 before this pass. The README badge points
+at this branch's runs.
+
+### Names in tracked files
+
+`git grep -i` for the company, its products, the other vendors' names and the
+reviewer's name, on 2026-09-30. The reviewer's name has no hits.
+
+**Changed in this pass** (planning docs, not validation or audit text):
+`docs/DEMO_SCRIPT.md` title is now "Demo script (≈12 min)", with no company or
+date, and its §7 heading and the README's heading are both "Questions for
+instrument integration". The audience lines in `docs/UI_PLAN.md:5` and
+`docs/PRODUCT.md:15` now say "an engineering lead at a lab automation company",
+the call reference is gone from `docs/PROGRESS_SUMMARY.md:11`, and "Celltrio
+questions" in this file's Phase A table is now "instrument-integration questions".
+
+**Kept on purpose:** `culture/claims.py`, `tests/test_claims.py`, and their
+mirrors under `deploy/`. They are the forbidden-claims checker, which must name
+the vendors to block "integrates with …" and "… lacks audit trails".
+
+**Proposed, waiting for the owner** (validation, results and limitation text;
+nothing changed yet):
+
+| Where | Now | Proposed |
+|---|---|---|
+| `README.md:64` (also on the site: `data.json` "not proven") | "It is not RoboCell or Celltrio data" | "It is not data from the instrument it would run on" |
+| `README.md:249`, `docs/DEMO_SCRIPT.md:221` | "Could a few real RoboCell sequences be shared…" | "Could a few real sequences from the instrument be shared…" |
+| `configs/detectability.yaml:10` (site Detectability matrix) | "Not RoboCell images." | "Not images from the target instrument." |
+| `docs/ARCHITECTURE_VALIDATION.md:78` | "a question for Celltrio" | "a question for the instrument team" |
+| `docs/ARCHITECTURE_VALIDATION.md:183` | "Not RoboCell or Celltrio images." | "Not images from the target instrument." |
+| `docs/ARCHITECTURE_VALIDATION.md:184` | "assumptions to confirm with Celltrio" | "assumptions to confirm with the instrument team" |
+| `docs/ARCHITECTURE_VALIDATION.md:201` (twice) | "ask Celltrio about FOV size first"; "the Celltrio question now" | "ask about the instrument's FOV size first"; "the FOV-size question now" |
+| `docs/ARCHITECTURE_VALIDATION.md:222` | "### Questions for Celltrio" | "### Questions for instrument integration" |
+| `docs/ARCHITECTURE_VALIDATION.md:226` | "real RoboCell sequences" | "real sequences from the instrument" |
+| `scripts/replay_fleet.py:154`, `results/replay_fleet_summary.md:40` | "Celltrio's real cadence is an open question." | "The target instrument's real cadence is an open question." (re-run the summary; no numbers change) |
 
 ## Slices (spec §2.1), confirmed against the repo
 
@@ -37,7 +110,7 @@ Tests: `pytest tests` → 112 passed, 1 xfailed (2026-09-26, after A7).
 | A7 instrument drift | Done (2026-09-26); **V7 fails.** `culture/drift.py`, `scripts/eval_drift.py`, `configs/drift.yaml`: flasks aligned on hours since start; per visit, log exposure relative to the flask's first 24 h minus an age-dependent expected change (tuning frames), plus A4 anomaly z, every visit including gate failures; per window (= cadence) the fleet median, standardised by the tuning fleet's population series; EWMA (λ = 0.2, L = 2.86, c = 1 chosen on tuning with no power); INSTRUMENT_DRIFT = EWMA beyond limit (no restart); per-flask SPC flags in drift windows marked suppressed (all codes; spec names anomaly drift only). Held-out: **the normal fleet itself drifts** from 42 h (6 h) / 48 h (12 h), exposure side, because the population SD (0.034) is one fleet's window-to-window SD and misses fleet-to-fleet offset (held-out normals sit ≈ −0.2 per-flask z below the tuning reference; leave-one-flask-out checked: 0.032, not the cause). So **V7 (a) passes by the rule but is not evidence** (dimming detected 2 h / 8 h after onset, 0 unsuppressed post-onset flags, but the same windows are in drift on normal); **V7 (b) fails**: every single-flask fleet inherits the false drift (A7's own), and stall flasks have no flag at all (inherited from A6); contamination flasks flagged by REIMAGE 8/8. 16 real per-flask SPC flags on normal flasks hidden. Dimming still gives REIMAGE on 10/14 flasks (not suppressed; roll-up is a B5/B6 question). Post-hoc diagnostic (not a verdict): standardising by the standard error of a median of n flasks (1.2533·s/√n, s from tuning) gives 0 normal drift episodes, 0/16 single-flask fleets in drift, dimming at 2 h / 8 h; assumes independent flasks, which the experiment clustering breaks. `results/drift_summary.md`, `results/drift_fleet.png` |
 | A8 latency | Done (2026-09-26); **V9 fails.** `scripts/benchmark_live_path.py` → `results/live_latency.{md,csv}`: live per-FOV path per model on the Mac (Apple M2 Pro) with torch/OpenCV at 2 threads to mimic the Space (HF CPU Basic, 2 vCPU); approximation, likely a lower bound. Input: a real LIVECell phase-contrast fixture tiled to the C2C12 frame size (no C2C12 frames on the Mac). Per FOV, median of 2: **Cellpose-SAM 689 s at 1392×1040**, 230 s at 704×520, 71 s at 348×260; classifier 0.67 s with Grad-CAM (0.17 s without); DINOv2-small qctile 0.03 s; patch kNN 0.003 s; quality gate < 0.01 s. Per visit at 1 FOV: 138× / 46× / 14× the 5 s budget; 3 FOVs triple it. Everything but Cellpose ≈ 0.7 s per FOV. The spec's levers (ViT-S, fewer crops, smaller input) don't close it; left: precomputed demo examples (spec), or a GPU Space / lighter live confluency model (Phase B decision, V1 rechecked) |
 | V2, V10 | Done (2026-09-26); **V2 fails.** `scripts/eval_growth_signal.py` → `results/growth_signal_summary.md`: held-out normal streams, full-frame increment between visits at 30–70% (effectively 30–56%) ÷ σ_fov (C2C12, 0.25-frac)/√n_fov. Median ratio 0.35 (6 h) / 0.65 (12 h) at 1 FOV, 0.61 / 1.12 at 3 FOVs (pass ≥ 2 at 1 FOV); measured visit error SD 13.2 pp (1 FOV) agrees with the model. Context: 0.5-frac noise fit gives up to 2.71 (12 h / 3 FOVs), not replayed. V10 (informational): area doubling time per experiment 17.7 / 12.4 / 15.4 h (median) |
-| Phase A report | Done (2026-09-26): `docs/ARCHITECTURE_VALIDATION.md` — summary table, one section per V1–V10, what it does and doesn't prove, next steps (decisions for the review, Phase B mapping, Celltrio questions). Also `results/classifier_c2c12.md` (classifier calls 5.0% of held-out normal C2C12 frames normal, 91.8% of contaminated frames contamination) and `results/growth_backtest_v3.png`. Deviation: no single `scripts/validate_architecture.py`; per-check scripts listed in the report |
+| Phase A report | Done (2026-09-26): `docs/ARCHITECTURE_VALIDATION.md` — summary table, one section per V1–V10, what it does and doesn't prove, next steps (decisions for the review, Phase B mapping, instrument-integration questions). Also `results/classifier_c2c12.md` (classifier calls 5.0% of held-out normal C2C12 frames normal, 91.8% of contaminated frames contamination) and `results/growth_backtest_v3.png`. Deviation: no single `scripts/validate_architecture.py`; per-check scripts listed in the report |
 
 ## Phase B progress (`cultureQC_upgrade_specv3.md`, v3.2)
 

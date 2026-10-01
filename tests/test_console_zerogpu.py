@@ -9,6 +9,11 @@ import os
 import subprocess
 import sys
 
+from conftest import require_module
+
+require_module("torch")
+require_module("gradio")
+
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SPACE = os.path.join(REPO, "deploy", "hf-space-demo")
 

@@ -2,7 +2,8 @@ name: tests
 
 on:
   push:
-    branches: [main]
+    # The upgrade branch is tested on every push until it merges (owner's call).
+    branches: [main, slice-1b-compute-cache]
   pull_request:
   workflow_dispatch:
 
@@ -33,6 +34,28 @@ jobs:
       # the deployed pipeline stops being the one in this repo — silently.
       - name: Space is in sync with the repo
         run: python deploy/sync_space.py --check
+
+  python:
+    name: Python tests (no model weights, no cache)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      # No torch, cellpose or gradio, and no compute cache: tests that need one
+      # skip with a stated reason (tests/conftest.py). The full suite, with the
+      # models and the cache, runs locally; docs/STATUS.md says what CI covers.
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest numpy pandas pyarrow pyyaml scipy scikit-image opencv-python-headless Pillow matplotlib plotly tqdm jsonschema
+
+      - name: Tests
+        run: python -m pytest tests -q -rs
 
   site:
     name: Site build

@@ -12,7 +12,7 @@ Existing codebase: Python backend (`culture/pipeline.py` and friends) already im
 
 ## Users
 
-Primary operating mode is **API-first / automation-integrated**: cultureQC is meant to be embedded in a lab automation pipeline (e.g. a robotics/automation company's culture-handling workflow), calling `analyze()` per image capture. Humans are not doing this at the bench routinely — they step in only when the system flags an exception (contamination suspected, detachment, image quality issue) or when reviewing the audit trail. This UI (`demo/app.py`) is a human-facing demo/review surface standing in for that exception-review and evaluation experience, shown to a VP at a lab automation company (Celltrio) evaluating whether to integrate cultureQC.
+Primary operating mode is **API-first / automation-integrated**: cultureQC is meant to be embedded in a lab automation pipeline (e.g. a robotics/automation company's culture-handling workflow), calling `analyze()` per image capture. Humans are not doing this at the bench routinely — they step in only when the system flags an exception (contamination suspected, detachment, image quality issue) or when reviewing the audit trail. This UI (`demo/app.py`) is a human-facing demo/review surface standing in for that exception-review and evaluation experience, shown to an engineering lead at a lab automation company evaluating whether to integrate cultureQC.
 
 ## Product Purpose
 

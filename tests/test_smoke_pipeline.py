@@ -17,10 +17,13 @@ import os
 import tempfile
 
 import pytest
+from conftest import require_module
 
-from culture.pipeline import analyze
-from culture.qc import CLASS_NAMES
-from culture.records import verify_chain
+require_module("torch")
+require_module("cellpose")
+from culture.pipeline import analyze  # noqa: E402
+from culture.qc import CLASS_NAMES  # noqa: E402
+from culture.records import verify_chain  # noqa: E402
 
 FIXTURE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                         "test-data", "contam_00015.png")

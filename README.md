@@ -4,7 +4,7 @@
 
 [Live demo](https://cultureqc.vercel.app) · [v0.3 site](https://cultureqc-cvoy.vercel.app) · [API](https://longgrainrice-cultureqc-api.hf.space/docs)
 
-[![tests](https://github.com/n1tishc/cultureqc/actions/workflows/tests.yml/badge.svg)](https://github.com/n1tishc/cultureqc/actions/workflows/tests.yml)
+[![tests](https://github.com/n1tishc/cultureqc/actions/workflows/tests.yml/badge.svg?branch=slice-1b-compute-cache)](https://github.com/n1tishc/cultureqc/actions/workflows/tests.yml?query=branch%3Aslice-1b-compute-cache)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 cultureQC reads a phase-contrast image of a cell culture and returns a
@@ -241,7 +241,7 @@ at a 12 h cadence would be 1.56 at 1 FOV and 2.71 at 3 FOVs, against 0.65 and
 (`results/growth_signal_summary.md`). Those larger fields were **estimated,
 never replayed**.
 
-**Questions for Celltrio:**
+**Questions for instrument integration:**
 
 - Imaging cadence per flask, and whether the flasks on one instrument are imaged in one round.
 - FOVs per visit, and FOV size relative to the flask.

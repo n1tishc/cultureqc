@@ -1,4 +1,4 @@
-# Demo script: Celltrio call, Tue Oct 6, 3 PM PDT
+# Demo script (≈12 min)
 
 12 to 13 minutes of demo by the section times below, then questions. The
 audience named two things that matter most, and the order follows them:
@@ -204,7 +204,7 @@ The ask: roughly half-frame fields, 3 per visit, twice a day. The estimated
 growth-to-noise ratio goes from 1.12 to 2.71 (`results/growth_signal_summary.md`).
 That is estimated, never replayed, and needs confirming on their data.
 
-## 7. Questions for Celltrio (1 min)
+## 7. Questions for instrument integration (1 min)
 
 - Imaging cadence per flask, and whether the flasks on one instrument are imaged in one round.
 - FOVs per visit, and FOV size relative to the flask.

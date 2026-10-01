@@ -8,7 +8,7 @@ next to it.
 
 **Where things stand:** the pipeline was validated on real images (Phase A),
 the parts that failed validation were demoted or captioned (Phase B), and a
-review console for the Celltrio call (Tue Oct 6, 3 PM PDT) is live on its own
+review console is live on its own
 Hugging Face Space with a GPU, plus two backups (Mac, Colab) that don't depend
 on Hugging Face.
 

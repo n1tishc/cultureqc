@@ -7,9 +7,11 @@ import os
 
 import numpy as np
 import pytest
+from conftest import require_module
 
-from culture.cache import probmap_sha256
-from demo import replay_3d, replay_timeline
+require_module("gradio")
+from culture.cache import probmap_sha256  # noqa: E402
+from demo import replay_3d, replay_timeline  # noqa: E402
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 REPLAYS = replay_timeline.load_replays()

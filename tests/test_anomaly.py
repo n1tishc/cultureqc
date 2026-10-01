@@ -11,6 +11,7 @@ import os
 
 import numpy as np
 import pandas as pd
+from conftest import requires
 
 from culture.anomaly import bin_index, greedy_coreset, image_score, merge_bins, nn_distance
 
@@ -24,6 +25,7 @@ def _unit(x):
     return (x / np.linalg.norm(x, axis=1, keepdims=True)).astype(np.float32)
 
 
+@requires("torch")
 def test_coreset_is_deterministic_and_covers_outliers():
     rng = np.random.default_rng(0)
     x = _unit(np.r_[rng.normal(0, 0.01, (500, 16)) + 1.0, -np.ones((1, 16))])  # one far point
@@ -33,6 +35,7 @@ def test_coreset_is_deterministic_and_covers_outliers():
     assert len(greedy_coreset(x, 10_000, seed=0)) == len(x)
 
 
+@requires("torch")
 def test_nn_distance_and_image_score():
     bank = _unit(np.eye(4)[:2])
     q = _unit(np.array([[1.0, 0, 0, 0], [0, 0, 1.0, 0]]))
@@ -48,6 +51,7 @@ def test_bins_merge_until_each_has_enough_sequences():
     assert [bin_index(p, [0.0, 20.0, 40.0, 100.0]) for p in (0.0, 19.9, 20.0, 57.0, 100.0)] == [0, 0, 1, 2, 2]
 
 
+@requires("torch")
 def test_no_frame_is_scored_against_its_own_sequence():
     rng = np.random.default_rng(0)
     rows, patches = [], {}

@@ -2,7 +2,7 @@
 
 ## Context
 
-This is a demo for a cell culture quality control tool. The audience is a VP at a lab automation company (Celltrio). The UI must look like real lab software — not a student project. The analysis backend already exists in `pipeline.py` and works. This plan is only about the presentation layer.
+This is a demo for a cell culture quality control tool. The audience is an engineering lead at a lab automation company. The UI must look like real lab software — not a student project. The analysis backend already exists in `pipeline.py` and works. This plan is only about the presentation layer.
 
 ## Reference products (what the industry looks like)
 

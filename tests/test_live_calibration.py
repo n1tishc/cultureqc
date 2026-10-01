@@ -4,13 +4,14 @@ model, no download."""
 
 import numpy as np
 import pytest
-import torch
+from conftest import require_module
 
-from culture import qc
-from culture.calibration import load_calibration, softmax
-from culture.pipeline import config_hashes
-from culture.rationale import generate_rationale
-from culture.rules import decide
+torch = require_module("torch")
+from culture import qc  # noqa: E402
+from culture.calibration import load_calibration, softmax  # noqa: E402
+from culture.pipeline import config_hashes  # noqa: E402
+from culture.rationale import generate_rationale  # noqa: E402
+from culture.rules import decide  # noqa: E402
 
 LOGITS = [2.0, 3.5, -1.0, 0.5]          # arg-max = contamination_suspected
 

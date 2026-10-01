@@ -5,7 +5,10 @@ figures stay complete without it. The motion itself is checked in a browser
 
 import os
 
-from demo import confluency_3d, precomputed, replay_3d, replay_timeline, viz3d
+from conftest import require_module
+
+require_module("gradio")
+from demo import confluency_3d, precomputed, replay_3d, replay_timeline, viz3d  # noqa: E402
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 EXAMPLES = precomputed.load()

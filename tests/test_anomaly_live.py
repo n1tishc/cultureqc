@@ -13,6 +13,7 @@ import os
 import numpy as np
 import pandas as pd
 import pytest
+from conftest import requires
 
 from culture import anomaly
 
@@ -95,6 +96,7 @@ def test_live_embedding_parity_on_real_frames():
     assert (df.flag_live[far] == df.flag_cached[far]).all(), df
 
 
+@requires("torch")
 def test_site_calibration_never_scores_against_its_own_bank(tmp_path, monkeypatch):
     """scripts/site_calibrate.py on stub embeddings: bank and calibration images
     are disjoint, thresholds are set, and the output loads in the live path."""

@@ -7,6 +7,10 @@ import subprocess
 import sys
 
 import pytest
+from conftest import require_module
+
+require_module("torch")
+require_module("cellpose")
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CODE = "from culture import seg; print(seg._get_model().device)"
