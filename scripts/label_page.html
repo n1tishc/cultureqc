@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>C2C12 confluency labels</title>
+<style>
+  :root { --bg:#f6f5f2; --panel:#fff; --ink:#1d1d1b; --mute:#6b6a66; --line:#dcdad4; --cell:#1f9d55; --accent:#2b59c3; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:14px/1.45 -apple-system, system-ui, sans-serif; }
+  header { display:flex; gap:12px; align-items:center; padding:10px 16px; border-bottom:1px solid var(--line); background:var(--panel); position:sticky; top:0; z-index:2; flex-wrap:wrap; }
+  header h1 { font-size:15px; margin:0 12px 0 0; }
+  .prog { color:var(--mute); }
+  button, label.btn { font:inherit; padding:6px 10px; border:1px solid var(--line); background:#fff; border-radius:6px; cursor:pointer; }
+  button.on { background:var(--ink); color:#fff; border-color:var(--ink); }
+  button.primary { background:var(--accent); color:#fff; border-color:var(--accent); }
+  main { display:grid; grid-template-columns: auto 1fr; gap:16px; padding:16px; }
+  .stage { position:relative; width:640px; height:640px; background:#000; border-radius:4px; overflow:hidden; cursor:crosshair; }
+  .stage canvas { position:absolute; inset:0; width:640px; height:640px; image-rendering:pixelated; }
+  aside { display:flex; flex-direction:column; gap:12px; min-width:280px; max-width:520px; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:12px; }
+  .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .ctx { position:relative; display:inline-block; }
+  .ctx img { display:block; max-width:100%; image-rendering:pixelated; }
+  .ctx .box { position:absolute; border:2px solid #ffd400; pointer-events:none; }
+  kbd { font:12px ui-monospace, monospace; border:1px solid var(--line); border-bottom-width:2px; border-radius:4px; padding:0 4px; background:#fafafa; }
+  .status { font-weight:600; }
+  .status.done { color:var(--cell); } .status.skip { color:#b45309; }
+  ul { margin:6px 0 0 18px; padding:0; } li { margin:2px 0; }
+  .strip { display:flex; flex-wrap:wrap; gap:4px; }
+  .strip button { padding:2px 6px; font-size:12px; }
+  .strip button.d { background:#e6f4ea; border-color:#9fd3b0; }
+  .strip button.s { background:#fdf0e1; border-color:#efc79a; }
+  .strip button.cur { outline:2px solid var(--accent); }
+</style>
+</head>
+<body>
+<header>
+  <h1>C2C12 confluency labels</h1>
+  <span class="prog" id="prog"></span>
+  <button id="prev">← Prev</button>
+  <button id="next">Next →</button>
+  <span style="flex:1"></span>
+  <label class="btn">Load saved file<input type="file" id="load" accept="application/json" hidden></label>
+  <button class="primary" id="save">Save labels file</button>
+</header>
+<main>
+  <div>
+    <div class="stage" id="stage">
+      <canvas id="img" width="__SIZE__" height="__SIZE__"></canvas>
+      <canvas id="mask" width="__SIZE__" height="__SIZE__"></canvas>
+      <canvas id="cursor" width="640" height="640"></canvas>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <button id="tBrush" class="on" title="B">Paint cell (B)</button>
+      <button id="tErase" title="E">Erase (E)</button>
+      <button id="tFill" title="F">Fill area (F)</button>
+      <span>Size <input type="range" id="size" min="1" max="24" value="5"> <span id="sizev">5</span> px</span>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <button id="undo">Undo (⌘Z)</button>
+      <button id="toggle">Hide mask (O)</button>
+      <span>Contrast <input type="range" id="contrast" min="50" max="300" value="140"></span>
+      <button id="allcell">All cell</button>
+      <button id="clear">Clear</button>
+    </div>
+  </div>
+  <aside>
+    <div class="card">
+      <div class="row"><span>Crop <b id="cid"></b></span><span class="status" id="st"></span></div>
+      <div class="row" style="margin-top:8px">
+        <button id="done" class="primary">Mark done and next (D)</button>
+        <button id="skip">Can't tell, skip (S)</button>
+      </div>
+    </div>
+    <div class="card">
+      <div style="margin-bottom:6px; color:var(--mute)">Where the crop sits (yellow box), for context</div>
+      <div class="ctx" id="ctx"><div class="box" id="ctxbox"></div></div>
+    </div>
+    <div class="card">
+      <b>What to paint</b>
+      <ul>
+        <li><b>Cell:</b> every part of a cell, including thin flat edges and long processes, and round bright dividing cells.</li>
+        <li><b>Background:</b> bare dish, the bright halo around cells, loose debris.</li>
+        <li>Where cells touch, paint straight across; no gaps between them.</li>
+        <li>When unsure about an edge, follow the dark outline of the cell. If a crop is too unclear to judge, skip it.</li>
+      </ul>
+      <div style="margin-top:8px; color:var(--mute)">Left drag paints, right drag erases. <kbd>[</kbd> <kbd>]</kbd> brush size. Fill paints the enclosed area you click, useful after outlining a cell. Work is kept in this browser as you go; <b>Save labels file</b> when done and leave it in Downloads.</div>
+    </div>
+    <div class="card"><div class="strip" id="strip"></div></div>
+  </aside>
+</main>
+<script>
+const CROPS = /*__CROPS__*/[];
+const N = __SIZE__, Z = 640 / N, KEY = "c2c12-labels-v1";
+const state = { i: 0, tool: "brush", size: 5, show: true, contrast: 1.4, labels: {} };
+CROPS.forEach(c => state.labels[c.id] = { mask: new Uint8Array(N * N), done: false, skip: false, undo: [] });
+
+function rleEncode(m) { const r = []; let v = 0, run = 0; for (let k = 0; k < m.length; k++) { if (m[k] === v) run++; else { r.push(run); v ^= 1; run = 1; } } r.push(run); return r; }
+function rleDecode(r) { const m = new Uint8Array(N * N); let p = 0, v = 0; for (const run of r) { if (v) m.fill(1, p, p + run); p += run; v ^= 1; } return m; }
+function exportObj() {
+  const crops = {};
+  for (const c of CROPS) { const l = state.labels[c.id]; crops[c.id] = { done: l.done, skip: l.skip, rle: rleEncode(l.mask) }; }
+  return { labeller: "repository owner", crop_size: N, saved_at: new Date().toISOString(), crops };
+}
+function importObj(o) {
+  for (const [id, v] of Object.entries(o.crops || {})) { const l = state.labels[id]; if (!l) continue; l.mask = rleDecode(v.rle); l.done = !!v.done; l.skip = !!v.skip; }
+}
+function persist() { try { localStorage.setItem(KEY, JSON.stringify(exportObj())); } catch (e) {} }
+try { const s = localStorage.getItem(KEY); if (s) importObj(JSON.parse(s)); } catch (e) {}
+
+const imgC = document.getElementById("img"), maskC = document.getElementById("mask"), curC = document.getElementById("cursor");
+const ix = imgC.getContext("2d"), mx = maskC.getContext("2d"), cx = curC.getContext("2d");
+let gray = null;
+
+function load(i) {
+  state.i = (i + CROPS.length) % CROPS.length;
+  const c = CROPS[state.i], im = new Image();
+  im.onload = () => {
+    const t = document.createElement("canvas"); t.width = N; t.height = N; const tx = t.getContext("2d");
+    tx.drawImage(im, 0, 0); gray = tx.getImageData(0, 0, N, N); drawImg();
+  };
+  im.src = c.img;
+  let ci = document.getElementById("ctximg");
+  if (!ci) { ci = document.createElement("img"); ci.id = "ctximg"; ci.alt = "Wider view around the crop"; document.getElementById("ctx").prepend(ci); }
+  ci.onload = () => { const s = ci.clientWidth / ci.naturalWidth, b = document.getElementById("ctxbox");
+    b.style.top = c.ctx_off[0] * s + "px"; b.style.left = c.ctx_off[1] * s + "px"; b.style.width = b.style.height = N * s + "px"; };
+  ci.src = c.ctx;
+  drawMask(); ui();
+}
+function drawImg() {
+  if (!gray) return;
+  const d = new ImageData(N, N), g = gray.data; let lo = 255, hi = 0;
+  const v = []; for (let k = 0; k < g.length; k += 4) v.push(g[k]); v.sort((a, b) => a - b);
+  lo = v[Math.floor(v.length * 0.01)]; hi = v[Math.floor(v.length * 0.99)]; const mid = (lo + hi) / 2, half = Math.max(1, (hi - lo) / 2);
+  for (let k = 0; k < g.length; k += 4) { const x = 128 + (g[k] - mid) / half * 127 * (state.contrast / 1.4) * 0.9; const y = Math.max(0, Math.min(255, x)); d.data[k] = d.data[k + 1] = d.data[k + 2] = y; d.data[k + 3] = 255; }
+  ix.putImageData(d, 0, 0);
+}
+function drawMask() {
+  const l = state.labels[CROPS[state.i].id], d = mx.createImageData(N, N);
+  if (state.show) for (let k = 0; k < N * N; k++) if (l.mask[k]) { d.data[4 * k] = 31; d.data[4 * k + 1] = 200; d.data[4 * k + 2] = 90; d.data[4 * k + 3] = 95; }
+  mx.putImageData(d, 0, 0);
+}
+function ui() {
+  const done = CROPS.filter(c => state.labels[c.id].done).length, skip = CROPS.filter(c => state.labels[c.id].skip).length;
+  document.getElementById("prog").textContent = `${done} done, ${skip} skipped, of ${CROPS.length}`;
+  const l = state.labels[CROPS[state.i].id], st = document.getElementById("st");
+  document.getElementById("cid").textContent = `${state.i + 1} / ${CROPS.length}`;
+  st.textContent = l.done ? "done" : l.skip ? "skipped" : "to do"; st.className = "status " + (l.done ? "done" : l.skip ? "skip" : "");
+  for (const [id, t] of [["tBrush", "brush"], ["tErase", "erase"], ["tFill", "fill"]]) document.getElementById(id).classList.toggle("on", state.tool === t);
+  document.getElementById("toggle").textContent = state.show ? "Hide mask (O)" : "Show mask (O)";
+  const strip = document.getElementById("strip"); strip.innerHTML = "";
+  CROPS.forEach((c, k) => { const b = document.createElement("button"), lb = state.labels[c.id]; b.textContent = k + 1;
+    b.className = (lb.done ? "d" : lb.skip ? "s" : "") + (k === state.i ? " cur" : ""); b.onclick = () => load(k); strip.appendChild(b); });
+}
+function snapshot() { const l = state.labels[CROPS[state.i].id]; l.undo.push(l.mask.slice()); if (l.undo.length > 40) l.undo.shift(); }
+function dab(px, py, val) {
+  const l = state.labels[CROPS[state.i].id], r = state.size / 2;
+  for (let y = Math.floor(py - r); y <= Math.ceil(py + r); y++) for (let x = Math.floor(px - r); x <= Math.ceil(px + r); x++) {
+    if (x < 0 || y < 0 || x >= N || y >= N) continue; if ((x + 0.5 - px) ** 2 + (y + 0.5 - py) ** 2 <= r * r + 0.25) l.mask[y * N + x] = val; }
+}
+function fill(px, py) {
+  const l = state.labels[CROPS[state.i].id], m = l.mask, x0 = Math.floor(px), y0 = Math.floor(py), from = m[y0 * N + x0], to = 1;
+  if (from === to) return; const st = [[x0, y0]];
+  while (st.length) { const [x, y] = st.pop(); if (x < 0 || y < 0 || x >= N || y >= N || m[y * N + x] !== from) continue; m[y * N + x] = to; st.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]); }
+}
+let drawing = false, val = 1, last = null;
+function pos(e) { const b = curC.getBoundingClientRect(); return [(e.clientX - b.left) / Z, (e.clientY - b.top) / Z]; }
+curC.addEventListener("contextmenu", e => e.preventDefault());
+curC.addEventListener("mousedown", e => {
+  const [x, y] = pos(e); snapshot();
+  if (state.tool === "fill" && e.button === 0) { fill(x, y); drawMask(); persist(); return; }
+  drawing = true; val = (e.button === 2 || state.tool === "erase") ? 0 : 1; last = [x, y]; dab(x, y, val); drawMask();
+});
+window.addEventListener("mouseup", () => { if (drawing) { drawing = false; persist(); } });
+curC.addEventListener("mousemove", e => {
+  const [x, y] = pos(e);
+  cx.clearRect(0, 0, 640, 640); cx.strokeStyle = "rgba(255,255,255,.8)"; cx.beginPath(); cx.arc(x * Z, y * Z, state.size / 2 * Z, 0, 7); cx.stroke();
+  if (!drawing) return; const steps = Math.max(1, Math.ceil(Math.hypot(x - last[0], y - last[1]) / Math.max(0.5, state.size / 4)));
+  for (let s = 1; s <= steps; s++) dab(last[0] + (x - last[0]) * s / steps, last[1] + (y - last[1]) * s / steps, val);
+  last = [x, y]; drawMask();
+});
+curC.addEventListener("mouseleave", () => cx.clearRect(0, 0, 640, 640));
+const $ = id => document.getElementById(id);
+$("tBrush").onclick = () => { state.tool = "brush"; ui(); }; $("tErase").onclick = () => { state.tool = "erase"; ui(); }; $("tFill").onclick = () => { state.tool = "fill"; ui(); };
+$("size").oninput = e => { state.size = +e.target.value; $("sizev").textContent = state.size; };
+$("contrast").oninput = e => { state.contrast = e.target.value / 100; drawImg(); };
+$("undo").onclick = () => { const l = state.labels[CROPS[state.i].id]; if (l.undo.length) { l.mask = l.undo.pop(); drawMask(); persist(); } };
+$("toggle").onclick = () => { state.show = !state.show; drawMask(); ui(); };
+$("allcell").onclick = () => { snapshot(); state.labels[CROPS[state.i].id].mask.fill(1); drawMask(); persist(); };
+$("clear").onclick = () => { snapshot(); state.labels[CROPS[state.i].id].mask.fill(0); drawMask(); persist(); };
+$("prev").onclick = () => load(state.i - 1); $("next").onclick = () => load(state.i + 1);
+$("done").onclick = () => { const l = state.labels[CROPS[state.i].id]; l.done = true; l.skip = false; persist(); load(state.i + 1); };
+$("skip").onclick = () => { const l = state.labels[CROPS[state.i].id]; l.skip = true; l.done = false; persist(); load(state.i + 1); };
+$("save").onclick = () => { const b = new Blob([JSON.stringify(exportObj())], { type: "application/json" }), a = document.createElement("a");
+  a.href = URL.createObjectURL(b); a.download = "c2c12_labels.json"; a.click(); };
+$("load").onchange = e => { const f = e.target.files[0]; if (!f) return; f.text().then(t => { importObj(JSON.parse(t)); persist(); load(state.i); }); };
+window.addEventListener("keydown", e => {
+  if ((e.metaKey || e.ctrlKey) && e.key === "z") { e.preventDefault(); $("undo").click(); return; }
+  const k = e.key.toLowerCase();
+  if (k === "b") $("tBrush").click(); else if (k === "e") $("tErase").click(); else if (k === "f") $("tFill").click();
+  else if (k === "o") $("toggle").click(); else if (k === "d") $("done").click(); else if (k === "s") $("skip").click();
+  else if (k === "arrowright") $("next").click(); else if (k === "arrowleft") $("prev").click();
+  else if (k === "[" || k === "]") { state.size = Math.max(1, Math.min(24, state.size + (k === "]" ? 1 : -1))); $("size").value = state.size; $("sizev").textContent = state.size; }
+});
+load(0);
+</script>
+</body>
+</html>
