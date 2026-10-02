@@ -8,8 +8,19 @@ Each record is:
   4. Appended to an append-only JSONL log
 
 This is the GMP audit-trail pattern mapped to 21 CFR Part 11 §11.10(e):
-computer-generated, time-stamped, model-versioned records with a human
-reviewer field (docs/audit_mapping.md).
+computer-generated, time-stamped, model-versioned records
+(docs/audit_mapping.md).
+
+Three record types share one chain (schema 0.4, culture/schema.json):
+  reading  one analysed image: the numbers, the profile, the action, the reason
+  review   a person's decision on a reading, linked to that reading's hash;
+           the reading itself is never edited, so a review cannot change what
+           the model said
+  change   a change under change control (a new confluency profile, rules
+           version or model), with what it replaces, why, the evidence and
+           who approved it
+Identity, electronic signatures and access control stay with the host
+platform; a review carries a reference to the host's signature record.
 
 What the chain proves on its own: editing a record breaks its own hash or,
 if that hash is recomputed, the next record's link; inserting or reordering
@@ -48,7 +59,9 @@ from datetime import datetime, timezone
 
 
 GENESIS_HASH = "0" * 64
-SCHEMA_VERSION = "0.3"  # culture/schema.json; stamped by culture/pipeline.py and demo/analysis.py
+SCHEMA_VERSION = "0.4"  # culture/schema.json; stamped by culture/pipeline.py and demo/analysis.py
+RECORD_TYPES = ("reading", "review", "change")
+SIGNATURE_MEANINGS = ("review", "approval", "rejection")
 
 
 def _canonical_json(record: dict) -> str:
@@ -103,7 +116,8 @@ class RecordWriter:
         """
         Finalize and append a record. Adds:
           - record_id (if not present)
-          - analysed_at (if not present)
+          - analysed_at for a reading, recorded_at for a review or change
+            (if not present)
           - prev_record_hash
           - record_hash
 
@@ -114,8 +128,9 @@ class RecordWriter:
         if "record_id" not in record or not record["record_id"]:
             record["record_id"] = str(uuid.uuid4())
 
-        if "analysed_at" not in record or not record["analysed_at"]:
-            record["analysed_at"] = datetime.now(timezone.utc).isoformat()
+        stamp = "analysed_at" if record.get("record_type", "reading") == "reading" else "recorded_at"
+        if stamp not in record or not record[stamp]:
+            record[stamp] = datetime.now(timezone.utc).isoformat()
 
         record["prev_record_hash"] = self._prev_hash
 
@@ -141,6 +156,90 @@ class RecordWriter:
         with open(self.log_path, "r") as f:
             return sum(1 for line in f if line.strip())
 
+
+
+# ---------------------------------------------------------------------------
+# Review and change events
+# ---------------------------------------------------------------------------
+
+def review_event(reading: dict, reviewer_id: str, reviewer_name: str, meaning: str, decision: str,
+                 final_action: str, reason: str | None = None, host_signature_ref: str | None = None,
+                 signed_at: str | None = None) -> dict:
+    """A person's decision on a reading, as a new record linked to it.
+
+    meaning is what the signature means (21 CFR 11.50(a)(3): review,
+    approval, ...). decision is "accept" (the recommended action stands) or
+    "override" (final_action differs, and a reason is required). The identity
+    and the signature itself belong to the host platform; host_signature_ref
+    points to its record of them.
+    """
+    from culture.rules import ACTIONS
+    if reading.get("record_type", "reading") != "reading" or not reading.get("record_hash"):
+        raise ValueError("a review must point to a finalized reading")
+    if meaning not in SIGNATURE_MEANINGS:
+        raise ValueError(f"meaning must be one of {SIGNATURE_MEANINGS}")
+    if decision not in ("accept", "override"):
+        raise ValueError("decision must be accept or override")
+    if final_action not in ACTIONS:
+        raise ValueError(f"final_action must be one of {ACTIONS}")
+    if decision == "accept" and final_action != reading["recommended_action"]:
+        raise ValueError("accept keeps the recommended action; use override to change it")
+    if decision == "override" and not reason:
+        raise ValueError("an override needs a reason")
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "record_type": "review",
+        "reviews_record_id": reading["record_id"],
+        "reviews_record_hash": reading["record_hash"],
+        "flask_id": reading.get("flask_id"),
+        "recommended_action": reading["recommended_action"],
+        "decision": decision,
+        "final_action": final_action,
+        "reason": reason,
+        "reviewer": {"id": reviewer_id, "name": reviewer_name},
+        "signature_meaning": meaning,
+        "signed_at": signed_at or datetime.now(timezone.utc).isoformat(),
+        "host_signature_ref": host_signature_ref,
+    }
+
+
+def change_event(subject: str, before: dict | None, after: dict, reason: str, evidence: list[dict],
+                 approved_by_id: str, approved_by_name: str, effective_from: str | None = None) -> dict:
+    """A change under change control: what it replaces, why, on what evidence, approved by whom.
+
+    before/after are {"id", "sha256"} of the configuration item (e.g. a
+    confluency profile); evidence is [{"path", "sha256"}] of the validation
+    results that justify it.
+    """
+    if subject not in ("confluency_profile", "rules", "model", "config"):
+        raise ValueError(f"unknown change subject {subject!r}")
+    if not evidence:
+        raise ValueError("a change needs its evidence")
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "record_type": "change",
+        "subject": subject,
+        "before": before,
+        "after": after,
+        "reason": reason,
+        "evidence": evidence,
+        "approved_by": {"id": approved_by_id, "name": approved_by_name},
+        "effective_from": effective_from or datetime.now(timezone.utc).isoformat(),
+    }
+
+
+def reviews_for(log_path: str) -> dict[str, list[dict]]:
+    """Review events in a log, keyed by the record_hash of the reading they review."""
+    out: dict[str, list[dict]] = {}
+    if not os.path.exists(log_path):
+        return out
+    with open(log_path) as f:
+        for line in f:
+            if line.strip():
+                r = json.loads(line)
+                if r.get("record_type") == "review":
+                    out.setdefault(r["reviews_record_hash"], []).append(r)
+    return out
 
 
 # ---------------------------------------------------------------------------

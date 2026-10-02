@@ -1,0 +1,26 @@
+# Confluency calibration profiles (culture/profiles.py).
+#
+# One entry per imaging setup: the Cellpose-SAM logit cutoff and the 90% error
+# band, both measured on labelled images from that setup by
+# scripts/confluency_profiles.py (results/confluency_profiles.md, where the
+# method and the acceptance criteria were committed before scoring). Every
+# record carries the profile's id and SHA-256; replacing an entry is a change
+# under change control, written as a `change` event in the record chain.
+#
+# status: validated (passed its pre-registered criteria on held-out images),
+#         failed (did not), in_domain_check (no held-out evidence),
+#         uncalibrated (no labelled images from the setup).
+
+version: 1
+
+profiles:
+  uncalibrated:
+    label: Other imaging setup (uncalibrated)
+    description: >-
+      No labelled images from this imaging setup. The reading uses Cellpose's
+      default cutoff and has no error band, so a reading at or above the
+      passage target goes to a person.
+    cutoff: 0.0
+    band_pp: null
+    status: uncalibrated
+    quality: null

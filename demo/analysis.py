@@ -1,8 +1,11 @@
 """
-demo/analysis.py — one image through the console's live path: Cellpose-SAM
-confluency (one pass; the overlay mask is the same probability map), the QC
-classifier (recorded; kept out of the action while demoted), the per-image
-anomaly check (shown for review; a flag holds a passage) and the action rules.
+demo/analysis.py — one image through the console's live path: the imaging
+setup's confluency profile (cutoff and error band, culture/profiles.py), the
+quality gate where one is calibrated for the setup, Cellpose-SAM confluency
+(one pass; the overlay mask is the same probability map at the profile's
+cutoff), the QC classifier (recorded; kept out of the action while demoted),
+the per-image anomaly check (shown for review; a flag holds a passage) and the
+action rules (rules_v0.5).
 
 demo/app.py runs it live; scripts/export_demo_examples.py runs it once per
 precomputed example, so the two show the same computation.
@@ -21,12 +24,15 @@ import numpy as np
 from culture.anomaly import AnomalyResult, score_frame
 from culture.cache import downsample_probmap, probmap_sha256
 from culture.pipeline import config_hashes
+from culture.profiles import Profile, get_profile
 from culture.qc import QCResult, classifier_demoted, qc_classify
+from culture.quality import QualityResult, quality_gate
 from culture.rationale import generate_rationale
 from culture.records import SCHEMA_VERSION, hash_file
 from culture.rules import RULES_VERSION, LineConfig, decide
 from culture.seg import ConfluencyResult, cpsam_confluency, threshold_confluency
 from culture.visuals import outline_scored_region
+from culture.weights import weights_hashes
 
 TILE_SIZE = 256
 DEFAULT_HOURS_SINCE_PASSAGE = 48.0
@@ -49,6 +55,12 @@ class Analysis:
     # cache's stored form (culture.cache.downsample_probmap); its SHA-256 goes
     # in the record as confluency_map_hash. Kept in memory only.
     probmap_x1000: np.ndarray | None = None
+    profile: Profile | None = None
+    quality: QualityResult | None = None     # None: no gate calibrated for this setup
+
+    @property
+    def interval(self) -> list[float] | None:
+        return self.profile.interval(self.confluency.pct) if self.profile else None
 
 
 def _scale_bboxes(bboxes, img_h, img_w):
@@ -87,17 +99,26 @@ def _build_overlay(img_gray, cell_mask, evidence_boxes):
     return overlay
 
 
-def analyze_image(img: np.ndarray, image_path: str, cell_line: str, target_confluency: float) -> Analysis:
+def analyze_image(img: np.ndarray, image_path: str, cell_line: str, target_confluency: float,
+                  profile_id: str | None = None) -> Analysis:
     t = {}
+    profile = get_profile(profile_id)
+    t0 = time.perf_counter()
+    quality = quality_gate(img, dataset=profile.quality) if profile.quality else None
+    t["quality_gate"] = time.perf_counter() - t0
+
     t0 = time.perf_counter()
     captured = {}
-    # One Cellpose-SAM pass: the overlay mask is the same prob > 0 the confluency counts.
-    conf = cpsam_confluency(img, method="probmap", on_visual=lambda prob, fg: captured.update(prob=prob, fg=fg))
+    # One Cellpose-SAM pass: the overlay mask is the same prob > cutoff the confluency counts.
+    conf = cpsam_confluency(img, method="probmap", thr=profile.cutoff,
+                            on_visual=lambda prob, fg: captured.update(prob=prob, fg=fg))
     threshold_confluency(img)  # baseline computed for parity; not shown in this surface
     t["segmentation"] = time.perf_counter() - t0
 
     t0 = time.perf_counter()
-    anomaly = score_frame(img, conf.pct)   # B2: shown for review; a flag holds a passage (rules v0.3)
+    # B2: shown for review; a flag holds a passage (rules v0.3). Its density
+    # bins were calibrated on the reading at Cellpose's default cutoff.
+    anomaly = score_frame(img, conf.extra["pct_default_cutoff"])
     anomaly_flag = anomaly.flag if anomaly.status == "ok" else None
     t["anomaly"] = time.perf_counter() - t0
 
@@ -126,6 +147,9 @@ def analyze_image(img: np.ndarray, image_path: str, cell_line: str, target_confl
         hours_since_passage=DEFAULT_HOURS_SINCE_PASSAGE,
         hours_since_feed=DEFAULT_HOURS_SINCE_FEED,
         anomaly_flag=anomaly_flag,
+        band_pp=profile.band_pp,
+        quality_passed=quality.passed if quality else None,
+        quality_reasons=quality.reasons if quality else None,
     )
 
     evidence_boxes = []
@@ -151,24 +175,42 @@ def analyze_image(img: np.ndarray, image_path: str, cell_line: str, target_confl
     return Analysis(confluency=conf, qc=qc, demoted=demoted, anomaly=anomaly, action=action, reason=reason,
                     rationale=rationale, evidence_boxes=evidence_boxes, overlay=overlay,
                     timings_s={k: round(v, 3) for k, v in t.items()},
-                    probmap_x1000=downsample_probmap(captured["prob"]))
+                    probmap_x1000=downsample_probmap(captured["prob"]), profile=profile, quality=quality)
 
 
-def build_record(a: Analysis, image_path: str, cell_line: str, captured_at: str | None = None) -> dict:
-    """The analysis record, before the writer adds its chain hashes."""
+def build_record(a: Analysis, image_path: str, cell_line: str, captured_at: str | None = None,
+                 host: dict | None = None) -> dict:
+    """The reading record, before the writer adds its chain hashes.
+
+    host carries what only the host platform knows (flask_id, lineage,
+    imager_id, fov, environment, protocol_stage); the demo has none of it.
+    """
+    host = host or {}
+    q = a.quality
     return {
         "schema_version": SCHEMA_VERSION,
-        "flask_id": "demo",
+        "record_type": "reading",
+        "flask_id": host.get("flask_id", "demo"),
         "cell_line": cell_line,
-        "protocol_stage": None,
+        "protocol_stage": host.get("protocol_stage"),
+        "lineage": host.get("lineage"),
+        "imager_id": host.get("imager_id"),
+        "fov": host.get("fov"),
+        "environment": host.get("environment"),
         "captured_at": captured_at or datetime.now(timezone.utc).isoformat(),
         "image_ref": os.path.basename(image_path),
         "image_hash": hash_file(image_path),
         "pixel_size_um": None,
         "confluency_pct": a.confluency.pct,
+        "confluency_interval": a.interval,
+        "confluency_profile": a.profile.record_fields(),
         "confluency_confidence": a.confluency.confidence,
         "confluency_method": a.confluency.method,
         "confluency_map_hash": probmap_sha256(a.probmap_x1000) if a.probmap_x1000 is not None else None,
+        "quality_gate": None if q is None else {"passed": q.passed, "reasons": q.reasons, "thresholds": q.thresholds,
+                                                 "blur": round(q.blur, 3), "mean_intensity": round(q.mean_intensity, 3),
+                                                 "uniformity": round(q.uniformity, 3)},
+        "recovery_request": {"action": "reimage", "reasons": q.reasons} if a.action == "reimage" else None,
         "qc_flag": a.qc.flag,
         "qc_confidence": a.qc.confidence,
         "qc_severity": None,
@@ -177,6 +219,7 @@ def build_record(a: Analysis, image_path: str, cell_line: str, captured_at: str 
         "qc_calibrated": a.qc.calibrated,
         "qc_used_in_decision": not a.demoted,
         **a.anomaly.record_fields(),
+        "anomaly_bin_confluency_pct": a.confluency.extra.get("pct_default_cutoff"),
         "growth_trend": None,
         "eta_to_target_hours": None,
         "recommended_action": a.action,
@@ -188,8 +231,6 @@ def build_record(a: Analysis, image_path: str, cell_line: str, captured_at: str 
             "dino": a.anomaly.model_version,
             "vlm": a.rationale["method"],
         },
-        "model_weights_hash": None,
+        "model_weights_hash": weights_hashes(),
         "config_hashes": config_hashes(),
-        "reviewed_by": None,
-        "review_outcome": None,
     }

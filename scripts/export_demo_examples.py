@@ -15,9 +15,15 @@ Examples (fixed before any output was seen):
                        the original simulator's design; owner decision 2026-09-28)
   EVICAN               the two real-image examples the console already showed
                        (one accurate, one error case; results/confluency_real_summary.md)
-Lamp dimming is left out: this tab runs no quality gate, and the anomaly flag
-does not catch dimming (AUROC 0.47), so a dimmed frame would show nothing. The
-Flask Timeline's dimming replay shows the gate catching it.
+Lamp dimming is left out: the anomaly flag does not catch dimming (AUROC 0.47),
+and the Flask Timeline's dimming replay already shows the quality gate
+catching it.
+
+Since rules_v0.5 each example is read with its imaging setup's confluency
+profile (configs/confluency_profiles.yaml): the C2C12 frames with the
+demo microscope's profile, the EVICAN images with EVICAN's; a setup without a
+profile gets `uncalibrated`. The cache parity columns compare the reading at
+Cellpose's default cutoff, which is what the cache stores.
 
 For the C2C12 frames the JSON also holds the compute cache's values for the
 same image (Colab GPU, nb/03), so CPU vs GPU agreement is visible.
@@ -65,6 +71,7 @@ from culture.cache import probmap_sha256  # noqa: E402
 from culture.rationale import generate_rationale  # noqa: E402
 from culture.rules import RULES_VERSION, LineConfig, decide  # noqa: E402
 from culture.records import SCHEMA_VERSION, RecordWriter, hash_file  # noqa: E402
+from culture.profiles import UNCALIBRATED, get_profile, load_profiles  # noqa: E402
 from demo.analysis import analyze_image, build_record  # noqa: E402
 
 OUT_DIR = os.path.join(REPO, "demo", "examples")
@@ -80,6 +87,11 @@ EVICAN_CREDIT = "EVICAN: Bioinformatics 36(12):3863 (2020), CC BY 4.0"
 REAL_SIZE_VARIANT = "scale0.060769_haze"      # scripts/contamination_scale.py variant_name(REALISTIC, True)
 SCALE_DIR = os.path.join(REPO, "data", "contamination_scale")
 SCALE_CSV = os.path.join(REPO, "results", "contamination_scale.csv")
+
+def profile_for(kind: str) -> str:
+    want = "evican_mixed" if kind == "evican" else "c2c12_ker2018"
+    return want if want in load_profiles() else UNCALIBRATED
+
 
 EVICAN = [
     # id, file, ground truth (%, union of the dataset's expert masks), label
@@ -126,7 +138,8 @@ def caption(e: dict, rec: dict) -> str:
     an = ("anomaly check unavailable" if rec["anomaly_status"] != "ok" else
           f"anomaly {'flagged' if flag else 'not flagged'} (score {rec['anomaly_score']:.3f}, "
           f"threshold {rec['anomaly_threshold']:.3f})")
-    conf = f"Cellpose-SAM reads {rec['confluency_pct']:.1f}%"
+    band = (rec.get("confluency_profile") or {}).get("band_pp")
+    conf = f"Cellpose-SAM reads {rec['confluency_pct']:.1f}%" + (f" (±{band:.1f} pp)" if band is not None else "")
     if e["kind"] == "evican":
         return (f"Real image, ground truth {e['gt_pct']:.1f}% from the dataset's expert masks; {conf}; {an}. "
                 "The anomaly banks hold only C2C12 frames, so on other cell types the flag is uncalibrated.")
@@ -170,7 +183,9 @@ def rederive(date: str) -> None:
             qc_flag=None if demoted else qc["flag"], qc_confidence=None if demoted else qc["confidence"],
             line_config=LineConfig(cell_line=ex["cell_line"], target_confluency=ex["target_confluency"]),
             hours_since_passage=DEFAULT_HOURS_SINCE_PASSAGE, hours_since_feed=DEFAULT_HOURS_SINCE_FEED,
-            anomaly_flag=flag)
+            anomaly_flag=flag, band_pp=(ex["record"].get("confluency_profile") or {}).get("band_pp"),
+            quality_passed=(ex["record"].get("quality_gate") or {}).get("passed"),
+            quality_reasons=(ex["record"].get("quality_gate") or {}).get("reasons"))
         rationale = generate_rationale(
             qc_flag=None if demoted else qc["flag"], qc_confidence=None if demoted else qc["confidence"],
             evidence_bbox=(qc.get("evidence_bboxes") or [None])[0], confluency_pct=conf["pct"],
@@ -229,7 +244,8 @@ def main():
             assert sha == e["image_sha256"], f"{e['id']}: {sha} != cache {e['image_sha256']}"
         img = cv2.imread(dst, cv2.IMREAD_GRAYSCALE)
         t0 = time.perf_counter()
-        a = analyze_image(img, dst, CELL_LINE, TARGET)
+        profile_id = profile_for(e["kind"])
+        a = analyze_image(img, dst, CELL_LINE, TARGET, profile_id=profile_id)
         wall = time.perf_counter() - t0
         overlay_file = f"{e['id']}_overlay.jpg"
         cv2.imwrite(os.path.join(OUT_DIR, overlay_file), cv2.cvtColor(a.overlay, cv2.COLOR_RGB2BGR),
@@ -245,6 +261,7 @@ def main():
             entry["cache"] = dict(e["cache"], probmap_sign_disagree_pct=round(
                 float(((cached > 0) != (a.probmap_x1000 > 0)).mean() * 100), 4))
         entry.update(
+            profile_id=profile_id,
             image=image_file, overlay=overlay_file, probmap=probmap_file, image_sha256=sha, height=int(img.shape[0]),
             width=int(img.shape[1]), cell_line=CELL_LINE, target_confluency=TARGET,
             confluency=a.confluency.to_dict(), qc=a.qc.to_dict(), demoted=a.demoted,
@@ -254,7 +271,8 @@ def main():
             generated_at=rec["captured_at"], device=device, torch_threads=torch.get_num_threads(),
             timings_s=a.timings_s | {"wall": round(wall, 3)})
         out.append(entry)
-        print(f"{e['id']}: {a.confluency.pct:.2f}% (cache {e.get('cache', {}).get('confluency_pct')}), "
+        print(f"{e['id']}: {a.confluency.pct:.2f}% at {profile_id} (cutoff 0: "
+              f"{a.confluency.extra['pct_default_cutoff']:.2f}%, cache {e.get('cache', {}).get('confluency_pct')}), "
               f"anomaly {a.anomaly.score} flag {a.anomaly.flag}, action {a.action}, {wall:.0f} s", flush=True)
     doc = {
         "generated_by": "scripts/export_demo_examples.py",

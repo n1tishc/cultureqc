@@ -146,6 +146,9 @@ def cpsam_confluency(
             "confidence_band": band,
             "borderline_fraction": round(borderline_frac, 4),
             "instance_pct": round(float((masks > 0).mean() * 100), 2),
+            # the reading at Cellpose's default cutoff, whatever thr is: the
+            # anomaly check's density bins were calibrated on it
+            "pct_default_cutoff": round(float((prob > 0.0).mean() * 100), 2),
         }
     else:
         fg = masks > 0

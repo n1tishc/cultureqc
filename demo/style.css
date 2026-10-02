@@ -565,3 +565,18 @@ footer { display: none !important; }
 .map-meta { margin-top: 6px; font-size: 12px; color: var(--text-muted); }
 .map-check.ok { color: var(--green); }
 .map-check.bad { color: var(--red); font-weight: 600; }
+
+/* v0.4: the reading's error band, the quality gate, and the review form */
+.confluency-band { position: absolute; top: -4px; bottom: -4px; border-radius: 4px; background: rgba(59,130,246,.28); border: 1px solid rgba(59,130,246,.75); pointer-events: none; }
+.band-line, .gate-line { margin-top: 10px; font-size: 13px; line-height: 1.5; color: var(--text-secondary); }
+.band-line b { color: var(--text-primary); font-family: var(--mono); font-weight: 600; }
+.band-line code { font-size: 12px; }
+.band-line .straddle { color: var(--amber); }
+.gate-line.ok { color: var(--green); }
+.gate-line.bad { color: var(--amber); }
+.review-panel { margin-top: 12px; padding: 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg-card); gap: 8px; }
+.review-head { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+.review-sub { font-size: 12.5px; line-height: 1.5; color: var(--text-muted); margin-top: 4px; }
+.review-out { font-size: 13px; line-height: 1.5; color: var(--text-secondary); }
+.review-out.bad { color: var(--amber); }
+.review-out b { color: var(--green); }

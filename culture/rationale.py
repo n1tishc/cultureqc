@@ -60,6 +60,7 @@ _ACTION_PHRASES = {
     "feed": "perform media exchange",
     "continue": "no action required; continue monitoring",
     "human_review": "pause automated decisions and flag for human review",
+    "reimage": "re-image this field before any decision",
 }
 
 _TREND_PHRASES = {

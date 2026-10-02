@@ -64,7 +64,7 @@ def test_qc_confidence_in_range(record):
 
 
 def test_recommended_action_is_valid(record):
-    assert record["recommended_action"] in {"human_review", "passage", "feed", "continue"}
+    assert record["recommended_action"] in {"human_review", "passage", "feed", "continue", "reimage"}
 
 
 def test_rationale_is_nonempty_and_deterministic_template(record):
@@ -85,7 +85,8 @@ def test_classifier_calibrated_and_demoted(record):
     assert record["qc_evidence_bbox"] is None                     # no Grad-CAM while demoted
     assert "QC flag" not in record["action_reason"]
     assert record["qc_rationale"].startswith("Confluency ")
-    assert set(record["config_hashes"]) == {"qc.yaml", "calibration.yaml", "detectability.yaml", "anomaly.yaml"}
+    assert set(record["config_hashes"]) == {"qc.yaml", "calibration.yaml", "detectability.yaml", "anomaly.yaml",
+                                            "confluency_profiles.yaml", "quality.yaml"}
 
 
 def test_anomaly_recorded_and_an_input_to_the_rules(record):
@@ -93,12 +94,23 @@ def test_anomaly_recorded_and_an_input_to_the_rules(record):
     # the rules (it holds a passage) whenever the check ran.
     assert record["anomaly_status"] in {"ok", "unavailable"}
     assert record["anomaly_used_in_decision"] is (record["anomaly_status"] == "ok")
-    assert record["decided_by"] == RULES_VERSION == "rules_v0.4"
+    assert record["decided_by"] == RULES_VERSION == "rules_v0.5"
     if record["anomaly_status"] == "ok":
         assert record["anomaly_flag"] == (record["anomaly_score"] > record["anomaly_threshold"])
         assert record["model_versions"]["dino"] == "facebook/dinov2-small"
     # the rationale mentions the anomaly check exactly when it flagged the image
     assert ("anomaly check flagged" in record["qc_rationale"]) is bool(record["anomaly_flag"])
+
+
+def test_reading_names_its_profile_and_hashes_the_weights(record):
+    # schema 0.4: no profile_id passed, so the uncalibrated profile: default cutoff, no band
+    p = record["confluency_profile"]
+    assert record["record_type"] == "reading"
+    assert p["id"] == "uncalibrated" and p["band_pp"] is None and record["confluency_interval"] is None
+    assert record["quality_gate"] is None                                  # no gate calibrated for the setup
+    assert record["anomaly_bin_confluency_pct"] == pytest.approx(record["confluency_pct"], abs=0.01)
+    assert all(len(v) == 64 for v in record["model_weights_hash"].values())
+    assert "reviewed_by" not in record                                     # reviews are their own records
 
 
 def test_image_hash_matches_fixture(record):
@@ -122,7 +134,7 @@ def test_record_matches_schema(record):
     with open(schema_path) as f:
         schema = json.load(f)
 
-    # schema.json was aligned with what the pipeline writes in schema 0.3
-    # (confluency_method values, record_hash); this test was a strict xfail before.
+    # schema.json matches what the pipeline writes (0.3 aligned it; 0.4 added
+    # record types, the profile and the host-platform fields).
     clean = {k: v for k, v in record.items() if not k.startswith("_")}
     jsonschema.validate(clean, schema)

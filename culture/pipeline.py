@@ -26,8 +26,11 @@ def config_hashes() -> dict:
     from culture.qc import QC_CONFIG_PATH
     from culture import detectability
     from culture.anomaly import ANOMALY_CONFIG_PATH
+    from culture.profiles import PROFILES_PATH
+    from culture.quality import _DEFAULT_CONFIG_PATH as QUALITY_CONFIG_PATH
     paths = {"qc.yaml": QC_CONFIG_PATH, "calibration.yaml": DEFAULT_CALIBRATION_PATH,
-             "detectability.yaml": detectability.DEFAULT_PATH, "anomaly.yaml": ANOMALY_CONFIG_PATH}
+             "detectability.yaml": detectability.DEFAULT_PATH, "anomaly.yaml": ANOMALY_CONFIG_PATH,
+             "confluency_profiles.yaml": PROFILES_PATH, "quality.yaml": QUALITY_CONFIG_PATH}
     return {name: hash_file(p) for name, p in paths.items() if os.path.exists(p)}
 
 
@@ -44,43 +47,57 @@ def analyze(
     image_ref: str | None = None,
     observer=None,
     details: dict | None = None,
+    profile_id: str | None = None,
+    lineage: dict | None = None,
+    imager_id: str | None = None,
+    fov: dict | None = None,
+    environment: dict | None = None,
 ) -> dict:
     """
-    Full pipeline: confluency + QC + rules -> hash-chained record.
+    Full pipeline: profile + quality gate + confluency + anomaly + QC + rules
+    -> hash-chained reading record.
 
-    Returns the finalized record dict (already appended to the log).
+    The host platform supplies what only it knows: flask_id, lineage,
+    imager_id, fov, environment, protocol_stage, and profile_id (which
+    imaging setup took the image). Returns the finalized record (already
+    appended to the log).
     """
     import cv2
     import numpy as np
 
+    from culture.anomaly import score_frame
+    from culture.profiles import get_profile
+    from culture.quality import quality_gate
+    from culture.weights import weights_hashes
+
     img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
     if img is None:
         raise FileNotFoundError(f"Could not read image: {image_path}")
-
-    # ── Confluency ──
     emit = observer or (lambda event: None)
+    profile = get_profile(profile_id)
+    quality = quality_gate(img, dataset=profile.quality) if profile.quality else None
+
+    # ── Confluency, at the profile's cutoff ──
     from culture.visuals import segmentation_visuals, qc_visual
     emit({"stage": "segmentation", "status": "running"})
     visuals = {}
     def segmentation_ready(prob, mask):
         visuals.update(segmentation_visuals(img, prob, mask))
-    conf_result = cpsam_confluency(img, method="probmap", **(
+    conf_result = cpsam_confluency(img, method="probmap", thr=profile.cutoff, **(
         {"on_visual": segmentation_ready} if observer or details is not None else {}))
     emit({"stage": "segmentation", "status": "complete", "visuals": dict(visuals),
           "confluency_pct": conf_result.pct})
 
-    # ── Per-image anomaly (B2): shown for review; a flag holds a passage (rules v0.3) ──
-    from culture.anomaly import score_frame
+    # ── Per-image anomaly (B2): shown for review; a flag holds a passage (rules v0.3).
+    #    Its density bins were calibrated on the reading at Cellpose's default cutoff. ──
     from culture.visuals import anomaly_tile_view, png
     emit({"stage": "anomaly", "status": "running"})
-    anomaly = score_frame(img, conf_result.pct)
+    anomaly = score_frame(img, conf_result.extra["pct_default_cutoff"])
     if anomaly.status == "ok" and (observer or details is not None):
         visuals["anomaly_tile"] = png(anomaly_tile_view(img, anomaly))
     emit({"stage": "anomaly", "status": "complete", "anomaly_status": anomaly.status})
 
-    # ── QC classification ──
-    # The classifier expects ~256x256 tiles. For a full flask image,
-    # tile it and aggregate. For now, center-crop to 256x256.
+    # ── QC classification (demoted: recorded, no vote; centre 256 px tile) ──
     h, w = img.shape[:2]
     tile_size = 256
     if h >= tile_size and w >= tile_size:
@@ -89,10 +106,6 @@ def analyze(
                    cx - tile_size//2 : cx + tile_size//2]
     else:
         tile = cv2.resize(img, (tile_size, tile_size))
-
-    # Demoted (configs/qc.yaml, spec v4 §2B.2): the classifier still runs and
-    # is recorded, but draws no Grad-CAM evidence and stays out of decide()
-    # and the rationale.
     demoted = classifier_demoted()
     emit({"stage": "qc", "status": "running"})
     def cam_ready(cam):
@@ -100,10 +113,10 @@ def analyze(
     qc_result = qc_classify(tile, run_gradcam=not demoted, **(
         {"on_visual": cam_ready} if not demoted and (observer or details is not None) else {}))
     if details is not None:
-        details.update(qc=qc_result, anomaly=anomaly, visuals=visuals)
+        details.update(qc=qc_result, anomaly=anomaly, visuals=visuals, profile=profile, quality=quality)
     emit({"stage": "qc", "status": "complete", "visuals": dict(visuals)})
 
-    # ── Rules ──
+    # ── Rules (rules_v0.5) ──
     cfg = line_config or DEFAULT_CONFIG
     action, reason = decide(
         confluency_pct=conf_result.pct,
@@ -114,9 +127,11 @@ def analyze(
         hours_since_passage=hours_since_passage,
         hours_since_feed=hours_since_feed,
         anomaly_flag=anomaly.flag if anomaly.status == "ok" else None,
+        band_pp=profile.band_pp,
+        quality_passed=quality.passed if quality else None,
+        quality_reasons=quality.reasons if quality else None,
     )
 
-    # ── Rationale ──
     rat = generate_rationale(
         qc_flag=None if demoted else qc_result.flag,
         qc_confidence=None if demoted else qc_result.confidence,
@@ -130,20 +145,31 @@ def analyze(
         anomaly_flag=anomaly.flag if anomaly.status == "ok" else None,
     )
 
-    # ── Build record ──
     now = datetime.now(timezone.utc).isoformat()
     record = {
         "schema_version": SCHEMA_VERSION,
+        "record_type": "reading",
         "flask_id": flask_id,
         "cell_line": cell_line,
         "protocol_stage": protocol_stage,
-        "captured_at": now,  # in a real system this comes from the microscope
+        "lineage": lineage,
+        "imager_id": imager_id,
+        "fov": fov,
+        "environment": environment,
+        "captured_at": now,  # in a real system this comes from the imager, via the host
         "image_ref": image_ref if image_ref is not None else os.path.abspath(image_path),
         "image_hash": hash_file(image_path),
         "pixel_size_um": pixel_size_um,
         "confluency_pct": conf_result.pct,
+        "confluency_interval": profile.interval(conf_result.pct),
+        "confluency_profile": profile.record_fields(),
         "confluency_confidence": conf_result.confidence,
         "confluency_method": conf_result.method,
+        "quality_gate": None if quality is None else {
+            "passed": quality.passed, "reasons": quality.reasons, "thresholds": quality.thresholds,
+            "blur": round(quality.blur, 3), "mean_intensity": round(quality.mean_intensity, 3),
+            "uniformity": round(quality.uniformity, 3)},
+        "recovery_request": {"action": "reimage", "reasons": quality.reasons} if action == "reimage" else None,
         "qc_flag": qc_result.flag,
         "qc_confidence": qc_result.confidence,
         "qc_severity": None,  # would come from a severity sub-classifier
@@ -152,6 +178,7 @@ def analyze(
         "qc_calibrated": qc_result.calibrated,
         "qc_used_in_decision": not demoted,
         **anomaly.record_fields(),
+        "anomaly_bin_confluency_pct": conf_result.extra["pct_default_cutoff"],
         "growth_trend": None,  # would come from time-series mode
         "eta_to_target_hours": None,
         "recommended_action": action,
@@ -163,14 +190,9 @@ def analyze(
             "dino": anomaly.model_version,
             "vlm": rat["method"],
         },
-        "model_weights_hash": None,
+        "model_weights_hash": weights_hashes(),
         "config_hashes": config_hashes(),
-        "reviewed_by": None,
-        "review_outcome": None,
     }
 
-    # ── Write to hash-chained log ──
     writer = RecordWriter(log_path)
-    finalized = writer.append(record)
-
-    return finalized
+    return writer.append(record)

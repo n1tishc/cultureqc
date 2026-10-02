@@ -22,8 +22,9 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from culture.qc import demoted_label
-from culture.records import RecordWriter, verify_chain
-from culture.rules import AMBIGUITY_TOOLTIP, boundary_ambiguity
+from culture.profiles import choices as profile_choices, get_profile
+from culture.records import RecordWriter, review_event, verify_chain
+from culture.rules import ACTIONS, AMBIGUITY_TOOLTIP, boundary_ambiguity
 from culture import detectability
 from culture.anomaly import LIVE_LIMITS
 from culture.visuals import anomaly_tile_view, png
@@ -35,7 +36,11 @@ WORK_DIR = tempfile.mkdtemp(prefix="cultureqc_demo_")
 LOG_PATH = os.path.join(WORK_DIR, "cultureqc_demo_events.jsonl")
 writer = RecordWriter(LOG_PATH)
 
-CELL_LINES = ["A172", "BT474", "BV2", "Huh7", "MCF7", "SHSY5Y", "SKOV3", "SkBr3", "unknown"]
+CELL_LINES = ["A172", "BT474", "BV2", "Huh7", "MCF7", "SHSY5Y", "SKOV3", "SkBr3", "C2C12", "unknown"]
+# Imaging setup -> confluency profile (configs/confluency_profiles.yaml). An
+# upload defaults to the demo microscope's profile when there is one.
+PROFILE_CHOICES = profile_choices()
+DEFAULT_PROFILE = "c2c12_ker2018" if any(v == "c2c12_ker2018" for _, v in PROFILE_CHOICES) else "uncalibrated"
 
 # Precomputed Analyze examples (scripts/export_demo_examples.py): real C2C12
 # and EVICAN frames run once through demo/analysis.py, shown instantly and
@@ -70,7 +75,10 @@ ACTION_META = {
     "feed": ("Feed", "amber"),
     "continue": ("Continue", "amber"),
     "human_review": ("Human Review", "red"),
+    "reimage": ("Re-image", "amber"),
 }
+STATUS_TEXT = {"validated": "validated", "failed": "failed its criteria", "in_domain_check": "in-domain check only",
+               "uncalibrated": "uncalibrated"}
 
 ICONS = {
     "check-circle": (
@@ -110,18 +118,18 @@ def _tint(hex_color, alpha):
 
 # ─── Analysis ───
 
-def run_analysis(original_path, cell_line, target_confluency):
+def run_analysis(original_path, cell_line, target_confluency, profile_id=None):
     if not original_path:
         empty = '<div class="rc-empty">Upload an image to begin analysis.</div>'
-        return gr.update(), gr.update(visible=False), empty, None, None
+        return gr.update(), gr.update(visible=False), empty, None, None, None, gr.update(visible=False)
 
     img = cv2.imread(original_path, cv2.IMREAD_GRAYSCALE)
     if img is None:
         err = '<div class="rc-empty">Could not read that image file.</div>'
-        return gr.update(), gr.update(visible=False), err, None, None
+        return gr.update(), gr.update(visible=False), err, None, None, None, gr.update(visible=False)
 
     target_confluency = float(target_confluency or 80.0)
-    a = analyze_image(img, original_path, cell_line, target_confluency)
+    a = analyze_image(img, original_path, cell_line, target_confluency, profile_id=profile_id)
     overlay_path = os.path.join(WORK_DIR, f"overlay_{next(tempfile._get_candidate_names())}.png")
     cv2.imwrite(overlay_path, cv2.cvtColor(a.overlay, cv2.COLOR_RGB2BGR))
 
@@ -151,7 +159,33 @@ def run_analysis(original_path, cell_line, target_confluency):
     map_view = {"prob": a.probmap_x1000, "confluency": a.confluency.to_dict(),
                 "map_hash": finalized["confluency_map_hash"], "precomputed": False,
                 "id": known["id"] if known else None}
-    return overlay_path, gr.update(visible=True, value="Overlay"), results_html, overlay_path, map_view
+    return (overlay_path, gr.update(visible=True, value="Overlay"), results_html, overlay_path, map_view,
+            finalized, gr.update(visible=True))
+
+
+def sign_review(reading, reviewer, decision, final_action, reason):
+    """A person's decision on the last live reading, appended to this session's
+    chain as its own record. Identity and the e-signature belong to the host
+    platform; this demo records the name typed here and no signature."""
+    if not reading:
+        return '<div class="review-out">Run Analyze first; a review needs a reading in this session.</div>'
+    reviewer = (reviewer or "").strip()
+    if not reviewer:
+        return '<div class="review-out bad">Type the reviewer\'s name.</div>'
+    decision = "accept" if decision.startswith("Accept") else "override"
+    if decision == "accept":
+        final_action = reading["recommended_action"]
+    try:
+        ev = review_event(reading, reviewer_id=f"demo:{reviewer.lower().replace(' ', '-')}", reviewer_name=reviewer,
+                          meaning="approval", decision=decision, final_action=final_action,
+                          reason=(reason or "").strip() or None)
+    except ValueError as e:
+        return f'<div class="review-out bad">{html.escape(str(e))}</div>'
+    rec = writer.append(ev)
+    res = verify_chain(LOG_PATH)
+    return f"""<div class="review-out"><b>Review recorded</b> as record #{writer.record_count}, linked to the reading by
+    its hash ({reading["record_hash"][:12]}…); the reading itself is unchanged. Chain {"intact" if res.ok else "BROKEN"}.
+    <pre class="audit-json">{html.escape(json.dumps(rec, indent=2, sort_keys=True))}</pre></div>"""
 
 
 def render_anomaly(img, anomaly):
@@ -211,6 +245,8 @@ def render_cutoff_note(ex, doc=None):
     """The calibrated cutoff's reading of this image, marked validated and not
     live: the console, the stored example and its record all use the shipped
     cutoff. Empty for images the cutoff study did not score."""
+    if ex.get("record", {}).get("confluency_profile"):
+        return ""            # read with its setup's profile since rules_v0.5; the card shows the cutoff and band
     doc = doc if doc is not None else precomputed.cutoff_calibrated()
     c = (doc or {}).get("examples", {}).get(ex["id"])
     if not c:
@@ -257,6 +293,61 @@ def show_example(ex):
     )
 
 
+def confluency_card(record, confluency_pct, confluency_confidence, confluency_method, target_confluency, delay_ms):
+    """The reading, its 90% error band from the imaging setup's profile, the
+    target, and the quality gate. Older stored records have no profile: they
+    show the reading alone."""
+    above_target = confluency_pct >= target_confluency
+    bar_pct = max(0.0, min(100.0, confluency_pct))
+    target_pct = max(0.0, min(100.0, target_confluency))
+    fill_color = STATUS_COLORS["green"] if above_target else "#4b5563"
+    prof = (record or {}).get("confluency_profile")
+    interval = (record or {}).get("confluency_interval")
+    band_html, band_line = "", ""
+    if prof:
+        label = get_profile(prof["id"]).entry.get("label", prof["id"])
+        status = STATUS_TEXT.get(prof["status"], prof["status"])
+        if interval:
+            lo, hi = interval
+            band_html = (f'<div class="confluency-band" style="left:{lo:.1f}%;width:{max(0.6, hi - lo):.1f}%"></div>')
+            straddle = lo < target_confluency <= hi
+            band_line = (f'<div class="band-line">90% error band <b>{lo:.1f}–{hi:.1f}%</b> (±{prof["band_pp"]:.1f} pp, '
+                         f'measured on held-out labelled images from this setup)'
+                         + (' · <span class="straddle">the band includes the target</span>' if straddle else "")
+                         + f'<br>Profile <code>{html.escape(prof["id"])}</code>, {html.escape(status)}, cutoff '
+                         f'{format(prof["cutoff"], "+g").replace("-", "−")} · {html.escape(label)}</div>')
+        else:
+            band_line = (f'<div class="band-line"><b>No error band:</b> this imaging setup has no calibration profile, '
+                         f'so a reading at or above the target goes to a person. Profile <code>{html.escape(prof["id"])}'
+                         f'</code>, cutoff {format(prof["cutoff"], "+g").replace("-", "−")}.</div>')
+    q = (record or {}).get("quality_gate", "absent")
+    if q == "absent":
+        gate_line = ""
+    elif q is None:
+        gate_line = '<div class="gate-line">Quality gate: not calibrated for this imaging setup</div>'
+    elif q["passed"]:
+        gate_line = f'<div class="gate-line ok">Quality gate: passed ({html.escape(q["thresholds"])} thresholds)</div>'
+    else:
+        why = ", ".join(r.replace("_", " ") for r in q["reasons"])
+        gate_line = f'<div class="gate-line bad">Quality gate: failed ({html.escape(why)}): re-image</div>'
+    return f"""
+  <div class="rc-card confluency-card" style="animation-delay:{delay_ms}ms">
+    <div class="confluency-number">{confluency_pct:.1f}<span class="unit">%</span></div>
+    <div class="confluency-bar">
+      <div class="confluency-fill" style="transform:scaleX({bar_pct / 100:.4f});background:{fill_color}"></div>
+      {band_html}
+      <div class="confluency-target-marker" style="left:{target_pct:.1f}%"></div>
+    </div>
+    <div class="confluency-meta">
+      <span>Target: {target_confluency:.0f}%</span>
+      <span title="{html.escape(AMBIGUITY_TOOLTIP)}">Boundary ambiguity: {boundary_ambiguity(confluency_confidence):.2f}{" (recorded, not used)" if prof else ""}</span>
+      <span>Method: {html.escape(confluency_method)}</span>
+    </div>
+    {band_line}{gate_line}
+  </div>
+"""
+
+
 def render_results(
     anomaly_html,
     demoted,
@@ -282,11 +373,6 @@ def render_results(
 
     action_label, action_color_key = ACTION_META.get(action, (action.replace("_", " ").title(), "amber"))
     action_color = STATUS_COLORS[action_color_key]
-
-    above_target = confluency_pct >= target_confluency
-    bar_pct = max(0.0, min(100.0, confluency_pct))
-    target_pct = max(0.0, min(100.0, target_confluency))
-    fill_color = STATUS_COLORS["green"] if above_target else "#4b5563"
 
     evidence_rows = []
     for cls_key, (_, cls_color_key) in FLAG_META.items():
@@ -327,19 +413,7 @@ def render_results(
         return f"""
 <div class="rc-stack">
 {provenance_html}
-  <div class="rc-card confluency-card" style="animation-delay:0ms">
-    <div class="confluency-number">{confluency_pct:.1f}<span class="unit">%</span></div>
-    <div class="confluency-bar">
-      <div class="confluency-fill" style="transform:scaleX({bar_pct / 100:.4f});background:{fill_color}"></div>
-      <div class="confluency-target-marker" style="left:{target_pct:.1f}%"></div>
-    </div>
-    <div class="confluency-meta">
-      <span>Target: {target_confluency:.0f}%</span>
-      <span title="{html.escape(AMBIGUITY_TOOLTIP)}">Boundary ambiguity: {boundary_ambiguity(confluency_confidence):.2f}</span>
-      <span>Method: {html.escape(confluency_method)}</span>
-    </div>
-  </div>
-
+{confluency_card(record, confluency_pct, confluency_confidence, confluency_method, target_confluency, 0)}
 {anomaly_html}
 
   <div class="rc-card action-card" style="animation-delay:200ms">
@@ -382,19 +456,7 @@ def render_results(
     <div class="classifier-note">{html.escape(calibration_line)}</div>
   </div>
 
-  <div class="rc-card confluency-card" style="animation-delay:100ms">
-    <div class="confluency-number">{confluency_pct:.1f}<span class="unit">%</span></div>
-    <div class="confluency-bar">
-      <div class="confluency-fill" style="transform:scaleX({bar_pct / 100:.4f});background:{fill_color}"></div>
-      <div class="confluency-target-marker" style="left:{target_pct:.1f}%"></div>
-    </div>
-    <div class="confluency-meta">
-      <span>Target: {target_confluency:.0f}%</span>
-      <span title="{html.escape(AMBIGUITY_TOOLTIP)}">Boundary ambiguity: {boundary_ambiguity(confluency_confidence):.2f}</span>
-      <span>Method: {html.escape(confluency_method)}</span>
-    </div>
-  </div>
-
+{confluency_card(record, confluency_pct, confluency_confidence, confluency_method, target_confluency, 100)}
   <div class="rc-card action-card" style="animation-delay:200ms">
     <span class="action-badge" style="background:{_tint(action_color, 0.15)};color:{action_color}">{html.escape(action_label)}</span>
   </div>
@@ -433,14 +495,15 @@ def on_example(path):
     ex = precomputed.match(path, EXAMPLES)
     if ex is None:
         vis, html_, orig, ov, preview = on_upload(path)
-        return preview, vis, html_, orig, ov, gr.update(), gr.update(), None
+        return preview, vis, html_, orig, ov, gr.update(), gr.update(), None, gr.update(), None, gr.update(visible=False)
     overlay = precomputed.overlay_path(ex)
     prob = precomputed.probmap(ex)
     map_view = None if prob is None else {
         "prob": prob, "confluency": ex["confluency"], "map_hash": ex["record"].get("confluency_map_hash"),
         "precomputed": True, "id": ex["id"]}
+    prof = (ex["record"].get("confluency_profile") or {}).get("id", DEFAULT_PROFILE)
     return (overlay, gr.update(visible=True, value="Overlay"), show_example(ex), precomputed.image_path(ex),
-            overlay, ex["cell_line"], ex["target_confluency"], map_view)
+            overlay, ex["cell_line"], ex["target_confluency"], map_view, prof, None, gr.update(visible=False))
 
 
 def switch_view(choice, original_path, overlay_path, map_view):
@@ -534,6 +597,10 @@ with gr.Blocks(
                         value=80, minimum=0, maximum=100, step=5, show_label=False, container=False,
                         elem_classes=["topbar-field", "target-field"],
                     )
+                    setup = gr.Dropdown(
+                        choices=PROFILE_CHOICES, value=DEFAULT_PROFILE, show_label=False, container=False,
+                        elem_classes=["topbar-field", "setup-field"],
+                    )
                 analyze_btn = gr.Button("Analyze", variant="primary", elem_classes=["analyze-btn"])
 
             with gr.Row(elem_classes="main-row"):
@@ -553,6 +620,20 @@ with gr.Blocks(
 
                 with gr.Column(scale=38, min_width=0, elem_classes="results-pane"):
                     results_html = gr.HTML('<div class="rc-empty">Upload an image to begin analysis.</div>')
+                    reading_state = gr.State(None)   # the last live reading, for the review form
+                    with gr.Column(visible=False, elem_classes="review-panel") as review_panel:
+                        gr.HTML('<div class="review-head">Review this reading</div><div class="review-sub">Writes a '
+                                'separate review record into this session\'s chain, linked to the reading by its hash. '
+                                'On an instrument, identity and the electronic signature come from the host platform; '
+                                'this demo records the name typed here.</div>')
+                        reviewer = gr.Textbox(placeholder="Reviewer name", show_label=False, container=False)
+                        decision = gr.Radio(["Accept the recommendation", "Override"], value="Accept the recommendation",
+                                            show_label=False, container=False)
+                        final_action = gr.Dropdown(choices=list(ACTIONS), value="passage", label="Final action (override)")
+                        reason = gr.Textbox(placeholder="Reason (required for an override)", show_label=False,
+                                            container=False, lines=2)
+                        sign_btn = gr.Button("Record review", elem_classes=["review-btn"])
+                        review_out = gr.HTML()
 
             with gr.Row(elem_classes="real-examples-row"):
                 gr.Markdown(
@@ -570,7 +651,7 @@ with gr.Blocks(
                     example_labels=[e["label"] for e in EXAMPLES],
                     inputs=[image_view],
                     outputs=[image_view, view_toggle, results_html, original_state, overlay_state, cell_line,
-                             target_conf, map_state],
+                             target_conf, map_state, setup, reading_state, review_panel],
                     fn=on_example,
                     run_on_click=True,
                     cache_examples=False,
@@ -618,7 +699,7 @@ with gr.Blocks(
                     "rise; heavier contamination is not tested (results/contamination_scale.md).</p>")
 
     gr.HTML(
-        '<div class="app-footer">cultureQC v0.3 &middot; Cellpose-SAM &middot; DINOv2-small (anomaly check) '
+        '<div class="app-footer">cultureQC v0.4 &middot; Cellpose-SAM &middot; DINOv2-small (anomaly check) '
         '&middot; EfficientNet-B0 (synthetic-trained QC classifier, demoted) &middot; code MIT; model weights and '
         'datasets carry their own licences, see the README</div>'
     )
@@ -627,20 +708,26 @@ with gr.Blocks(
         fn=on_upload,
         inputs=[image_view],
         outputs=[view_toggle, results_html, original_state, overlay_state, image_view],
-    ).then(fn=lambda: None, inputs=None, outputs=[map_state], show_progress="hidden")
+    ).then(fn=lambda: (None, None, gr.update(visible=False), ""), inputs=None,
+           outputs=[map_state, reading_state, review_panel, review_out], show_progress="hidden")
 
     analyze_btn.click(
         fn=start_loading, inputs=None, outputs=[analyze_btn, loading_overlay], show_progress="hidden",
     ).then(
         fn=run_analysis,
-        inputs=[original_state, cell_line, target_conf],
-        outputs=[image_view, view_toggle, results_html, overlay_state, map_state],
+        inputs=[original_state, cell_line, target_conf, setup],
+        outputs=[image_view, view_toggle, results_html, overlay_state, map_state, reading_state, review_panel],
         show_progress="hidden",
+    ).then(
+        fn=lambda: "", inputs=None, outputs=[review_out], show_progress="hidden",
     ).then(
         fn=end_loading, inputs=None, outputs=[analyze_btn, loading_overlay], show_progress="hidden",
     ).then(
         fn=None, inputs=None, outputs=None, js=COUNT_UP_JS, show_progress="hidden",
     )
+
+    sign_btn.click(fn=sign_review, inputs=[reading_state, reviewer, decision, final_action, reason],
+                   outputs=[review_out], show_progress="hidden")
 
     view_toggle.change(
         fn=switch_view,

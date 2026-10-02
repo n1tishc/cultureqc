@@ -115,13 +115,15 @@ def evaluate_thresholds(
     )
 
 
-def quality_gate(img: np.ndarray, config_path: str = _DEFAULT_CONFIG_PATH) -> QualityResult:
-    """Deterministic pass/fail + reason codes for one FOV image."""
+def quality_gate(img: np.ndarray, config_path: str = _DEFAULT_CONFIG_PATH,
+                 dataset: str | None = None) -> QualityResult:
+    """Deterministic pass/fail + reason codes for one FOV image, with the
+    thresholds calibrated on `dataset` if quality.yaml has an entry for it."""
     from culture.cache import quality_metrics
 
     m = quality_metrics(img)
     return evaluate_thresholds(
-        m["blur_laplacian_var"], m["exposure_mean"], m["uniformity_block_std"], config_path
+        m["blur_laplacian_var"], m["exposure_mean"], m["uniformity_block_std"], config_path, dataset=dataset
     )
 
 
