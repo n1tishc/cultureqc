@@ -1,6 +1,6 @@
 import { AnomalyLayer } from "./Stage";
 import { ErrorFigure, ReviewFigure, row } from "./Sections";
-import { Action, Icon, Path, Verdict, actionGloss, short } from "./ui";
+import { Action, Icon, Path, actionGloss, short } from "./ui";
 
 /* The home page's product sections. Like the rest of the site, every number
    is read from data.json; the copy around it says what it is and where it
@@ -217,32 +217,80 @@ function detectKind(text) {
   return ["fail", "No"];
 }
 
+/* "Image quality (blur / exposure / uneven illumination)" → name, and the
+   faults it covers as a phrase. */
+function splitIssue(issue) {
+  const m = issue.match(/^(.*?)\s*\((.*)\)$/);
+  if (!m) return [issue, ""];
+  const parts = m[2].split(" / ");
+  const list = parts.length > 1 ? `${parts.slice(0, -1).join(", ")} or ${parts[parts.length - 1]}` : parts[0];
+  return [m[1], list];
+}
+
+/* What the pipeline reads from an image, beside what the matrix leaves to
+   another test. The verdict for each row, with its evidence, is on the
+   validation page. */
 export function Scope({ data }) {
   const rows = data.detectability.rows;
+  const gated = rows.filter((r) => detectKind(r.detectable_here)[0] === "pass");
+  const elsewhere = rows.filter((r) => detectKind(r.detectable_here)[0] !== "pass");
+  const ceiling = data.examples.items[0].confluency.ambiguity_ceiling;
   return (
     <section className="sec" id="scope" aria-labelledby="scope-h">
       <div className="wrap">
         <header className="sec-head">
-          <h2 id="scope-h">Scope, stated up front</h2>
+          <h2 id="scope-h">Built for confluency QC, clear about the rest</h2>
           <div>
-            <p>cultureQC reads confluency, gates image quality and flags unusual frames for a person. It is not a contamination test: with simulated bacteria at their real size, the anomaly flag is at chance on the tested setup. Each fault type says how to confirm it.</p>
+            <p>cultureQC reads confluency, gates image quality and flags unusual frames for a person. It is not a contamination test: with simulated bacteria at their real size, the anomaly flag is at chance on the tested setup. Everything else is listed with the test to confirm it with.</p>
           </div>
         </header>
-        <div className="scope-grid" role="list">
-          {rows.map((r) => {
-            const [k, word] = detectKind(r.detectable_here);
-            return (
-              <div className="scope-item" role="listitem" key={r.issue} data-k={k}>
-                <b>{r.issue}</b>
-                <Verdict k={k}>{word}</Verdict>
-                <span className="scope-confirm">{k === "pass" ? r.detectable_here : `Confirm with: ${r.confirm_with}`}</span>
-              </div>
-            );
-          })}
+        <div className="scope-split">
+          <div className="scope-col">
+            <h3>What it reads</h3>
+            <ul className="scope-in">
+              <li>
+                <Icon name="check" />
+                <div>
+                  <b>Confluency</b>
+                  <span>Cellpose-SAM’s reading, with a boundary-ambiguity score. Above {ceiling.toFixed(2)}, a person decides.</span>
+                </div>
+              </li>
+              {gated.map((r) => {
+                const [name, faults] = splitIssue(r.issue);
+                return (
+                  <li key={r.issue}>
+                    <Icon name="check" />
+                    <div>
+                      <b>{name}</b>
+                      <span>{faults ? `On flask visits, the quality gate fails frames for ${faults}; the action is ${r.confirm_with.toLowerCase()}. Single-image analysis does not run it.` : r.detectable_here}</span>
+                    </div>
+                  </li>
+                );
+              })}
+              <li>
+                <Icon name="check" />
+                <div>
+                  <b>Unusual frames</b>
+                  <span>An anomaly score against healthy frames of the same density. A flag holds a passage for a person; it does not name a cause.</span>
+                </div>
+              </li>
+            </ul>
+          </div>
+          <div className="scope-col">
+            <h3>Confirm with a separate test</h3>
+            <dl className="scope-out">
+              {elsewhere.map((r) => (
+                <div key={r.issue}>
+                  <dt>{r.issue}</dt>
+                  <dd>{r.confirm_with}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
         </div>
         <p className="spec-foot">
           <a className="more" href="/validation#detectability">
-            The evidence behind each row <Icon name="passage" />
+            What was tested for each, and the result <Icon name="passage" />
           </a>
           <span>
             Source: <Path>configs/detectability.yaml</Path>, hashed into every record

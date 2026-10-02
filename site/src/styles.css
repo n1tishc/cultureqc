@@ -2126,34 +2126,91 @@ td .num {
 
 /* scope */
 
-.scope-grid {
+.scope-split {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   background: var(--panel);
   border: 1px solid var(--rule);
   border-radius: 8px;
-  overflow: hidden;
 }
 
-/* hairlines drawn by each cell, so a short last row leaves white, not a gap */
-.scope-item {
-  box-shadow: 1px 0 0 var(--rule), 0 1px 0 var(--rule);
-  padding: 16px 18px;
-  display: grid;
-  gap: 6px;
-  align-content: start;
+.scope-col {
+  padding: 22px 24px 24px;
 }
 
-.scope-item b {
+.scope-col + .scope-col {
+  border-left: 1px solid var(--rule);
+}
+
+.scope-col h3 {
+  margin: 0 0 14px;
+  font-size: 13px;
   font-weight: 600;
-  font-size: 14.5px;
+  color: var(--ink-3);
+}
+
+.scope-in {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 16px;
+}
+
+.scope-in li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+}
+
+.scope-in .ico {
+  color: var(--passage);
+  font-size: 16px;
+  margin-top: 2px;
+}
+
+.scope-in b {
+  display: block;
+  font-weight: 600;
+  font-size: 15px;
   line-height: 1.35;
 }
 
-.scope-confirm {
-  font-size: 13px;
-  color: var(--ink-3);
+.scope-in span {
+  display: block;
+  margin-top: 3px;
+  font-size: 14px;
+  color: var(--ink-2);
+  line-height: 1.5;
+}
+
+.scope-out {
+  margin: 0;
+}
+
+.scope-out div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 4px 16px;
+  padding: 10px 0;
+  border-top: 1px solid var(--rule);
+  font-size: 14px;
   line-height: 1.45;
+}
+
+.scope-out div:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.scope-out dt {
+  color: var(--ink);
+}
+
+.scope-out dd {
+  margin: 0;
+  color: var(--ink-3);
 }
 
 /* closing call to action */
@@ -2435,6 +2492,19 @@ td .num {
 }
 
 @media (max-width: 760px) {
+  .scope-split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .scope-col + .scope-col {
+    border-left: 0;
+    border-top: 1px solid var(--rule);
+  }
+
+  .scope-col {
+    padding: 18px 16px 20px;
+  }
+
   .tamper {
     grid-template-columns: minmax(0, 1fr);
   }
