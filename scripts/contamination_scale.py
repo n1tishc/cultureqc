@@ -499,9 +499,9 @@ def cmd_report(a):
         "frames, so they are 16.5× too long (docs/ARCHITECTURE_VALIDATION.md, V5 correction). Here the same "
         f"frames are rebuilt with the bacteria shrunk by 0.079 / 1.3 = {REALISTIC:.4f}, area-averaged, so a "
         "bacterium narrower than a pixel darkens part of one pixel. The median bacterium in the sprite "
-        f"library is {length:.0f} px long at 79 nm/px (longest side of the minimum-area rectangle around "
-        "its mask; the 55 px in docs/STATUS.md B0 is a bounding-box measure) ({length * 0.079:.1f} µm): {length:.0f} px "
-        f"({length * 1.3:.0f} µm) as originally pasted, {length * REALISTIC:.1f} px as pasted here. Bacteria "
+        f"library is {length:.0f} px long at 79 nm/px, {length * 0.079:.1f} µm (longest side of the "
+        "minimum-area rectangle around its mask; the 55 px in docs/STATUS.md B0 is a bounding-box measure): "
+        f"{length:.0f} px ({length * 1.3:.0f} µm) as originally pasted, {length * REALISTIC:.1f} px as pasted here. Bacteria "
         "are placed on background pixels only, and one narrower than a pixel darkens it by a few grey levels, "
         "so fewer are visible in the plot than were placed.",
         "",

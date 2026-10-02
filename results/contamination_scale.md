@@ -4,7 +4,7 @@ Generated 2026-09-29T01:01:44Z by `scripts/contamination_scale.py` on the Mac (A
 
 ## Why
 
-The original contamination fault set pastes DeepBacs bacteria pixel for pixel into 1.3 µm/px C2C12 frames, so they are 16.5× too long (docs/ARCHITECTURE_VALIDATION.md, V5 correction). Here the same frames are rebuilt with the bacteria shrunk by 0.079 / 1.3 = 0.0608, area-averaged, so a bacterium narrower than a pixel darkens part of one pixel. The median bacterium in the sprite library is 59 px long at 79 nm/px (longest side of the minimum-area rectangle around its mask; the 55 px in docs/STATUS.md B0 is a bounding-box measure) ({length * 0.079:.1f} µm): {length:.0f} px (77 µm) as originally pasted, 3.6 px as pasted here. Bacteria are placed on background pixels only, and one narrower than a pixel darkens it by a few grey levels, so fewer are visible in the plot than were placed.
+The original contamination fault set pastes DeepBacs bacteria pixel for pixel into 1.3 µm/px C2C12 frames, so they are 16.5× too long (docs/ARCHITECTURE_VALIDATION.md, V5 correction). Here the same frames are rebuilt with the bacteria shrunk by 0.079 / 1.3 = 0.0608, area-averaged, so a bacterium narrower than a pixel darkens part of one pixel. The median bacterium in the sprite library is 59 px long at 79 nm/px, 4.7 µm (longest side of the minimum-area rectangle around its mask; the 55 px in docs/STATUS.md B0 is a bounding-box measure): 59 px (77 µm) as originally pasted, 3.6 px as pasted here. Bacteria are placed on background pixels only, and one narrower than a pixel darkens it by a few grey levels, so fewer are visible in the plot than were placed.
 
 ## Design
 
