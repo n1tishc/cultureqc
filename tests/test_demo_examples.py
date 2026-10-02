@@ -2,8 +2,10 @@
 examples (demo/examples/, scripts/export_demo_examples.py).
 
 - Each example is self-consistent: image hash, record fields, flag vs
-  threshold, action vs the rules on the stored numbers.
-- C2C12 examples agree with the compute cache (GPU) for the same image.
+  threshold, action vs the rules on the stored numbers, and the confluency
+  profile it was read with is the one in configs/confluency_profiles.yaml.
+- C2C12 examples agree with the compute cache (GPU) for the same image, at
+  the cutoff the cache uses (0.0, `pct_default_cutoff`).
 - Showing one needs no model and never touches the session's audit chain.
 - The 3D view's map is the one the record hashes (confluency_map_hash).
 """
@@ -17,7 +19,8 @@ import pytest
 from conftest import requires
 
 from culture.cache import PROBMAP_DOWNSAMPLE, downsample_probmap, probmap_sha256
-from culture.records import hash_file
+from culture.profiles import UNCALIBRATED, get_profile
+from culture.records import GENESIS_HASH, hash_file
 from culture.rules import RULES_VERSION, LineConfig, decide
 from demo import precomputed
 from demo.analysis import DEFAULT_HOURS_SINCE_FEED, DEFAULT_HOURS_SINCE_PASSAGE
@@ -41,7 +44,7 @@ def test_real_size_example_matches_the_scale_run():
     sc = pd.read_csv(os.path.join(repo, "results", "contamination_scale.csv"))
     (ex,) = [e for e in EXAMPLES if e["kind"] == "c2c12_contamination_real"]
     row = sc[(sc.variant == "scale0.060769_haze") & (sc.image_sha256 == ex["image_sha256"])].iloc[0]
-    assert ex["confluency"]["pct"] == pytest.approx(row.pct, abs=0.01)
+    assert ex["confluency"]["extra"]["pct_default_cutoff"] == pytest.approx(row.pct, abs=0.01)
     assert ex["anomaly"]["score"] == pytest.approx(row.score, abs=1e-4)
     assert ex["anomaly"]["flag"] == row.flag
     assert "at chance" in ex["caption"] and "16.5" not in ex["caption"]
@@ -60,13 +63,22 @@ def test_example_is_self_consistent(ex):
     a = ex["anomaly"]
     if a["status"] == "ok":
         assert a["flag"] == (a["score"] > a["threshold"]) == rec["anomaly_flag"]
+    # read with the setup's current profile, and binned for the anomaly check at cutoff 0.0
+    prof = get_profile(ex["profile_id"])
+    assert prof.id == ex["profile_id"] and rec["confluency_profile"] == prof.record_fields()
+    assert rec["confluency_interval"] == prof.interval(rec["confluency_pct"])
+    assert rec["anomaly_bin_confluency_pct"] == ex["confluency"]["extra"]["pct_default_cutoff"]
+    if prof.cutoff == 0.0:
+        assert ex["confluency"]["pct"] == pytest.approx(ex["confluency"]["extra"]["pct_default_cutoff"], abs=1e-6)
     # the action follows from the stored numbers alone (classifier demoted)
     assert ex["demoted"]
+    gate = rec.get("quality_gate") or {}
     action, _ = decide(confluency_pct=ex["confluency"]["pct"], confluency_confidence=ex["confluency"]["confidence"],
                        qc_flag=None, qc_confidence=None,
                        line_config=LineConfig(cell_line=ex["cell_line"], target_confluency=ex["target_confluency"]),
                        hours_since_passage=DEFAULT_HOURS_SINCE_PASSAGE, hours_since_feed=DEFAULT_HOURS_SINCE_FEED,
-                       anomaly_flag=a["flag"] if a["status"] == "ok" else None)
+                       anomaly_flag=a["flag"] if a["status"] == "ok" else None, band_pp=prof.band_pp,
+                       quality_passed=gate.get("passed"), quality_reasons=gate.get("reasons"))
     assert action == ex["action"]
     for key in ("caption", "credit", "generated_at", "device", "timings_s"):
         assert ex[key], key
@@ -79,12 +91,33 @@ def test_stored_record_matches_the_schema(ex):
         jsonschema.validate(ex["record"], json.load(f))
 
 
+def test_stored_chain_starts_with_the_approved_profile_changes():
+    """A profile other than `uncalibrated` reads an example only after a change
+    record that replaces `uncalibrated` with it, by SHA-256, at the chain's start."""
+    with open(precomputed.EXAMPLES_JSON) as f:
+        changes = json.load(f).get("changes") or []
+    used = {e["profile_id"] for e in EXAMPLES} - {UNCALIBRATED}
+    after = {c["after"]["id"]: c for c in changes}
+    assert set(after) == used
+    for pid in used:
+        c, prof = after[pid], get_profile(pid)
+        assert prof.status == "validated"
+        assert c["record_type"] == "change" and c["subject"] == "confluency_profile"
+        assert c["before"] == {"id": UNCALIBRATED, "sha256": get_profile(UNCALIBRATED).sha256}
+        assert c["after"] == {"id": pid, "sha256": prof.sha256}
+    # one chain: the changes first, then the examples
+    chain = changes + [e["record"] for e in EXAMPLES]
+    assert chain[0]["prev_record_hash"] == GENESIS_HASH
+    for prev, rec in zip(chain, chain[1:]):
+        assert rec["prev_record_hash"] == prev["record_hash"]
+
+
 @pytest.mark.parametrize("ex", [e for e in EXAMPLES if "cache" in e], ids=lambda e: e["id"])
 def test_c2c12_examples_match_the_cache(ex):
-    """Cache: Colab GPU (nb/03). Examples: this machine's run of the same code."""
+    """Cache: Colab GPU (nb/03), cutoff 0.0. Examples: this machine's run of the same code."""
     c = ex["cache"]
     assert ex["anomaly"]["bin_label"] == c["anomaly_bin"]
-    assert ex["confluency"]["pct"] == pytest.approx(c["confluency_pct"], abs=0.5)
+    assert ex["confluency"]["extra"]["pct_default_cutoff"] == pytest.approx(c["confluency_pct"], abs=0.5)
     assert ex["anomaly"]["score"] == pytest.approx(c["anomaly_score"], abs=0.01)
     assert ex["anomaly"]["flag"] == c["anomaly_flag"]
 
@@ -135,8 +168,10 @@ def test_3d_map_is_the_recorded_one(ex):
     assert m.shape == (math.ceil(ex["height"] / PROBMAP_DOWNSAMPLE), math.ceil(ex["width"] / PROBMAP_DOWNSAMPLE))
     assert probmap_sha256(m) == ex["record"]["confluency_map_hash"]
     c = ex["confluency"]
+    cut = ex["record"]["confluency_profile"]["cutoff"]
     # observed on the 7 examples: max 0.15 pp and 0.0014 (1/4-resolution sampling)
-    assert (m > 0).mean() * 100 == pytest.approx(c["pct"], abs=0.5)
+    assert (m > round(cut * 1000)).mean() * 100 == pytest.approx(c["pct"], abs=0.5)
+    assert (m > 0).mean() * 100 == pytest.approx(c["extra"]["pct_default_cutoff"], abs=0.5)
     assert (np.abs(m) < 1000).mean() == pytest.approx(c["extra"]["borderline_fraction"], abs=0.005)
 
 
@@ -188,7 +223,8 @@ def test_cutoff_note_matches_the_cutoff_study():
     """The console's calibrated-cutoff note (demo/examples/cutoff_calibrated.json)
     is exactly what scripts/export_cutoff_examples.py derives from
     results/confluency_cutoff.csv, is marked not live, and appears only on the
-    EVICAN examples."""
+    EVICAN examples, and only on records that predate confluency profiles
+    (since rules_v0.5 the card shows the profile's cutoff and band instead)."""
     repo = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     csv = os.path.join(repo, "results", "confluency_cutoff.csv")
     doc = precomputed.cutoff_calibrated()
@@ -202,7 +238,9 @@ def test_cutoff_note_matches_the_cutoff_study():
     from demo.app import render_cutoff_note
     for ex in EXAMPLES:
         note = render_cutoff_note(ex, doc)
-        if ex["kind"] == "evican":
+        if ex["record"].get("confluency_profile"):
+            assert note == ""
+        elif ex["kind"] == "evican":
             c = doc["examples"][ex["id"]]
             assert "validated, not live" in note and f'{c["calibrated"]["pct"]:.1f}%' in note
             assert "Not fully blind" in note

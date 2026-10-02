@@ -6,7 +6,7 @@ The method, splits and acceptance criteria are pre-registered in
 results/confluency_profiles.md and committed before any image is scored here.
 
     .venv/bin/python scripts/confluency_profiles.py maps --setup livecell
-    .venv/bin/python scripts/confluency_profiles.py maps --setup c2c12      # needs --labels
+    .venv/bin/python scripts/confluency_profiles.py maps --setup c2c12      # the pre-registered crops; no labels read
     .venv/bin/python scripts/confluency_profiles.py robust --setup evican
     .venv/bin/python scripts/confluency_profiles.py labelpage --out ~/Desktop/projs/c2c12_label
     .venv/bin/python scripts/confluency_profiles.py score [--labels path] [--msc-dir path]

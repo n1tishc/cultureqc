@@ -1,7 +1,17 @@
 #!/usr/bin/env python3
 """
-How often the rules send an image to human review. With the classifier
-demoted, two rules can (culture/rules.py, rules_v0.4):
+How often the rules send an image to human review.
+
+Since rules_v0.5 (culture/rules.py), with the classifier demoted, a reading
+goes to review when its setup's 90% error band includes the target (the
+reading can't tell which side of the target the flask is on), when it is at
+or above the target but the anomaly check flagged the image, or when its
+setup has no calibration profile and it is at or above the target. The
+C2C12 frames are read with the profile configs/confluency_profiles.yaml gives
+the demo microscope (`c2c12_ker2018`, or `uncalibrated` if it is not
+validated): its cutoff applied to the cached map, its band to the reading.
+
+For comparison, the rules_v0.4 triggers, with the classifier demoted:
   - the boundary-ambiguity trigger (rule 2): many pixels sit near the
     Cellpose-SAM cutoff (the record's confidence below the line's floor, 0.30
     by default; boundary ambiguity above 0.70). It is a density-sensitive
@@ -42,6 +52,9 @@ import pandas as pd
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, REPO)
 
+import numpy as np  # noqa: E402
+
+from culture.profiles import get_profile  # noqa: E402
 from culture.rules import DEFAULT_CONFIG, RULES_VERSION  # noqa: E402
 
 CACHE = os.path.join(REPO, "cache")
@@ -49,6 +62,36 @@ RESULTS = os.path.join(REPO, "results")
 BINS = [0, 20, 40, 60, 80, 100.01]
 CROP_FRAC = 0.25
 TARGETS = (80.0, 50.0)               # the default target, and the replays' (results/growth_backtest.md)
+C2C12_PROFILE = "c2c12_ker2018"
+
+
+def reading_at(sha: str, cutoff: float, pct0: float) -> float:
+    """The frame's reading at `cutoff`: the cached full-resolution reading at 0.0, otherwise the
+    cached map (1/4 resolution, logit × 1000; within 0.15 pp of full resolution on the examples)."""
+    if cutoff == 0.0:
+        return pct0
+    m = np.load(os.path.join(CACHE, "probmaps", f"{sha}.npz"))["prob_x1000"]
+    return float((m > round(cutoff * 1000)).mean() * 100)
+
+
+def v05(g: pd.DataFrame, target: float, band: float | None) -> dict:
+    """rules_v0.5's passage step on readings `g.reading` and flags `g.flag_binned` (time since passage
+    assumed long enough; the quality gate's REIMAGE is not modelled)."""
+    r, flag = g.reading, g.flag_binned
+    if band is None:
+        straddle = pd.Series(False, index=g.index)
+        above = r >= target
+        passage = pd.Series(False, index=g.index)
+        review = above
+    else:
+        above = (r - band) >= target
+        straddle = (~above) & ((r + band) >= target)
+        passage = above & ~flag
+        review = straddle | (above & flag)
+    n = len(g)
+    return {"n": n, "band_review": int(straddle.sum()), "held": int((above & flag).sum()) if band is not None else 0,
+            "uncalibrated_review": int(review.sum()) if band is None else 0, "passage": int(passage.sum()),
+            "review": int(review.sum()), "review_pct": round(100 * int(review.sum()) / n, 1) if n else None}
 
 
 def rate(df: pd.DataFrame, floor: float) -> dict:
@@ -119,6 +162,11 @@ def main():
                               "total": int((low | held_back).sum()),
                               "total_pct": round(100 * int((low | held_back).sum()) / n, 1)})
 
+    prof = get_profile(C2C12_PROFILE)
+    scored["reading"] = [reading_at(sha, prof.cutoff, p) for sha, p in zip(scored.image_sha256, scored.pct)]
+    v05_rows = [{"target": target, "group": name, **v05(scored[mask], target, prof.band_pp)}
+                for target in TARGETS for name, mask in groups]
+
     per_seq = {s: rate(g, floor)["review_pct"] for s, g in held.groupby("sequence_id")}
     dense = held[held.pct >= 40]
     per_seq_dense = {s: rate(g, floor) for s, g in dense.groupby("sequence_id")}
@@ -128,20 +176,38 @@ def main():
         w.writeheader()
         w.writerows(rows)
 
+    band_txt = (f"cutoff {prof.cutoff:+.1f}, 90% band ±{prof.band_pp:.2f} pp" if prof.band_pp is not None
+                else f"cutoff {prof.cutoff:+.1f}, no band")
     lines = [
-        "# Human-review rate: boundary-ambiguity trigger and passage hold", "",
+        "# Human-review rate", "",
         f"Generated {time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())} by `scripts/review_rate.py`. "
-        "No model runs: confidences are the compute cache's (Cellpose-SAM cpsam_v2, Colab GPU, nb/03), "
-        "full resolution, same formula as the live path. C2C12 images: Ker et al., *Sci Data* 5:180237 (2018), "
-        "CC BY 4.0; fault frames are simulated from them.", "",
-        f"Rules: `{RULES_VERSION}`. With the classifier demoted, two rules return `human_review`: boundary "
-        f"ambiguity above {1 - floor:.2f} (the record's `confidence` below the {floor:.2f} floor, `culture/rules.py` "
-        "default), a density-sensitive review trigger that does not predict the reading's error "
-        "(`results/confidence_vs_error.md`), and, since `rules_v0.3`, the passage hold "
-        "(confluency at or above the target, but the anomaly check flagged the image). Quality-gate failures "
-        "return REIMAGE (`results/quality_gate_c2c12.md`). Frames within a sequence are not independent; "
+        "No model runs: readings, confidences and maps are the compute cache's (Cellpose-SAM cpsam_v2, Colab GPU, "
+        "nb/03), same formula as the live path. C2C12 images: Ker et al., *Sci Data* 5:180237 (2018), "
+        "CC BY 4.0; fault frames are simulated from them. Frames within a sequence are not independent; "
         "n sequences is the sample size.", "",
-        "## Boundary-ambiguity trigger", "",
+        f"## `{RULES_VERSION}`: error band and passage hold", "",
+        f"C2C12 frames read with profile `{prof.id}` ({prof.status}; {band_txt}; "
+        "`configs/confluency_profiles.yaml`, `results/confluency_profiles.md`)"
+        + ("" if prof.cutoff == 0.0 else ", the cutoff applied to the cached map at 1/4 resolution") + ". "
+        + ("A reading goes to review when its band includes the target, or when it is at or above the target "
+           "and the anomaly check flagged the image." if prof.band_pp is not None else
+           "With no calibration profile, every reading at or above the target goes to review: the rules never "
+           "passage on an uncalibrated reading alone.")
+        + " Time since passage is assumed long enough; quality-gate failures return REIMAGE and are not modelled "
+          "here. Boundary ambiguity no longer decides.", "",
+        "| target | group | images | band includes the target | held by the anomaly flag | uncalibrated, at or above target | passage | total to review |",
+        "|---|---|---|---|---|---|---|---|",
+    ]
+    for r in v05_rows:
+        lines.append(f"| {r['target']:g}% | {r['group']} | {r['n']} | {r['band_review']} | {r['held']} | "
+                     f"{r['uncalibrated_review']} | {r['passage']} | {r['review']} ({r['review_pct']}%) |")
+    lines += ["", "## rules_v0.4, for comparison: boundary-ambiguity trigger", "",
+        f"With the classifier demoted, rules_v0.4 had two rules that return `human_review`: boundary "
+        f"ambiguity above {1 - floor:.2f} (the record's `confidence` below the {floor:.2f} floor), a "
+        "density-sensitive review trigger that does not predict the reading's error "
+        "(`results/confidence_vs_error.md`), and, since `rules_v0.3`, the passage hold "
+        "(confluency at or above the target, but the anomaly check flagged the image). Readings at cutoff 0.0, "
+        "full resolution. Quality-gate failures return REIMAGE (`results/quality_gate_c2c12.md`).", "",
         "| group | sequences | images | sent to review | note |", "|---|---|---|---|---|",
     ]
     for r in rows:
@@ -153,7 +219,7 @@ def main():
               "Held-out frames at 40% or more, per sequence (sent to review / frames): " + ", ".join(
                   f"{s.replace('c2c12_', '').replace('_Data', '')} {r['n_review']}/{r['n']}"
                   for s, r in sorted(per_seq_dense.items())) + ".", "",
-              "## Passage hold on an anomaly flag (since rules_v0.3)", "",
+              "## rules_v0.4, for comparison: passage hold on an anomaly flag (since rules_v0.3)", "",
               "Frames with an anomaly score (A4). Passage-eligible: boundary ambiguity at or below the trigger and confluency "
               "at or above the target (time since passage assumed long enough). Held: passage-eligible and "
               "flagged, so sent to review instead of passage. Total: ambiguity trigger or held.", "",
@@ -166,7 +232,7 @@ def main():
     with open(os.path.join(RESULTS, "review_rate.md"), "w") as f:
         f.write("\n".join(lines))
     print("\n".join(lines))
-    print(json.dumps({"floor": floor, "groups": len(rows)}))
+    print(json.dumps({"floor": floor, "groups": len(rows), "c2c12_profile": prof.id}))
 
 
 if __name__ == "__main__":
