@@ -47,14 +47,21 @@ function useContour(url) {
   return d;
 }
 
-function AnomalyLayer({ ex }) {
+export function AnomalyLayer({ ex, nested = false }) {
   const a = ex.anomaly;
   const flat = a.patches.flat();
   const lo = Math.min(...flat);
   const top = new Set(a.top.map(([r, c]) => `${r},${c}`));
   const { x, y, size, patch } = a.crop;
   return (
-    <svg className="overlay layer-anom" data-l="anom" viewBox={`0 0 ${ex.width} ${ex.height}`} preserveAspectRatio="none" aria-hidden="true">
+    <svg
+      className="overlay layer-anom"
+      data-l="anom"
+      viewBox={`0 0 ${ex.width} ${ex.height}`}
+      preserveAspectRatio="none"
+      aria-hidden="true"
+      {...(nested ? { x: 0, y: 0, width: ex.width, height: ex.height } : {})}
+    >
       <rect x={a.tile.x} y={a.tile.y} width={a.tile.size} height={a.tile.size} fill="none" stroke="var(--anom)" strokeWidth="1.2" strokeDasharray="5 4" vectorEffect="non-scaling-stroke" />
       {a.patches.map((row, r) =>
         row.map((dist, c) => {

@@ -18,7 +18,7 @@ function Src({ children }) {
 
 /* ── confluency ── */
 
-function ErrorFigure({ data }) {
+export function ErrorFigure({ data, letter = "A" }) {
   const r = row(data, "Confluency error, Cellpose-SAM");
   const v1 = data.validation.find((v) => v.id === "V1");
   const [mae, n, base] = nums(r.number);
@@ -52,7 +52,7 @@ function ErrorFigure({ data }) {
   );
 }
 
-function ReviewFigure({ data }) {
+export function ReviewFigure({ data, letter = "B" }) {
   const rr = data.review_rate;
   const all = rr.find((r) => r.group === "C2C12 held-out, full frames");
   const bins = rr.filter((r) => /^C2C12 held-out, confluency/.test(r.group));
@@ -141,7 +141,7 @@ export function Confluency({ data }) {
   return (
     <Section
       id="confluency"
-      title="How far to trust one confluency reading"
+      title="Confluency against expert masks"
       lede={
         <p>
           Cellpose-SAM’s probability map gives the number; the share of pixels close to its cutoff gives the boundary ambiguity, and a frame above {ceiling.toFixed(2)} goes to a person. Both were measured on real images: the number against expert masks, and the ambiguity against the number’s error, which it does not predict. It tracks density, so it is a review trigger, not a confidence.
@@ -167,15 +167,15 @@ function detectKind(text) {
   return ["fail", "No"];
 }
 
-export function Limits({ data }) {
+export function Detectability({ data }) {
   const d = data.detectability;
   const real = row(data, "Anomaly flag vs contamination, bacteria at real size");
   const big = row(data, "Anomaly flag vs contamination (V5)");
   const flagRate = row(data, "Anomaly flag rate, held-out normal");
   return (
     <Section
-      id="limits"
-      title="What it cannot see, stated before anyone asks"
+      id="detectability"
+      title="What it can and cannot see"
       lede={
         <>
           <p>Each fault type has a row: what was tested, on what, and what to confirm it with. The matrix’s SHA-256 is in every record, so a reading can be traced to the limits that applied when it was made.</p>
@@ -266,11 +266,23 @@ const VERDICT_WORD = { pass: "Pass", fail: "Fail", mixed: "Mixed", none: "No ver
 export function Validation({ data }) {
   const v = data.validation;
   const count = (k) => v.filter((x) => x.kind === k).length;
+  const kinds = ["pass", "fail", "mixed", "none", "info"].filter((k) => count(k));
   return (
     <Section
-      id="validation"
-      title={`${v.length} validation checks, ${count("fail")} of them failed`}
-      lede={<p>{data.validation_intro}</p>}
+      id="checks"
+      title={`${v[0].id}–${v[v.length - 1].id}, on held-out data`}
+      lede={
+        <>
+          <p>Every threshold was set on tuning sequences; every result here is on held-out data, with its verdict as scored. Below the table: what the results changed in the product, and what this evidence does not prove.</p>
+          <p className="tally" aria-label="Verdicts">
+            {kinds.map((k) => (
+              <Verdict key={k} k={k}>
+                {count(k)} {VERDICT_WORD[k].toLowerCase()}
+              </Verdict>
+            ))}
+          </p>
+        </>
+      }
     >
       <div className="table-wrap" tabIndex={0} role="region" aria-label="Validation checks V1 to V10">
         <table>
@@ -375,9 +387,25 @@ export function Integration({ data }) {
   );
 }
 
-/* ── what changed since v0.2 ── */
+/* ── release notes ── */
 
-export function Changes({ data }) {
+function Note({ title, children, src, was }) {
+  return (
+    <li className="note">
+      <p>
+        <b>{title}</b> {children}
+      </p>
+      {was ? <p className="note-was">In v0.2: {was}</p> : null}
+      {src ? (
+        <span className="src">
+          <Path>{src}</Path>
+        </span>
+      ) : null}
+    </li>
+  );
+}
+
+export function ReleaseNotes({ data }) {
   const clsSyn = row(data, "QC classifier accuracy, synthetic");
   const clsReal = row(data, "QC classifier on real normal frames");
   const clsRealPct = clsReal.number.match(/^[\d.]+%/)[0];
@@ -390,167 +418,94 @@ export function Changes({ data }) {
   const amb = row(data, "Boundary ambiguity vs the reading's error");
   const fc = row(data, "Passage forecast");
   const spc = row(data, "SPC");
-  const items = [
-    {
-      was: `Confluency error ${v02.number}.`,
-      now: (
-        <>
-          <b>Measured on real images instead:</b> {err.number}, on 33 held-out EVICAN images with expert masks. The v0.2 numbers did not hold on real images.
-        </>
-      ),
-      src: `${v02.source} · ${err.source}`,
-    },
-    {
-      was: `The QC classifier led the page: accuracy ${clsSyn.number} and contamination recall, measured on synthetic test tiles.`,
-      now: (
-        <>
-          <b>Demoted.</b> The EfficientNet QC classifier is still recorded in each record but no longer shown or used: it called {clsRealPct} of real normal frames normal.
-        </>
-      ),
-      src: clsReal.source,
-    },
-    {
-      was: "Contamination shown as DeepBacs bacteria pasted onto real frames, flagged with evidence boxes.",
-      now: (
-        <>
-          <b>Those bacteria were {data.oversize_factor}× too large.</b> At their real size: {real.number}. Contamination is now listed as not detected here.
-        </>
-      ),
-      src: real.source,
-    },
-    {
-      was: "Confluency with a per-image confidence.",
-      now: (
-        <>
-          <b>The “confidence” is now “boundary ambiguity”.</b> Checked by a rule fixed in advance, the per-image score {amb.number}. So it is shown as a review trigger, not a confidence. Frames above {data.examples.items[0].confluency.ambiguity_ceiling.toFixed(2)} go to review: {rev.number}.
-        </>
-      ),
-      src: `${amb.source} · ${rev.source}`,
-    },
-    {
-      was: "Not in v0.2.",
-      kept: true,
-      now: (
-        <>
-          <b>A fix for the low reading, validated and held for release.</b> Most of it comes from the model’s cell cutoff. With the cutoff recalibrated on other images, the error on the same 33 images drops from {cutMae[0]} to {cutMae[1]} pp. {data.cutoff_disclosure} It is not live yet: it moves the review trigger and the anomaly bins, which are re-derived first.
-        </>
-      ),
-      src: cut.source,
-    },
-    {
-      was: "Not in v0.2.",
-      kept: true,
-      now: (
-        <>
-          <b>Per-image anomaly check, quality gate, flask history and a passage forecast.</b> Forecast backtest at the replays’ passage target: {fc.number}. Since rules_v0.3 an anomaly flag holds a passage for human review.
-        </>
-      ),
-      src: fc.source,
-    },
-    {
-      was: "Not in v0.2.",
-      kept: true,
-      now: (
-        <>
-          <b>Validated V1–V10, fails stated,</b> and a detectability matrix whose hash rides in every record, next to the hashes of the probability map and configs, and the model names.
-        </>
-      ),
-      src: "docs/ARCHITECTURE_VALIDATION.md · configs/detectability.yaml",
-    },
-    {
-      was: "Not in v0.2.",
-      kept: true,
-      now: (
-        <>
-          <b>Built, failed validation, kept out of decisions:</b> SPC on growth residuals ({spc.number}) and the instrument-drift monitor.
-        </>
-      ),
-      src: spc.source,
-    },
-  ];
+  const flagRate = row(data, "Anomaly flag rate, held-out normal");
+  const zg = row(data, "Live latency, console Space on ZeroGPU");
+  const ceiling = data.examples.items[0].confluency.ambiguity_ceiling.toFixed(2);
+  const nEvican = nums(err.number)[1];
   return (
-    <Section
-      id="changes"
-      title="What changed since v0.2"
-      lede={
-        <p>
-          The v0.2 site is still up at{" "}
-          <a href="https://cultureqc.vercel.app" target="_blank" rel="noreferrer">
-            cultureqc.vercel.app
-          </a>
-          . Here is what it showed, and what testing on real images changed.
-        </p>
-      }
-    >
-      <div className="changes" role="table" aria-label="v0.2 against v0.3">
-        <div className="change change-head" role="row">
-          <div role="columnheader">What v0.2 showed</div>
-          <div role="columnheader">v0.3, after testing on real images</div>
-        </div>
-        {items.map((c, i) => (
-          <div className="change" key={i} role="row">
-            <div role="cell">
-              <p className={c.kept ? "kept" : ""}>{c.was}</p>
-            </div>
-            <div role="cell">
-              <p>{c.now}</p>
-              <span className="src">
-                <Path>{c.src}</Path>
-              </span>
-            </div>
-          </div>
-        ))}
-      </div>
-    </Section>
-  );
-}
+    <>
+      <article className="release" id="v0-3" aria-labelledby="v0-3-h">
+        <header className="release-head">
+          <h2 id="v0-3-h">v0.3</h2>
+          <p>
+            Rules <code>{data.meta.rules}</code>
+            <br />
+            Branch <code>{data.meta.branch}</code>
+          </p>
+        </header>
+        <div className="release-body">
+          <section aria-labelledby="new-h">
+            <h3 id="new-h">New</h3>
+            <ul className="notes">
+              <Note title="Per-image anomaly check." src={flagRate.source}>
+                DINOv2 patch features of the centre tile, scored against healthy frames of the same confluency, with thresholds set on tuning sequences only. It flags {flagRate.number} of healthy held-out frames, and since rules_v0.3 a flag holds a passage for a person.
+              </Note>
+              <Note title="Quality gate, flask history and a passage forecast." src={fc.source}>
+                Bad images are dropped from the growth trend, and the forecast is backtested at the replays’ passage target: {fc.number}.
+              </Note>
+              <Note title="A fuller record, verifiable in the browser." src="docs/audit_mapping.md">
+                Each record carries the hashes of the image, the probability map, every config and the anomaly bank, the model and rules versions, and the previous record’s hash; an anchored checkpoint catches a rewritten or truncated chain.
+              </Note>
+              <Note title={`Validation ${data.validation[0].id}–${data.validation[data.validation.length - 1].id} and a detectability matrix.`} src="docs/ARCHITECTURE_VALIDATION.md · configs/detectability.yaml">
+                Checks on held-out data with their verdicts as scored, and the matrix’s hash in every record.
+              </Note>
+              <Note title="A live console." src={zg.source}>
+                The same code on a GPU Space, for any image: {zg.number}.
+              </Note>
+            </ul>
+          </section>
 
-export function Footer({ data, commit }) {
-  const credits = [...new Set(data.examples.items.map((e) => e.credit))];
-  return (
-    <footer className="foot">
-      <div className="wrap foot-grid">
-        <div>
-          <h4>cultureQC v0.3</h4>
-          <p>
-            Every figure on this page is generated from the repository’s stored output by <code>site/assets/build_data.py</code>; the numbers come from the README tables that <code>tests/test_readme_provenance.py</code> checks against their source files.
-          </p>
-          <p>
-            Built from <code>{data.meta.branch}</code>
-            {commit ? (
-              <>
-                {" "}
-                at <code>{commit.slice(0, 7)}</code>
-              </>
-            ) : null}
-            .
-          </p>
+          <section aria-labelledby="changed-h">
+            <h3 id="changed-h">Changed after testing on real images</h3>
+            <ul className="notes">
+              <Note title="Confluency error is measured on real images." src={`${err.source} · ${v02.source}`} was={`${v02.number}.`}>
+                {err.number}, on {nEvican} held-out EVICAN images with expert masks.
+              </Note>
+              <Note title="The per-image “confidence” is now “boundary ambiguity”, a review trigger." src={`${amb.source} · ${rev.source}`} was="a per-image confidence.">
+                Checked by a rule fixed in advance, the score {amb.number}. Frames above {ceiling} go to a person: {rev.number}.
+              </Note>
+              <Note title="The QC classifier no longer drives the action." src={`${clsReal.source} · ${clsSyn.source}`} was={`it led the page, with accuracy ${clsSyn.number} on synthetic test tiles.`}>
+                It is still recorded in each record, with <code>qc_used_in_decision: false</code>. On real normal frames it called {clsRealPct} normal.
+              </Note>
+              <Note title="Contamination is listed as not detected here." src={real.source} was="simulated bacteria pasted onto real frames, flagged with evidence boxes.">
+                The demo’s bacteria were {data.oversize_factor}× larger than real ones. At their real size: {real.number}.
+              </Note>
+            </ul>
+          </section>
+
+          <section aria-labelledby="next-h">
+            <h3 id="next-h">Validated, not yet released</h3>
+            <ul className="notes">
+              <Note title="A recalibrated cell cutoff for the low reading." src={cut.source}>
+                With the cutoff recalibrated on other images, the error on the same {nEvican} images drops from {cutMae[0]} to {cutMae[1]} pp. {data.cutoff_disclosure} It moves the review trigger and the anomaly bins, which are re-derived before it ships.
+              </Note>
+            </ul>
+          </section>
+
+          <section aria-labelledby="kept-h">
+            <h3 id="kept-h">Built, kept out of decisions</h3>
+            <ul className="notes">
+              <Note title="SPC on growth residuals and the instrument-drift monitor." src={spc.source}>
+                Both failed validation (SPC: {spc.number}, faults simulated) and stay in code and in the report only.
+              </Note>
+            </ul>
+          </section>
         </div>
-        <div>
-          <h4>Images</h4>
-          {credits.map((c) => (
-            <p key={c}>{c}</p>
-          ))}
-        </div>
-        <div>
-          <h4>Links</h4>
-          <p>
-            <a href={data.meta.console_url} target="_blank" rel="noreferrer">
-              Live console <Icon name="external" />
-            </a>
-          </p>
-          <p>
-            <a href={data.meta.repo_url} target="_blank" rel="noreferrer">
-              Source repository
-            </a>
-          </p>
+      </article>
+
+      <article className="release" id="v0-2" aria-labelledby="v0-2-h">
+        <header className="release-head">
+          <h2 id="v0-2-h">v0.2</h2>
           <p>
             <a href="https://cultureqc.vercel.app" target="_blank" rel="noreferrer">
-              The v0.2 site
+              cultureqc.vercel.app <Icon name="external" />
             </a>
           </p>
+        </header>
+        <div className="release-body">
+          <p className="release-p">The first release: Cellpose-SAM confluency, a four-class QC classifier with Grad-CAM evidence boxes, rules for passage, feed and review, and a hash-chained record. Its site is still online. Its headline numbers were measured on synthetic test tiles; v0.3 re-measured them on real images, above.</p>
         </div>
-      </div>
-    </footer>
+      </article>
+    </>
   );
 }

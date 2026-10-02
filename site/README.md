@@ -8,11 +8,17 @@ is what the v0.3 Vercel project serves at https://cultureqc-cvoy.vercel.app. The
 
 | Path | What it is |
 |---|---|
-| `src/App.jsx` | the page: top bar, hero, and the sections in order |
+| `index.html`, `validation.html`, `release-notes.html` | the three pages; each names its page on `<body data-page>`. Vercel's `cleanUrls` serves `/validation` and `/release-notes`, and `vite.config.js` does the same locally |
+| `src/main.jsx` | picks the page component from `data-page` |
+| `src/pages/Home.jsx` | the product page: hero, the stage, how it works, accuracy, flask history, records, integration, measured performance, scope |
+| `src/pages/ValidationPage.jsx` | confluency against expert masks, the V1–V10 checks, and the detectability matrix with real-size contamination |
+| `src/pages/ReleaseNotesPage.jsx` | release notes for v0.3 and v0.2 |
+| `src/components/Shell.jsx` | the top bar, closing call to action, footer and secondary-page header shared by every page |
 | `src/components/Stage.jsx` | the hero instrument: a real frame, its computed layers (cell probability, cutoff contour, borderline band, anomaly patches), the readout rail, the seven-example strip |
+| `src/components/Product.jsx` | the home page's how-it-works steps, accuracy feature, measured-performance datasheet and scope |
 | `src/components/Timeline.jsx` | the five held-out flask replays: per-visit map with its three fields, the growth chart, quality gate, flags and the passage forecast |
 | `src/components/Records.jsx` | the record chain, re-hashed in the browser, with the tamper switch |
-| `src/components/Sections.jsx` | confluency trust, limits, validation, integration, what changed since v0.2, footer |
+| `src/components/Sections.jsx` | confluency figures, detectability, validation, integration and the release notes |
 | `src/lib/verify.js` | SHA-256 over each record's stored canonical JSON, and the chain links |
 | `src/data.json` | **generated** by `assets/build_data.py`; never edit by hand |
 | `public/img/v3/` | **generated** layers, thumbnails, replay maps and the contamination figure |
