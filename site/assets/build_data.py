@@ -40,7 +40,9 @@ IMG_OUT = os.path.join(SITE, "public", "img", "v3")
 IMG_URL = "img/v3"
 
 CONSOLE_URL = "https://huggingface.co/spaces/LongGrainRice/cultureqc-console"
-REPO_URL = "https://github.com/n1tishc/cultureqc"
+# The branch, not the repo root: main still shows v0.2 (its headline numbers were synthetic,
+# results/v02_headline.md) until the owner merges or annotates it.
+REPO_URL = "https://github.com/n1tishc/cultureqc/tree/slice-1b-compute-cache"
 C2C12_UM_PER_PX = 1.3        # README "Imaging requirement": C2C12, 5× objective, 1.3 µm/px
 TILE_PX, CROP_PX, PATCH_PX = 256, 224, 14   # culture/anomaly.py: qctile, DINOv2 centre crop, 16×16 patches
 BAND_LOGIT = 1.0             # culture/seg.py confidence_band (logits) around the 0 cutoff

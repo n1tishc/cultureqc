@@ -2,7 +2,7 @@
  "meta": {
   "rules": "rules_v0.4",
   "console_url": "https://huggingface.co/spaces/LongGrainRice/cultureqc-console",
-  "repo_url": "https://github.com/n1tishc/cultureqc",
+  "repo_url": "https://github.com/n1tishc/cultureqc/tree/slice-1b-compute-cache",
   "branch": "slice-1b-compute-cache",
   "generated_by": "site/assets/build_data.py"
  },
