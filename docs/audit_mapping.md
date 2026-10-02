@@ -18,30 +18,58 @@ Each row says what exists today and what does not. Gaps are listed, not hidden.
 
 ## What a record carries
 
-One JSON line per analysed image, written by `culture/pipeline.py::analyze` and
-appended by `culture/records.py::RecordWriter`. Values below are from the seven
-stored example records (`demo/examples/examples.json`).
+One chain, three record types (schema `0.4`, `culture/schema.json`), written by
+`culture/records.py::RecordWriter` in append mode:
+
+- **reading**: one analysed image (`culture/pipeline.py::analyze`, and the
+  console's `demo/analysis.py`).
+- **review**: a person's decision on a reading, as a new record that points to
+  the reading's `record_hash`. The reading is never edited, so a review cannot
+  change what the model said, and a later reviewer sees both.
+- **change**: a change under change control, such as a new confluency profile,
+  rules version or model: what it replaces and what replaces it (by id and
+  SHA-256), why, the validation evidence (by path and SHA-256), and who
+  approved it.
+
+Fields of a reading:
 
 | Field | What it holds | Note |
 |---|---|---|
-| `record_id` | UUID v4 | |
+| `record_type`, `record_id` | `reading`, UUID v4 | |
 | `analysed_at` | UTC timestamp, set by the code at analysis time | |
-| `captured_at` | Capture time | Set to analysis time in this prototype; in use it should come from the imager |
-| `image_hash` | SHA-256 of the image bytes read | Identifies the bytes, not the instrument that made them |
-| `confluency_pct`, `confluency_confidence` | The reading, and `confidence` = 1 − min(1, 4 × share of pixels within ±1 logit of the cutoff). The console and the site show 1 − it as **boundary ambiguity**: a pre-registered check found the score tracks density and does not predict the reading's error (`results/confidence_vs_error.md`). The field keeps its name so the schema doesn't change before the freeze | The name: it is a review trigger, not a confidence in the reading |
-| `confluency_method` | `probmap` | |
-| `confluency_map_hash` | SHA-256 of the probability map drawn in the console (a 1/4-resolution copy of the map the number was counted from) | The drawn map can be checked against the record |
-| `anomaly_*` | Status, density bin, score, z, threshold, flag, `anomaly_bank_sha256`, `anomaly_used_in_decision` | The bank's hash is checked before use (below) |
+| `captured_at` | Capture time | In use it comes from the imager, through the host platform |
+| `flask_id`, `cell_line`, `protocol_stage` | Vessel or labware ID, cell line, the protocol step that took the image | Supplied by the host platform |
+| `lineage` | Passage number and parent vessel | Supplied by the host platform; `null` in the demo |
+| `imager_id`, `fov` | The instrument, and the field of view within the vessel | Supplied by the host platform; `null` in the demo |
+| `environment` | A snapshot the host supplies at capture (e.g. temperature, CO₂), stored as given | cultureQC does not read it |
+| `image_hash` | SHA-256 of the image bytes read | Identifies the bytes; `imager_id` says which instrument |
+| `confluency_pct` | The reading at the profile's cutoff | |
+| `confluency_profile` | The imaging setup's calibration profile: id, SHA-256 of its entry in `configs/confluency_profiles.yaml`, status, cutoff, error band | A setup with no labelled images is `uncalibrated`: default cutoff, no band |
+| `confluency_interval` | Reading ± the profile's 90% error band, measured on held-out labelled images from that setup (`results/confluency_profiles.md`) | `null` for an uncalibrated setup |
+| `confluency_confidence` | 1 − boundary ambiguity (the share of pixels near the cutoff). Recorded; decides nothing since `rules_v0.5`, because it tracks density and not the reading's error (`results/confidence_vs_error.md`) | |
+| `confluency_method`, `confluency_map_hash` | `probmap`; SHA-256 of the probability map drawn in the console (a 1/4-resolution copy of the map the number was counted from) | The drawn map can be checked against the record |
+| `quality_gate` | Pass or fail, reasons, which threshold set, and the three metrics | `null` where no gate is calibrated for the setup |
+| `recovery_request` | `{"action": "reimage", "reasons": [...]}` when the gate fails: a machine-readable request for the host's scheduler | |
+| `anomaly_*`, `anomaly_bin_confluency_pct` | Status, density bin, score, z, threshold, flag, `anomaly_bank_sha256`, `anomaly_used_in_decision`; the reading at the default cutoff that picked the bin (the banks were calibrated at that cutoff) | The bank's hash is checked before use (below) |
 | `qc_*` | The demoted classifier's flag and confidence; `qc_used_in_decision: false` | Recorded, no vote |
-| `recommended_action`, `action_reason` | `passage`, `feed`, `continue` or `human_review`, and the rules engine's one-sentence reason. `continue` was `hold` up to `rules_v0.3` (label only) | |
+| `recommended_action`, `action_reason` | `passage`, `feed`, `continue`, `human_review` or `reimage`, and the rules engine's one-sentence reason | |
 | `qc_rationale` | A template sentence | `model_versions.vlm` reads `template`; no language model runs |
-| `decided_by` | Rules version (`rules_v0.4`) | Would name a person once a reviewer decides |
-| `model_versions` | Model names: `cpsam_v2`, `facebook/dinov2-small`, `qc_effnetb0_v1`, `template` | Names only |
-| `model_weights_hash` | `null` in every record today | **Gap:** the weights files are not hashed |
-| `config_hashes` | SHA-256 of `anomaly.yaml`, `calibration.yaml`, `detectability.yaml`, `qc.yaml` | The Cellpose-SAM cutoff and band are code defaults in `culture/seg.py`, not in a config, so they are not covered (**gap**) |
-| `reviewed_by`, `review_outcome` | `null` until a reviewer fills them | For the platform's review workflow |
+| `decided_by` | Rules version (`rules_v0.5`) | A person's decision is a review record |
+| `model_versions` | Model names: `cpsam_v2`, `facebook/dinov2-small`, `qc_effnetb0_v1`, `template` | |
+| `model_weights_hash` | SHA-256 of each model's weights file, keyed like `model_versions` | `null` for a file not on the machine |
+| `config_hashes` | SHA-256 of `anomaly.yaml`, `calibration.yaml`, `confluency_profiles.yaml`, `detectability.yaml`, `qc.yaml`, `quality.yaml` | |
 | `prev_record_hash`, `record_hash` | The chain | See below |
-| `schema_version` | `0.3` | `culture/schema.json` now matches what the pipeline writes, and `tests/test_demo_examples.py` validates every stored record against it. It said `0.2` until the pre-freeze pass: v0.3 had added the `anomaly_*`, `config_hashes` and `confluency_map_hash` fields without a bump |
+| `schema_version` | `0.4` | `tests/test_record_events.py` validates all three types against the schema |
+
+Fields of a review: `reviews_record_id` and `reviews_record_hash` (the
+reading), `recommended_action`, `decision` (`accept` or `override`),
+`final_action`, `reason` (required for an override), `reviewer` (`id`, `name`),
+`signature_meaning` (`review`, `approval` or `rejection`), `signed_at`, and
+`host_signature_ref`, a pointer to the host platform's electronic-signature
+record. cultureQC does not sign: identity, authentication and the signature
+belong to the host. The console's review form writes this record into its
+session chain with the name typed there, which shows the shape, not a
+signature.
 
 ### The chain
 
@@ -99,14 +127,17 @@ This is tamper evidence, not non-repudiation: records are not signed.
 | (b) | Accurate, complete copies, human-readable and electronic | Each record is one self-contained JSON line | Export and inspection copies |
 | (c) | Protection and retrieval through the retention period | Append-only file | Storage, backup, retention |
 | (d) | Limiting system access to authorised individuals | Nothing | Access control |
-| (e) | Secure, computer-generated, time-stamped audit trails of operator entries and actions; changes must not obscure earlier entries | `analysed_at`, `record_hash`, `prev_record_hash`, append-only writes | Operator identity; the trail of human actions |
+| (e) | Secure, computer-generated, time-stamped audit trails of operator entries and actions; changes must not obscure earlier entries | `analysed_at`, `record_hash`, `prev_record_hash`, append-only writes. A person's decision is a separate review record linked to the reading's hash, so it never overwrites the reading; a configuration change is a change record with what it replaced | Operator identity and authentication |
 | (f) | Operational checks on the sequence of steps | The pipeline's order is fixed in code (segmentation, anomaly, classifier, rules, record) | Sequencing of instrument steps |
-| (g) | Authority checks | `decided_by` records who or what decided, but checks nothing | Authority checks, e-signatures |
-| (h) | Device checks on the source of data input | `image_hash` fixes which bytes were read; `pixel_size_um` is null in the examples | Which instrument produced the image |
+| (g) | Authority checks | `decided_by` names the rules version; a review names its reviewer and the meaning of the signature; nothing is checked | Authority checks, e-signatures |
+| (h) | Device checks on the source of data input | `image_hash` fixes which bytes were read; `imager_id` and `fov` carry the instrument and position the host reports; the reading names the imaging setup's calibration profile | Checking that the image came from that instrument |
 | (i), (j) | Training; written accountability policies | — | Organisational |
 | (k) | Control of systems documentation | Git history; config files hashed into each record | Document control |
 
-Electronic signatures (Subpart C) are not implemented.
+Electronic signatures (Subpart C) are not implemented. A review record carries
+the fields §11.50 asks a signed record to show (the signer's printed name, the
+date and time, and the meaning of the signature) and a reference to the host's
+signature record; the binding of signature to record (§11.70) is the host's.
 
 ---
 

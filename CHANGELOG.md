@@ -1,7 +1,46 @@
 # Changelog
 
 Changes that affect what a record says, what the rules decide, or what a
-viewer is told. Commit hashes are on branch `slice-1b-compute-cache`.
+viewer is told. Commit hashes are on branch `slice-1b-compute-cache` unless a section names another.
+
+## Confluency calibration profiles (from 2026-10-02, branch `confluency-calibration`)
+
+The confluency reading is now calibrated per imaging setup and carries a
+measured error band; reviews and changes are their own records. Method and
+acceptance criteria were committed before scoring (`1ef52cb`, `2baa18f`):
+`results/confluency_profiles.md`.
+
+### Rules `rules_v0.5`
+
+- **Passage reads the error band.** A reading whose band clears the target
+  passages; a band that includes the target goes to a person; a setup with no
+  calibration profile never passages on its reading alone.
+- **Boundary ambiguity no longer decides.** It tracks density, not the
+  reading's error (`results/confidence_vs_error.md`); it stays in the record.
+- **`reimage`** is a new action: the image failed the quality gate calibrated
+  for its setup.
+- An anomaly flag still holds a passage (unchanged since `rules_v0.3`); its
+  density bin is still picked by the reading at Cellpose's default cutoff,
+  which its banks were calibrated on.
+
+### Records: schema `0.4`
+
+- Three record types in one chain: `reading`, `review` and `change`.
+  `reviewed_by` and `review_outcome` are gone from the reading: a review is a
+  new record linked to the reading's hash, so the reading is never edited.
+- A reading names its confluency profile (id, SHA-256, status, cutoff, band)
+  and carries `confluency_interval`, the quality gate's result, a
+  machine-readable `recovery_request`, the host platform's keys (`lineage`,
+  `imager_id`, `fov`, `environment`), and `model_weights_hash`, now filled.
+- `config_hashes` adds `confluency_profiles.yaml` and `quality.yaml`.
+
+### Docs
+
+- `docs/host_platform.md`: what a host platform supplies and receives per
+  visit, how exceptions, reviews and profile changes flow, and who owns which
+  control.
+- `docs/audit_mapping.md`: the record fields and the Part 11 rows for schema
+  0.4.
 
 ## Pre-freeze fixes (from 2026-09-30)
 

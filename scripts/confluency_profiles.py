@@ -500,9 +500,15 @@ def cmd_score(a):
                 r = byname[t["name"]]
                 w.writerow([s, r["name"], r["unit"], round(r["gt"], 3), round(r["curve"][I0], 2), round(r["conf0"], 3),
                             t["cutoff"], round(t["reading"], 2), None if np.isnan(t["band"]) else round(t["band"], 3)])
+    status = {"evican": "held-out", "livecell": "in-domain check", "msc": "held-out",
+              "c2c12": "held-out; non-specialist labels"}
     json.dump({"generated_by": "scripts/confluency_profiles.py", "grid": GRID,
-               "profiles": {k: {kk: vv for kk, vv in v.items() if kk != "j"} for k, v in profiles.items()}},
-              open(OUT_JSON, "w"), indent=1)
+               "profiles": {k: {kk: vv for kk, vv in v.items() if kk != "j"} for k, v in profiles.items()},
+               "results": {PROFILE[s_]: {"status": status[s_], **{k: v for k, v in r.items() if k != "_rows"},
+                                         "calls": {str(int(T)): c for T, c in r["calls"].items()},
+                                         "learning": {str(k): v for k, v in r["learning"].items()}}
+                           for s_, r in res.items()}},
+              open(OUT_JSON, "w"), indent=1, default=float)
     write_md(rows, profiles, res)
 
 
@@ -574,6 +580,44 @@ def write_md(rows, profiles, res):
     print("wrote", OUT_MD, OUT_CSV, OUT_JSON)
 
 
+# ── figure ──────────────────────────────────────────────────────────────────
+
+OUT_PNG = os.path.join("results", "confluency_profiles.png")
+
+
+def cmd_figure(a):
+    """Reading vs ground truth per setup on its test images: shipped cutoff (grey) and the
+    setup's own profile (colour), with the 90% band and the 80% target. From results/confluency_profiles.csv."""
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    import pandas as pd
+    df = pd.read_csv(OUT_CSV)
+    doc = json.load(open(OUT_JSON))
+    setups = [s for s in ("livecell", "msc", "evican", "c2c12") if s in set(df.setup)]
+    fig, axes = plt.subplots(1, len(setups), figsize=(4.2 * len(setups), 4.4), squeeze=False)
+    for ax, s in zip(axes[0], setups):
+        d = df[df.setup == s]
+        res = doc["results"][PROFILE[s]]
+        q = doc["profiles"][PROFILE[s]]["band_pp"]
+        x = np.linspace(0, 100, 2)
+        if q is not None:
+            ax.fill_between(x, x - q, x + q, color="#3b82f6", alpha=0.12, lw=0, label=f"90% band ±{q:.1f} pp")
+        ax.plot(x, x, color="#111", lw=0.8)
+        ax.scatter(d.gt_pct, d.pct_cut0, s=7, color="#9ca3af", alpha=0.6,
+                   label=f"shipped cutoff 0: MAE {res['shipped']['mae']:.1f} pp")
+        ax.scatter(d.gt_pct, d.pct_test, s=7, color="#2563eb", alpha=0.7,
+                   label=f"own profile: MAE {res['profile']['mae']:.1f} pp")
+        ax.axhline(80, color="#f59e0b", lw=0.8, ls="--"); ax.axvline(80, color="#f59e0b", lw=0.8, ls="--")
+        ax.set_xlim(0, 100); ax.set_ylim(0, 100); ax.set_aspect("equal")
+        ax.set_xlabel("expert ground truth (%)"); ax.set_ylabel("reading (%)")
+        ax.set_title(f"{PROFILE[s]}\n{res['status']}, n = {len(d)} test images", fontsize=10)
+        ax.legend(loc="upper left", fontsize=7, frameon=False)
+    fig.tight_layout()
+    fig.savefig(OUT_PNG, dpi=140)
+    print("wrote", OUT_PNG)
+
+
 # ── C2C12 label page ────────────────────────────────────────────────────────
 
 def cmd_labelpage(a):
@@ -609,10 +653,12 @@ def main():
     p = sub.add_parser("score")
     p.add_argument("--labels")
     p.add_argument("--msc-dir")
+    sub.add_parser("figure")
     p = sub.add_parser("labelpage")
     p.add_argument("--out", default="~/Desktop/projs/c2c12_label")
     a = ap.parse_args()
-    {"maps": cmd_maps, "robust": cmd_robust, "score": cmd_score, "labelpage": cmd_labelpage}[a.cmd](a)
+    {"maps": cmd_maps, "robust": cmd_robust, "score": cmd_score, "labelpage": cmd_labelpage,
+     "figure": cmd_figure}[a.cmd](a)
 
 
 if __name__ == "__main__":
