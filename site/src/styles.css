@@ -1501,22 +1501,65 @@ td .num {
 .json .bad { background: rgba(255, 128, 114, 0.22); color: #fff; border-radius: 2px; }
 
 .tamper {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px 16px;
-  align-items: center;
-  margin-top: 14px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px 32px;
+  align-items: start;
+  margin-top: 16px;
   font-size: 14px;
   color: var(--ink-2);
 }
 
+.switches {
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+}
+
 .tamper-limit {
-  margin: 8px 0 0;
-  max-width: 72ch;
+  margin: 0 0 2px 46px;
+  max-width: 64ch;
   font-size: 13px;
   line-height: 1.55;
   color: var(--ink-3);
 }
+
+.verdicts {
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+}
+
+.verdicts span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  color: var(--ink-3);
+}
+
+.verdicts span svg {
+  width: 14px;
+  height: 14px;
+}
+
+.verdicts span[data-ok="true"] { color: var(--passage); }
+.verdicts span[data-ok="false"] { color: var(--review); }
+
+.verdicts p {
+  margin: 4px 0 0;
+  line-height: 1.55;
+  max-width: 62ch;
+}
+
+.link[data-ok="deleted"] {
+  background: repeating-linear-gradient(135deg, var(--panel) 0 6px, #f4f5f7 6px 12px);
+  border-style: dashed;
+  color: var(--ink-3);
+  cursor: default;
+}
+
+.link .st[data-ok="deleted"] { color: var(--ink-3); }
 
 .switch {
   display: inline-flex;
@@ -1785,6 +1828,14 @@ td .num {
 }
 
 @media (max-width: 760px) {
+  .tamper {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .tamper-limit {
+    margin-left: 0;
+  }
+
   .bar-in {
     gap: 12px;
   }

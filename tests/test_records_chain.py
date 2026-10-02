@@ -241,3 +241,21 @@ def test_stored_example_records_verify(tmp_path):
     res = verify_chain(path)
     assert res.ok and res.n_records == len(records) == 7
     assert verify_chain(path, checkpoint=checkpoint(path)).ok
+
+
+def test_the_sites_checkpoint_anchors_the_stored_chain(tmp_path):
+    """site/src/data.json ships a checkpoint of the seven stored records
+    (site/assets/build_data.py); the Records section checks its tamper switches
+    against it. It must anchor the stored chain, and catch the two changes a
+    chain alone passes, by the same rules the browser applies."""
+    with open(os.path.join(REPO, "site", "src", "data.json")) as f:
+        cp = json.load(f)["examples"]["checkpoint"]
+    with open(os.path.join(REPO, "demo", "examples", "examples.json")) as f:
+        records = [ex["record"] for ex in json.load(f)["examples"]]
+    assert cp["count"] == len(records) == 7 and cp["head_hash"] == records[-1]["record_hash"]
+    path = str(tmp_path / "examples.jsonl")
+    _write(path, records)
+    assert verify_chain(path, checkpoint=cp).status == "intact"
+    short = str(tmp_path / "short.jsonl")
+    _write(short, records[:-2])
+    assert verify_chain(short).ok and verify_chain(short, checkpoint=cp).status == "truncated"

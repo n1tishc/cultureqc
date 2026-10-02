@@ -67,6 +67,10 @@ things corrected, no new capability. `docs/STATUS.md` has the item-by-item log.
   and verifying against it catches the two changes a bare chain misses: a
   full rewrite and a deleted tail (`8542add`). Docs no longer say an edit
   "breaks every link after it".
+- The site's Records section has two more switches, rewrite record 3 and every
+  later hash, and delete the last two records: the chain alone passes both,
+  and the checkpoint shipped with the page (made from the stored records at
+  build time) catches both.
 
 ### Repository
 

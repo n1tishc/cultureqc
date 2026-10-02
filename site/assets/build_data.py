@@ -240,6 +240,31 @@ def replay_map_layers(name, out_dir):
 
 # ── builders ──
 
+def example_checkpoint(records):
+    """The anchored checkpoint for the stored chain, made by culture.records.checkpoint
+    from the stored records in chain order: their count and head hash. It ships with
+    the page so the Records section can show what a chain alone misses; in deployment
+    it is stored outside the log. created_at is kept from the last build while the
+    chain is unchanged, so CI's rebuild of data.json is byte-identical."""
+    import tempfile
+    from culture.records import checkpoint, verify_chain
+    with tempfile.TemporaryDirectory() as d:
+        log = os.path.join(d, "examples.jsonl")
+        with open(log, "w") as f:
+            f.writelines(json.dumps(r, sort_keys=True) + "\n" for r in records)
+        cp = checkpoint(log, scope="demo/examples/examples.json")
+        try:
+            with open(rel("site", "src", "data.json")) as f:
+                old = json.load(f)["examples"].get("checkpoint")
+        except (FileNotFoundError, KeyError, json.JSONDecodeError):
+            old = None
+        if old and all(old.get(k) == cp[k] for k in ("scope", "count", "head_hash", "schema_version", "hash_alg")):
+            cp["created_at"] = old["created_at"]
+        res = verify_chain(log, checkpoint=cp)
+        assert res.ok and res.status == "intact", res
+    return cp
+
+
 def build_examples(img_dir):
     src = json.load(open(rel("demo", "examples", "examples.json")))
     by_id = {e["id"]: e for e in src["examples"]}
@@ -283,7 +308,8 @@ def build_examples(img_dir):
             "record": {"index": chain_order.index(ident) + 1, "canonical": canon,
                        "record_hash": rec["record_hash"], "prev_record_hash": rec["prev_record_hash"]},
         })
-    return {"items": out, "chain_order": chain_order, "generated_by": src["generated_by"]}
+    return {"items": out, "chain_order": chain_order, "generated_by": src["generated_by"],
+            "checkpoint": example_checkpoint([e["record"] for e in src["examples"]])}
 
 
 def build_replays(img_dir):

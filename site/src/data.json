@@ -2601,7 +2601,15 @@
    "evican_pc3",
    "evican_ht29"
   ],
-  "generated_by": "scripts/export_demo_examples.py"
+  "generated_by": "scripts/export_demo_examples.py",
+  "checkpoint": {
+   "scope": "demo/examples/examples.json",
+   "count": 7,
+   "head_hash": "a3aea8576f5aa60a3829dd9614103b11df31374eed7f415a8a5959e00afaa83e",
+   "schema_version": "1",
+   "hash_alg": "sha256",
+   "created_at": "2026-10-02T06:51:53.014143+00:00"
+  }
  },
  "replays": [
   {

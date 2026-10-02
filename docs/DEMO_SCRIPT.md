@@ -137,6 +137,8 @@ person steps in on exceptions and audits the trail.
      chain that still verifies. That is caught against an anchored
      checkpoint (record count + head hash) kept in the platform's own audit
      trail or WORM storage, which is why the record is built to attach to one.
+     On the site's Records section, the two lower switches show both: "chain
+     alone: passes", "against the anchored checkpoint: fails".
    - `anomaly_used_in_decision: true`, `qc_used_in_decision: false`,
      `decided_by: rules_v0.4`: the record says what fed the action, what
      didn't, and which version of the rules decided.

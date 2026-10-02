@@ -51,7 +51,11 @@ including `prev_record_hash`); the first record links to `"0" * 64`.
 `culture/records.py::verify_chain` recomputes every hash and stops at the first
 mismatch. The site does the same in the browser (`site/src/lib/verify.js`):
 raise one reading by 10 points and that record's hash and the next record's
-link both fail.
+link both fail. Two more switches there show the rows below that a chain alone
+passes: rewrite record 3 and every later hash, or delete the last two records.
+Each is checked against a checkpoint of the seven stored records made when the
+site is built (`site/assets/build_data.py`, with `culture.records.checkpoint`)
+and fails against it, while the chain alone still verifies.
 
 What the chain alone catches, and what it doesn't (one test per row in
 `tests/test_records_chain.py`):

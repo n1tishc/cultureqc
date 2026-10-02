@@ -30,3 +30,30 @@ export async function verifyChain(records) {
   }
   return out;
 }
+
+/* Check verifyChain's results against an anchored checkpoint
+   (culture/records.py checkpoint(): the record count and head hash, stored
+   outside the log). Fewer records than it counted is a deleted tail; a record
+   at its count that no longer hashes to its head is a rewrite. The same two
+   rules as culture.records.verify_chain(checkpoint=...). */
+export function checkCheckpoint(results, cp) {
+  if (results.length < cp.count) return { ok: false, status: "truncated" };
+  if (results[cp.count - 1].computed !== cp.head_hash) return { ok: false, status: "rewritten" };
+  return { ok: true, status: "intact" };
+}
+
+/* What someone with write access to the whole log can do: edit record k
+   (0-based), then recompute its hash and every later prev_record_hash and
+   record_hash so each link checks out again. */
+export async function rewriteFrom(records, k, edit) {
+  const out = records.slice(0, k);
+  let prev = k > 0 ? records[k - 1].record_hash : GENESIS;
+  for (let i = k; i < records.length; i++) {
+    let canonical = i === k ? edit(records[i].canonical) : records[i].canonical;
+    canonical = canonical.replace(/"prev_record_hash":"[0-9a-f]{64}"/, `"prev_record_hash":"${prev}"`);
+    const record_hash = await sha256(canonical);
+    out.push({ ...records[i], canonical, record_hash });
+    prev = record_hash;
+  }
+  return out;
+}

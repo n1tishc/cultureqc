@@ -110,7 +110,7 @@ export default function App() {
           title="Every reading is a record you can re-check"
           lede={
             <p>
-              The {ex.items.length} readings above are one hash chain. Your browser has just re-hashed each record from its stored bytes and checked every link; flip the switch to change one number and watch the chain say so.
+              The {ex.items.length} readings above are one hash chain. Your browser has just re-hashed each record from its stored bytes and checked every link. Flip a switch to tamper with it three ways, and see what the chain alone catches and what needs the anchored checkpoint.
             </p>
           }
         >
