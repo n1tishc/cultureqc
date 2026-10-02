@@ -118,7 +118,7 @@ Ten principles. The ones this project can show evidence against:
 |---|---|
 | **4. Clear context of use** | Stated in the README and the detectability matrix: phase-contrast confluency and a per-image anomaly check at the tested setup, with what it cannot detect listed (contamination at real size, growth stalls, instrument drift). |
 | **6. Data governance and documentation** | Every dataset's source and licence in `docs/DATASETS.md`; every number in the README's provenance table must appear in the `results/` file it cites (`tests/test_readme_provenance.py`). |
-| **7. Model design and development practices** | Negative results kept: in v0.2 a 60-epoch Cellpose-SAM fine-tune on LIVECell showed no improvement, so segmentation stays zero-shot; in v0.3 the classifier was demoted after failing on real C2C12 (`results/classifier_c2c12.md`). |
+| **7. Model design and development practices** | Negative results kept: in v0.2 a Cellpose-SAM fine-tune on LIVECell showed no improvement, so segmentation stays zero-shot (from the v0.2 notes; the run is not reproduced in this repository); in v0.3 the classifier was demoted after failing on real C2C12 (`results/classifier_c2c12.md`). |
 | **8. Risk-based performance assessment** | Real-image confluency on held-out EVICAN (V1); the irreversible action (passage) waits for a person whenever the anomaly flag fires (`rules_v0.3`). Human-AI interaction is not assessed. |
 | **9. Life cycle management** | Versions and hashes in every record; the cutoff change below is held for release, not hot-patched. Scheduled monitoring and re-evaluation are not built. |
 | **10. Clear, essential information** | Limits are stated next to the results (README "Known limits", detectability matrix, V1–V10 with Fail marked). |

@@ -560,7 +560,7 @@ with gr.Blocks(
                     "C2C12 frames are held-out frames from the Phase A replays; the contaminated ones are "
                     "simulated (bacteria pasted at 16.5× their real size). EVICAN: one accurate case and one "
                     "error case against the dataset's own expert masks. "
-                    + " · ".join(sorted({e["credit"] for e in EXAMPLES}))
+                    + " · ".join(sorted({part for e in EXAMPLES for part in e["credit"].split("; ")}))
                 )
                 # Spaces set GRADIO_CACHE_EXAMPLES=true; caching would write the
                 # stored maps into Gradio's CSV log (over its field limit) and
@@ -618,7 +618,7 @@ with gr.Blocks(
                     "rise; heavier contamination is not tested (results/contamination_scale.md).</p>")
 
     gr.HTML(
-        '<div class="app-footer">cultureQC v0.1 &middot; Cellpose-SAM &middot; DINOv2-small (anomaly check) '
+        '<div class="app-footer">cultureQC v0.3 &middot; Cellpose-SAM &middot; DINOv2-small (anomaly check) '
         '&middot; EfficientNet-B0 (synthetic-trained QC classifier, demoted) &middot; code MIT; model weights and '
         'datasets carry their own licences, see the README</div>'
     )

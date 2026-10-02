@@ -1,8 +1,8 @@
 # cultureQC: everything done on the upgrade branch
 
-As of 2026-09-28. Branch `slice-1b-compute-cache` (`git log main..HEAD` for
-the full list). Nothing is merged to `main`; that happens only when the
-owner says so. The detailed, row-by-row log is `docs/STATUS.md`; this file is
+As of 2026-10-01. Branch `slice-1b-compute-cache` (`git log main..HEAD` for
+the full list). Nothing is merged to `main`: the owner decided on 2026-10-01
+not to merge before the call and to show v0.2 and v0.3 side by side. The detailed, row-by-row log is `docs/STATUS.md`; this file is
 the readable overview. Every number here is copied from the results file named
 next to it.
 
@@ -39,6 +39,9 @@ on Hugging Face.
 | Sep 26–27 | Phase B: classifier scale test (B0), detectability matrix (B4), calibration + demotion (B3), real replays (B1), anomaly check (B2) | `a0af827` … `6120328` |
 | Sep 27–28 | B8: review console, 3D views, demo script, review rate, console Space, backups, ZeroGPU | `73e5441` … `b55e8ec` |
 | Sep 28 | Rules v0.3 (a flag holds a passage); 3D motion and per-example cameras | `2bd61df`, `444fdee` |
+| Sep 29 | v0.3 site on its own Vercel project (https://cultureqc-cvoy.vercel.app) | see `docs/STATUS.md`, B8 part 9 |
+| Sep 30 | Cellpose-SAM cutoff study; audit mapping rewritten against the primary texts | `3e97868` … `4a82657`, `1dc5e10` |
+| Sep 30 – Oct 1 | Pre-freeze pass: fixes from a self-review and an outside review (section 12) | `1e6b77e` … `4270648` |
 
 ## 3. Data and the compute cache (Slices 0, 1, 1b)
 
@@ -108,28 +111,32 @@ slow for a live demo, so the demo needs a GPU (section 8).
   bacteria), the quality gate fails no more often, and confluency reads a
   median 4.3 pp lower. Up to that density (400 per 256 px tile area; heavier
   not tested), per-visit contamination is not detected at this magnification,
-  so the v0.3 hold gives no protection against it. The
+  so the v0.3 passage hold gives no protection against it. The
   detectability row, README limits, validation report, anomaly card and demo
   script say so; the console's Detectability tab shows the side-by-side image.
 - **B3, classifier demoted:** it still runs and is recorded, but the
   recommended action ignores it (`qc_used_in_decision: false`), its
-  probabilities are temperature-scaled (T = 1.5536), and the UI shows it
-  collapsed as "not used in the recommendation". Retraining was a no-go
-  (owner decision, 2026-09-27).
+  probabilities are temperature-scaled (T = 1.5536). The console shows it
+  collapsed under "Demoted — known wrong on real frames (5.0% of normal
+  frames called normal); not used for the action"
+  (`results/classifier_c2c12.md`); the site no longer shows it on the example
+  cards. Retraining was a no-go (owner decision, 2026-09-27).
 - **B4, detectability matrix + claims check:** `configs/detectability.yaml`
   says, per fault type, what was tested and on what; shown in the
   Detectability tab; its hash goes in every record. `tests/test_claims.py`
   enforces the wording.
 - **B2, per-image anomaly check:** DINOv2-small patch distance to banks of
   normal C2C12 patches, per confluency bin. Since `rules_v0.3` (owner
-  decision, 2026-09-28) a flag holds a passage for human review; hold and
-  feed are unchanged. Held-out normal flag rate 10.0%
+  decision, 2026-09-28) a flag holds a passage for human review; the other
+  actions (continue, called hold until `rules_v0.4`, and feed) are unchanged. Held-out normal flag rate 10.0%
   (`results/anomaly_summary.md`). Live and cached scores agree (largest
   difference 0.00015 on 10 real frames).
 - **B1, Flask Timeline on real replays:** 5 held-out C2C12 flasks (normal ×2,
   contamination, slowdown, lamp dimming) with 3-FOV confluency, noise band,
   quality gate, anomaly flag and one passage forecast
-  (`demo/replays/*.json`).
+  (`demo/replays/*.json`). The contamination replay's forecast is made after
+  the pasted bacteria arrive, so it is marked suppressed and shows its reason
+  instead of a crossing time (pre-freeze item 8).
 
 ## 7. The review console (B8)
 
@@ -139,13 +146,13 @@ slow for a live demo, so the demo needs a GPU (section 8).
   test with bacteria 16.5× too large, the same kind of frame with the bacteria at
   real size, EVICAN PC3 accurate, EVICAN HT29 error case), each labelled
   "Precomputed example" with script, device, date and credit; **Analyze** runs
-  any image live. Cards: confluency with confidence, anomaly check with a
+  any image live. Cards: confluency with boundary ambiguity, anomaly check with a
   zoomed heatmap, recommended action, rationale, and the hash-chained audit
   record ("Chain intact · record #N").
 - **3D views (B8 part 2; motion added 2026-09-28):**
   - **Analyze → 3D:** Cellpose-SAM's cell-probability map as a surface
     (height = logit, labelled "not cell thickness"), the cutoff plane, the
-    borderline band that sets the confidence. The map's SHA-256 is a record
+    borderline band that sets the boundary ambiguity. The map's SHA-256 is a record
     field (`confluency_map_hash`); the view re-hashes the map and says whether
     it matches the record, which ties the picture to the audit trail.
   - **Flask Timeline → 3D space × time:** one layer per visit from the cache's
@@ -157,7 +164,8 @@ slow for a live demo, so the demo needs a GPU (section 8).
     click or drag stops it; nothing moves for viewers who ask for reduced
     motion; without the script the figures are complete and still.
 - **Detectability:** the matrix from B4.
-- **Review rate** (`results/review_rate.md`): the 0.30 confidence floor sends
+- **Review rate** (`results/review_rate.md`): the record-confidence floor of
+  0.30 (boundary ambiguity above 0.70) sends
   5.7% of held-out frames to human review, but 43.8% of those at 40–60%
   confluency. The passage hold adds 1 of 14 passage-eligible held-out frames at
   the 50% target (total 5.8%) and holds all 76 passage-eligible simulated
@@ -165,7 +173,7 @@ slow for a live demo, so the demo needs a GPU (section 8).
 - **GMP scope** (in the demo script): tamper-evident with provenance, not
   Part 11 compliant on its own; `decided_by`, `reviewed_by`,
   `review_outcome` are there for the platform layer (`docs/audit_mapping.md`).
-- **Demo script:** `docs/DEMO_SCRIPT.md`, about 9 minutes, confluency QC first,
+- **Demo script:** `docs/DEMO_SCRIPT.md`, about 12 minutes, confluency QC first,
   then the audit record.
 
 ## 8. Where the console runs
@@ -188,14 +196,18 @@ slow for a live demo, so the demo needs a GPU (section 8).
 - **Checked on the live Space:** all 7 examples open, both 3D views match
   their hashes, the 3D motion runs and stops on a click, no page errors; a
   signed-out Analyze also works (contamination 1 live: Human Review under
-  `rules_v0.3`). ZeroGPU shows a small "Successfully acquired a GPU" toast on
+  `rules_v0.3`). Republished twice in the pre-freeze pass; the latest, Space
+  commit `eaad5cf6` (2026-10-01), again gave the stored flag and action on 7
+  of 7 examples (`results/space_dry_run_eaad5cf6.md`). ZeroGPU shows a small "Successfully acquired a GPU" toast on
   each live Analyze.
 - `cultureqc-demo` and `cultureqc-api` never changed.
 
 ## 9. Tests
 
-`pytest` (the `tests/` suite plus the API Space's tests): 265 passed, 1
-expected failure (2026-09-28). Includes the
+`pytest tests`: 295 passed, no expected failures (2026-10-01, after
+pre-freeze item 8; the schema xfail is gone since `rules_v0.4`). CI runs on
+this branch too: API contract, the Python tests that need no model weights or
+cache, and the site build with a `data.json` drift check. Includes the
 README provenance check, the claims check, demo example parity, replay
 re-export, device selection (`tests/test_seg_device.py`), the ZeroGPU mode
 (`tests/test_console_zerogpu.py`), the v0.3 rule (`tests/test_rules_anomaly.py`)
@@ -216,14 +228,54 @@ and the 3D figures' motion contract (`tests/test_viz3d.py`).
    flag is at chance.
 3. Shifted synthetic tiles and V5(a) patch embeddings (`docs/STATUS.md`, open
    questions): defaults hold (not done).
+4. **`main` (2026-10-01, owner):** not merged and not annotated before the
+   call; v0.2 and v0.3 are shown side by side.
+5. Open with the owner: the company names listed in `docs/STATUS.md` ("Names
+   in tracked files"), and the classifier's Hugging Face card, which says MIT
+   although it was trained on LIVECell-based tiles (CC BY-NC 4.0).
 
 ## 11. What's left
 
 | When | What | Who |
 |---|---|---|
 | Done 2026-09-29 | v0.3 Vercel project created (production branch `slice-1b-compute-cache`): https://cultureqc-cvoy.vercel.app, set in `site/index.html` | owner |
-| Thu Oct 1 | Dry run: `scripts/space_dry_run.py` again; open both 3D views in the call browser; open the v0.3 site (https://cultureqc-cvoy.vercel.app) at 1280×720 | |
+| Thu Oct 1 | Dry run: `scripts/space_dry_run.py` run after each republish (latest `eaad5cf6`, 7 of 7); open both 3D views in the call browser; open the v0.3 site (https://cultureqc-cvoy.vercel.app) at 1280×720 | owner |
 | Fri Oct 2 | Freeze | |
 | Mon Oct 5 | Rehearsal with `docs/DEMO_SCRIPT.md` | |
 | Tue Oct 6, 3 PM PDT | Call: open the Space 10 min early, signed in; Mac backup running | |
-| After | Merge to `main` only on the owner's word | owner |
+| After | Merge to `main` only on the owner's word (not before the call, 2026-10-01) | owner |
+
+## 12. Cutoff study, audit mapping, and the pre-freeze pass (Sep 30 – Oct 1)
+
+- **Cellpose-SAM cutoff** (`3e97868`, `results/confluency_cutoff.md`): picked
+  on the 65 EVICAN eval2019 images outside the 33 and evaluated on the 33:
+  −3.5 logit, MAE 8.36 → 3.78 pp. Not fully blind: the idea came from error
+  analysis of the same 33, and a quarter-resolution sweep showed the
+  evaluation curve before the rule was written. Validated, not shipped: the
+  default cutoff is unchanged and the result is held for a release under
+  change control.
+- **Audit mapping** (`1dc5e10`, `docs/audit_mapping.md`): rewritten clause by
+  clause against 21 CFR 11.10, the FDA-EMA Good AI Practice principles and
+  the Annex 22 consultation draft, with the gaps; corrected v0.2 text
+  (`model_weights_hash` is null in every record).
+- **Pre-freeze pass** (`docs/STATUS.md` has every row, `CHANGELOG.md` the
+  changes a viewer sees):
+  1. Specs untracked; CI on this branch.
+  2. Audit chain: a missing or empty log no longer verifies; an anchored
+     checkpoint (count + head hash) catches a full rewrite and a deleted tail,
+     which a chain alone passes.
+  3. The confluency "confidence" failed a pre-registered check against the
+     reading's error (`results/confidence_vs_error.md`) and is shown as
+     boundary ambiguity.
+  4. `rules_v0.4`: the action `hold` is renamed `continue`, decisions
+     identical; schema 0.3; stored records re-chained.
+  5. The cutoff result's disclosure everywhere 3.78 appears; v0.2's headline
+     numbers recorded as synthetic (`results/v02_headline.md`).
+  6. Quality-gate notes show the overall held-out fail rate; a README section
+     on licences: the pipeline as built is not cleared for commercial use
+     pending review (the Cellpose-SAM weights are trained on CC BY-NC data).
+  7. README and site link v0.3 first; v0.2 labelled superseded.
+  8. Site sections reordered; classifier off the site cards; Timeline target
+     explained; contamination forecast suppressed with its reason.
+  9. Site Records section: rewrite and delete-tail switches, checked against
+     a checkpoint shipped with the page.
