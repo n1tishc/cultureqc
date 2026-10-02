@@ -365,6 +365,34 @@ def build_replays(img_dir):
     return out
 
 
+def build_profiles():
+    """The confluency calibration profiles study (results/confluency_profiles.json, written by
+    scripts/confluency_profiles.py) with each profile's live status from configs/confluency_profiles.yaml."""
+    src = rel("results", "confluency_profiles.json")
+    if not os.path.exists(src):
+        return None
+    doc = json.load(open(src))
+    cfg = yaml.safe_load(open(rel("configs", "confluency_profiles.yaml")))["profiles"]
+    order = ["c2c12_ker2018", "msc_phase", "evican_mixed", "livecell_incucyte"]
+    items = []
+    for pid in sorted(doc["results"], key=lambda k: order.index(k) if k in order else 9):
+        r, p, c = doc["results"][pid], doc["profiles"][pid], cfg.get(pid, {})
+        items.append({
+            "id": pid, "label": c.get("label", pid), "status": c.get("status"), "study": r["status"],
+            "n_calib": p["n_calib"], "n_test": r["n_test"], "cutoff": p["cutoff"], "band_pp": r3(p["band_pp"]),
+            "shipped": {k: r3(v) for k, v in r["shipped"].items()}, "profile": {k: r3(v) for k, v in r["profile"].items()},
+            "bands": [{k: (r3(v) if isinstance(v, float) else v) for k, v in b.items()} for b in r["bands"]],
+            "coverage": r3(r["coverage"]), "calls": {T: {k: r3(v) if isinstance(v, float) else v for k, v in cc.items()}
+                                                     for T, cc in r["calls"].items()},
+            "acceptance": {k: {"verdict": v[0], "detail": v[1]} for k, v in r["acceptance"].items()},
+            "transfer": {k: r3(v) for k, v in r["transfer"].items()},
+            "learning": {k: [r3(x) for x in v] for k, v in r["learning"].items()},
+            "folds": [{k: r3(v) if isinstance(v, float) else v for k, v in f.items()} for f in r.get("folds", [])],
+        })
+    return {"items": items, "cutoffs": {k: v["cutoff"] for k, v in doc["profiles"].items()},
+            "source": "results/confluency_profiles.md"}
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--images", action="store_true")
@@ -393,6 +421,7 @@ def main():
         "not_proven": readme_lead_paragraph(readme, "**What this does and doesn't prove.**"),
         "oversize_factor": re.search(r"bacteria ([\d.]+)× too large", readme).group(1),
         "results": results_rows(readme),
+        "profiles": build_profiles(),
         # scripts/export_cutoff_examples.py, from results/confluency_cutoff.md: why 3.78 pp is not fully blind
         "cutoff_disclosure": json.load(open(rel("demo", "examples", "cutoff_calibrated.json")))["disclosure"]["text"],
         "decisions": readme_bullets(readme, "**What changed because of it**"),

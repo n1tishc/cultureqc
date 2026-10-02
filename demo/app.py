@@ -309,6 +309,9 @@ def confluency_card(record, confluency_pct, confluency_confidence, confluency_me
     prof = (record or {}).get("confluency_profile")
     interval = (record or {}).get("confluency_interval")
     band_html, band_line = "", ""
+    amb = (f'<span class="amb" title="{html.escape(AMBIGUITY_TOOLTIP)}">Boundary ambiguity '
+           f'{boundary_ambiguity(confluency_confidence):.2f}: recorded; since rules_v0.5 it no longer decides '
+           f'(it tracks density, not error)</span>')
     if prof:
         label = get_profile(prof["id"]).entry.get("label", prof["id"])
         status = STATUS_TEXT.get(prof["status"], prof["status"])
@@ -322,9 +325,10 @@ def confluency_card(record, confluency_pct, confluency_confidence, confluency_me
                          + f'<br>Profile <code>{html.escape(prof["id"])}</code>, {html.escape(status)}, cutoff '
                          f'{format(prof["cutoff"], "+g").replace("-", "−")} · {html.escape(label)}</div>')
         else:
-            band_line = (f'<div class="band-line"><b>No error band:</b> this imaging setup has no calibration profile, '
-                         f'so a reading at or above the target goes to a person. Profile <code>{html.escape(prof["id"])}'
-                         f'</code>, cutoff {format(prof["cutoff"], "+g").replace("-", "−")}.</div>')
+            band_line = (f'<div class="band-line"><b>No error band:</b> this imaging setup has no validated calibration '
+                         f'profile, so a reading at or above the target goes to a person. Profile '
+                         f'<code>{html.escape(prof["id"])}</code>, cutoff {prof["cutoff"]:+.1f}'.replace("cutoff -", "cutoff −")
+                         + amb + '</div>')
     q = (record or {}).get("quality_gate", "absent")
     if q == "absent":
         gate_line = ""
@@ -345,7 +349,7 @@ def confluency_card(record, confluency_pct, confluency_confidence, confluency_me
     </div>
     <div class="confluency-meta">
       <span>Target: {target_confluency:.0f}%</span>
-      <span title="{html.escape(AMBIGUITY_TOOLTIP)}">Boundary ambiguity: {boundary_ambiguity(confluency_confidence):.2f}{" (recorded, not used)" if prof else ""}</span>
+      {"" if prof else f'<span title="{html.escape(AMBIGUITY_TOOLTIP)}">Boundary ambiguity: {boundary_ambiguity(confluency_confidence):.2f}</span>'}
       <span>Method: {html.escape(confluency_method)}</span>
     </div>
     {band_line}{gate_line}

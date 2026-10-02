@@ -580,3 +580,7 @@ footer { display: none !important; }
 .review-out { font-size: 13px; line-height: 1.5; color: var(--text-secondary); }
 .review-out.bad { color: var(--amber); }
 .review-out b { color: var(--green); }
+.control-cluster .setup-field { max-width: 320px !important; min-width: 260px !important; border-left: 1px solid var(--border) !important; }
+.setup-field input { padding-right: 34px !important; text-overflow: ellipsis; }
+.confluency-meta .ambiguity-note { color: var(--text-muted); }
+.band-line .amb { display: block; margin-top: 4px; color: var(--text-muted); font-size: 12px; }

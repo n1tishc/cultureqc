@@ -2637,3 +2637,46 @@ td .num {
     animation-duration: 0.01ms !important;
   }
 }
+
+/* confluency profiles (results/confluency_profiles.md) */
+
+.figs.g2 {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+}
+
+.prof-bars {
+  gap: 16px;
+}
+
+.prof-row {
+  display: grid;
+  gap: 6px;
+}
+
+.prof-name {
+  font-size: 13.5px;
+  font-weight: 550;
+  color: var(--ink);
+}
+
+.prof-pair {
+  display: grid;
+  gap: 5px;
+}
+
+.prof-pair .bars-row {
+  grid-template-columns: 128px minmax(0, 1fr) 72px;
+  font-size: 12.5px;
+}
+
+td.own {
+  background: #eef7f8;
+  font-weight: 600;
+}
+
+.sub-h {
+  margin: 36px 0 14px;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--ink);
+}
