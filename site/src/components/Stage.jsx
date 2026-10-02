@@ -252,7 +252,10 @@ export default function Stage({ examples, verify, liveParity }) {
               </span>
             </div>
             <Gauge value={a.score} mark={a.threshold} max={anomMax} kind="anom" left={`score ${a.score.toFixed(3)} · ${a.bin}% bin`} right={`threshold ${a.threshold.toFixed(3)}`} />
-            <p>Set by the {a.top.length} outlined centre-tile patches.</p>
+            <p>
+              Reads only the dashed {a.tile.size} px centre tile of the frame; the score is set by its {a.top.length} outlined patches.
+              {ex.kind === "evican" ? " The anomaly banks hold only C2C12 frames, so on other cell types the flag is uncalibrated." : null}
+            </p>
           </Reading>
 
           <Reading>

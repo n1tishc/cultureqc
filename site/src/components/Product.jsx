@@ -271,7 +271,7 @@ export function Scope({ data }) {
                 <Icon name="check" />
                 <div>
                   <b>Unusual frames</b>
-                  <span>An anomaly score against healthy frames of the same density. A flag holds a passage for a person; it does not name a cause.</span>
+                  <span>An anomaly score for the frame’s {data.examples.items[0].anomaly.tile.size} px centre tile, against healthy frames of the same density. A flag holds a passage for a person; it does not name a cause.</span>
                 </div>
               </li>
             </ul>
