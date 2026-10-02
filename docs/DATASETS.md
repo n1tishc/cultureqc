@@ -172,6 +172,39 @@ the weights are marked not cleared for commercial use pending review.
   Source: the Nature Methods PDF hosted by Sartorius,
   https://www.sartorius.com/download/1185054/nature-methods-incucyte-livecell-large-scale-dataset-label-f-1--data.pdf
 
+## LIVECell test split — used as an in-domain confluency check (profiles, 2026-10-02)
+
+- **Use:** `results/confluency_profiles.md` reads all 1,512 test-split images
+  (8 cell lines; annotations `LIVECell_single_cells/<line>/test.json` from the
+  same public bucket) against the union of their polygons. Half of each line's
+  fields (a field = well and position) calibrate, the other half test; for
+  most lines that is the other position in the same well.
+- **Why only "in-domain":** LIVECell is in Cellpose-SAM's training list (above).
+  Whether its test split was excluded from that training was not confirmed,
+  so these numbers show the method on the model's own training domain, not
+  held-out performance.
+
+## MSC phase contrast (Solopov et al. 2025) — used, held-out confluency check (profiles, 2026-10-02)
+
+- **What:** Solopov et al., "Comparative Study of Deep Transfer Learning Models
+  for Semantic Segmentation of Human Mesenchymal Stem Cell Micrographs",
+  *Int J Mol Sci* 26(5):2338 (2025), doi:10.3390/ijms26052338. The data is on
+  Kaggle as `maximsolopov/msu-smooth-1-20`: 320 phase-contrast images of human
+  MSCs, 1000 × 1000 px, each with one binary cell mask made by three experts.
+- **License:** the Kaggle copy is **CC BY-NC-SA 4.0** (the article itself is CC
+  BY 4.0). Used here for evaluation only; the images and masks are **not
+  redistributed** (`data/sources/msc/`, gitignored), and only summary numbers
+  appear in `results/`.
+- **Discrepancies, recorded as found:** the files carry three population
+  prefixes (218-4, 218-5, 218-6) where the paper describes five donors; the
+  paper gives a 10× objective and the dataset page 40×.
+- **Training overlap:** not one of Cellpose-SAM's 18 training datasets (above).
+- **Range:** ground truth 3.6–67.5% (4 images above 60%), so it says little
+  about the passage range.
+- **Download:** Kaggle's public endpoint
+  `https://www.kaggle.com/api/v1/datasets/download/maximsolopov/msu-smooth-1-20`
+  (130 MB zip; it served without a login on 2026-10-02).
+
 ## C2C12 time-lapse — used, Phase A replay fleet (`nb/03`)
 
 - **What:** Ker et al. 2018, *Sci Data* 5:180237, doi:10.1038/sdata.2018.237;

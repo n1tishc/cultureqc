@@ -38,9 +38,14 @@ writer = RecordWriter(LOG_PATH)
 
 CELL_LINES = ["A172", "BT474", "BV2", "Huh7", "MCF7", "SHSY5Y", "SKOV3", "SkBr3", "C2C12", "unknown"]
 # Imaging setup -> confluency profile (configs/confluency_profiles.yaml). An
-# upload defaults to the demo microscope's profile when there is one.
+# upload is `uncalibrated` until the viewer says which setup took it: a
+# profile's band holds only for images from its own setup. Only validated
+# profiles are offered (culture.profiles.choices).
 PROFILE_CHOICES = profile_choices()
-DEFAULT_PROFILE = "c2c12_ker2018" if any(v == "c2c12_ker2018" for _, v in PROFILE_CHOICES) else "uncalibrated"
+DEFAULT_PROFILE = "uncalibrated"
+# Hash the weights once at startup, not inside the first Analyze (the Cellpose-SAM file is ~1.2 GB).
+from culture.weights import weights_hashes as _warm_weights  # noqa: E402
+_warm_weights()
 
 # Precomputed Analyze examples (scripts/export_demo_examples.py): real C2C12
 # and EVICAN frames run once through demo/analysis.py, shown instantly and

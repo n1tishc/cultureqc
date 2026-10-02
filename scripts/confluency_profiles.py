@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import argparse
 import base64
+import hashlib
 import csv
 import json
 import math
@@ -54,6 +55,7 @@ N_CROPS = 20          # per split
 OUT_MD = os.path.join("results", "confluency_profiles.md")
 OUT_CSV = os.path.join("results", "confluency_profiles.csv")
 OUT_JSON = os.path.join("results", "confluency_profiles.json")
+LABELS = os.path.join("results", "c2c12_confluency_labels.json")   # the owner's painted C2C12 crops, tracked
 PROFILE = {"evican": "evican_mixed", "livecell": "livecell_incucyte", "msc": "msc_phase", "c2c12": "c2c12_ker2018"}
 
 
@@ -458,7 +460,10 @@ def evaluate(rows, prof, all_profiles, robust):
                    f"{c80['profile_agree']:.1%} of {c80['profile_n']}, review {c80['profile_review']:.1%}")
     else:
         A["A4"] = ("not measurable", f"{near} test images at 60–100%")
-    A["A5"] = (("pass" if out["coverage"] >= 0.85 else "fail", f"{out['coverage']:.1%}") if has_q
+    cov6090 = float(within[m6090].mean()) if (has_q and m6090.any()) else None
+    A["A5"] = (("pass" if out["coverage"] >= 0.85 else "fail",
+                f"{out['coverage']:.1%}; at 60–90%: " + (f"{cov6090:.0%} of {int(m6090.sum())}" if cov6090 is not None
+                                                          else "no images")) if has_q
                else ("not measurable", "no band"))
     out["acceptance"] = A
     out["_rows"] = [{"name": r["name"], "gt": r["gt"], "reading": float(x), "cutoff": GRID[j], "band": float(q)}
@@ -477,7 +482,8 @@ def cmd_score(a):
     if msc:
         msc_gt(msc)
         setups["msc"] = msc
-    c2 = c2c12_items(a.labels)
+    labels = a.labels or (LABELS if os.path.exists(LABELS) else None)
+    c2 = c2c12_items(labels)
     if c2:
         setups["c2c12"] = c2
     for s, items in setups.items():
@@ -518,11 +524,15 @@ def write_md(rows, profiles, res):
     L = ["", "## Results", "",
          f"Generated {stamp} by `scripts/confluency_profiles.py score`, with the method and rules above unchanged. "
          "EVICAN: Parekh et al., *Bioinformatics* 36(12):3863 (2020), CC BY 4.0. LIVECell: Edlund et al., "
-         "*Nat Methods* 18:1038 (2021), CC BY-NC 4.0. C2C12: Ker et al., *Sci Data* 5:180237 (2018), CC BY 4.0.", ""]
+         "*Nat Methods* 18:1038 (2021), CC BY-NC 4.0. MSC: Solopov et al., *Int J Mol Sci* 26:2338 (2025), "
+         "Kaggle copy CC BY-NC-SA 4.0. C2C12: Ker et al., *Sci Data* 5:180237 (2018), CC BY 4.0"
+         + (f"; crop labels `{LABELS}`, SHA-256 `{hashlib.sha256(open(LABELS, 'rb').read()).hexdigest()}`"
+            if "c2c12" in rows and os.path.exists(LABELS) else "") + ".", ""]
     L += ["### Profiles", "",
           "| profile | images (calibration / test) | cutoff (logit) | calibration MAE (pp) | 90% band (± pp) | status |",
           "|---|---|---|---|---|---|"]
-    status = {"evican": "held-out", "livecell": "in-domain check", "msc": "held-out", "c2c12": "held-out; non-specialist labels"}
+    status = {"evican": "held-out", "livecell": "in-domain check; test fields are other positions, mostly in the same well",
+              "msc": "held-out, leave one population out", "c2c12": "held-out sequences; non-specialist labels on 160 px crops"}
     for s, rr in rows.items():
         p = profiles[PROFILE[s]]
         nt = res[s]["n_test"]

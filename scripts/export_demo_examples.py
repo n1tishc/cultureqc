@@ -241,6 +241,8 @@ def main():
                     for p in ("results/confluency_profiles.md", "results/confluency_profiles.json")]
         for pid in sorted({profile_for(e["kind"]) for e in examples} - {UNCALIBRATED}):
             prof = get_profile(pid)
+            if prof.status != "validated":
+                continue                      # not live: reads like an uncalibrated setup, nothing changed
             changes.append(writer.append(change_event(
                 "confluency_profile", {"id": uncal.id, "sha256": uncal.sha256}, {"id": prof.id, "sha256": prof.sha256},
                 f"Calibration profile for this imaging setup ({prof.status}): cutoff {prof.cutoff:+g}, 90% error band "

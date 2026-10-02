@@ -11,7 +11,12 @@ SHA-256, and replacing a profile is a `change` event in the chain
 
 A setup with no labelled images gets the `uncalibrated` profile: Cellpose's
 default cutoff and no band, so the rules never passage on its reading alone
-(culture/rules.py).
+(culture/rules.py). A profile that did not pass its pre-registered criteria
+on held-out images (status `failed` or `in_domain_check`) keeps its fitted
+values for the record (`fitted_cutoff`, `fitted_band_pp`) but reads like an
+uncalibrated setup: `cutoff` 0.0 and `band_pp` null. The entries are written
+from results/confluency_profiles.json by scripts/write_profiles_config.py,
+and tests/test_profiles_config.py checks that they still match.
 
     from culture.profiles import get_profile
     p = get_profile("c2c12_ker2018")
@@ -88,7 +93,7 @@ def get_profile(profile_id: str | None = None, path: str = PROFILES_PATH) -> Pro
 
 
 def choices(path: str = PROFILES_PATH) -> list[tuple[str, str]]:
-    """(label, id) pairs for a setup picker, uncalibrated last."""
+    """(label, id) pairs for a setup picker: the validated profiles, then uncalibrated."""
     ps = load_profiles(path)
-    order = [p for p in ps if p != UNCALIBRATED] + [UNCALIBRATED]
+    order = [p for p in ps if ps[p].status == "validated"] + [UNCALIBRATED]
     return [(ps[p].entry.get("label", p), p) for p in order]
