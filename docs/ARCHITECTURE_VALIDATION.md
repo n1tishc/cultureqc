@@ -75,7 +75,7 @@ Tests: `pytest tests` → 112 passed, 1 xfailed.
 
   Measured visit-level error (visit mean − full frame) agrees with the model: SD 13.21 pp at 1 FOV (model 11.41), 7.51 pp at 3 FOVs (model 6.59). Context: with the 0.5-frac noise fit, the same increments give 0.85 / 1.46 (6 h) and 1.56 / **2.71** (12 h) — not replayed at that size.
 - **Verdict: fail** at 1 FOV and at 3 FOVs, both cadences.
-- **Spec's change:** "fails at 3 FOVs → growth-deviation flags only at the longer cadence." That does not reach 2 here either (12 h / 3 FOVs = 1.12). What moves the ratio is **FOV size** (and count): a question for Celltrio, not a setting we can choose.
+- **Spec's change:** "fails at 3 FOVs → growth-deviation flags only at the longer cadence." That does not reach 2 here either (12 h / 3 FOVs = 1.12). What moves the ratio is **FOV size** (and count): a property of the imaging instrument, not a setting we can choose.
 - `results/growth_signal_summary.md`, `results/growth_signal_v2.png`.
 
 ![](../results/growth_signal_v2.png)
@@ -180,8 +180,8 @@ Conditions are "unknown" in this C2C12 import, so per experiment (held-out seque
 **Does:** the temporal logic was run end to end on **real C2C12 phase-contrast sequences** with simulated visits, repositioning and faults, under a tuning/held-out split and pre-written counting rules. It shows where the architecture breaks: per-visit growth signal vs FOV noise, gate/SPC interaction for contamination, anomaly calibration transfer across experiments, population drift standardisation, classifier domain transfer, and live latency.
 
 **Doesn't:**
-- Not RoboCell or Celltrio images. One cell line (C2C12), one microscope, ~85 h span, 3 experiments.
-- Cadence (6 h, 12 h), FOVs per visit (1, 3) and FOV size (0.25-frac crop) are **assumptions** to confirm with Celltrio. V2 depends on them directly.
+- Not images from a production culture instrument. One cell line (C2C12), one microscope, ~85 h span, 3 experiments.
+- Cadence (6 h, 12 h), FOVs per visit (1, 3) and FOV size (0.25-frac crop) are **assumptions** to confirm against a real instrument. V2 depends on them directly.
 - Faults are simulated: sprite contamination (at 16.5× real bacterial size, see V5), re-timed frames for stalls, synchronous lamp dimming. Real faults are messier and slower.
 - Held-out n is small: 14 normal sequences, **2 per fault type**. Frames within a sequence are not independent. A pass on n = 2 (V5b) is weak; a fail on n = 2 is informative only when the mechanism is clear (V6, V7).
 - Confluency "truth" is Cellpose-SAM's own reading, which V1 found ~8 pp low and unvalidated in the 60–90% band.
@@ -198,7 +198,7 @@ Conditions are "unknown" in this C2C12 import, so per experiment (held-out seque
 1. **Demo strategy (V9).** (a) Precomputed replay examples in the Space, labelled as such (fits the freeze; the spec's own fallback). (b) A GPU Space. (c) A lighter live confluency model (needs V1 rerun). Recommendation: (a) for Oct 4; (b)/(c) after.
 2. **Anomaly trend monitoring (V4).** Recommendation: follow the spec — drop the anomaly *trend*, keep the per-visit OOD flag. V6's false alarms all came from anomaly/class monitors.
 3. **Class-residual SPC (V8 spirit).** The classifier calls 5% of normal C2C12 frames normal. Recommendation: stop trending class probabilities until B3 has addressed domain shift.
-4. **Growth-stall detection (V2/V6).** Either present it as a stated limitation at the replayed FOV size, or invest in a frozen/population reference + long-horizon CUSUM and ask Celltrio about FOV size first. Recommendation: limitation for the demo; the Celltrio question now.
+4. **Growth-stall detection (V2/V6).** Either present it as a stated limitation at the replayed FOV size, or invest in a frozen/population reference + long-horizon CUSUM and confirm a real instrument's FOV size first. Recommendation: limitation for the demo; the FOV-size question now.
 5. **B5 instrument drift (V7).** Keep as informational (spec's fail branch), or build on the post-hoc SE-of-median scaling. Recommendation: informational + README limitation; B5 stays early in the cut order.
 6. **REIMAGE roll-up.** While INSTRUMENT_DRIFT is active, should N per-flask REIMAGEs become one instrument action? (Decision-logic question for B6; §11.1 ranks REIMAGE first today.)
 7. **B3 retrain (GPU).** The domain-shift test is effectively already failed on C2C12; the conditional retrain would need a GPU run (the spec allows it only if triggered). Needs your go-ahead.
@@ -219,11 +219,11 @@ Conditions are "unknown" in this C2C12 import, so per experiment (held-out seque
 
 Cut order stays S → B7 → B5 → B3 shift/retrain → B6. Code freeze **Sun Oct 4**.
 
-### Questions for Celltrio
+### Questions for instrument integration
 
 - Imaging **cadence** per flask, and whether flasks on one instrument are imaged in one round (A7 assumes age-aligned rounds).
 - **FOVs per visit and FOV size** relative to the flask (V2's ratio depends on both).
-- Image format, bit depth and resolution; can they share a few real RoboCell sequences for validation (would replace C2C12 as the primary test set)?
+- Image format, bit depth and resolution. Real sequences from a production instrument would replace C2C12 as the primary test set.
 
 ### Housekeeping
 

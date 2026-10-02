@@ -26,7 +26,8 @@ PY_UI_FILES = ["demo/app.py", "demo/flask_timeline.py", "demo/replay_timeline.py
     "Real-time contamination detection on every visit.",
     "It replaces sterility testing.",
     "cultureQC is Part 11 compliant.",
-    "Integrates with BioFlow out of the box.",
+    "Integrates with the lab scheduler out of the box.",
+    "The platform has no audit trail.",
     "98% test accuracy.",
     "Contamination AUROC 1.00 on held-out sequences.",
     "SPC detects growth stalls within 3 visits.",
@@ -70,6 +71,7 @@ def test_checker_catches(text):
     "**Not cleared for commercial use pending review**",
     "The pipeline as built is not cleared for commercial use pending review.",
     "This is a demo, not production-ready.",
+    "cultureQC does not integrate with any lab platform yet.",
 ])
 def test_checker_allows(text):
     assert not claims.violations(text)

@@ -79,3 +79,12 @@ things corrected, no new capability. `docs/STATUS.md` has the item-by-item log.
   was not rewritten (`1e6b77e`).
 - CI runs on this branch, including the Python tests that need no model
   weights or cache (`1e6b77e`).
+- `configs/detectability.yaml`: one wording change in `tested_setup`, no
+  numbers. Its SHA-256 changes. The five replays are re-exported, and that
+  hash is the only line that differs; the stored examples keep the hash that
+  was in force when they were made.
+- The claims checker's integration and audit-trail rules are generic: any
+  "integrates with …" unless negated, and any statement that another system
+  lacks audit trails.
+- README: a "How it was built" section; the dated decisions it lists are in
+  `docs/STATUS.md`.

@@ -255,8 +255,8 @@ That is estimated, never replayed, and needs confirming on their data.
   person? Is that trigger treated as GMP-critical?
 - How are analysis parameters (thresholds, model versions) versioned and
   put under change control on the platform side?
-- Could a few real RoboCell sequences be shared for validation? They would
-  replace C2C12 as the primary test set.
+- Could a few real sequences be shared for validation? They would replace
+  C2C12 as the primary test set.
 
 ## If something breaks
 

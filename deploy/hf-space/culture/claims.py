@@ -12,7 +12,7 @@ Three rule kinds:
                   a passage-prediction number needs "n = 5")
 
 Not automatable, checked by hand at freeze: presenting precomputed outputs as
-live; implying BioFlow lacks audit trails in paraphrase.
+live; implying another system lacks audit trails in paraphrase.
 """
 
 from __future__ import annotations
@@ -43,10 +43,9 @@ RULES = [
     Rule("real-time contamination", r"\b(real[- ]?time|live)\b[^.\n]{0,20}\bcontamination", "unless_negated"),
     Rule("replaces testing", r"\breplac\w*\b[^.\n]{0,40}\b(sterility|pcr|compendial)", "unless_negated"),
     Rule("compliance claim", r"part\s*11[- ]compliant|\bgmp[- ]validated", "unless_negated"),
-    Rule("vendor integration", r"\bintegrat\w*\b[^.\n]{0,25}\b(bioflow|momentum|green button go|robocell)",
-         "unless_negated"),
-    Rule("vendor lacks audit", r"\b(bioflow|celltrio)\b[^.\n]{0,30}\b(lacks?|has no|have no)\b[^.\n]{0,20}audit",
-         "forbid"),
+    # cultureQC is not integrated with any lab platform, and says nothing about other systems' audit trails.
+    Rule("integration claim", r"\bintegrat\w*\b[^.\n]{0,15}\b(with|into)\b", "unless_negated"),
+    Rule("other system lacks audit", r"\b(lacks?|has no|have no)\b[^.\n]{0,20}\baudit[- ]trails?\b", "forbid"),
     Rule("synthetic headline", r"\b98\s?%|\b2\.34\s?pp", "needs_context", r"synthetic"),
     Rule("fault number provenance", r"\b(AUROC|recall|detection rate)\b[^.\n]{0,40}\d", "needs_context",
          r"simulated|synthetic"),

@@ -5,7 +5,7 @@
  "caption": "Recorded C2C12 sequence, held out from all tuning. No fault was added.",
  "config_hashes": {
   "anomaly.yaml": "2776ce48025a554c2d3487c0d98433ef376ee4b9de1f5b25d48508bf82721184",
-  "detectability.yaml": "cb73861f0e9f666ea24c2e352debe327d517d3f09f6026a4d8d9a98204494282",
+  "detectability.yaml": "104b51773f11971cf9b019eaec5836c1419a0b9d4b687c3d48ca73358f16a383",
   "growth.yaml": "5a61223bf061a82d947367396d3a42101ade964851520f23746e2e4f0b134cc0",
   "noise.yaml": "a5dc3a7ea41367eb3a10adf29d77899251dd390b674372fffc19035241957177",
   "qc.yaml": "53c8f2ad51b5937d1d81baafb454de186df3c1a192f4400ee6bb936dfb63b959",

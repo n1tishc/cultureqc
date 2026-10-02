@@ -151,7 +151,7 @@ def write_summary(path, args, specs, streams, split_df, pairing, heldout_rates, 
               f"A backtest cut point or a one-step-ahead prediction fits only the visits before it, so with at "
               f"most {cadence24['max']} visits it never has {MIN_GROWTH_VISITS} before the one it scores: "
               "24 h is reported as **not testable on the C2C12 span** (spec §2A.3). "
-              "Celltrio's real cadence is an open question.",
+              "Real instrument cadence is an open question.",
               "", "## Fault twins match their base before onset", "",
               "Same seed for every stream, so a twin should repeat its base's visits (time, frame, crops) until onset.",
               "", "| fault type | twins that match, over all cadence × FOV cells |", "|---|---|"]

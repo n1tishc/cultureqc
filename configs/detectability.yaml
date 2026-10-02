@@ -7,7 +7,7 @@ version: 1
 tested_setup: >-
   Replayed C2C12 time-lapse (Ker et al. 2018, CC BY 4.0; real images, simulated
   visits and faults): 0.25-frac fields of view, 1–3 per visit, visits every 6–12 h,
-  5× objective at 1.3 µm/px. Not RoboCell images.
+  5× objective at 1.3 µm/px. Not images from a production culture instrument.
 provenance_note: >-
   Simulated faults are drawn onto recorded frames. The contamination simulation
   pastes bacterial images from DeepBacs (79 nm/px) pixel-for-pixel into 1.3 µm/px

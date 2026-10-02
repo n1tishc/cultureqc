@@ -61,8 +61,8 @@ matching the training pixel size does not fix it (B0,
 
 **What this does and doesn't prove.** It ran the per-flask logic end to end on
 real phase-contrast sequences under a tuning/held-out split, and showed where
-it breaks. It is not RoboCell or Celltrio data: one cell line, one microscope,
-three experiments. Cadence, FOVs per visit and FOV size are assumptions. Faults
+it breaks. It is not data from a production culture instrument: one cell line,
+one microscope, three experiments. Cadence, FOVs per visit and FOV size are assumptions. Faults
 are simulated, and held-out has 2 sequences per fault type. Confluency "truth"
 for C2C12 is Cellpose-SAM's own full-frame reading, which V1 found reads about
 8 pp low.
@@ -250,7 +250,7 @@ never replayed**.
 - Imaging cadence per flask, and whether the flasks on one instrument are imaged in one round.
 - FOVs per visit, and FOV size relative to the flask.
 - Image format, bit depth and resolution.
-- Could a few real RoboCell sequences be shared for validation? They would replace C2C12 as the primary test set.
+- Validation data: real sequences from a production instrument would replace C2C12 as the primary test set.
 
 ## Demo
 
@@ -501,6 +501,15 @@ npm run dev      # http://localhost:5173
 npm run build    # -> site/dist, which is what Vercel serves
 python site/assets/build_data.py [--images]
 ```
+
+## How it was built
+
+Built with Claude Code as a pair programmer. The decisions and their dates are
+in `docs/STATUS.md`: demoting the QC classifier rather than retraining it
+(2026-09-27), letting an anomaly flag hold a passage (`rules_v0.3`,
+2026-09-28), showing contamination at both the exaggerated and the real
+bacterial size (2026-09-28), holding the calibrated cutoff for a release
+(2026-09-30), and renaming `hold` to `continue` (`rules_v0.4`, 2026-09-30).
 
 ## Credits
 

@@ -35,7 +35,8 @@ docs and deploy.
 | 9 | Site demo of what a chain alone misses (A2.4) | `4270648` | Records section: next to "Change one number in record 3", two switches, "Rewrite record 3 and every hash after it" and "Delete the last two records", one at a time. Each shows "Chain alone" and "Against the anchored checkpoint": edit fails both; rewrite and delete pass the chain (7 of 7, 5 of 5 verified) and fail the checkpoint (head hash, count). The checkpoint is made at build time by `culture.records.checkpoint` from the seven stored records and shipped in `data.json` (its `created_at` is kept while the chain is unchanged, so CI's rebuild stays byte-identical). The browser applies the same two rules as `verify_chain(checkpoint=)` (`checkCheckpoint` and `rewriteFrom` in `site/src/lib/verify.js`). Checked headless at 1280 and 390 px, all four states; `tests/test_records_chain.py` checks the shipped checkpoint anchors the stored chain and catches a deleted tail. No JavaScript unit tests exist for the site |
 | 10 | Stale or unsourced text (A7); schema alignment already done in item 4 | `716d923` | `docs/PROGRESS_SUMMARY.md` brought to 2026-10-01: boundary ambiguity, `rules_v0.4`, demo ≈12 min, 295 tests, the owner's no-merge decision, and a new section on the cutoff study (with its not-fully-blind disclosure), the audit-mapping rewrite and this pass. Console Space README rewritten for v0.3 (what it shows, precomputed vs live, the demoted classifier, records, licences, links to the v0.3 site and this branch). `docs/audit_mapping.md` no longer states "60-epoch" as fact: cited as the v0.2 notes, not reproduced here. Console footer says v0.3 instead of v0.1, and the examples' credit line no longer lists C2C12 twice. **The README and footer reach the console only with a republish, which waits for the owner's OK** |
 | — | Owner decision on the calibrated cutoff (2026-09-30), logged here on 2026-10-01 | `cbfacf5` | Held for release: the live path keeps Cellpose-SAM's default cutoff, and −3.5 (`results/confluency_cutoff.md`) is shown as validated, not shipped, with its not-fully-blind disclosure |
-| 11 | "How it was built" text (C3) | — | Drafted for the owner, not added to the README; the owner decides |
+| 11 | "How it was built" text (C3) | — | Approved by the owner on 2026-10-02 and added to the README before "Credits". Each of its five dates is the date of the row it cites in this file |
+| — | Names (owner's decision, 2026-10-02) | — | See "Names in tracked files" below. `results/replay_fleet_summary.md` re-generated for its one changed sentence; the split and stream files came out byte-identical |
 
 ### CI on this branch
 
@@ -62,36 +63,14 @@ the schema xfail gone). The README badge points at this branch's runs.
 
 ### Names in tracked files
 
-`git grep -i` for the company, its products, the other vendors' names and the
-reviewer's name, on 2026-09-30. The reviewer's name has no hits.
+Tracked files name no instrument vendor, product or person outside the credits
+and licences (owner's decision, 2026-10-02). The limits and open questions
+describe the setting, a production culture instrument, not a company. Checked
+with `git grep -i` before each push.
 
-**Changed in this pass** (planning docs, not validation or audit text):
-`docs/DEMO_SCRIPT.md` title is now "Demo script (≈12 min)", with no company or
-date, and its §7 heading and the README's heading are both "Questions for
-instrument integration". The audience lines in `docs/UI_PLAN.md:5` and
-`docs/PRODUCT.md:15` now say "an engineering lead at a lab automation company",
-the call reference is gone from `docs/PROGRESS_SUMMARY.md:11`, and "Celltrio
-questions" in this file's Phase A table is now "instrument-integration questions".
-
-**Kept on purpose:** `culture/claims.py`, `tests/test_claims.py`, and their
-mirrors under `deploy/`. They are the forbidden-claims checker, which must name
-the vendors to block "integrates with …" and "… lacks audit trails".
-
-**Proposed, waiting for the owner** (validation, results and limitation text;
-nothing changed yet):
-
-| Where | Now | Proposed |
-|---|---|---|
-| `README.md:64` (also on the site: `data.json` "not proven") | "It is not RoboCell or Celltrio data" | "It is not data from the instrument it would run on" |
-| `README.md:249`, `docs/DEMO_SCRIPT.md:221` | "Could a few real RoboCell sequences be shared…" | "Could a few real sequences from the instrument be shared…" |
-| `configs/detectability.yaml:10` (site Detectability matrix) | "Not RoboCell images." | "Not images from the target instrument." |
-| `docs/ARCHITECTURE_VALIDATION.md:78` | "a question for Celltrio" | "a question for the instrument team" |
-| `docs/ARCHITECTURE_VALIDATION.md:183` | "Not RoboCell or Celltrio images." | "Not images from the target instrument." |
-| `docs/ARCHITECTURE_VALIDATION.md:184` | "assumptions to confirm with Celltrio" | "assumptions to confirm with the instrument team" |
-| `docs/ARCHITECTURE_VALIDATION.md:201` (twice) | "ask Celltrio about FOV size first"; "the Celltrio question now" | "ask about the instrument's FOV size first"; "the FOV-size question now" |
-| `docs/ARCHITECTURE_VALIDATION.md:222` | "### Questions for Celltrio" | "### Questions for instrument integration" |
-| `docs/ARCHITECTURE_VALIDATION.md:226` | "real RoboCell sequences" | "real sequences from the instrument" |
-| `scripts/replay_fleet.py:154`, `results/replay_fleet_summary.md:40` | "Celltrio's real cadence is an open question." | "The target instrument's real cadence is an open question." (re-run the summary; no numbers change) |
+The claims checker (`culture/claims.py`, mirrored under `deploy/`) blocks the
+two claims generically: any integration claim ("integrates with …", allowed
+only negated), and any statement that another system lacks audit trails.
 
 ## Slices (spec §2.1), confirmed against the repo
 
