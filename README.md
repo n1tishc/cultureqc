@@ -510,6 +510,33 @@ python site/assets/build_data.py [--images]
 - **DeepBacs** *E. coli* brightfield images ([Zenodo 5550935](https://zenodo.org/records/5550935)): the pasted contamination sprites.
 - **Models:** Cellpose-SAM (`cpsam`), DINOv2-small (`facebook/dinov2-small`), EfficientNet-B0 via `timm`.
 
-## License
+## Licences and commercial use
 
-MIT; see [LICENSE](LICENSE). Datasets keep their own licences, above.
+One row per component the pipeline runs or was built from. Each licence was
+checked against the source in the last column on 2026-10-01; quoted text is
+verbatim, and `field: value` is the source's own metadata.
+
+| Component | Licence | Commercial use as built | Source |
+|---|---|---|---|
+| cultureQC code (this repository) | MIT | Yes | [LICENSE](LICENSE): "MIT License … Copyright (c) 2026 Nitish C" |
+| Cellpose code (`cellpose` package) | BSD 3-Clause | Yes, keeping the copyright notice | [MouseLand/cellpose LICENSE](https://github.com/MouseLand/cellpose/blob/main/LICENSE), GitHub `spdx_id: BSD-3-Clause`: "Copyright © 2020 Howard Hughes Medical Institute" |
+| Cellpose-SAM weights (`cpsam`): every confluency reading | Trained on CC BY-NC data, including one CC BY-NC-ND 4.0 dataset | **Not cleared for commercial use pending review** | [Cellpose README](https://github.com/MouseLand/cellpose#readme): "All Cellpose models are trained on data that is licensed under CC-BY-NC. The Cellpose annotated dataset is also CC-BY-NC." The Cellpose-SAM paper (bioRxiv 2025.04.28.651001, Methods) lists "Neurips 2022 challenge" among the datasets "used … for training Cellpose-SAM" (`docs/DATASETS.md`); that dataset's [Zenodo record 10719375](https://zenodo.org/records/10719375) has `license: cc-by-nc-nd-4.0` |
+| DINOv2-small weights (`facebook/dinov2-small`): the anomaly check | Apache-2.0 | Yes, with attribution and the licence's notice terms | [Hugging Face model metadata](https://huggingface.co/facebook/dinov2-small) `license: apache-2.0`; model code [facebookresearch/dinov2](https://github.com/facebookresearch/dinov2) `spdx_id: Apache-2.0`; run through `transformers`, `spdx_id: Apache-2.0` |
+| QC classifier weights (`LongGrainRice/cultureqc-qc-effnetb0-v1`): demoted, display only | Tagged MIT on its model card; trained on tiles built on LIVECell (CC BY-NC 4.0) | **Not cleared for commercial use pending review**: the MIT tag does not settle the LIVECell question | [Model card](https://huggingface.co/LongGrainRice/cultureqc-qc-effnetb0-v1) `license: mit`, and: "Trained entirely on synthetic data (bacterial sprites composited onto LIVECell images; detachment via mask-erosion + floaters)." |
+| The classifier's initial weights (ImageNet or not) | Not recorded | Unknown | No training code or log in this repository or on the model card says how training started. `culture/qc.py` builds the network with `pretrained=False` and loads the weights above, which says nothing about training |
+| EfficientNet-B0 code (`timm`) | Apache-2.0 | Yes, with attribution and the licence's notice terms | [huggingface/pytorch-image-models](https://github.com/huggingface/pytorch-image-models) `spdx_id: Apache-2.0` |
+| LIVECell images: backgrounds of the classifier's synthetic tiles | CC BY-NC 4.0 | No: non-commercial only. `test-data/` here holds 4 LIVECell images (`*_Phase_*.tif`) and 4 synthetic tiles built on LIVECell images (`contam_`, `detach_`, `imgq_`, `normal_*.png`), distributed under that licence | [LIVECell README](https://github.com/sartorius-research/LIVECell#license): "All images, annotations and models associated with LIVECell are published under Attribution-NonCommercial 4.0 International (CC BY-NC 4.0) license." |
+| DeepBacs *E. coli* brightfield: the contamination sprites | CC BY 4.0 | Yes, with attribution | [Zenodo record 5550935](https://zenodo.org/records/5550935) ("DeepBacs – Escherichia coli bright field segmentation dataset") `license: cc-by-4.0` |
+| EVICAN: V1 validation, two examples, `test-data/evican_*.jpg` | CC BY 4.0 | Yes, with attribution | Dataverse API for `doi:10.17617/3.AJBV1S`: `"license":{"name":"CC BY 4.0"}` (`docs/DATASETS.md`) |
+| C2C12 time-lapse: replays, anomaly banks, examples | CC BY 4.0 | Yes, with attribution | [OSF project `ysaq2`](https://osf.io/ysaq2/) licence: "CC-By Attribution 4.0 International" |
+
+**The pipeline as built is not cleared for commercial use pending review.**
+Every confluency reading comes from the Cellpose-SAM weights, and the demoted
+classifier carries LIVECell's non-commercial licence. Commercial use would need
+the confluency weights cleared or replaced. Not covered above: the optional
+Qwen2-VL rationale in `culture/rationale.py`, which is switched off everywhere
+(`use_vlm=False`) and whose licence was not checked.
+
+The repository's MIT licence covers this code only. Model weights and datasets
+carry their own licences. This table is an engineering summary, not legal
+advice, and hasn't been reviewed by counsel.

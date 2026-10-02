@@ -614,7 +614,8 @@ with gr.Blocks(
 
     gr.HTML(
         '<div class="app-footer">cultureQC v0.1 &middot; Cellpose-SAM &middot; DINOv2-small (anomaly check) '
-        '&middot; EfficientNet-B0 (synthetic-trained QC classifier, demoted) &middot; MIT</div>'
+        '&middot; EfficientNet-B0 (synthetic-trained QC classifier, demoted) &middot; code MIT; model weights and '
+        'datasets carry their own licences, see the README</div>'
     )
 
     image_view.upload(

@@ -28,8 +28,10 @@ GitHub README states "All Cellpose models are trained on data that is
 licensed under CC-BY-NC. The Cellpose annotated dataset is also CC-BY-NC" —
 i.e. the *shipped weights* carry a non-commercial-license-trained-on taint.
 Worth a legal read before any commercial claim tied to Cellpose-SAM
-specifically (separate from cultureQC's own code license); not evaluated
-further here.
+specifically (separate from cultureQC's own code license). Followed up in the
+README's "Licences and commercial use" table: one of the training sets, the
+NeurIPS 2022 challenge dataset, is CC BY-NC-ND 4.0 on Zenodo (10719375), and
+the weights are marked not cleared for commercial use pending review.
 
 ## EVICAN — used, primary held-out eval (Slice 1)
 

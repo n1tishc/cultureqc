@@ -42,6 +42,9 @@ PY_UI_FILES = ["demo/app.py", "demo/flask_timeline.py", "demo/replay_timeline.py
     "A calibrated confluency confidence.",
     "The rules say hold.",
     'recommended_action: "hold"',
+    "The pipeline is commercially usable today.",
+    "A production-ready confluency QC pipeline.",
+    "Cleared for commercial use.",
 ])
 def test_checker_catches(text):
     assert claims.violations(text)
@@ -64,6 +67,9 @@ def test_checker_catches(text):
     "`continue` was called `hold` up to rules_v0.3 (label only).",
     "The anomaly flag held the passage for human review.",
     "The anomaly banks hold only C2C12 frames.",
+    "**Not cleared for commercial use pending review**",
+    "The pipeline as built is not cleared for commercial use pending review.",
+    "This is a demo, not production-ready.",
 ])
 def test_checker_allows(text):
     assert not claims.violations(text)

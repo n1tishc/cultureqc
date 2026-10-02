@@ -71,6 +71,10 @@ RULES = [
          r"|\bconfidence\b[^.\n]{0,15}\bthat the (reading|confluency|number) is (right|correct)", "forbid"),
     # A bare hash chain misses a full rewrite and a deleted tail (docs/audit_mapping.md, "The chain").
     Rule("chain overclaim", r"\bbreaks?\b[^.\n]{0,25}\bevery\b[^.\n]{0,15}\blinks?\b|tamper[- ]?proof", "forbid"),
+    # The confluency weights are trained on CC BY-NC data (README, "Licences and commercial use"), so the
+    # pipeline as a whole is not cleared for commercial use; a negated statement of that is allowed.
+    Rule("commercial-use claim", r"\bcommercially[- ](usable|ready|viable|cleared)\b|\bproduction[- ]ready\b"
+         r"|\b(cleared|ready|approved|licensed)\s+for\s+commercial\s+use", "unless_negated"),
 ]
 
 
