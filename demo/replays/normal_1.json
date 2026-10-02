@@ -212,6 +212,7 @@
   "reimage_after_onset": null,
   "reimage_before_onset": 0
  },
+ "target_note": "Passage target 50% in these replays: the held-out C2C12 recordings never pass 57.0%, as Cellpose-SAM measures them. The Analyze examples use 80%.",
  "visits": [
   {
    "anomaly_bin": "0-20",

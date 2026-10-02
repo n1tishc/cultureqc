@@ -44,6 +44,22 @@ things corrected, no new capability. `docs/STATUS.md` has the item-by-item log.
   see 1 − `confidence` as **boundary ambiguity**, a density-sensitive review
   trigger; the review threshold is unchanged (`f5532f5`).
 
+### What a viewer is shown (`8` in `docs/STATUS.md`)
+
+- The demoted QC classifier is off the site's example cards. It is still in
+  every record (`qc_used_in_decision: false`); the console keeps it collapsed
+  under "Demoted — known wrong on real frames (5.0% of normal frames called
+  normal); not used for the action".
+- The contamination replay's passage forecast is exported as
+  `status: "suppressed_fault"` with the reason "driven by pasted bacteria
+  raising measured confluency, not by growth"; the site and console show the
+  reason instead of a crossing time. The fit is kept in the replay JSON; the
+  growth model is unchanged.
+- The Timeline says why its passage target is 50% (the recordings never pass
+  57.0%) while the Analyze examples use 80%.
+- Site sections reordered: Reading, Confluency, Records, Integration, Timeline,
+  Limits, Validation, Since v0.2.
+
 ### Audit chain
 
 - `verify_chain` returns a structured result; a missing or empty log is no

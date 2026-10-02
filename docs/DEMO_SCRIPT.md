@@ -223,6 +223,13 @@ waits for a person; continue and feed are unchanged.
 3. **Lamp dimming**, 3D: the red dashed layers failed the quality gate
    (REIMAGE) and are left out of the trend instead of reading as a dip.
 
+- If he asks why 50% here and 80% in Analyze: the held-out C2C12 recordings
+  never pass 57.0% as Cellpose-SAM measures them (`results/review_rate.md`), so
+  an 80% target would never be reached. The tab's header says so.
+- The **Contamination** replay shows no passage time: its forecast is made after
+  the pasted bacteria arrive and is driven by them, not by growth, so it is
+  shown as suppressed with that reason. The flagged visit still holds the passage.
+
 ## 6. What it can't do, and what would fix it (1.5 min)
 
 Open **Detectability**. At the tested setup (0.25-frame fields, 1–3 per visit,

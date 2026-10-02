@@ -41,6 +41,10 @@ CELL_LINES = ["A172", "BT474", "BV2", "Huh7", "MCF7", "SHSY5Y", "SKOV3", "SkBr3"
 # and EVICAN frames run once through demo/analysis.py, shown instantly and
 # labelled as precomputed; Analyze re-runs them live.
 EXAMPLES = precomputed.load()
+# The demoted classifier's collapsed heading. The rate is "called normal" on held-out
+# normal frames, results/classifier_c2c12.md; tests/test_replay_notes.py checks it.
+CLASSIFIER_SUMMARY = ("Demoted — known wrong on real frames (5.0% of normal frames called normal); "
+                      "not used for the action")
 CONTAMINATION_FIGURE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "figures", "contamination_scale.png")
 
 STATUS_COLORS = {"green": "#22c55e", "amber": "#f59e0b", "red": "#ef4444"}
@@ -345,7 +349,7 @@ def render_results(
   <div class="rc-card rationale" style="animation-delay:250ms">{html.escape(rationale)}</div>
 
   <details class="rc-card audit-details classifier-details" style="animation-delay:300ms">
-    <summary><span class="audit-chevron"></span>QC classifier (not used in the recommendation)</summary>
+    <summary><span class="audit-chevron"></span>QC classifier: {html.escape(CLASSIFIER_SUMMARY)}</summary>
     <div class="classifier-note">{html.escape(demoted_label())}</div>
     <div class="evidence-rows">{"".join(evidence_rows)}
     </div>
@@ -583,6 +587,7 @@ with gr.Blocks(
                 'padding:12px 16px;margin-bottom:10px;">'
                 f'<strong style="color:var(--text-primary)">{html.escape(_first["banner"])}</strong><br>'
                 '<span style="color:var(--text-secondary);font-size:0.85em;line-height:1.5">'
+                f'{html.escape(_first["target_note"])}<br>'
                 "Precomputed from held-out sequences: every number below was produced before the app "
                 "started, by the same code the Phase A checks used. No SPC or trend charts; the QC "
                 "classifier is not shown (demoted, see the Analyze tab).</span></div>"

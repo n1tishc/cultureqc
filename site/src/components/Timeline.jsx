@@ -289,6 +289,19 @@ export default function Timeline({ replays }) {
                 </>
               ) : null}
             </p>
+          ) : f.status === "suppressed_fault" ? (
+            <p className={held ? "held" : ""}>
+              Passage forecast not shown: the growth fit made at visit {f.made_at_visit + 1} ({f.made_at_hours} h), after the simulated fault’s onset, is {f.suppressed_reason}.
+              {held ? (
+                <>
+                  {" "}
+                  <b>
+                    <Icon name="human_review" /> Passage held:
+                  </b>{" "}
+                  the anomaly check flagged that visit, so since rules_v0.3 a passage goes to human review.
+                </>
+              ) : null}
+            </p>
           ) : (
             <p>No passage forecast: the fit starts once the flask passes {f.cut}%, and this one did not.</p>
           )}

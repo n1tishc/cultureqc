@@ -192,6 +192,31 @@ def gate_rates(path: str = os.path.join(REPO, "results", "quality_gate_c2c12.md"
             "pct": held.group(4), "tuning_sequences": int(tuning.group(1))}
 
 
+def target_note(review_rate: str = os.path.join(REPO, "results", "review_rate.md"),
+                examples: str = os.path.join(REPO, "demo", "examples", "examples.json")) -> str:
+    """Why the replays' passage target is not the Analyze examples' target: the
+    highest held-out C2C12 reading (results/review_rate.md) sits just above 50%."""
+    import re
+    with open(review_rate) as f:
+        top = re.search(r"Highest held-out C2C12 confluency: ([\d.]+)%", f.read()).group(1)
+    with open(examples) as f:
+        (ex_target,) = {e["target_confluency"] for e in json.load(f)["examples"]}
+    return (f"Passage target {TARGET_PCT:.0f}% in these replays: the held-out C2C12 recordings never pass {top}%, "
+            f"as Cellpose-SAM measures them. The Analyze examples use {ex_target:.0f}%.")
+
+
+SUPPRESSED_REASON = "driven by pasted bacteria raising measured confluency, not by growth"
+
+
+def suppress_fault_forecast(fc: dict, kind: str, onset: float | None) -> dict:
+    """A forecast made after a pasted-bacteria onset measures the bacteria, not
+    growth: keep the fit for the record, but mark it so no crossing time is
+    shown. Export-time labelling only; culture.growth is unchanged."""
+    if kind == "contamination_onset" and fc["status"] == "predicted" and fc["made_at_hours"] > onset:
+        fc = {**fc, "status": "suppressed_fault", "suppressed_reason": SUPPRESSED_REASON}
+    return fc
+
+
 def notes_for(kind: str, onset: float | None, summary: dict, fc: dict) -> list[str]:
     """What this particular replay shows that a viewer could misread, from its
     own counts. Explanations, never suppression rules."""
@@ -213,9 +238,6 @@ def notes_for(kind: str, onset: float | None, summary: dict, fc: dict) -> list[s
     if fc["status"] == "cut_not_reached":
         out.append(f"No passage forecast: the visits that pass the quality gate never reach {fc['cut_pct']:.0f}% "
                    "(target − 10), where a forecast is first made.")
-    if kind == "contamination_onset" and fc["status"] == "predicted" and fc["made_at_hours"] > onset:
-        out.append("The passage forecast here is made after onset and is driven by the pasted bacteria raising "
-                   "measured confluency, not by growth.")
     return out
 
 
@@ -284,7 +306,7 @@ def build(cache_dir: str) -> tuple[dict[str, dict], list[str]]:
         if missing:
             notes.append(f"{name}: {missing} visits have no anomaly score")
 
-        fc = forecast(visits, hours)
+        fc = suppress_fault_forecast(forecast(visits, hours), kind, onset)
         fc["backtest"] = bt_caption
         bt_row = backtest_row(bt, sc["base_sequence_id"]) if kind == "none" else None
         if bt_row is not None:
@@ -319,6 +341,7 @@ def build(cache_dir: str) -> tuple[dict[str, dict], list[str]]:
             "experiment": sc["experiment"], "split": sc["split"],
             "fault": None if onset is None else {"type": kind, "onset_hours": _r(onset, 2)},
             "banner": BANNER, "caption": captions("normal" if kind == "none" else kind, onset, severity, matrix),
+            "target_note": target_note(),
             "notes": notes_for(kind, onset, summary, fc),
             "credit": CREDIT,
             "replay_params": {"mean_interval_hours": CADENCE_H, "jitter_hours": JITTER_FRAC * CADENCE_H,

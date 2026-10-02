@@ -289,9 +289,6 @@ export default function Stage({ examples, verify, liveParity }) {
         <p>
           Hover a reading to light the layer it came from. {ex.label}. {ex.credit}.{ex.sequence ? ` Held-out ${ex.sequence}, frame ${ex.frame}.` : ""} Precomputed with the console’s own code ({ex.device}, {ex.generated_at}). {liveParity}
         </p>
-        <p>
-          <b>QC classifier, demoted:</b> it calls this frame <span className="mono">{ex.classifier.flag.replace("_", " ")}</span> at {ex.classifier.confidence.toFixed(2)}. Recorded, never used for the action: it does not transfer to real frames.
-        </p>
       </div>
     </div>
   );

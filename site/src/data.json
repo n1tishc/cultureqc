@@ -364,12 +364,6 @@
       "patch": 14
      }
     },
-    "classifier": {
-     "flag": "normal",
-     "confidence": 0.4079,
-     "model": "qc_effnetb0_v1",
-     "used_in_decision": false
-    },
     "action": "continue",
     "action_reason": "Confluency 39.4% below target 80%. No action needed.",
     "rationale": "Confluency 39.4% below target (80%); recommend no action required; continue monitoring.",
@@ -738,12 +732,6 @@
       "size": 224,
       "patch": 14
      }
-    },
-    "classifier": {
-     "flag": "contamination_suspected",
-     "confidence": 0.7866,
-     "model": "qc_effnetb0_v1",
-     "used_in_decision": false
     },
     "action": "continue",
     "action_reason": "Confluency 16.8% below target 80%. No action needed.",
@@ -1114,12 +1102,6 @@
       "patch": 14
      }
     },
-    "classifier": {
-     "flag": "contamination_suspected",
-     "confidence": 0.3927,
-     "model": "qc_effnetb0_v1",
-     "used_in_decision": false
-    },
     "action": "human_review",
     "action_reason": "Boundary ambiguity 0.99 is above 0.70 (record confidence 0.01 below floor 0.30): many pixels sit near the cell/background cutoff; recommend manual inspection.",
     "rationale": "Confluency 51.4% below target (80%); recommend pause automated decisions and flag for human review.",
@@ -1488,12 +1470,6 @@
       "size": 224,
       "patch": 14
      }
-    },
-    "classifier": {
-     "flag": "image_quality",
-     "confidence": 0.9731,
-     "model": "qc_effnetb0_v1",
-     "used_in_decision": false
     },
     "action": "continue",
     "action_reason": "Confluency 12.2% below target 80%. No action needed.",
@@ -1864,12 +1840,6 @@
       "patch": 14
      }
     },
-    "classifier": {
-     "flag": "contamination_suspected",
-     "confidence": 0.9897,
-     "model": "qc_effnetb0_v1",
-     "used_in_decision": false
-    },
     "action": "human_review",
     "action_reason": "Confluency 86.6% >= target 80%, but the anomaly check flagged this image; passage held for human review.",
     "rationale": "Confluency 86.6% above target (80%); recommend pause automated decisions and flag for human review. The anomaly check flagged this image, so it is not passaged automatically.",
@@ -2238,12 +2208,6 @@
       "size": 224,
       "patch": 14
      }
-    },
-    "classifier": {
-     "flag": "image_quality",
-     "confidence": 0.9998,
-     "model": "qc_effnetb0_v1",
-     "used_in_decision": false
     },
     "action": "continue",
     "action_reason": "Confluency 5.1% below target 80%. No action needed.",
@@ -2614,12 +2578,6 @@
       "patch": 14
      }
     },
-    "classifier": {
-     "flag": "image_quality",
-     "confidence": 0.6352,
-     "model": "qc_effnetb0_v1",
-     "used_in_decision": false
-    },
     "action": "human_review",
     "action_reason": "Boundary ambiguity 0.73 is above 0.70 (record confidence 0.27 below floor 0.30): many pixels sit near the cell/background cutoff; recommend manual inspection.",
     "rationale": "Confluency 29.4% below target (80%); recommend pause automated decisions and flag for human review.",
@@ -2665,6 +2623,7 @@
     "reimage_after_onset": null,
     "reimage_before_onset": 0
    },
+   "target_note": "Passage target 50% in these replays: the held-out C2C12 recordings never pass 57.0%, as Cellpose-SAM measures them. The Analyze examples use 80%.",
    "frame_hw": [
     1040,
     1392
@@ -3258,6 +3217,7 @@
      76.11,
      92.26
     ],
+    "suppressed_reason": null,
     "curve": [
      [
       0.0,
@@ -3532,6 +3492,7 @@
     "reimage_after_onset": null,
     "reimage_before_onset": 5
    },
+   "target_note": "Passage target 50% in these replays: the held-out C2C12 recordings never pass 57.0%, as Cellpose-SAM measures them. The Analyze examples use 80%.",
    "frame_hw": [
     1040,
     1392
@@ -4173,6 +4134,7 @@
     "made_at_hours": null,
     "t_star": null,
     "interval": null,
+    "suppressed_reason": null,
     "curve": [],
     "backtest": {
      "interval_covers": "4/5",
@@ -4195,9 +4157,7 @@
     "type": "contamination_onset"
    },
    "noise_band": "±1 standard error of the 3-FOV mean: sigma_fov(confluency) / sqrt(3), configs/noise.yaml C2C12 fit (the noise V2 compares one visit's growth to)",
-   "notes": [
-    "The passage forecast here is made after onset and is driven by the pasted bacteria raising measured confluency, not by growth."
-   ],
+   "notes": [],
    "summary": {
     "anomaly_flags_after_onset": 8,
     "anomaly_flags_before_onset": 0,
@@ -4207,6 +4167,7 @@
     "reimage_after_onset": 7,
     "reimage_before_onset": 0
    },
+   "target_note": "Passage target 50% in these replays: the held-out C2C12 recordings never pass 57.0%, as Cellpose-SAM measures them. The Analyze examples use 80%.",
    "frame_hw": [
     1040,
     1392
@@ -4846,259 +4807,16 @@
     }
    ],
    "forecast": {
-    "status": "predicted",
+    "status": "suppressed_fault",
     "model": "logistic",
     "target": 50.0,
     "cut": 40.0,
     "made_at_visit": 7,
     "made_at_hours": 41.39,
-    "t_star": 42.97,
-    "interval": [
-     40.68,
-     47.2
-    ],
-    "curve": [
-     [
-      0.0,
-      0.03
-     ],
-     [
-      0.76,
-      0.03
-     ],
-     [
-      1.53,
-      0.04
-     ],
-     [
-      2.29,
-      0.05
-     ],
-     [
-      3.06,
-      0.05
-     ],
-     [
-      3.82,
-      0.06
-     ],
-     [
-      4.59,
-      0.07
-     ],
-     [
-      5.35,
-      0.08
-     ],
-     [
-      6.12,
-      0.1
-     ],
-     [
-      6.88,
-      0.11
-     ],
-     [
-      7.65,
-      0.13
-     ],
-     [
-      8.41,
-      0.15
-     ],
-     [
-      9.18,
-      0.17
-     ],
-     [
-      9.94,
-      0.2
-     ],
-     [
-      10.71,
-      0.23
-     ],
-     [
-      11.47,
-      0.26
-     ],
-     [
-      12.23,
-      0.3
-     ],
-     [
-      13.0,
-      0.35
-     ],
-     [
-      13.76,
-      0.4
-     ],
-     [
-      14.53,
-      0.46
-     ],
-     [
-      15.29,
-      0.54
-     ],
-     [
-      16.06,
-      0.62
-     ],
-     [
-      16.82,
-      0.71
-     ],
-     [
-      17.59,
-      0.83
-     ],
-     [
-      18.35,
-      0.95
-     ],
-     [
-      19.12,
-      1.1
-     ],
-     [
-      19.88,
-      1.27
-     ],
-     [
-      20.65,
-      1.46
-     ],
-     [
-      21.41,
-      1.68
-     ],
-     [
-      22.18,
-      1.94
-     ],
-     [
-      22.94,
-      2.23
-     ],
-     [
-      23.71,
-      2.57
-     ],
-     [
-      24.47,
-      2.96
-     ],
-     [
-      25.23,
-      3.4
-     ],
-     [
-      26.0,
-      3.91
-     ],
-     [
-      26.76,
-      4.49
-     ],
-     [
-      27.53,
-      5.15
-     ],
-     [
-      28.29,
-      5.9
-     ],
-     [
-      29.06,
-      6.76
-     ],
-     [
-      29.82,
-      7.72
-     ],
-     [
-      30.59,
-      8.82
-     ],
-     [
-      31.35,
-      10.05
-     ],
-     [
-      32.12,
-      11.43
-     ],
-     [
-      32.88,
-      12.97
-     ],
-     [
-      33.65,
-      14.69
-     ],
-     [
-      34.41,
-      16.59
-     ],
-     [
-      35.18,
-      18.69
-     ],
-     [
-      35.94,
-      20.98
-     ],
-     [
-      36.7,
-      23.47
-     ],
-     [
-      37.47,
-      26.16
-     ],
-     [
-      38.23,
-      29.04
-     ],
-     [
-      39.0,
-      32.1
-     ],
-     [
-      39.76,
-      35.33
-     ],
-     [
-      40.53,
-      38.69
-     ],
-     [
-      41.29,
-      42.16
-     ],
-     [
-      42.06,
-      45.72
-     ],
-     [
-      42.82,
-      49.31
-     ],
-     [
-      43.59,
-      52.92
-     ],
-     [
-      44.35,
-      56.49
-     ],
-     [
-      45.12,
-      60.0
-     ]
-    ],
+    "t_star": null,
+    "interval": null,
+    "suppressed_reason": "driven by pasted bacteria raising measured confluency, not by growth",
+    "curve": [],
     "backtest": {
      "interval_covers": "4/5",
      "median_abs_error_h": 9.0,
@@ -5133,6 +4851,7 @@
     "reimage_after_onset": 0,
     "reimage_before_onset": 6
    },
+   "target_note": "Passage target 50% in these replays: the held-out C2C12 recordings never pass 57.0%, as Cellpose-SAM measures them. The Analyze examples use 80%.",
    "frame_hw": [
     1040,
     1392
@@ -5735,6 +5454,7 @@
     "made_at_hours": null,
     "t_star": null,
     "interval": null,
+    "suppressed_reason": null,
     "curve": [],
     "backtest": {
      "interval_covers": "4/5",
@@ -5769,6 +5489,7 @@
     "reimage_after_onset": 6,
     "reimage_before_onset": 0
    },
+   "target_note": "Passage target 50% in these replays: the held-out C2C12 recordings never pass 57.0%, as Cellpose-SAM measures them. The Analyze examples use 80%.",
    "frame_hw": [
     1040,
     1392
@@ -6376,6 +6097,7 @@
     "made_at_hours": null,
     "t_star": null,
     "interval": null,
+    "suppressed_reason": null,
     "curve": [],
     "backtest": {
      "interval_covers": "4/5",

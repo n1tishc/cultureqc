@@ -162,7 +162,8 @@
   "made_at_hours": 41.39,
   "made_at_visit": 7,
   "n_visits_fit": 8,
-  "status": "predicted",
+  "status": "suppressed_fault",
+  "suppressed_reason": "driven by pasted bacteria raising measured confluency, not by growth",
   "t_star_hours": 42.97,
   "target_pct": 50.0
  },
@@ -187,9 +188,7 @@
   }
  },
  "noise_band": "±1 standard error of the 3-FOV mean: sigma_fov(confluency) / sqrt(3), configs/noise.yaml C2C12 fit (the noise V2 compares one visit's growth to)",
- "notes": [
-  "The passage forecast here is made after onset and is driven by the pasted bacteria raising measured confluency, not by growth."
- ],
+ "notes": [],
  "provenance": "replay_simulated",
  "recorded_crossing_hours": null,
  "replay_params": {
@@ -211,6 +210,7 @@
   "reimage_after_onset": 7,
   "reimage_before_onset": 0
  },
+ "target_note": "Passage target 50% in these replays: the held-out C2C12 recordings never pass 57.0%, as Cellpose-SAM measures them. The Analyze examples use 80%.",
  "visits": [
   {
    "anomaly_bin": "0-20",

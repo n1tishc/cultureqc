@@ -380,6 +380,7 @@ export function Integration({ data }) {
 export function Changes({ data }) {
   const clsSyn = row(data, "QC classifier accuracy, synthetic");
   const clsReal = row(data, "QC classifier on real normal frames");
+  const clsRealPct = clsReal.number.match(/^[\d.]+%/)[0];
   const real = row(data, "Anomaly flag vs contamination, bacteria at real size");
   const err = row(data, "Confluency error, Cellpose-SAM");
   const v02 = row(data, "Confluency error, v0.2 headline");
@@ -400,10 +401,10 @@ export function Changes({ data }) {
       src: `${v02.source} · ${err.source}`,
     },
     {
-      was: "The QC classifier led the page: its accuracy and contamination recall, measured on synthetic test tiles.",
+      was: `The QC classifier led the page: accuracy ${clsSyn.number} and contamination recall, measured on synthetic test tiles.`,
       now: (
         <>
-          <b>Demoted.</b> On synthetic tiles: {clsSyn.number}. On real held-out C2C12 normal frames it calls {clsReal.number}. It is still recorded, never used for the action.
+          <b>Demoted.</b> The EfficientNet QC classifier is still recorded in each record but no longer shown or used: it called {clsRealPct} of real normal frames normal.
         </>
       ),
       src: clsReal.source,

@@ -10,11 +10,11 @@ import { verifyChain } from "./lib/verify";
 const NAV = [
   ["reading", "Reading"],
   ["confluency", "Confluency"],
+  ["records", "Records"],
+  ["integration", "Integration"],
   ["timeline", "Timeline"],
   ["limits", "Limits"],
   ["validation", "Validation"],
-  ["records", "Records"],
-  ["integration", "Integration"],
   ["changes", "Since v0.2"],
 ];
 
@@ -98,27 +98,12 @@ export default function App() {
           <div className="wrap" style={{ marginTop: "clamp(12px, 1.4vw, 18px)" }}>
             <Stage examples={ex} verify={verify} liveParity={liveParity} />
             <p className="provenance-line">
-              Everything above is the pipeline’s stored output for real frames, including the demoted classifier’s wrong call. The live console runs the same code on any image you give it.
+              Everything above is the pipeline’s stored output for real frames. The live console runs the same code on any image you give it.
             </p>
           </div>
         </section>
 
         <Confluency data={DATA} />
-
-        <Section
-          id="timeline"
-          title="Across visits: growth, noise, and a passage that waits for review"
-          lede={
-            <p>
-              {DATA.replays.length} held-out C2C12 flasks, recorded time-lapse replayed as visits of {DATA.replays[0].visits[0].fov.length} fields each. The quality gate drops bad images from the trend, the anomaly check flags frames, and a flagged visit holds the passage forecast for a person.
-            </p>
-          }
-        >
-          <Timeline replays={DATA.replays} />
-        </Section>
-
-        <Limits data={DATA} />
-        <Validation data={DATA} />
 
         <Section
           id="records"
@@ -133,6 +118,22 @@ export default function App() {
         </Section>
 
         <Integration data={DATA} />
+
+        <Section
+          id="timeline"
+          title="Across visits: growth, noise, and a passage that waits for review"
+          lede={
+            <p>
+              {DATA.replays.length} held-out C2C12 flasks, recorded time-lapse replayed as visits of {DATA.replays[0].visits[0].fov.length} fields each. The quality gate drops bad images from the trend, the anomaly check flags frames, and a flagged visit holds the passage forecast for a person. {DATA.replays[0].target_note}
+            </p>
+          }
+        >
+          <Timeline replays={DATA.replays} />
+        </Section>
+
+        <Limits data={DATA} />
+        <Validation data={DATA} />
+
         <Changes data={DATA} />
       </main>
 

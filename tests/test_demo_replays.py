@@ -81,7 +81,15 @@ def test_forecast_on_a_flagged_visit_says_the_passage_is_held():
     for name, doc in REPLAYS.items():
         fc = doc["forecast"]
         text = replay_timeline.forecast_text(doc)
-        flagged = fc["status"] == "predicted" and any(
+        flagged = fc["status"] in ("predicted", "suppressed_fault") and any(
             v["visit"] == fc["made_at_visit"] and v.get("anomaly_flag") for v in doc["visits"])
         assert ("Passage held" in text) == flagged, name
     assert "Passage held" in replay_timeline.forecast_text(REPLAYS["contamination"])
+
+
+def test_suppressed_forecast_shows_its_reason_not_a_crossing_time():
+    doc = REPLAYS["contamination"]
+    text = replay_timeline.forecast_text(doc)
+    assert doc["forecast"]["suppressed_reason"] in text and "reaches 50% at" not in text
+    fig, _, _ = replay_timeline.render("contamination", REPLAYS)
+    assert not any("Growth fit" in t.get_text() for t in fig.axes[0].get_legend().get_texts())

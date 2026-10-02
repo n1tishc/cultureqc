@@ -107,6 +107,14 @@ def forecast_text(doc: dict) -> str:
     backtest = (f"backtest: n = {bt['n_sequences']} sequences, {fc['target_pct']:.0f}% target; median absolute "
                 f"error {bt['median_abs_error_h']:.1f} h, 90% interval covered the recorded crossing in "
                 f"{bt['interval_covers']}; {bt['source']}")
+    made_at = next((v for v in doc["visits"] if v["visit"] == fc.get("made_at_visit")), None)
+    held = (f" **Passage held:** the anomaly check flagged the visit this forecast was made at, so under "
+            f"{RULES_VERSION} a passage is sent to human review, not recommended."
+            if made_at is not None and made_at.get("anomaly_flag") else "")
+    if fc["status"] == "suppressed_fault":
+        return (f"**Passage forecast:** not shown. The growth fit made at {fc['made_at_hours']:.0f} h, after the "
+                f"simulated fault's onset, is {fc['suppressed_reason']}, so no crossing time is given.{held} "
+                f"({backtest})")
     if fc["status"] != "predicted":
         return f"**Passage forecast:** none for this flask. ({backtest})"
     lo_hi = (f", 90% interval {fc['interval_hours'][0]:.0f}–{fc['interval_hours'][1]:.0f} h"
@@ -117,11 +125,8 @@ def forecast_text(doc: dict) -> str:
     if doc.get("recorded_crossing_hours") is not None:
         text += (f" Recorded full-frame crossing: {doc['recorded_crossing_hours']:.0f} h. "
                  f"{fc['target_pct']:.0f}% here is as Cellpose-SAM measures it, which reads about 8 pp low (V1).")
-    made_at = next((v for v in doc["visits"] if v["visit"] == fc["made_at_visit"]), None)
-    if made_at is not None and made_at.get("anomaly_flag"):
-        text += (f" **Passage held:** the anomaly check flagged the visit this forecast was made at, so under "
-                 f"{RULES_VERSION} a passage is sent to human review, not recommended. The forecast is the growth "
-                 "fit only, not an action.")
+    if held:
+        text += held + " The forecast is the growth fit only, not an action."
     return text
 
 

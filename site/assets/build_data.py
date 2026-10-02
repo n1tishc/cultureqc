@@ -278,8 +278,6 @@ def build_examples(img_dir):
                         "tile": {"x": tx, "y": ty, "size": TILE_PX},
                         "crop": {"x": tx + (TILE_PX - CROP_PX) // 2, "y": ty + (TILE_PX - CROP_PX) // 2,
                                  "size": CROP_PX, "patch": PATCH_PX}},
-            "classifier": {"flag": e["qc"]["flag"], "confidence": e["qc"]["confidence"],
-                           "model": e["qc"]["model_version"], "used_in_decision": rec["qc_used_in_decision"]},
             "action": e["action"], "action_reason": e["action_reason"], "rationale": e["rationale"],
             "rules": rec["decided_by"], "device": e["device"], "generated_at": e["generated_at"][:10],
             "record": {"index": chain_order.index(ident) + 1, "canonical": canon,
@@ -307,15 +305,21 @@ def build_replays(img_dir):
                 "post_onset": v.get("post_onset", False), "map": f"{IMG_URL}/tl/{name}_{v['visit']:02d}.png",
                 "map_sha256": L["map_sha256"],
             })
-        fc = f.get("fit_curve") or {}
+        # Only a forecast the replay stands behind is drawn; a suppressed one keeps
+        # its fit in the replay JSON but shows its reason instead of a crossing time.
+        shown = f.get("status") == "predicted"
+        fc = (f.get("fit_curve") or {}) if shown else {}
         out.append({
             "scenario": name, "banner": r["banner"], "caption": r["caption"], "credit": r["credit"],
             "sequence": r["base_sequence_id"], "split": r["split"], "fault": r.get("fault"),
             "noise_band": r["noise_band"], "notes": r.get("notes", []), "summary": r["summary"],
+            "target_note": r["target_note"],
             "frame_hw": maps["frame_hw"], "um_per_px": C2C12_UM_PER_PX, "visits": visits,
             "forecast": {"status": f.get("status"), "model": f.get("chosen_model"), "target": f.get("target_pct"), "cut": f.get("cut_pct"),
                          "made_at_visit": f.get("made_at_visit"), "made_at_hours": f.get("made_at_hours"),
-                         "t_star": f.get("t_star_hours"), "interval": f.get("interval_hours"),
+                         "t_star": f.get("t_star_hours") if shown else None,
+                         "interval": f.get("interval_hours") if shown else None,
+                         "suppressed_reason": f.get("suppressed_reason"),
                          "curve": [[r3(h), r3(m)] for h, m in zip(fc.get("hours", []), fc.get("mean", []))],
                          "backtest": f.get("backtest")},
         })
