@@ -268,7 +268,18 @@ def example_checkpoint(records):
 def build_examples(img_dir):
     src = json.load(open(rel("demo", "examples", "examples.json")))
     by_id = {e["id"]: e for e in src["examples"]}
-    chain_order = [e["id"] for e in src["examples"]]
+    # Change records (approved profile changes) open the stored chain, then the readings in export order.
+    changes = src.get("changes", [])
+    chain_order = [f"change{k + 1}" for k in range(len(changes))] + [e["id"] for e in src["examples"]]
+    change_items = []
+    for k, c in enumerate(changes):
+        canon = canonical(c)
+        assert hashlib.sha256(canon.encode()).hexdigest() == c["record_hash"], f"change{k + 1}"
+        change_items.append({"id": f"change{k + 1}", "kind": "change", "label": f"Profile change: {c['after']['id']}",
+                             "subject": c["subject"], "after": c["after"], "before": c["before"], "reason": c["reason"],
+                             "approved_by": c["approved_by"]["name"], "evidence": c["evidence"],
+                             "record": {"index": k + 1, "canonical": canon, "record_hash": c["record_hash"],
+                                        "prev_record_hash": c["prev_record_hash"]}})
     out = []
     for ident in EXAMPLE_ORDER:
         e = by_id[ident]
@@ -294,7 +305,9 @@ def build_examples(img_dir):
                            "band_logit": BAND_LOGIT, "floor": CONF_FLOOR,
                            "ambiguity": boundary_ambiguity(e["confluency"]["confidence"]),
                            "ambiguity_ceiling": boundary_ambiguity(CONF_FLOOR),
-                           "ambiguity_tooltip": AMBIGUITY_TOOLTIP},
+                           "ambiguity_tooltip": AMBIGUITY_TOOLTIP,
+                           "profile": rec.get("confluency_profile"), "interval": rec.get("confluency_interval")},
+            "quality_gate": rec.get("quality_gate"),
             "target": e["target_confluency"],
             "anomaly": {"score": a["score"], "threshold": a["threshold"], "flag": a["flag"], "bin": a["bin_label"],
                         "z": a["z"], "model": a["model_version"],
@@ -308,8 +321,8 @@ def build_examples(img_dir):
             "record": {"index": chain_order.index(ident) + 1, "canonical": canon,
                        "record_hash": rec["record_hash"], "prev_record_hash": rec["prev_record_hash"]},
         })
-    return {"items": out, "chain_order": chain_order, "generated_by": src["generated_by"],
-            "checkpoint": example_checkpoint([e["record"] for e in src["examples"]])}
+    return {"items": out, "changes": change_items, "chain_order": chain_order, "generated_by": src["generated_by"],
+            "checkpoint": example_checkpoint(changes + [e["record"] for e in src["examples"]])}
 
 
 def build_replays(img_dir):

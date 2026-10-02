@@ -2,28 +2,23 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { checkCheckpoint, rewriteFrom, verifyChain } from "../lib/verify";
 import { Icon, actionWord, short } from "./ui";
 
-/* The seven stored records, re-hashed in this browser from the exact bytes
-   culture/records.py hashed. Three switches, one at a time, tamper in memory
-   and re-run the same check: edit one number in record 3; edit it and
-   recompute every later hash; delete the last two records. Each result is also
-   checked against the anchored checkpoint build_data.py made from the stored
-   records (count and head hash), which catches the two a chain alone passes. */
-
-const MODES = [
-  ["edit", "Change one number in record 3"],
-  ["rewrite", "Rewrite record 3 and every hash after it"],
-  ["truncate", "Delete the last two records"],
-];
+/* The stored records, re-hashed in this browser from the exact bytes
+   culture/records.py hashed: any approved profile changes first, then the
+   seven readings. Three switches, one at a time, tamper in memory and re-run
+   the same check: edit one number in the third reading; edit it and recompute
+   every later hash; delete the last two records. Each result is also checked
+   against the anchored checkpoint build_data.py made from the stored records
+   (count and head hash), which catches the two a chain alone passes. */
 
 const FIELDS = [
-  ["image_hash", "SHA-256 of the image file that was read."],
-  ["confluency_map_hash", "SHA-256 of Cellpose-SAM’s probability map, so the map behind the number can be checked later."],
-  ["model_versions", "Segmentation, anomaly and classifier model identifiers."],
-  ["config_hashes", "SHA-256 of each config in force: anomaly thresholds, calibration, detectability matrix, QC settings."],
+  ["record_type", "reading, review or change: one chain holds all three."],
+  ["confluency_profile", "The imaging setup’s calibration: its id and SHA-256, cutoff and error band."],
+  ["confluency_interval", "The reading ± that band, measured on held-out labelled images from the setup."],
+  ["image_hash · confluency_map_hash", "SHA-256 of the image read and of Cellpose-SAM’s probability map, so the map behind the number can be checked later."],
+  ["model_weights_hash · config_hashes", "SHA-256 of each model’s weights and of each config in force."],
   ["decided_by", "The rules version that chose the action."],
-  ["anomaly_used_in_decision", "Whether the anomaly flag could change the action (true since rules_v0.3)."],
-  ["qc_used_in_decision", "The demoted classifier: recorded, false."],
-  ["reviewed_by · review_outcome", "Empty here, left for the platform’s review workflow to fill."],
+  ["flask_id · lineage · imager_id · fov", "The host platform’s keys: vessel, passage history, instrument, field of view."],
+  ["review records", "A person’s decision is a new record pointing to the reading’s hash, with the reviewer, the meaning of the signature and the reason; the reading itself is never edited."],
   ["prev_record_hash · record_hash", "The chain: each record’s hash covers every field above plus the previous record’s hash."],
 ];
 
@@ -88,12 +83,22 @@ function Json({ obj, bad }) {
 }
 
 export default function Records({ examples }) {
-  const byId = useMemo(() => Object.fromEntries(examples.items.map((e) => [e.id, e])), [examples]);
+  const byId = useMemo(
+    () => Object.fromEntries([...examples.items, ...(examples.changes || [])].map((e) => [e.id, e])),
+    [examples],
+  );
   const chain = useMemo(() => examples.chain_order.map((id) => byId[id]), [examples, byId]);
   const cp = examples.checkpoint;
   const n = chain.length;
+  // The tamper target: the third reading (change records, if any, come first).
+  const T = chain.findIndex((e) => e.kind !== "change") + 2;
+  const MODES = [
+    ["edit", `Change one number in record ${T + 1}`],
+    ["rewrite", `Rewrite record ${T + 1} and every hash after it`],
+    ["truncate", "Delete the last two records"],
+  ];
   const [mode, setMode] = useState(null);
-  const [sel, setSel] = useState(2);
+  const [sel, setSel] = useState(T);
   const [view, setView] = useState(null);
 
   useEffect(() => {
@@ -101,8 +106,8 @@ export default function Records({ examples }) {
     (async () => {
       const base = chain.map((e) => e.record);
       let recs = base;
-      if (mode === "edit") recs = base.map((r, i) => (i === 2 ? { ...r, canonical: tamper(r.canonical) } : r));
-      if (mode === "rewrite") recs = await rewriteFrom(base, 2, tamper);
+      if (mode === "edit") recs = base.map((r, i) => (i === T ? { ...r, canonical: tamper(r.canonical) } : r));
+      if (mode === "rewrite") recs = await rewriteFrom(base, T, tamper);
       if (mode === "truncate") recs = base.slice(0, n - 2);
       const res = await verifyChain(recs);
       if (live) setView({ mode, recs, res, anchor: checkCheckpoint(res, cp) });
@@ -110,7 +115,7 @@ export default function Records({ examples }) {
     return () => {
       live = false;
     };
-  }, [chain, mode, cp, n]);
+  }, [chain, mode, cp, n, T]);
 
   const ready = view && view.mode === mode;
   const recs = ready ? view.recs : chain.map((e) => e.record);
@@ -124,14 +129,14 @@ export default function Records({ examples }) {
 
   const pick = (m) => {
     setMode(m);
-    setSel(m === "truncate" ? n - 3 : 2);
+    setSel(m === "truncate" ? n - 3 : T);
   };
 
   let msg = "Re-hashing…";
   if (res && mode === "edit")
-    msg = `Confluency in record 3 raised by 10 points: ${n - nOk} of ${n} records now fail — record 3’s own hash, and record 4’s link to it. Records 1–2 are untouched.`;
+    msg = `Confluency in record ${T + 1} raised by 10 points: ${n - nOk} of ${n} records now fail — record ${T + 1}’s own hash, and record ${T + 2}’s link to it. Records 1–${T} are untouched.`;
   else if (res && mode === "rewrite")
-    msg = `Record 3 raised by 10 points, then its hash and every later hash recomputed: all ${nOk} records verify, so the chain alone passes. Against the checkpoint it fails: record ${n} now hashes to ${short(res[n - 1].computed, 8)}, not the checkpoint’s head ${short(cp.head_hash, 8)}.`;
+    msg = `Record ${T + 1} raised by 10 points, then its hash and every later hash recomputed: all ${nOk} records verify, so the chain alone passes. Against the checkpoint it fails: record ${n} now hashes to ${short(res[n - 1].computed, 8)}, not the checkpoint’s head ${short(cp.head_hash, 8)}.`;
   else if (res && mode === "truncate")
     msg = `Records ${n - 1} and ${n} deleted: the ${nOk} left all verify, so the chain alone passes. Against the checkpoint it fails: ${res.length} records where it counted ${cp.count}.`;
   else if (res)
@@ -161,7 +166,9 @@ export default function Records({ examples }) {
                 {gone ? "—" : rehashed ? <b className="changed">{short(recs[i].record_hash, 8)}</b> : short(recs[i].record_hash, 8)}
               </span>
               <span className="h">
-                {(() => {
+                {e.kind === "change" ? (
+                  <>approved by {e.approved_by}</>
+                ) : (() => {
                   const act = actionWord(e.action).toLowerCase();
                   const now = gone ? e.confluency.pct : JSON.parse(recs[i].canonical).confluency_pct;
                   return now !== e.confluency.pct ? (
@@ -214,7 +221,7 @@ export default function Records({ examples }) {
       </div>
 
       <div className="rec-grid">
-        <Json obj={obj} bad={(mode === "edit" || mode === "rewrite") && shown === 2 ? "confluency_pct" : null} />
+        <Json obj={obj} bad={(mode === "edit" || mode === "rewrite") && shown === T ? "confluency_pct" : null} />
         <div>
           <dl className="fields">
             {FIELDS.map(([k, d]) => (
@@ -228,8 +235,7 @@ export default function Records({ examples }) {
       </div>
 
       <div className="scope">
-        <b>Where this sits for GMP.</b> The chain catches an edited, inserted or reordered record and carries its provenance: image, map, configs and anomaly bank by hash; models and rules by name and version. It is designed to attach to an existing Part 11 audit trail, which is also where its checkpoint belongs, and is not Part 11 compliant on its own. Electronic signatures, access control and the review
-        workflow belong to the platform; <code>reviewed_by</code> and <code>review_outcome</code> are there for it to fill. Field-by-field mapping: <code>docs/audit_mapping.md</code>.
+        <b>Where this sits for GMP.</b> The chain catches an edited, inserted or reordered record and carries its provenance: image, map, profile, configs, weights and anomaly bank by hash; models and rules by name and version. It is designed to be written into a host platform’s Part 11 audit trail, which is also where its checkpoint belongs, and is not Part 11 compliant on its own. Identity, access control and electronic signatures belong to the platform; a review record carries the reviewer, the meaning of the signature and a reference to the platform’s signature record. Field-by-field mapping: <code>docs/audit_mapping.md</code>; the boundary: <code>docs/host_platform.md</code>.
       </div>
     </>
   );

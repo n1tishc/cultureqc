@@ -5,20 +5,27 @@ The rules layer decides; the VLM/template recommends. Both are logged.
 This separation is the GMP-friendly design: a human can read the rules,
 predict the output, and audit the decision without understanding the model.
 
-Order of precedence:
+Order of precedence (rules_v0.5):
   1. QC flag != normal with confidence >= threshold -> human_review
      (skipped when qc_flag is None: the classifier is demoted, configs/qc.yaml)
-  2. Confluency confidence < 0.3, i.e. boundary ambiguity > 0.70 ->
-     human_review (many pixels near the cutoff; a density-sensitive review
-     trigger, not an error estimate: results/confidence_vs_error.md)
-  3. Confluency >= target and hours since passage >= min_hours -> passage,
-     unless the per-image anomaly check flagged the image: then human_review
-     (a flagged flask is never passaged automatically; the flag does not
-     change continue or feed, where nothing irreversible happens)
+  2. The image failed the quality gate -> reimage (no reading is acted on)
+  3. Passage, read against the confluency profile's error band
+     (culture/profiles.py; results/confluency_profiles.md), when enough
+     hours have passed since the last passage:
+       - reading − band >= target: passage, unless the per-image anomaly
+         check flagged the image, then human_review
+       - the band straddles the target: human_review (the reading can't say
+         which side of the target the flask is on)
+       - no band (an uncalibrated imaging setup) and reading >= target:
+         human_review
   4. Hours since feed >= feed_interval -> feed
   5. Else -> continue (keep culturing; no action now)
 
 Versions (decided_by in every record):
+  rules_v0.5  passage reads the profile's error band; the boundary-ambiguity
+              floor no longer decides anything (it tracks density, not error:
+              results/confidence_vs_error.md) and stays in the record; a
+              failed quality gate gives `reimage`.
   rules_v0.4  label-only change: `hold` renamed `continue` (it read as "put
               the flask on hold"), and rule 2's reason names boundary
               ambiguity. Decisions identical to v0.3.
@@ -31,11 +38,13 @@ Usage:
     action, reason = decide(
         confluency_pct=78.2,
         confluency_confidence=0.91,
-        qc_flag="normal",
-        qc_confidence=0.97,
+        qc_flag=None,
+        qc_confidence=None,
         line_config=DEFAULT_CONFIG,
         hours_since_passage=48,
         hours_since_feed=12,
+        band_pp=6.0,
+        quality_passed=True,
     )
 """
 
@@ -44,9 +53,10 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass, field
 
-# Written into every record's decided_by. v0.3 (2026-09-28): the anomaly flag
-# holds a passage for human review (rule 3).
-RULES_VERSION = "rules_v0.4"
+# Written into every record's decided_by. v0.5: passage reads the confluency
+# profile's error band; a failed quality gate gives reimage.
+RULES_VERSION = "rules_v0.5"
+ACTIONS = ("passage", "feed", "continue", "human_review", "reimage")
 
 # ---------------------------------------------------------------------------
 # Per-line configuration
@@ -60,7 +70,7 @@ class LineConfig:
     min_hours_since_passage: float = 24.0
     feed_interval_h: float = 24.0
     qc_review_threshold: float = 0.7
-    confluency_confidence_floor: float = 0.3
+    confluency_confidence_floor: float = 0.3                # rules_v0.4 and earlier; not used from v0.5
 
 
 DEFAULT_CONFIG = LineConfig()
@@ -124,6 +134,9 @@ def decide(
     hours_since_passage: float | None = None,
     hours_since_feed: float | None = None,
     anomaly_flag: bool | None = None,
+    band_pp: float | None = None,
+    quality_passed: bool | None = None,
+    quality_reasons: list[str] | None = None,
 ) -> tuple[str, str]:
     """
     Deterministic action decision.
@@ -131,15 +144,19 @@ def decide(
     qc_flag=None leaves the classifier out of the decision (rule 1 is
     skipped); pass that when it is demoted rather than a made-up "normal".
     anomaly_flag=None (the check was unavailable) leaves rule 3 as a plain
-    confluency check; pass the flag whenever the anomaly check ran.
+    confluency check. band_pp is the confluency profile's 90% error band;
+    None means the imaging setup is uncalibrated. quality_passed=None means
+    no quality gate is calibrated for the setup, so rule 2 is skipped.
+    confluency_confidence (1 − boundary ambiguity) is accepted for the
+    record and no longer decides anything.
 
     Returns:
-        (action, reason) where action is one of:
-        "human_review", "passage", "feed", "continue"
+        (action, reason) where action is one of ACTIONS.
     """
     cfg = line_config or DEFAULT_CONFIG
+    T = cfg.target_confluency
 
-    # 1. QC flag check (highest priority)
+    # 1. QC flag check (highest priority; skipped while the classifier is demoted)
     if qc_flag is not None and qc_flag != "normal" and qc_confidence >= cfg.qc_review_threshold:
         return (
             "human_review",
@@ -148,36 +165,38 @@ def decide(
             f"Automated decisions paused until human review."
         )
 
-    # 2. Many pixels near the cutoff (boundary ambiguity above the trigger)
-    if confluency_confidence < cfg.confluency_confidence_floor:
-        return (
-            "human_review",
-            f"Boundary ambiguity {boundary_ambiguity(confluency_confidence):.2f} is above "
-            f"{boundary_ambiguity(cfg.confluency_confidence_floor):.2f} (record confidence "
-            f"{confluency_confidence:.2f} below floor {cfg.confluency_confidence_floor:.2f}): "
-            f"many pixels sit near the cell/background cutoff; recommend manual inspection."
-        )
+    # 2. Quality gate: an image that failed it is not read for a decision
+    if quality_passed is False:
+        why = ", ".join(r.replace("_", " ") for r in (quality_reasons or [])) or "quality gate failed"
+        return ("reimage", f"Image failed the quality gate ({why}); re-image before any decision.")
 
-    # 3. Passage check
-    passage_ready = confluency_pct >= cfg.target_confluency
-    hours_ok = (
-        hours_since_passage is None
-        or hours_since_passage >= cfg.min_hours_since_passage
-    )
-    if passage_ready and hours_ok and anomaly_flag:
+    # 3. Passage, against the error band
+    hours_ok = hours_since_passage is None or hours_since_passage >= cfg.min_hours_since_passage
+    since = f", {hours_since_passage:.0f}h since last passage" if hours_since_passage is not None else ""
+    if hours_ok and band_pp is None and confluency_pct >= T:
+        held = " The anomaly check also flagged this image." if anomaly_flag else ""
         return (
             "human_review",
-            f"Confluency {confluency_pct:.1f}% >= target {cfg.target_confluency:.0f}%, "
-            f"but the anomaly check flagged this image; passage held for human review."
+            f"Confluency {confluency_pct:.1f}% >= target {T:.0f}%, but this imaging setup has no "
+            f"calibration profile, so the reading has no measured error; passage needs a person.{held}"
         )
-    if passage_ready and hours_ok:
-        return (
-            "passage",
-            f"Confluency {confluency_pct:.1f}% >= target {cfg.target_confluency:.0f}%"
-            + (f", {hours_since_passage:.0f}h since last passage"
-               if hours_since_passage is not None else "")
-            + "."
-        )
+    if hours_ok and band_pp is not None:
+        lo, hi = confluency_pct - band_pp, confluency_pct + band_pp
+        if lo >= T and anomaly_flag:
+            return (
+                "human_review",
+                f"Confluency {confluency_pct:.1f}% (±{band_pp:.1f} pp) >= target {T:.0f}%, "
+                f"but the anomaly check flagged this image; passage held for human review."
+            )
+        if lo >= T:
+            return ("passage", f"Confluency {confluency_pct:.1f}% (±{band_pp:.1f} pp) >= target {T:.0f}%{since}.")
+        if hi >= T:
+            return (
+                "human_review",
+                f"Confluency {confluency_pct:.1f}% is within its error band (±{band_pp:.1f} pp) of the "
+                f"target {T:.0f}%: the reading can't tell which side of the target the flask is on; "
+                f"recommend a person checks."
+            )
 
     # 4. Feed check
     if hours_since_feed is not None and hours_since_feed >= cfg.feed_interval_h:
@@ -185,12 +204,8 @@ def decide(
             "feed",
             f"Feed interval {cfg.feed_interval_h:.0f}h elapsed "
             f"({hours_since_feed:.0f}h since last feed). "
-            f"Confluency {confluency_pct:.1f}% (target {cfg.target_confluency:.0f}%)."
+            f"Confluency {confluency_pct:.1f}% (target {T:.0f}%)."
         )
 
     # 5. Default: continue culturing
-    return (
-        "continue",
-        f"Confluency {confluency_pct:.1f}% below target {cfg.target_confluency:.0f}%. "
-        f"No action needed."
-    )
+    return ("continue", f"Confluency {confluency_pct:.1f}% below target {T:.0f}%. No action needed.")

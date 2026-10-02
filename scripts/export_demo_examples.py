@@ -70,7 +70,7 @@ sys.path.insert(0, REPO)
 from culture.cache import probmap_sha256  # noqa: E402
 from culture.rationale import generate_rationale  # noqa: E402
 from culture.rules import RULES_VERSION, LineConfig, decide  # noqa: E402
-from culture.records import SCHEMA_VERSION, RecordWriter, hash_file  # noqa: E402
+from culture.records import SCHEMA_VERSION, RecordWriter, change_event, hash_file  # noqa: E402
 from culture.profiles import UNCALIBRATED, get_profile, load_profiles  # noqa: E402
 from demo.analysis import analyze_image, build_record  # noqa: E402
 
@@ -213,10 +213,15 @@ def main():
     ap.add_argument("--only", nargs="*", help="example ids to (re)run; the rest are kept from examples.json")
     ap.add_argument("--rederive", action="store_true",
                     help="re-derive decisions from the stored outputs under the current rules; no model run")
+    ap.add_argument("--change-approved-by", metavar="NAME",
+                    help="start the stored chain with one change record per confluency profile the examples use, "
+                         "approved by NAME (only when the owner has approved putting those profiles live)")
     args = ap.parse_args()
     if args.rederive:
         rederive(datetime.now(timezone.utc).date().isoformat())
         return
+    if args.change_approved_by and args.only:
+        ap.error("--change-approved-by re-chains every record; run it without --only")
 
     import torch
 
@@ -229,6 +234,18 @@ def main():
     device = ("cuda" if torch.cuda.is_available() else
               "mps" if os.environ.get("CULTUREQC_DEVICE") == "mps" and torch.backends.mps.is_available() else "cpu")
     writer = RecordWriter(os.path.join(tempfile.mkdtemp(prefix="cultureqc_examples_"), "records.jsonl"))
+    changes = []
+    if args.change_approved_by:
+        uncal = get_profile(UNCALIBRATED)
+        evidence = [{"path": p, "sha256": hash_file(os.path.join(REPO, p))}
+                    for p in ("results/confluency_profiles.md", "results/confluency_profiles.json")]
+        for pid in sorted({profile_for(e["kind"]) for e in examples} - {UNCALIBRATED}):
+            prof = get_profile(pid)
+            changes.append(writer.append(change_event(
+                "confluency_profile", {"id": uncal.id, "sha256": uncal.sha256}, {"id": prof.id, "sha256": prof.sha256},
+                f"Calibration profile for this imaging setup ({prof.status}): cutoff {prof.cutoff:+g}, 90% error band "
+                f"±{prof.band_pp:g} pp, measured on held-out labelled images (results/confluency_profiles.md).",
+                evidence, "owner", args.change_approved_by)))
     out = []
     for e in examples:
         if args.only and e["id"] not in args.only:
@@ -279,6 +296,7 @@ def main():
         "note": ("Precomputed by the console's own analysis code (demo/analysis.py), once, before the app "
                  "started. Pressing Analyze runs the same image live."),
         "platform": f"{platform.system()} {platform.machine()}, python {platform.python_version()}",
+        "changes": changes,
         "examples": out,
     }
     with open(OUT_JSON, "w") as f:

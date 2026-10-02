@@ -103,7 +103,14 @@ export function HowItWorks({ data }) {
           </Step>
           <Step n="2" title="Confluency" art={<MiniFrame ex={ex} prob />}>
             <p>
-              Cellpose-SAM’s cell-probability map, in cyan. <b className="num">{c.pct.toFixed(1)}%</b> of pixels sit above the cell cutoff. Boundary ambiguity <b className="num">{c.ambiguity.toFixed(2)}</b>; above {c.ambiguity_ceiling.toFixed(2)}, a person decides.
+              Cellpose-SAM’s cell-probability map, in cyan. <b className="num">{c.pct.toFixed(1)}%</b> of pixels sit above the cutoff of this microscope’s calibration profile
+              {c.interval ? (
+                <>
+                  , with a 90% error band of <b className="num">{c.interval[0].toFixed(1)}–{c.interval[1].toFixed(1)}%</b> measured on held-out labelled images. If the band includes the passage target, a person decides.
+                </>
+              ) : (
+                <>. This setup has no calibration profile, so the reading has no error band and a passage goes to a person.</>
+              )}
             </p>
           </Step>
           <Step n="3" title="Anomaly check" art={<MiniTile ex={ex} />}>

@@ -1,182 +1,724 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "cultureQC Record",
-  "description": "One auditable record per analysed brightfield image. Numbers come from models; the VLM/template only explains and recommends.",
-  "type": "object",
-  "required": [
-    "record_id",
-    "prev_record_hash",
-    "schema_version",
-    "flask_id",
-    "cell_line",
-    "captured_at",
-    "analysed_at",
-    "image_ref",
-    "image_hash",
-    "confluency_pct",
-    "confluency_confidence",
-    "confluency_method",
-    "qc_flag",
-    "qc_confidence",
-    "recommended_action",
-    "action_reason",
-    "decided_by",
-    "model_versions"
-  ],
-  "properties": {
-    "record_id": {
-      "type": "string",
-      "description": "UUID v4 for this record"
-    },
-    "prev_record_hash": {
-      "type": "string",
-      "description": "SHA-256 of the previous record's canonical JSON. Genesis record uses 64 zeros."
-    },
-    "schema_version": {
-      "type": "string",
-      "const": "0.3",
-      "description": "0.3: this schema now matches what the pipeline writes (anomaly_*, config_hashes, confluency_map_hash, record_hash, confluency_method values, continue). Records stamped 0.2 were written before it was aligned."
-    },
-    "record_hash": {
-      "type": "string",
-      "description": "SHA-256 of this record's canonical JSON (sorted keys, compact, ASCII) without record_hash itself. Added by culture/records.py::RecordWriter.append."
-    },
-    "flask_id": {
-      "type": "string"
-    },
-    "cell_line": {
-      "type": "string"
-    },
-    "protocol_stage": {
-      "type": ["string", "null"]
-    },
-    "captured_at": {
-      "type": "string",
-      "format": "date-time"
-    },
-    "analysed_at": {
-      "type": "string",
-      "format": "date-time"
-    },
-    "image_ref": {
-      "type": "string",
-      "description": "Path or URI to the source image"
-    },
-    "image_hash": {
-      "type": "string",
-      "description": "SHA-256 of the raw image bytes"
-    },
-    "pixel_size_um": {
-      "type": ["number", "null"]
-    },
-    "confluency_pct": {
-      "type": "number",
-      "minimum": 0,
-      "maximum": 100
-    },
-    "confluency_confidence": {
-      "type": "number",
-      "minimum": 0,
-      "maximum": 1,
-      "description": "1 - min(1, 4 x share of pixels within 1 logit of the Cellpose-SAM cutoff). Shown as boundary ambiguity (1 - this value): it tracks density and does not predict the reading's error (results/confidence_vs_error.md). The rules send the image to review below 0.30. Not a probability that the reading is right."
-    },
-    "confluency_method": {
-      "type": "string",
-      "enum": ["probmap", "instance", "threshold"],
-      "description": "What culture/seg.py writes: Cellpose-SAM probability map (the default), its instance masks, or the threshold baseline."
-    },
-    "confluency_map_hash": {
-      "type": ["string", "null"],
-      "description": "SHA-256 of the Cellpose-SAM cell-probability map the confluency was counted from, at 1/4 resolution as int16 logits x 1000 (culture.cache.probmap_sha256); null when the record has no map"
-    },
-    "qc_flag": {
-      "type": "string",
-      "enum": ["normal", "contamination_suspected", "detachment", "image_quality"]
-    },
-    "qc_confidence": {
-      "type": "number",
-      "minimum": 0,
-      "maximum": 1
-    },
-    "qc_severity": {
-      "type": ["string", "null"],
-      "enum": ["early", "mid", "late", null]
-    },
-    "qc_evidence_bbox": {
-      "type": ["array", "null"],
-      "items": {"type": "integer"},
-      "minItems": 4,
-      "maxItems": 4,
-      "description": "[x, y, w, h] in tile coordinates"
-    },
-    "qc_rationale": {
-      "type": ["string", "null"],
-      "description": "<=2 sentences, references image regions"
-    },
-    "qc_calibrated": {
-      "type": "boolean",
-      "description": "qc_confidence is temperature-scaled (configs/calibration.yaml)"
-    },
-    "qc_used_in_decision": {
-      "type": "boolean",
-      "description": "false while the classifier is demoted (configs/qc.yaml): recorded, not used by the rules"
-    },
-    "anomaly_status": {
-      "type": "string",
-      "enum": ["ok", "unavailable"],
-      "description": "per-image anomaly check (culture/anomaly.py); unavailable when the banks are missing or unverified"
-    },
-    "anomaly_score": {"type": ["number", "null"]},
-    "anomaly_z": {"type": ["number", "null"]},
-    "anomaly_bin": {"type": ["string", "null"]},
-    "anomaly_threshold": {"type": ["number", "null"]},
-    "anomaly_flag": {"type": ["boolean", "null"]},
-    "anomaly_bank_sha256": {"type": ["string", "null"]},
-    "anomaly_used_in_decision": {
-      "type": "boolean",
-      "description": "true when the anomaly check ran and its flag was an input to the rules (since rules_v0.3: a flag turns passage into human_review; continue and feed are unchanged); false when the check was unavailable"
-    },
-    "growth_trend": {
-      "type": ["string", "null"],
-      "enum": ["rising", "flat", "falling", "unknown", null]
-    },
-    "eta_to_target_hours": {
-      "type": ["number", "null"]
-    },
-    "recommended_action": {
-      "type": "string",
-      "enum": ["passage", "feed", "continue", "human_review"],
-      "description": "rules_v0.4 renamed hold to continue (label only; decisions identical to rules_v0.3). Records decided under rules_v0.3 or earlier say hold."
-    },
-    "action_reason": {
-      "type": "string"
-    },
-    "decided_by": {
-      "type": "string"
-    },
-    "model_versions": {
+  "description": "One chain, three record types: a reading per analysed image, a review per person's decision on a reading (linked by hash; the reading is never edited), and a change per change-controlled update. Numbers come from models; the rules decide; people review.",
+  "oneOf": [
+    {
       "type": "object",
+      "title": "reading",
+      "required": [
+        "record_id",
+        "prev_record_hash",
+        "schema_version",
+        "flask_id",
+        "cell_line",
+        "captured_at",
+        "analysed_at",
+        "image_ref",
+        "image_hash",
+        "confluency_pct",
+        "confluency_confidence",
+        "confluency_method",
+        "qc_flag",
+        "qc_confidence",
+        "recommended_action",
+        "action_reason",
+        "decided_by",
+        "model_versions",
+        "record_type",
+        "confluency_profile",
+        "confluency_interval",
+        "quality_gate",
+        "recovery_request"
+      ],
       "properties": {
-        "seg": {"type": "string"},
-        "qc": {"type": "string"},
-        "dino": {"type": "string"},
-        "vlm": {"type": ["string", "null"]}
+        "record_id": {
+          "type": "string",
+          "description": "UUID v4 for this record"
+        },
+        "prev_record_hash": {
+          "type": "string",
+          "description": "SHA-256 of the previous record's canonical JSON. Genesis record uses 64 zeros."
+        },
+        "schema_version": {
+          "type": "string",
+          "const": "0.4",
+          "description": "0.4: three record types in one chain (reading, review, change); a reading names its confluency profile and error band; reviews are separate records; host-platform keys (lineage, imager, field of view, environment); reimage action; weights hashed."
+        },
+        "record_hash": {
+          "type": "string",
+          "description": "SHA-256 of this record's canonical JSON (sorted keys, compact, ASCII) without record_hash itself. Added by culture/records.py::RecordWriter.append."
+        },
+        "flask_id": {
+          "type": "string",
+          "description": "Vessel / labware ID, from the host platform"
+        },
+        "cell_line": {
+          "type": "string"
+        },
+        "protocol_stage": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Protocol step that took the image, from the host platform"
+        },
+        "captured_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "analysed_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "image_ref": {
+          "type": "string",
+          "description": "Path or URI to the source image"
+        },
+        "image_hash": {
+          "type": "string",
+          "description": "SHA-256 of the raw image bytes"
+        },
+        "pixel_size_um": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "confluency_pct": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "confluency_confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "1 − boundary ambiguity. Recorded; decides nothing since rules_v0.5 (it tracks density, not the reading's error: results/confidence_vs_error.md)"
+        },
+        "confluency_method": {
+          "type": "string",
+          "enum": [
+            "probmap",
+            "instance",
+            "threshold"
+          ],
+          "description": "What culture/seg.py writes: Cellpose-SAM probability map (the default), its instance masks, or the threshold baseline."
+        },
+        "confluency_map_hash": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "SHA-256 of the Cellpose-SAM cell-probability map the confluency was counted from, at 1/4 resolution as int16 logits x 1000 (culture.cache.probmap_sha256); null when the record has no map"
+        },
+        "qc_flag": {
+          "type": "string",
+          "enum": [
+            "normal",
+            "contamination_suspected",
+            "detachment",
+            "image_quality"
+          ]
+        },
+        "qc_confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "qc_severity": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "early",
+            "mid",
+            "late",
+            null
+          ]
+        },
+        "qc_evidence_bbox": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "integer"
+          },
+          "minItems": 4,
+          "maxItems": 4,
+          "description": "[x, y, w, h] in tile coordinates"
+        },
+        "qc_rationale": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "<=2 sentences, references image regions"
+        },
+        "qc_calibrated": {
+          "type": "boolean",
+          "description": "qc_confidence is temperature-scaled (configs/calibration.yaml)"
+        },
+        "qc_used_in_decision": {
+          "type": "boolean",
+          "description": "false while the classifier is demoted (configs/qc.yaml): recorded, not used by the rules"
+        },
+        "anomaly_status": {
+          "type": "string",
+          "enum": [
+            "ok",
+            "unavailable"
+          ],
+          "description": "per-image anomaly check (culture/anomaly.py); unavailable when the banks are missing or unverified"
+        },
+        "anomaly_score": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "anomaly_z": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "anomaly_bin": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "anomaly_threshold": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "anomaly_flag": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "anomaly_bank_sha256": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "anomaly_used_in_decision": {
+          "type": "boolean",
+          "description": "true when the anomaly check ran and its flag was an input to the rules (since rules_v0.3: a flag turns passage into human_review; continue and feed are unchanged); false when the check was unavailable"
+        },
+        "growth_trend": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "rising",
+            "flat",
+            "falling",
+            "unknown",
+            null
+          ]
+        },
+        "eta_to_target_hours": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "recommended_action": {
+          "type": "string",
+          "enum": [
+            "passage",
+            "feed",
+            "continue",
+            "human_review",
+            "reimage"
+          ],
+          "description": "rules_v0.5 added reimage. rules_v0.4 renamed hold to continue (label only)."
+        },
+        "action_reason": {
+          "type": "string"
+        },
+        "decided_by": {
+          "type": "string"
+        },
+        "model_versions": {
+          "type": "object",
+          "properties": {
+            "seg": {
+              "type": "string"
+            },
+            "qc": {
+              "type": "string"
+            },
+            "dino": {
+              "type": "string"
+            },
+            "vlm": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        "model_weights_hash": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "description": "SHA-256 of each model's weights file, keyed like model_versions; null where the file was not found"
+        },
+        "config_hashes": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "SHA-256 of each config file that shaped this record, keyed by file name"
+        },
+        "record_type": {
+          "const": "reading"
+        },
+        "lineage": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "From the host platform",
+          "properties": {
+            "passage_number": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "parent_flask_id": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "imager_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The instrument that took the image, from the host platform"
+        },
+        "fov": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "Field of view within the vessel",
+          "properties": {
+            "index": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "x_mm": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "y_mm": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "environment": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "Snapshot supplied by the host platform at capture (e.g. temperature, CO2); stored as given, not used by cultureQC"
+        },
+        "confluency_profile": {
+          "type": "object",
+          "required": [
+            "id",
+            "sha256",
+            "status",
+            "cutoff",
+            "band_pp"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "sha256": {
+              "type": "string"
+            },
+            "status": {
+              "enum": [
+                "validated",
+                "failed",
+                "in_domain_check",
+                "uncalibrated"
+              ]
+            },
+            "cutoff": {
+              "type": "number"
+            },
+            "band_pp": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "description": "configs/confluency_profiles.yaml entry the reading used (culture/profiles.py)"
+        },
+        "confluency_interval": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "number"
+          },
+          "minItems": 2,
+          "maxItems": 2,
+          "description": "Reading ± the profile's 90% error band, clipped to 0-100; null for an uncalibrated setup"
+        },
+        "anomaly_bin_confluency_pct": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Confluency at Cellpose's default cutoff, which picks the anomaly check's density bin (its banks and thresholds were calibrated at that cutoff)"
+        },
+        "quality_gate": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "null: no quality gate is calibrated for this imaging setup",
+          "properties": {
+            "passed": {
+              "type": "boolean"
+            },
+            "reasons": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "thresholds": {
+              "type": "string"
+            },
+            "blur": {
+              "type": "number"
+            },
+            "mean_intensity": {
+              "type": "number"
+            },
+            "uniformity": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "passed",
+            "reasons",
+            "thresholds"
+          ],
+          "additionalProperties": false
+        },
+        "recovery_request": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "Machine-readable request to the host scheduler",
+          "properties": {
+            "action": {
+              "const": "reimage"
+            },
+            "reasons": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "action",
+            "reasons"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "title": "review",
+      "additionalProperties": false,
+      "required": [
+        "record_id",
+        "prev_record_hash",
+        "schema_version",
+        "record_type",
+        "recorded_at",
+        "reviews_record_id",
+        "reviews_record_hash",
+        "recommended_action",
+        "decision",
+        "final_action",
+        "reviewer",
+        "signature_meaning",
+        "signed_at"
+      ],
+      "properties": {
+        "record_id": {
+          "type": "string"
+        },
+        "prev_record_hash": {
+          "type": "string"
+        },
+        "record_hash": {
+          "type": "string"
+        },
+        "schema_version": {
+          "type": "string",
+          "const": "0.4"
+        },
+        "recorded_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "record_type": {
+          "const": "review"
+        },
+        "reviews_record_id": {
+          "type": "string"
+        },
+        "reviews_record_hash": {
+          "type": "string"
+        },
+        "flask_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "recommended_action": {
+          "enum": [
+            "passage",
+            "feed",
+            "continue",
+            "human_review",
+            "reimage"
+          ]
+        },
+        "decision": {
+          "enum": [
+            "accept",
+            "override"
+          ]
+        },
+        "final_action": {
+          "enum": [
+            "passage",
+            "feed",
+            "continue",
+            "human_review",
+            "reimage"
+          ]
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "reviewer": {
+          "type": "object",
+          "required": [
+            "id",
+            "name"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "signature_meaning": {
+          "enum": [
+            "review",
+            "approval",
+            "rejection"
+          ],
+          "description": "21 CFR 11.50(a)(3): the meaning of the signature"
+        },
+        "signed_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "host_signature_ref": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The host platform's e-signature record; cultureQC does not sign"
+        }
       }
     },
-    "model_weights_hash": {
-      "type": ["object", "null"]
-    },
-    "config_hashes": {
+    {
       "type": "object",
-      "additionalProperties": {"type": "string"},
-      "description": "SHA-256 of each config file that shaped this record, keyed by file name"
-    },
-    "reviewed_by": {
-      "type": ["string", "null"]
-    },
-    "review_outcome": {
-      "type": ["string", "null"]
+      "title": "change",
+      "additionalProperties": false,
+      "required": [
+        "record_id",
+        "prev_record_hash",
+        "schema_version",
+        "record_type",
+        "recorded_at",
+        "subject",
+        "before",
+        "after",
+        "reason",
+        "evidence",
+        "approved_by",
+        "effective_from"
+      ],
+      "properties": {
+        "record_id": {
+          "type": "string"
+        },
+        "prev_record_hash": {
+          "type": "string"
+        },
+        "record_hash": {
+          "type": "string"
+        },
+        "schema_version": {
+          "type": "string",
+          "const": "0.4"
+        },
+        "recorded_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "record_type": {
+          "const": "change"
+        },
+        "subject": {
+          "enum": [
+            "confluency_profile",
+            "rules",
+            "model",
+            "config"
+          ]
+        },
+        "before": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "required": [
+            "id",
+            "sha256"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "sha256": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "after": {
+          "type": "object",
+          "required": [
+            "id",
+            "sha256"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "sha256": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "reason": {
+          "type": "string"
+        },
+        "evidence": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "path",
+              "sha256"
+            ],
+            "properties": {
+              "path": {
+                "type": "string"
+              },
+              "sha256": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "approved_by": {
+          "type": "object",
+          "required": [
+            "id",
+            "name"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "effective_from": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
     }
-  },
-  "additionalProperties": false
+  ]
 }
