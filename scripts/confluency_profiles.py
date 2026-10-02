@@ -200,11 +200,30 @@ def rle_decode(rle: list[int], h: int, w: int) -> np.ndarray:
     return flat.reshape(h, w)
 
 
-def msc_items(msc_dir: str | None) -> list[dict]:
-    """Filled in once the dataset's layout is known (donor ids, one mask or three)."""
-    if not msc_dir or not os.path.isdir(msc_dir):
+MSC = os.path.join("data", "sources", "msc")
+
+
+def msc_items(msc_dir: str | None = None) -> list[dict]:
+    """Solopov et al. 2025 (Kaggle maximsolopov/msu-smooth-1-20): images/<pop>_part_<p>_tile_<t>.png and
+    masks/<same>_mask.png (0/255). Leave one population out: every image is a test image of the fold that
+    leaves its population out, and a calibration image of the other folds."""
+    msc_dir = msc_dir or MSC
+    if not os.path.isdir(os.path.join(msc_dir, "images")):
         return []
-    raise NotImplementedError("MSC loader: inspect the downloaded layout first")
+    out = []
+    for n in sorted(os.listdir(os.path.join(msc_dir, "images"))):
+        out.append({"setup": "msc", "name": n, "split": "lopo", "unit": n.split("_part_")[0],
+                    "group": n.split("_part_")[0], "path": os.path.join(msc_dir, "images", n),
+                    "mask": os.path.join(msc_dir, "masks", n.replace(".png", "_mask.png"))})
+    return out
+
+
+def msc_gt(items: list[dict]) -> None:
+    import cv2
+    for i in items:
+        m = cv2.imread(i["mask"], cv2.IMREAD_GRAYSCALE)
+        assert m is not None, i["mask"]
+        i["_gt"] = float((m > 0).mean() * 100)
 
 
 def item_map(i: dict) -> np.ndarray:
@@ -309,7 +328,7 @@ def perturb(img: np.ndarray, kind: str) -> np.ndarray:
 def cmd_robust(a):
     """Readings on perturbed copies of up to 40 test images; no ground truth read."""
     import cv2
-    items = [i for i in load_items(a.setup, labels=a.labels, msc_dir=a.msc_dir) if i["split"] == "test"]
+    items = [i for i in load_items(a.setup, msc_dir=a.msc_dir) if i["split"] in ("test", "lopo")]
     rng = np.random.default_rng(0)
     pick_ = sorted(rng.permutation(len(items))[:40]) if len(items) > 40 else range(len(items))
     os.makedirs(WORK, exist_ok=True)
@@ -343,8 +362,17 @@ def readings(setup: str, items: list[dict]) -> list[dict]:
     return rows
 
 
-def fit(rows: list[dict]) -> dict:
-    cal = [r for r in rows if r["split"] == "calib"]
+def folds(rows: list[dict]) -> list[tuple[list[int], list[int]]]:
+    """(calibration, test) row indices: one fold for a fixed split; for MSC one fold per left-out population."""
+    if all(r["split"] == "lopo" for r in rows):
+        units = sorted({r["unit"] for r in rows})
+        return [([k for k, r in enumerate(rows) if r["unit"] != u], [k for k, r in enumerate(rows) if r["unit"] == u])
+                for u in units]
+    return [([k for k, r in enumerate(rows) if r["split"] == "calib"], [k for k, r in enumerate(rows) if r["split"] == "test"])]
+
+
+def fit(rows: list[dict], idx: list[int] | None = None) -> dict:
+    cal = [rows[k] for k in idx] if idx is not None else [r for r in rows if r["split"] in ("calib", "lopo")]
     R = np.array([r["curve"] for r in cal])
     gt = np.array([r["gt"] for r in cal])
     j = pick(R, gt)
@@ -353,51 +381,65 @@ def fit(rows: list[dict]) -> dict:
 
 
 def evaluate(rows, prof, all_profiles, robust):
-    test = [r for r in rows if r["split"] == "test"]
+    """Every test image is read at the cutoff and band of the fold it is held out of."""
+    fs = folds(rows)
+    test_idx, J, Q = [], [], []
+    fold_fits = []
+    for cal, test in fs:
+        f = fit(rows, cal)
+        fold_fits.append(f)
+        test_idx += test
+        J += [f["j"]] * len(test)
+        Q += [np.nan if f["band_pp"] is None else f["band_pp"]] * len(test)
+    test = [rows[k] for k in test_idx]
     R = np.array([r["curve"] for r in test])
     gt = np.array([r["gt"] for r in test])
     c0 = np.array([r["conf0"] for r in test])
-    j, q = prof["j"], prof["band_pp"]
-    out = {"shipped": stats(R[:, I0], gt), "profile": stats(R[:, j], gt), "bands": [], "calls": {}, "transfer": {}}
+    J, Q = np.array(J), np.array(Q)
+    rp = R[np.arange(len(test)), J]                      # reading at the fold's cutoff
+    has_q = not np.isnan(Q).any()
+    within = np.abs(rp - gt) <= Q
+    out = {"folds": [{k: v for k, v in f.items() if k != "j"} for f in fold_fits], "n_test": len(test),
+           "shipped": stats(R[:, I0], gt), "profile": stats(rp, gt), "bands": [], "calls": {}, "transfer": {}}
     for lo, hi in GT_BANDS:
         m = (gt >= lo) & (gt < hi)
-        cov = float((np.abs(R[m, j] - gt[m]) <= q).mean()) if (q is not None and m.any()) else None
         out["bands"].append({"band": f"{lo}-{min(hi, 100):.0f}%", "n": int(m.sum()),
                              "mae0": float(np.abs(R[m, I0] - gt[m]).mean()) if m.any() else None,
                              "bias0": float((R[m, I0] - gt[m]).mean()) if m.any() else None,
-                             "mae": float(np.abs(R[m, j] - gt[m]).mean()) if m.any() else None,
-                             "bias": float((R[m, j] - gt[m]).mean()) if m.any() else None, "coverage": cov})
-    out["coverage"] = float((np.abs(R[:, j] - gt) <= q).mean()) if q is not None else None
+                             "mae": float(np.abs(rp[m] - gt[m]).mean()) if m.any() else None,
+                             "bias": float((rp[m] - gt[m]).mean()) if m.any() else None,
+                             "coverage": float(within[m].mean()) if (has_q and m.any()) else None})
+    out["coverage"] = float(within.mean()) if has_q else None
     for T in TARGETS:
-        cp = call(R[:, j], q, T)
+        cp = np.where(rp - Q >= T, "passage", np.where(rp + Q < T, "continue", "review")) if has_q \
+            else call(rp, None, T)
         cs = shipped_call(R[:, I0], c0, T)
         ap, np_ = agreement(cp, gt, T)
         as_, ns = agreement(cs, gt, T)
         out["calls"][T] = {"profile_review": float((cp == "review").mean()), "profile_agree": ap, "profile_n": np_,
-                           "shipped_review": float((cs == "review").mean()), "shipped_agree": as_, "shipped_n": ns,
-                           "n_near": int(((gt >= T - 20) & (gt <= 100)).sum())}
+                           "shipped_review": float((cs == "review").mean()), "shipped_agree": as_, "shipped_n": ns}
     for name, other in all_profiles.items():
         out["transfer"][name] = float(np.abs(R[:, other["j"]] - gt).mean())
-    # learning curve
-    cal = [r for r in rows if r["split"] == "calib"]
-    Rc = np.array([r["curve"] for r in cal])
-    gc = np.array([r["gt"] for r in cal])
+    # learning curve: per fold, the cutoff picked from k random calibration images; MAE over all test images
     rng = np.random.default_rng(0)
     out["learning"] = {}
     for k in (2, 5, 10, 20):
-        if k > len(cal):
+        if any(k > len(cal) for cal, _ in fs):
             continue
         maes = []
         for _ in range(20):
-            s = rng.choice(len(cal), k, replace=False)
-            jj = pick(Rc[s], gc[s])
-            maes.append(float(np.abs(R[:, jj] - gt).mean()))
+            err = []
+            for cal, tst in fs:
+                s_ = rng.choice(cal, k, replace=False)
+                jj = pick(np.array([rows[i]["curve"] for i in s_]), np.array([rows[i]["gt"] for i in s_]))
+                err += [abs(rows[i]["curve"][jj] - rows[i]["gt"]) for i in tst]
+            maes.append(float(np.mean(err)))
         out["learning"][k] = (float(np.median(maes)), float(np.quantile(maes, 0.9)))
     if robust:
-        byname = {r["name"]: r for r in test}
+        pos = {r["name"]: n for n, r in enumerate(test)}
         out["robust"] = {}
         for kind in ("dim", "bright", "blur"):
-            d = [abs(v[kind][j] - byname[n]["curve"][j]) for n, v in robust.items() if n in byname]
+            d = [abs(v[kind][J[pos[nm]]] - test[pos[nm]]["curve"][J[pos[nm]]]) for nm, v in robust.items() if nm in pos]
             out["robust"][kind] = (float(np.median(d)), len(d)) if d else None
     # acceptance
     m6090 = (gt >= 60) & (gt < 90)
@@ -405,7 +447,7 @@ def evaluate(rows, prof, all_profiles, robust):
     A = {}
     A["A1"] = ("pass" if out["profile"]["mae"] <= 5 else "fail", f"{out['profile']['mae']:.2f} pp")
     if m6090.sum() >= 10:
-        e = R[m6090, j] - gt[m6090]
+        e = rp[m6090] - gt[m6090]
         A["A2"] = ("pass" if np.abs(e).mean() <= 5 else "fail", f"{np.abs(e).mean():.2f} pp, n = {int(m6090.sum())}")
         A["A3"] = ("pass" if abs(e.mean()) <= 3 else "fail", f"{e.mean():+.2f} pp, n = {int(m6090.sum())}")
     else:
@@ -416,9 +458,11 @@ def evaluate(rows, prof, all_profiles, robust):
                    f"{c80['profile_agree']:.1%} of {c80['profile_n']}, review {c80['profile_review']:.1%}")
     else:
         A["A4"] = ("not measurable", f"{near} test images at 60–100%")
-    A["A5"] = (("pass" if out["coverage"] >= 0.85 else "fail", f"{out['coverage']:.1%}") if q is not None
+    A["A5"] = (("pass" if out["coverage"] >= 0.85 else "fail", f"{out['coverage']:.1%}") if has_q
                else ("not measurable", "no band"))
     out["acceptance"] = A
+    out["_rows"] = [{"name": r["name"], "gt": r["gt"], "reading": float(x), "cutoff": GRID[j], "band": float(q)}
+                    for r, x, j, q in zip(test, rp, J, Q)]
     return out
 
 
@@ -431,6 +475,7 @@ def cmd_score(a):
     livecell_gt(setups["livecell"])
     msc = msc_items(a.msc_dir)
     if msc:
+        msc_gt(msc)
         setups["msc"] = msc
     c2 = c2c12_items(a.labels)
     if c2:
@@ -448,12 +493,13 @@ def cmd_score(a):
     json.dump(rows, open(os.path.join(WORK, "readings.json"), "w"))
     with open(OUT_CSV, "w", newline="") as f:
         w = csv.writer(f)
-        w.writerow(["setup", "name", "split", "unit", "gt_pct", "pct_cut0", "conf_cut0", "profile_cutoff", "pct_profile"])
+        w.writerow(["setup", "name", "unit", "gt_pct", "pct_cut0", "conf_cut0", "test_cutoff", "pct_test", "band_pp"])
         for s, rr in rows.items():
-            j = profiles[PROFILE[s]]["j"]
-            for r in rr:
-                w.writerow([s, r["name"], r["split"], r["unit"], round(r["gt"], 3), round(r["curve"][I0], 2),
-                            round(r["conf0"], 3), GRID[j], round(r["curve"][j], 2)])
+            byname = {r["name"]: r for r in rr}
+            for t in res[s]["_rows"]:
+                r = byname[t["name"]]
+                w.writerow([s, r["name"], r["unit"], round(r["gt"], 3), round(r["curve"][I0], 2), round(r["conf0"], 3),
+                            t["cutoff"], round(t["reading"], 2), None if np.isnan(t["band"]) else round(t["band"], 3)])
     json.dump({"generated_by": "scripts/confluency_profiles.py", "grid": GRID,
                "profiles": {k: {kk: vv for kk, vv in v.items() if kk != "j"} for k, v in profiles.items()}},
               open(OUT_JSON, "w"), indent=1)
@@ -473,7 +519,7 @@ def write_md(rows, profiles, res):
     status = {"evican": "held-out", "livecell": "in-domain check", "msc": "held-out", "c2c12": "held-out; non-specialist labels"}
     for s, rr in rows.items():
         p = profiles[PROFILE[s]]
-        nt = sum(r["split"] == "test" for r in rr)
+        nt = res[s]["n_test"]
         L.append(f"| `{PROFILE[s]}` | {p['n_calib']} / {nt} | {p['cutoff']:+.1f} | {p['calib_mae']:.2f} | "
                  f"{fmt(p['band_pp'])} | {status[s]} |")
     L += ["", "### Acceptance (each profile on its own test images)", "",
@@ -484,7 +530,12 @@ def write_md(rows, profiles, res):
         L.append(f"| `{PROFILE[s]}` | " + " | ".join(f"**{A[k][0]}** ({A[k][1]})" for k in ("A1", "A2", "A3", "A4", "A5")) + " |")
     for s, r in res.items():
         p = profiles[PROFILE[s]]
-        L += ["", f"### `{PROFILE[s]}` ({status[s]})", "",
+        L += ["", f"### `{PROFILE[s]}` ({status[s]})", ""]
+        if len(r["folds"]) > 1:
+            L += ["Leave one population out: " + "; ".join(
+                f"fold {k + 1} cutoff {f['cutoff']:+.1f}, band ± {fmt(f['band_pp'])} pp ({f['n_calib']} calibration images)"
+                for k, f in enumerate(r["folds"])) + ".", ""]
+        L += [
               "| | shipped, cutoff 0.0 | profile, cutoff %+.1f |" % p["cutoff"], "|---|---|---|"]
         for k, lab in [("mae", "MAE (pp)"), ("median_ae", "median absolute error (pp)"), ("bias", "mean signed error (pp)"),
                        ("over10", "off by more than 10 pp"), ("slope", "slope, reading on ground truth"),

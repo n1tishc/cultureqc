@@ -37,7 +37,7 @@ lines as data the model was trained on, not held-out evidence.
 |---|---|---|---|---|---|
 | `evican_mixed` | EVICAN eval2019, 98 images, 30 cell lines, several microscopes (Parekh et al. 2020, CC BY 4.0) | union of the `Cell` polygons, as in `results/confluency_real_summary.md` | the 65 images outside `results/confluency_real.csv` | the 33 in it (their fourth use, after V1, a preview sweep and the cutoff study) | held-out |
 | `livecell_incucyte` | LIVECell test split, 1,512 images, 8 cell lines, one instrument (Edlund et al. 2021, CC BY-NC 4.0) | union of the image's polygons (`cv2.fillPoly`) | per cell line, half of its fields (a field = line, well and position, all its time points and crops), chosen with `numpy.random.default_rng(0)` over the sorted field names | the other fields | in-domain check |
-| `msc_phase` | Solopov et al. 2025, 320 phase-contrast images of human MSCs from 5 donors, 10× (CC BY 4.0), if downloaded | the dataset's binary cell mask; if each expert's mask is provided, the pixel-wise majority, with the spread between experts' confluency reported as the label-noise floor | leave one donor out, if donors can be identified from the files; otherwise half of the images, `default_rng(0)` | the left-out donor in each fold, pooled; otherwise the other half | held-out |
+| `msc_phase` | Solopov et al. 2025, 320 phase-contrast images (1000 × 1000) of human MSCs (Kaggle `maximsolopov/msu-smooth-1-20`, CC BY-NC-SA 4.0) | the dataset's binary cell mask (one per image, made by three experts) | leave one population out (the file-name prefix: 218-4, 218-5, 218-6) | the left-out population in each fold, pooled | held-out |
 | `c2c12_ker2018` | C2C12 frames of the replay fleet (Ker et al. 2018, CC BY 4.0), crops labelled cell/background by the repository owner, if labelled | the painted mask | crops from tuning sequences (`results/replay_fleet_split.csv`) | crops from held-out sequences | held-out; labels by a non-specialist |
 
 What was already seen: the EVICAN calibration rule is the cutoff study's,
@@ -46,8 +46,14 @@ so `evican_mixed` will pick −3.5 again, and its results on the 33 are known
 against ground truth in that study; they stay in, in whichever split their
 field falls, and are named in the results.
 
-The MSC dataset is checked against Cellpose-SAM's 18 training datasets
-(`docs/DATASETS.md`) before use, and its confluency range is reported. Crops
+MSC dataset, checked after download and before scoring (labels only, no
+model run): its licence on Kaggle is CC BY-NC-SA 4.0 (the paper is CC BY 4.0);
+the files carry three population prefixes, where the paper describes five
+donors; the paper says 10× and the dataset page 40×. It is not one of
+Cellpose-SAM's 18 training datasets (`docs/DATASETS.md`). Its ground truth
+spans 3.6–67.5%: 114 images below 20%, 140 at 20–40%, 62 at 40–60% and 4 at
+60–70%, so A2–A4 are not measurable on it. Its images and masks are not
+redistributed here. Crops
 for the C2C12 labels are chosen without any model output: sequences in
 turn, a frame drawn uniformly within each fifth of the sequence's frames, and
 a crop position drawn uniformly, all with `default_rng(0)`.
