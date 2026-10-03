@@ -74,7 +74,10 @@ def build() -> dict:
         live = st == "validated"
         profiles[pid] = {
             "label": LABELS.get(pid, pid),
-            "description": f"Fitted on {p['n_calib']} labelled images from this setup; tested on {res['n_test']} others.",
+            "description": (f"Fitted on {p['n_calib']} labelled images from this setup; tested on {res['n_test']} others."
+                            if len(res.get("folds", [])) <= 1 else
+                            f"{res['n_test']} labelled images from this setup in {len(res['folds'])} populations; each "
+                            f"population tested with the cutoff and band fitted on the others."),
             "cutoff": p["cutoff"] if live else 0.0,
             "band_pp": round(p["band_pp"], 2) if (live and p["band_pp"] is not None) else None,
             "status": st,
