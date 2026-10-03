@@ -187,6 +187,8 @@ def c2c12_items(labels_path: str | None) -> list[dict]:
             continue
         m = rle_decode(lab["rle"], CROP, CROP)
         out.append({**c, "_gt": float(m.mean() * 100)})
+    # a crop can be empty, but a file where every labelled crop is empty was marked done without painting
+    assert not out or any(i["_gt"] > 0 for i in out), f"{labels_path}: every crop marked done has no cells painted"
     return out
 
 
@@ -421,7 +423,9 @@ def evaluate(rows, prof, all_profiles, robust):
         out["calls"][T] = {"profile_review": float((cp == "review").mean()), "profile_agree": ap, "profile_n": np_,
                            "shipped_review": float((cs == "review").mean()), "shipped_agree": as_, "shipped_n": ns}
     for name, other in all_profiles.items():
-        out["transfer"][name] = float(np.abs(R[:, other["j"]] - gt).mean())
+        # the setup's own column uses the fold cutoffs, so no test image is read with a cutoff fitted on it
+        out["transfer"][name] = stats(rp, gt) if other is prof else stats(R[:, other["j"]], gt)
+    assert any(o is prof for o in all_profiles.values())
     # learning curve: per fold, the cutoff picked from k random calibration images; MAE over all test images
     rng = np.random.default_rng(0)
     out["learning"] = {}
@@ -494,6 +498,8 @@ def cmd_score(a):
     robust = {s: json.load(open(os.path.join(WORK, f"robust_{s}.json")))
               for s in rows if os.path.exists(os.path.join(WORK, f"robust_{s}.json"))}
     res = {s: evaluate(r, profiles[PROFILE[s]], profiles, robust.get(s)) for s, r in rows.items()}
+    for s, r in res.items():
+        assert r["transfer"][PROFILE[s]]["mae"] == r["profile"]["mae"], s
 
     os.makedirs(WORK, exist_ok=True)
     json.dump(rows, open(os.path.join(WORK, "readings.json"), "w"))
@@ -547,6 +553,12 @@ def write_md(rows, profiles, res):
     for s, r in res.items():
         p = profiles[PROFILE[s]]
         L += ["", f"### `{PROFILE[s]}` ({status[s]})", ""]
+        if s == "livecell":
+            from confluency_cutoff import LIVECELL_DENSE
+            split = {x["name"]: x["split"] for x in rows[s]}
+            L += ["The six frames scored in the cutoff study (`results/confluency_cutoff.md`), and the split their "
+                  "field fell in: " + ", ".join(f"`{n}` ({'calibration' if split[n] == 'calib' else 'test'})"
+                                               for _, n in LIVECELL_DENSE) + ".", ""]
         if len(r["folds"]) > 1:
             L += ["Leave one population out: " + "; ".join(
                 f"fold {k + 1} cutoff {f['cutoff']:+.1f}, band ± {fmt(f['band_pp'])} pp ({f['n_calib']} calibration images)"
@@ -580,11 +592,17 @@ def write_md(rows, profiles, res):
                 v = r["robust"].get(kind)
                 if v:
                     L.append(f"| {lab} | {v[0]:.2f} | {v[1]} |")
-    L += ["", "### Transfer: test MAE under each profile's cutoff", "",
-          "| test images ↓ / profile → | " + " | ".join(f"`{n}` ({profiles[n]['cutoff']:+.1f})" for n in profiles) + " |",
-          "|---|" + "---|" * len(profiles)]
+    head = "| test images ↓ / profile → | " + " | ".join(f"`{n}` ({profiles[n]['cutoff']:+.1f})" for n in profiles) + " |"
+    rule = "|---|" + "---|" * len(profiles)
+    L += ["", "### Transfer: each setup's test images under each profile's cutoff", "",
+          "Own profile: the fold cutoffs, as above. Median absolute error and R² per cell are in "
+          "`results/confluency_profiles.json`.", "", "MAE (pp):", "", head, rule]
     for s, r in res.items():
-        L.append(f"| {PROFILE[s]} | " + " | ".join(f"{r['transfer'][n]:.2f}" for n in profiles) + " |")
+        L.append(f"| {PROFILE[s]} | " + " | ".join(f"{r['transfer'][n]['mae']:.2f}" for n in profiles) + " |")
+    L += ["", "Mean signed error (pp); images off by more than 10 pp:", "", head, rule]
+    for s, r in res.items():
+        L.append(f"| {PROFILE[s]} | " + " | ".join(f"{r['transfer'][n]['bias']:+.2f}; {r['transfer'][n]['over10']} of "
+                                                     f"{r['transfer'][n]['n']}" for n in profiles) + " |")
     L.append("")
     open(OUT_MD, "w").write(src + "\n".join(L) + "\n")
     print("wrote", OUT_MD, OUT_CSV, OUT_JSON)

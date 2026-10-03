@@ -385,7 +385,7 @@ def build_profiles():
             "coverage": r3(r["coverage"]), "calls": {T: {k: r3(v) if isinstance(v, float) else v for k, v in cc.items()}
                                                      for T, cc in r["calls"].items()},
             "acceptance": {k: {"verdict": v[0], "detail": v[1]} for k, v in r["acceptance"].items()},
-            "transfer": {k: r3(v) for k, v in r["transfer"].items()},
+            "transfer": {k: r3(v["mae"]) for k, v in r["transfer"].items()},
             "learning": {k: [r3(x) for x in v] for k, v in r["learning"].items()},
             "folds": [{k: r3(v) if isinstance(v, float) else v for k, v in f.items()} for f in r.get("folds", [])],
         })
