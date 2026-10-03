@@ -21,6 +21,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import pandas as pd
 
+from culture.profiles import get_profile
 from culture.rules import RULES_VERSION
 from demo.theme import ACCENT, BG_CARD, BORDER, TEXT_PRIMARY, TEXT_SECONDARY
 
@@ -36,6 +37,19 @@ LABELS = {
 FLAG_COLOR = "#ef4444"
 REIMAGE_COLOR = "#f59e0b"
 ONSET_COLOR = "#a78bfa"
+SETUP_PROFILE = "c2c12_ker2018"     # the replays' imaging setup (Ker et al. 2018); uncalibrated unless validated
+
+
+def passage_note(flagged: bool) -> str:
+    """Why a passage at the target would not be recommended on its own, under the current rules."""
+    if not get_profile(SETUP_PROFILE).calibrated:
+        return (f" **Passage goes to a person:** this imaging setup has no calibration profile, so under "
+                f"{RULES_VERSION} a passage at the target is sent to human review, not recommended."
+                + (" The anomaly check also flagged the visit this forecast was made at." if flagged else ""))
+    if flagged:
+        return (f" **Passage held:** the anomaly check flagged the visit this forecast was made at, so under "
+                f"{RULES_VERSION} a passage is sent to human review, not recommended.")
+    return ""
 
 
 def load_replays(replay_dir: str = REPLAY_DIR) -> dict[str, dict]:
@@ -108,9 +122,7 @@ def forecast_text(doc: dict) -> str:
                 f"error {bt['median_abs_error_h']:.1f} h, 90% interval covered the recorded crossing in "
                 f"{bt['interval_covers']}; {bt['source']}")
     made_at = next((v for v in doc["visits"] if v["visit"] == fc.get("made_at_visit")), None)
-    held = (f" **Passage held:** the anomaly check flagged the visit this forecast was made at, so under "
-            f"{RULES_VERSION} a passage is sent to human review, not recommended."
-            if made_at is not None and made_at.get("anomaly_flag") else "")
+    held = passage_note(made_at is not None and bool(made_at.get("anomaly_flag")))
     if fc["status"] == "suppressed_fault":
         return (f"**Passage forecast:** not shown. The growth fit made at {fc['made_at_hours']:.0f} h, after the "
                 f"simulated fault's onset, is {fc['suppressed_reason']}, so no crossing time is given.{held} "

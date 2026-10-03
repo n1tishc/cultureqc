@@ -10,6 +10,25 @@ measured error band; reviews and changes are their own records. Method and
 acceptance criteria were committed before scoring (`1ef52cb`, `2baa18f`):
 `results/confluency_profiles.md`.
 
+### Results (each setup's held-out images, scored once)
+
+| profile | cutoff | test MAE, profile vs Cellpose default (pp) | 90% band | criteria |
+|---|---|---|---|---|
+| `msc_phase` (MSCs, leave one population out, 320 images) | −1.5 | 3.43 vs 8.19 | ±7.1 pp | A1 and A5 pass; A2–A4 not measurable (no test image above 70%) |
+| `evican_mixed` (mixed microscopes, 33 test images; not fully blind, their fourth use) | −3.5 | 3.78 vs 8.36 | ±29.4 pp | A1 and A5 pass; A2–A4 not measurable (no test image above 60%) |
+| `livecell_incucyte` (in-domain check, 756 test images) | −0.5 | 2.05 vs 2.14 | ±6.0 pp | all five pass; not used live, as the model was trained on this setup |
+
+- On every setup, its own cutoff has the lowest test MAE; another setup's
+  cutoff costs 1 to 6 pp.
+- On MSC, a cutoff picked from 10 labelled images reaches 3.81 pp (median of
+  20 draws) against 3.43 pp from all of them.
+- `evican_mixed`'s band is wide because several calibration images are read
+  far off (one at 2% against 65%); the 33 test images have none of those, so
+  its test MAE is the better case.
+- The C2C12 setup of the console's examples and replays has no labelled
+  images, so it stays `uncalibrated`: a reading at or above the target goes to
+  a person.
+
 ### Rules `rules_v0.5`
 
 - **Passage reads the error band.** A reading whose band clears the target

@@ -36,7 +36,7 @@ and gets back one **reading** record (`culture/schema.json`) with:
 from culture.pipeline import analyze
 
 rec = analyze(
-    image_path, flask_id="A12", cell_line="C2C12", profile_id="c2c12_ker2018",
+    image_path, flask_id="A12", cell_line="MSC", profile_id="msc_phase",
     lineage={"passage_number": 7, "parent_flask_id": "A07"}, imager_id="imager-1",
     fov={"index": 3, "x_mm": None, "y_mm": None}, hours_since_passage=hours,
     log_path="records.jsonl",

@@ -12,6 +12,13 @@ const STUDY = {
   in_domain_check: ["none", "In-domain check only"],
 };
 
+// "Validated" never stands alone: say how many of the five criteria could be measured on the setup's test images.
+const measured = (p) => {
+  const v = Object.values(p.acceptance).map((a) => a.verdict);
+  const m = v.filter((x) => x !== "not measurable");
+  return `${m.filter((x) => x === "pass").length} of ${m.length} measurable criteria passed` +
+    (m.length < v.length ? `; ${v.length - m.length} not measurable` : "");
+};
 const fx = (x, d = 2) => (x === null || x === undefined ? "—" : Number(x).toFixed(d));
 const cut = (x) => (x >= 0 ? `+${x.toFixed(1)}` : `−${Math.abs(x).toFixed(1)}`);
 
@@ -122,7 +129,10 @@ export function AcceptanceTable({ data }) {
               <td>
                 {p.label}
                 <span className="verdict-note">
-                  cutoff {cut(p.cutoff)}, band ±{fx(p.band_pp, 1)} pp; {p.n_calib} calibration / {p.n_test} test images
+                  cutoff {cut(p.cutoff)}, band ±{fx(p.band_pp, 1)} pp;{" "}
+                  {p.folds && p.folds.length > 1
+                    ? `${p.n_test} images, leave one population out (${p.folds.length} populations)`
+                    : `${p.n_calib} calibration / ${p.n_test} test images`}
                 </span>
               </td>
               {crit.map(([k]) => (
@@ -133,6 +143,7 @@ export function AcceptanceTable({ data }) {
               ))}
               <td>
                 <Verdict k={(STUDY[p.status] || ["none"])[0]}>{(STUDY[p.status] || ["none", p.status])[1]}</Verdict>
+                <span className="verdict-note">{measured(p)}</span>
               </td>
             </tr>
           ))}

@@ -80,3 +80,12 @@ profiles:
     evidence:
       path: results/confluency_profiles.json
       sha256: 44d93a44549d7acb19f734fda7f361737bc30a4ad1c7e31c39b4572c04fc70e4
+  c2c12_ker2018:
+    label: C2C12 time-lapse microscope (Ker et al. 2018), 5× phase contrast
+    description: 'No labelled images from this setup, so no confluency calibration: the reading uses Cellpose''s
+      default cutoff and has no error band, and a reading at or above the passage target goes to a person. Its quality
+      gate is calibrated on the tuning frames (results/quality_gate_c2c12.md).'
+    cutoff: 0.0
+    band_pp: null
+    status: uncalibrated
+    quality: c2c12

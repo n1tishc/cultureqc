@@ -77,14 +77,22 @@ def test_reexport_is_byte_identical(tmp_path):
         assert filecmp.cmp(tmp_path / name, os.path.join(REPO, "demo", "replays", name), shallow=False), name
 
 
-def test_forecast_on_a_flagged_visit_says_the_passage_is_held():
+def test_forecast_says_why_a_passage_is_not_recommended():
+    """Uncalibrated setup: every forecast says a passage goes to a person for that reason, and names the
+    anomaly flag only as additional. Calibrated: a flag at the forecast's visit holds the passage."""
+    from culture.profiles import get_profile
+    calibrated = get_profile(replay_timeline.SETUP_PROFILE).calibrated
     for name, doc in REPLAYS.items():
         fc = doc["forecast"]
         text = replay_timeline.forecast_text(doc)
-        flagged = fc["status"] in ("predicted", "suppressed_fault") and any(
-            v["visit"] == fc["made_at_visit"] and v.get("anomaly_flag") for v in doc["visits"])
-        assert ("Passage held" in text) == flagged, name
-    assert "Passage held" in replay_timeline.forecast_text(REPLAYS["contamination"])
+        made = fc["status"] in ("predicted", "suppressed_fault")
+        flagged = made and any(v["visit"] == fc["made_at_visit"] and v.get("anomaly_flag") for v in doc["visits"])
+        if calibrated:
+            assert ("Passage held" in text) == flagged, name
+        else:
+            assert ("no calibration profile" in text) == made and "Passage held" not in text, name
+            assert ("also flagged" in text) == flagged, name
+    assert "flagged" in replay_timeline.forecast_text(REPLAYS["contamination"])
 
 
 def test_suppressed_forecast_shows_its_reason_not_a_crossing_time():

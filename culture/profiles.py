@@ -9,7 +9,8 @@ change control, not a code default: every record names the profile and its
 SHA-256, and replacing a profile is a `change` event in the chain
 (culture/records.py).
 
-A setup with no labelled images gets the `uncalibrated` profile: Cellpose's
+A setup with no labelled images gets the `uncalibrated` profile, or a named
+entry with status `uncalibrated` that also names its quality gate: Cellpose's
 default cutoff and no band, so the rules never passage on its reading alone
 (culture/rules.py). A profile that did not pass its pre-registered criteria
 on held-out images (status `failed` or `in_domain_check`) keeps its fitted
@@ -19,7 +20,7 @@ from results/confluency_profiles.json by scripts/write_profiles_config.py,
 and tests/test_profiles_config.py checks that they still match.
 
     from culture.profiles import get_profile
-    p = get_profile("c2c12_ker2018")
+    p = get_profile("msc_phase")
     p.cutoff, p.band_pp, p.interval(62.0), p.sha256
 """
 
@@ -93,7 +94,9 @@ def get_profile(profile_id: str | None = None, path: str = PROFILES_PATH) -> Pro
 
 
 def choices(path: str = PROFILES_PATH) -> list[tuple[str, str]]:
-    """(label, id) pairs for a setup picker: the validated profiles, then uncalibrated."""
+    """(label, id) pairs for a setup picker: the validated profiles, the named setups without a
+    calibration (they still run their quality gate), then the generic uncalibrated entry."""
     ps = load_profiles(path)
-    order = [p for p in ps if ps[p].status == "validated"] + [UNCALIBRATED]
+    order = ([p for p in ps if ps[p].status == "validated"] +
+             [p for p in ps if ps[p].status == "uncalibrated" and p != UNCALIBRATED] + [UNCALIBRATED])
     return [(ps[p].entry.get("label", p), p) for p in order]

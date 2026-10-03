@@ -175,7 +175,29 @@ export default function Timeline({ replays }) {
   const v = r.visits[sel];
   const f = r.forecast;
   const madeAt = f.made_at_visit != null ? r.visits[f.made_at_visit] : null;
-  const held = madeAt && madeAt.flag;
+  const flagged = Boolean(madeAt && madeAt.flag);
+  const uncal = !(r.profile && r.profile.calibrated);
+  const made = f.status === "predicted" || f.status === "suppressed_fault";
+  const held = made && (uncal || flagged);
+  // Since rules_v0.5 an uncalibrated setup never passages on a reading alone; the flag is then additional.
+  const heldNote = uncal ? (
+    <>
+      {" "}
+      <b>
+        <Icon name="human_review" /> Passage goes to a person:
+      </b>{" "}
+      this imaging setup has no calibration profile, so a passage at the target goes to human review
+      {flagged ? `; the anomaly check also flagged visit ${f.made_at_visit + 1}, where this forecast was made` : ""}.
+    </>
+  ) : flagged ? (
+    <>
+      {" "}
+      <b>
+        <Icon name="human_review" /> Passage held:
+      </b>{" "}
+      the anomaly check flagged visit {f.made_at_visit + 1}, where this forecast was made, so a passage goes to human review.
+    </>
+  ) : null;
   const onKey = (e) => {
     if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
       e.preventDefault();
@@ -279,28 +301,12 @@ export default function Timeline({ replays }) {
                 {f.interval[0]}–{f.interval[1]} h
               </span>
               . Backtest: median error {f.backtest.median_abs_error_h} h, interval covered {f.backtest.interval_covers} (n = {f.backtest.n_sequences} sequences).
-              {held ? (
-                <>
-                  {" "}
-                  <b>
-                    <Icon name="human_review" /> Passage held:
-                  </b>{" "}
-                  the anomaly check flagged visit {f.made_at_visit + 1}, where this forecast was made, so since rules_v0.3 a passage goes to human review.
-                </>
-              ) : null}
+              {heldNote}
             </p>
           ) : f.status === "suppressed_fault" ? (
             <p className={held ? "held" : ""}>
               Passage forecast not shown: the growth fit made at visit {f.made_at_visit + 1} ({f.made_at_hours} h), after the simulated fault’s onset, is {f.suppressed_reason}.
-              {held ? (
-                <>
-                  {" "}
-                  <b>
-                    <Icon name="human_review" /> Passage held:
-                  </b>{" "}
-                  the anomaly check flagged that visit, so since rules_v0.3 a passage goes to human review.
-                </>
-              ) : null}
+              {heldNote}
             </p>
           ) : (
             <p>No passage forecast: the fit starts once the flask passes {f.cut}%, and this one did not.</p>

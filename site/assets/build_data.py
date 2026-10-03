@@ -326,6 +326,9 @@ def build_examples(img_dir):
 
 
 def build_replays(img_dir):
+    from culture.profiles import get_profile
+    from demo.replay_timeline import SETUP_PROFILE
+    prof = get_profile(SETUP_PROFILE)
     maps = json.load(open(rel("demo", "replay_maps", "maps.json")))
     out = []
     for name in REPLAY_ORDER:
@@ -353,6 +356,7 @@ def build_replays(img_dir):
             "sequence": r["base_sequence_id"], "split": r["split"], "fault": r.get("fault"),
             "noise_band": r["noise_band"], "notes": r.get("notes", []), "summary": r["summary"],
             "target_note": r["target_note"],
+            "profile": {"id": prof.id, "status": prof.status, "calibrated": prof.calibrated},
             "frame_hw": maps["frame_hw"], "um_per_px": C2C12_UM_PER_PX, "visits": visits,
             "forecast": {"status": f.get("status"), "model": f.get("chosen_model"), "target": f.get("target_pct"), "cut": f.get("cut_pct"),
                          "made_at_visit": f.get("made_at_visit"), "made_at_hours": f.get("made_at_hours"),

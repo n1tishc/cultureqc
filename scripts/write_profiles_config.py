@@ -9,7 +9,8 @@ Status, decided mechanically from the pre-registered criteria
   in_domain_check  LIVECell: no held-out evidence, whatever the criteria say
 Only a validated profile is live: its fitted cutoff and band are the ones
 used. Any other keeps them as fitted_cutoff / fitted_band_pp and reads like an
-uncalibrated setup (cutoff 0.0, no band).
+uncalibrated setup (cutoff 0.0, no band). A setup with no scored profile
+(UNSCORED) is written as uncalibrated, with its quality gate.
 
     .venv/bin/python scripts/write_profiles_config.py
 """
@@ -31,6 +32,18 @@ LABELS = {
     "evican_mixed": "EVICAN: mixed brightfield and phase-contrast microscopes",
     "msc_phase": "MSC phase contrast (Solopov et al. 2025)",
     "livecell_incucyte": "LIVECell instrument, 10× phase contrast",
+}
+# Imaging setups with no scored profile. They read like an uncalibrated setup (Cellpose's default cutoff, no
+# band), but are named, so a reading says which setup took it, and they run the quality gate calibrated for
+# the setup, which needs no labelled images (configs/quality.yaml).
+UNSCORED = {
+    "c2c12_ker2018": {
+        "quality": "c2c12",
+        "description": ("No labelled images from this setup, so no confluency calibration: the reading uses "
+                        "Cellpose's default cutoff and has no error band, and a reading at or above the passage "
+                        "target goes to a person. Its quality gate is calibrated on the tuning frames "
+                        "(results/quality_gate_c2c12.md)."),
+    },
 }
 HEADER = """# Confluency calibration profiles (culture/profiles.py).
 #
@@ -87,6 +100,10 @@ def build() -> dict:
             "quality": "c2c12" if pid == "c2c12_ker2018" else None,
             "evidence": {"path": "results/confluency_profiles.json", "sha256": src_hash},
         }
+    for pid, u in UNSCORED.items():
+        if pid not in profiles:
+            profiles[pid] = {"label": LABELS.get(pid, pid), "description": u["description"], "cutoff": 0.0,
+                             "band_pp": None, "status": "uncalibrated", "quality": u["quality"]}
     return {"version": 1, "profiles": profiles}
 
 

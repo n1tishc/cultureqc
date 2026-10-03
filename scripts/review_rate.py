@@ -55,6 +55,7 @@ sys.path.insert(0, REPO)
 import numpy as np  # noqa: E402
 
 from culture.profiles import get_profile  # noqa: E402
+from culture.quality import evaluate_thresholds  # noqa: E402
 from culture.rules import DEFAULT_CONFIG, RULES_VERSION  # noqa: E402
 
 CACHE = os.path.join(REPO, "cache")
@@ -75,8 +76,10 @@ def reading_at(sha: str, cutoff: float, pct0: float) -> float:
 
 
 def v05(g: pd.DataFrame, target: float, band: float | None) -> dict:
-    """rules_v0.5's passage step on readings `g.reading` and flags `g.flag_binned` (time since passage
-    assumed long enough; the quality gate's REIMAGE is not modelled)."""
+    """rules_v0.5 on readings `g.reading`, flags `g.flag_binned` and the quality gate `g.gate_pass`
+    (a failed gate is REIMAGE, before any reading is used; time since passage assumed long enough)."""
+    reimage = ~g.gate_pass
+    g = g[g.gate_pass]
     r, flag = g.reading, g.flag_binned
     if band is None:
         straddle = pd.Series(False, index=g.index)
@@ -88,8 +91,8 @@ def v05(g: pd.DataFrame, target: float, band: float | None) -> dict:
         straddle = (~above) & ((r + band) >= target)
         passage = above & ~flag
         review = straddle | (above & flag)
-    n = len(g)
-    return {"n": n, "band_review": int(straddle.sum()), "held": int((above & flag).sum()) if band is not None else 0,
+    n = len(g) + int(reimage.sum())
+    return {"n": n, "reimage": int(reimage.sum()), "band_review": int(straddle.sum()), "held": int((above & flag).sum()) if band is not None else 0,
             "uncalibrated_review": int(review.sum()) if band is None else 0, "passage": int(passage.sum()),
             "review": int(review.sum()), "review_pct": round(100 * int(review.sum()) / n, 1) if n else None}
 
@@ -164,6 +167,14 @@ def main():
 
     prof = get_profile(C2C12_PROFILE)
     scored["reading"] = [reading_at(sha, prof.cutoff, p) for sha, p in zip(scored.image_sha256, scored.pct)]
+    if prof.quality:
+        qm = pd.read_parquet(os.path.join(CACHE, "quality.parquet")).set_index("image_sha256")
+        assert scored.image_sha256.isin(qm.index).all(), "frame without cached quality metrics"
+        scored["gate_pass"] = [evaluate_thresholds(*qm.loc[sha, ["blur_laplacian_var", "exposure_mean",
+                                                                 "uniformity_block_std"]], dataset=prof.quality).passed
+                               for sha in scored.image_sha256]
+    else:
+        scored["gate_pass"] = True
     v05_rows = [{"target": target, "group": name, **v05(scored[mask], target, prof.band_pp)}
                 for target in TARGETS for name, mask in groups]
 
@@ -193,13 +204,15 @@ def main():
            "and the anomaly check flagged the image." if prof.band_pp is not None else
            "With no calibration profile, every reading at or above the target goes to review: the rules never "
            "passage on an uncalibrated reading alone.")
-        + " Time since passage is assumed long enough; quality-gate failures return REIMAGE and are not modelled "
-          "here. Boundary ambiguity no longer decides.", "",
-        "| target | group | images | band includes the target | held by the anomaly flag | uncalibrated, at or above target | passage | total to review |",
-        "|---|---|---|---|---|---|---|---|",
+        + (f" The quality gate calibrated for the setup (`configs/quality.yaml`, entry `{prof.quality}`) runs "
+           "first, on the cached metrics, and a frame that fails it returns REIMAGE." if prof.quality else
+           " No quality gate is calibrated for the setup.")
+        + " Time since passage is assumed long enough. Boundary ambiguity no longer decides.", "",
+        "| target | group | images | re-image (quality gate) | band includes the target | held by the anomaly flag | uncalibrated, at or above target | passage | total to review |",
+        "|---|---|---|---|---|---|---|---|---|",
     ]
     for r in v05_rows:
-        lines.append(f"| {r['target']:g}% | {r['group']} | {r['n']} | {r['band_review']} | {r['held']} | "
+        lines.append(f"| {r['target']:g}% | {r['group']} | {r['n']} | {r['reimage']} | {r['band_review']} | {r['held']} | "
                      f"{r['uncalibrated_review']} | {r['passage']} | {r['review']} ({r['review_pct']}%) |")
     lines += ["", "## rules_v0.4, for comparison: boundary-ambiguity trigger", "",
         f"With the classifier demoted, rules_v0.4 had two rules that return `human_review`: boundary "
