@@ -1,8 +1,9 @@
 # cultureQC: everything done on the upgrade branch
 
-As of 2026-10-01. Branch `slice-1b-compute-cache` (`git log main..HEAD` for
+As of 2026-10-04. Branch `slice-1b-compute-cache` (`git log main..HEAD` for
 the full list). Nothing is merged to `main`: the owner decided on 2026-10-01
-not to merge before the call and to show v0.2 and v0.3 side by side. The detailed, row-by-row log is `docs/STATUS.md`; this file is
+not to merge before the call, so the v0.2 site stays up beside this branch's
+site (v0.3, then v0.4 from 2026-10-04). The detailed, row-by-row log is `docs/STATUS.md`; this file is
 the readable overview. Every number here is copied from the results file named
 next to it.
 
@@ -10,7 +11,8 @@ next to it.
 the parts that failed validation were demoted or captioned (Phase B), and a
 review console is live on its own
 Hugging Face Space with a GPU, plus two backups (Mac, Colab) that don't depend
-on Hugging Face.
+on Hugging Face. Since 2026-10-04 confluency is read with a per-setup
+calibration profile and its error band, and the rules act on that band (§13).
 
 ---
 
@@ -180,9 +182,9 @@ slow for a live demo, so the demo needs a GPU (section 8).
 
 | Where | How | Live Analyze | Source |
 |---|---|---|---|
-| **Space `LongGrainRice/cultureqc-console`** (main) | ZeroGPU, a GPU attached per Analyze | median 3.28 s; 7 of 7 examples same flag and action as stored | `results/live_latency_zerogpu.md` |
-| **Mac backup** | `deploy/run_console_mac.sh`, Cellpose-SAM on Apple's GPU, no Hugging Face at run time | median 16.43 s; 7 of 7 same | `results/live_latency_mac_mps.md` |
-| **Colab backup** | `nb/05_console_colab.ipynb` + `~/Desktop/projs/cultureqc_console_bundle.zip` (console + all weights) | median 12.06 s on a Tesla T4; 7 of 7 same | `results/live_latency_colab_gpu.md` |
+| **Space `LongGrainRice/cultureqc-console`** (main) | ZeroGPU, a GPU attached per Analyze | median 3.22 s; 7 of 7 examples same flag and action as stored, each read with its setup's profile (2026-10-04) | `results/space_dry_run_e6c44671.md` |
+| **Mac backup** | `deploy/run_console_mac.sh`, Cellpose-SAM on Apple's GPU, no Hugging Face at run time | median 16.48 s; 7 of 7 same (2026-10-04) | `results/live_latency_mac_mps.md` |
+| **Colab backup** | `nb/05_console_colab.ipynb` + `~/Desktop/projs/cultureqc_console_bundle.zip` (console + all weights) | median 12.06 s on a Tesla T4; 7 of 7 same as the examples stored at the time (2026-09-29, before the calibration profiles) | `results/live_latency_colab_gpu.md` |
 | CPU (for reference) | — | 689 s per FOV | `results/live_latency.md` |
 
 - **Why ZeroGPU** (2026-09-28): no cost beyond PRO, no switching hardware on
@@ -196,22 +198,24 @@ slow for a live demo, so the demo needs a GPU (section 8).
 - **Checked on the live Space:** all 7 examples open, both 3D views match
   their hashes, the 3D motion runs and stops on a click, no page errors; a
   signed-out Analyze also works (contamination 1 live: Human Review under
-  `rules_v0.3`). Republished twice in the pre-freeze pass; the latest, Space
-  commit `eaad5cf6` (2026-10-01), again gave the stored flag and action on 7
-  of 7 examples (`results/space_dry_run_eaad5cf6.md`). ZeroGPU shows a small "Successfully acquired a GPU" toast on
+  `rules_v0.3`). Republished in the pre-freeze pass (Space commits `eaad5cf6`,
+  `3cb8d430`) and again with the calibration profiles on 2026-10-04 (Space
+  commit `e6c44671`); each time the dry run gave the stored flag and action on
+  7 of 7 examples (`results/space_dry_run_e6c44671.md` is the latest). ZeroGPU shows a small "Successfully acquired a GPU" toast on
   each live Analyze.
 - `cultureqc-demo` and `cultureqc-api` never changed.
 
 ## 9. Tests
 
-`pytest tests`: 295 passed, no expected failures (2026-10-01, after
-pre-freeze item 8; the schema xfail is gone since `rules_v0.4`). CI runs on
-this branch too: API contract, the Python tests that need no model weights or
+`pytest tests deploy/hf-space/test_api.py`: 353 passed, no expected failures
+(2026-10-04, on the Mac with the local cache and models). CI runs on this
+branch too: API contract, the Python tests that need no model weights or
 cache, and the site build with a `data.json` drift check. Includes the
 README provenance check, the claims check, demo example parity, replay
 re-export, device selection (`tests/test_seg_device.py`), the ZeroGPU mode
 (`tests/test_console_zerogpu.py`), the v0.3 rule (`tests/test_rules_anomaly.py`)
-and the 3D figures' motion contract (`tests/test_viz3d.py`).
+and the 3D figures' motion contract (`tests/test_viz3d.py`). The site job installs only numpy and pyyaml, so the
+page-data generator must not import anything heavier (`tests/test_replay_notes.py`).
 
 ## 10. Open decisions
 
@@ -230,17 +234,22 @@ and the 3D figures' motion contract (`tests/test_viz3d.py`).
    questions): defaults hold (not done).
 4. **`main` (2026-10-01, owner):** not merged and not annotated before the
    call; v0.2 and v0.3 are shown side by side.
-5. Open with the owner: the company names listed in `docs/STATUS.md` ("Names
-   in tracked files"), and the classifier's Hugging Face card, which says MIT
-   although it was trained on LIVECell-based tiles (CC BY-NC 4.0).
+5. ~~Company names in tracked files~~ **Resolved 2026-10-02 (owner):** none
+   (`docs/STATUS.md`, "Names in tracked files"). Still open: the classifier's
+   Hugging Face card, which says MIT although it was trained on LIVECell-based
+   tiles (CC BY-NC 4.0).
+6. ~~Calibration profiles live~~ **Resolved 2026-10-04 (owner, "Both"):**
+   `evican_mixed` and `msc_phase` live; the console's C2C12 microscope stays
+   uncalibrated (§13).
 
 ## 11. What's left
 
 | When | What | Who |
 |---|---|---|
 | Done 2026-09-29 | v0.3 Vercel project created (production branch `slice-1b-compute-cache`): https://cultureqc-cvoy.vercel.app, set in `site/index.html` | owner |
-| Thu Oct 1 | Dry run: `scripts/space_dry_run.py` run after each republish (latest `eaad5cf6`, 7 of 7); open both 3D views in the call browser; open the v0.3 site (https://cultureqc-cvoy.vercel.app) at 1280×720 | owner |
-| Fri Oct 2 | Freeze | |
+| Done 2026-10-01 | Dry run: `scripts/space_dry_run.py` after each republish (7 of 7 each time) | |
+| Done 2026-10-04 | Calibration profiles live (owner approval): console Space `e6c44671` dry run 7 of 7; site v0.4 pushed (`9d5d43f`), CI green | owner |
+| Before the call | Open both 3D views in the call browser; open the v0.4 site (https://cultureqc-cvoy.vercel.app) at 1280×720 | owner |
 | Mon Oct 5 | Rehearsal with `docs/DEMO_SCRIPT.md` | |
 | Tue Oct 6, 3 PM PDT | Call: open the Space 10 min early, signed in; Mac backup running | |
 | After | Merge to `main` only on the owner's word (not before the call, 2026-10-01) | owner |
@@ -251,9 +260,9 @@ and the 3D figures' motion contract (`tests/test_viz3d.py`).
   on the 65 EVICAN eval2019 images outside the 33 and evaluated on the 33:
   −3.5 logit, MAE 8.36 → 3.78 pp. Not fully blind: the idea came from error
   analysis of the same 33, and a quarter-resolution sweep showed the
-  evaluation curve before the rule was written. Validated, not shipped: the
-  default cutoff is unchanged and the result is held for a release under
-  change control.
+  evaluation curve before the rule was written. Validated, not shipped at the
+  time; live since 2026-10-04 as the calibration profile `evican_mixed`
+  through a change record (§13).
 - **Audit mapping** (`1dc5e10`, `docs/audit_mapping.md`): rewritten clause by
   clause against 21 CFR 11.10, the FDA-EMA Good AI Practice principles and
   the Annex 22 consultation draft, with the gaps; corrected v0.2 text
@@ -279,3 +288,31 @@ and the 3D figures' motion contract (`tests/test_viz3d.py`).
      explained; contamination forecast suppressed with its reason.
   9. Site Records section: rewrite and delete-tail switches, checked against
      a checkpoint shipped with the page.
+
+## 13. Calibration profiles and v0.4 (Oct 2–4)
+
+Details: `docs/STATUS.md` ("Confluency calibration profiles") and
+`CHANGELOG.md`. Done on a separate branch, then fast-forwarded into
+`slice-1b-compute-cache` with the owner's approval.
+
+- **Per-setup calibration** (`results/confluency_profiles.md`): method,
+  splits and criteria pre-registered before any new image was scored, then
+  scored once on held-out images. MSC (`msc_phase`): MAE 8.19 → 3.43 pp, band
+  ±7.11 pp, leave one population out. EVICAN (`evican_mixed`): 8.36 → 3.78 pp,
+  not fully blind (the cutoff study's caveat), band ±29.40 pp. Both pass A1 (MAE ≤ 5)
+  and A5 (band coverage); A2–A4, the checks near a passage target, are not
+  measurable on either (EVICAN 0, MSC 4 test images at 60–90%).
+- **The console's C2C12 microscope stays uncalibrated** (owner, no labelled
+  images): it keeps its quality gate, and a reading at or above the target
+  goes to a person.
+- **`rules_v0.5`, schema 0.4:** a band that includes the target goes to a
+  person; boundary ambiguity is recorded but no longer decides; `reimage` is
+  an action when the setup's quality gate fails. Records are `reading`,
+  `review` or `change`; the stored chain opens with the two change records
+  that put the profiles live, approved by "repository owner".
+- **Review rate under `rules_v0.5`** (`results/review_rate.md`): on the 1228
+  held-out normal C2C12 frames at an 80% target, 149 are sent to re-image and
+  0 to review; at 50%, 42 (3.4%) go to review.
+- **Console and site:** examples regenerated on the Mac; console Space
+  republished (`e6c44671`, dry run 7 of 7); site v0.4 shows each example's
+  band against the target.

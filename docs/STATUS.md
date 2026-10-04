@@ -94,10 +94,27 @@ any new image was scored. Details: `CHANGELOG.md`.
 | Site v0.4 | `33ced8e` | Error band on the example cards, v0.5 rules figure, v0.4 release notes; checked in headless Chromium |
 | Console Space republished with the profiles (owner approved; the owner ran the publish) | Space commit `e6c44671` | Running on ZeroGPU about 4 min after upload; `/run_analysis` takes the setup (`profile_id`). Dry run (`results/space_dry_run_e6c44671.md`): anomaly flag and action the same as stored on 7 of 7 examples, each read with its setup's profile, readings within 0.04 pp; first Analyze 6.22 s, median of the rest 3.22 s (n = 6). One live HT29 record: `rules_v0.5`, schema 0.4, `evican_mixed` with the config's SHA-256, human review. Checked in a browser on the live Space: HT29 band and Human Review, stress test Re-image on exposure, 51.4% frame Continue with no band, PC3 Continue; no page errors |
 
-Still open: merging into `slice-1b-compute-cache` and pushing (redeploys the
-site), on the owner's approval. The console Space's own README still quotes
-the 2026-09-29 latency, labelled as measured before the profiles; it is
-refreshed on the next publish.
+| Fast-forwarded into `slice-1b-compute-cache` and pushed (owner approved) | `100b535` | Site redeployed as v0.4; checked in a browser at 1440 and 390 px: 9 of 9 records verify, the tamper switches are caught, HT29 shows its band and Human Review, no page errors |
+| CI fix (owner approved the push) | `9d5d43f` | The site job failed on `100b535`: `site/assets/build_data.py` imported `demo/replay_timeline.py`, which needs matplotlib, and that job installs only numpy and pyyaml. The script keeps its own copy of the replays' setup; `tests/test_replay_notes.py` keeps the two equal. All three CI jobs green |
+
+Still open: the console Space's own README still quotes the 2026-09-29
+latency, labelled as measured before the profiles; it is refreshed on the
+next publish.
+
+## Repository cleanup (branch `repo-cleanup`, 2026-10-04)
+
+Local branch off `9d5d43f`; nothing pushed until the owner approves.
+
+| Change | Commit | Result |
+|---|---|---|
+| Five docs about the September 9–10 React frontend removed (`FRONTEND_REDESIGN`, `INTERACTIVE_FRONTEND`, `SCIENTIFIC_UI_REFINEMENT`, `LIVE_INSTRUMENT`, `DEPLOYMENT_CHECK`), with `scripts/generate_instrument_demo.py` | `d1e5b89` | That frontend's source is not on this branch and nothing cited the docs; the script's input image and output folder were gone. The `/analyze` streaming contract (still tested by `deploy/hf-space/test_api.py`) moved into `deploy/README.md` |
+| `deploy/README.md` rewritten around what runs now | `d1e5b89` | Starts with the v0.4 site and the console; the v0.2 API and raw-demo Spaces marked frozen; the v0.2 site's local setup points to `main` |
+| `demo/flask_timeline.py` (the Flask Timeline tab before the real replays) removed | `c131a1d` | No longer imported by the console. Its fixture writer moved into `scripts/growth_examples.py`, the only user; re-running it gives a byte-identical `growth_examples.png` and the same numbers |
+| `docs/PROGRESS_SUMMARY.md` brought up to 2026-10-04 | this row's commit | Console and backup numbers, open decisions, a §13 on the calibration profiles |
+
+Left as they are: unused helpers in `culture/` (a change there is synced into
+both Space folders), the untracked local files, and `HANDOFF_nb03.md` (the
+owner's call).
 
 ## Slices (spec §2.1), confirmed against the repo
 
