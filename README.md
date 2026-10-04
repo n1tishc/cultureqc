@@ -491,18 +491,21 @@ it was generated from.
 
 ## Deployment
 
-The page is static on Vercel; the pipeline runs as a Docker Space on
-HuggingFace. They are independent deployments joined by one URL, so neither can
-break the other's build, and the page still hashes files and builds a verifiable
-manifest when the API is asleep. See [`deploy/README.md`](deploy/README.md).
+The site is static on Vercel and has no analysis path of its own: it shows the
+pipeline's stored output and links to the review console, which runs live on a
+ZeroGPU Space (`LongGrainRice/cultureqc-console`, with a Mac and a Colab backup).
+The v0.2 site and its API Space are left as they are. See
+[`deploy/README.md`](deploy/README.md) for what runs where.
 
 ### The frontend
 
-React 18 on Vite, in `site/`: one page that shows the pipeline's stored output
-for real frames. A held-out C2C12 frame with the layers Cellpose-SAM and the
-anomaly check computed, its readings and action; the five flask replays; the
-detectability matrix; V1–V10; the seven chained records, re-hashed in the
-browser; and what changed since v0.2. Live analysis is a link to the console
+React 18 on Vite, in `site/`: three pages (home, `/validation`,
+`/release-notes`) that show the pipeline's stored output for real frames. Each
+example with the layers Cellpose-SAM and the anomaly check computed, its
+reading, error band and action; the five flask replays; the detectability
+matrix; V1–V10; the stored chain's nine records (two approved profile changes,
+then seven readings), re-hashed in the browser; and release notes from v0.2 to
+v0.4. Live analysis is a link to the console
 Space. Every number comes from `site/src/data.json`, which
 `site/assets/build_data.py` generates from the repo's output; `site/README.md`
 has the layout.

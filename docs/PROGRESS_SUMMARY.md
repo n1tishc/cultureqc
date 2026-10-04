@@ -247,7 +247,7 @@ page-data generator must not import anything heavier (`tests/test_replay_notes.p
 | When | What | Who |
 |---|---|---|
 | Done 2026-09-29 | v0.3 Vercel project created (production branch `slice-1b-compute-cache`): https://cultureqc-cvoy.vercel.app, set in `site/index.html` | owner |
-| Done 2026-10-01 | Dry run: `scripts/space_dry_run.py` after each republish (7 of 7 each time) | |
+| Done 2026-10-01–02 | Dry run: `scripts/space_dry_run.py` after each republish (7 of 7 each time) | |
 | Done 2026-10-04 | Calibration profiles live (owner approval): console Space `e6c44671` dry run 7 of 7; site v0.4 pushed (`9d5d43f`), CI green | owner |
 | Before the call | Open both 3D views in the call browser; open the v0.4 site (https://cultureqc-cvoy.vercel.app) at 1280×720 | owner |
 | Mon Oct 5 | Rehearsal with `docs/DEMO_SCRIPT.md` | |
