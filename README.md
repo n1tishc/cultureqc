@@ -2,7 +2,7 @@
 
 **One brightfield image in. Confluency, an anomaly check, a recommended action, and a record you can verify.**
 
-[v0.3 site](https://cultureqc-cvoy.vercel.app) · [Review console](https://huggingface.co/spaces/LongGrainRice/cultureqc-console) · [v0.2 site (superseded — its headline numbers were synthetic)](https://cultureqc.vercel.app) · [v0.2 API](https://longgrainrice-cultureqc-api.hf.space/docs) (still runs v0.2: `schema_version` 0.2)
+[v0.4 site](https://cultureqc-cvoy.vercel.app) · [Review console](https://huggingface.co/spaces/LongGrainRice/cultureqc-console) · [v0.2 site (superseded — its headline numbers were synthetic)](https://cultureqc.vercel.app) · [v0.2 API](https://longgrainrice-cultureqc-api.hf.space/docs) (still runs v0.2: `schema_version` 0.2)
 
 [![tests](https://github.com/n1tishc/cultureqc/actions/workflows/tests.yml/badge.svg?branch=slice-1b-compute-cache)](https://github.com/n1tishc/cultureqc/actions/workflows/tests.yml?query=branch%3Aslice-1b-compute-cache)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
