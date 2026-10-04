@@ -7,6 +7,7 @@ swapped). A forecast driven by pasted bacteria shows its reason, not a crossing
 time. The demoted classifier is off the site's cards, and the console's heading
 for it carries the measured rate."""
 
+import ast
 import glob
 import json
 import os
@@ -81,3 +82,18 @@ def test_classifier_is_off_the_site_cards_and_its_console_heading_is_sourced():
     from culture.claims import python_strings
     strings = python_strings(os.path.join(REPO, "demo", "app.py"))
     assert f"Demoted — known wrong on real frames ({rate} of normal frames called normal); " in strings
+
+
+def _constant(path, name):
+    with open(os.path.join(REPO, path)) as f:
+        tree = ast.parse(f.read())
+    (value,) = [n.value.value for n in tree.body if isinstance(n, ast.Assign)
+                and any(getattr(t, "id", None) == name for t in n.targets)]
+    return value
+
+
+def test_site_reads_the_replays_with_the_console_setup():
+    """build_data.py keeps its own copy of the replays' imaging setup: importing it from
+    demo/replay_timeline.py would need matplotlib, which the site job does not install."""
+    assert _constant("site/assets/build_data.py", "REPLAY_PROFILE") == \
+        _constant("demo/replay_timeline.py", "SETUP_PROFILE") == "c2c12_ker2018"

@@ -47,6 +47,9 @@ C2C12_UM_PER_PX = 1.3        # README "Imaging requirement": C2C12, 5× objectiv
 TILE_PX, CROP_PX, PATCH_PX = 256, 224, 14   # culture/anomaly.py: qctile, DINOv2 centre crop, 16×16 patches
 BAND_LOGIT = 1.0             # culture/seg.py confidence_band (logits) around the 0 cutoff
 CONF_FLOOR = 0.30            # culture/rules.py review floor; README review-rate row
+# demo/replay_timeline.py SETUP_PROFILE, the replays' imaging setup. Not imported: that module
+# needs matplotlib, and the site job installs only numpy and pyyaml (tests keep the two equal).
+REPLAY_PROFILE = "c2c12_ker2018"
 sys.path.insert(0, REPO)
 from culture.records import SCHEMA_VERSION  # noqa: E402
 from culture.rules import AMBIGUITY_TOOLTIP, RULES_VERSION, boundary_ambiguity  # noqa: E402
@@ -331,8 +334,7 @@ def build_examples(img_dir):
 
 def build_replays(img_dir):
     from culture.profiles import get_profile
-    from demo.replay_timeline import SETUP_PROFILE
-    prof = get_profile(SETUP_PROFILE)
+    prof = get_profile(REPLAY_PROFILE)
     maps = json.load(open(rel("demo", "replay_maps", "maps.json")))
     out = []
     for name in REPLAY_ORDER:
