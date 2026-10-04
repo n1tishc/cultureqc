@@ -1,6 +1,7 @@
 {
  "meta": {
   "rules": "rules_v0.5",
+  "schema": "0.4",
   "console_url": "https://huggingface.co/spaces/LongGrainRice/cultureqc-console",
   "repo_url": "https://github.com/n1tishc/cultureqc/tree/slice-1b-compute-cache",
   "branch": "slice-1b-compute-cache",
@@ -7135,6 +7136,112 @@
    "n_review": 451,
    "pct": 9.2,
    "note": "each crop segmented on its own, as the replay visits are"
+  }
+ ],
+ "review_rate_v05": [
+  {
+   "rules": "rules_v0.5",
+   "profile": "c2c12_ker2018",
+   "target": 80.0,
+   "group": "C2C12 held-out, normal",
+   "n": 1228,
+   "reimage": 149,
+   "band_review": 0,
+   "held": 0,
+   "uncalibrated_review": 0,
+   "passage": 0,
+   "review": 0
+  },
+  {
+   "rules": "rules_v0.5",
+   "profile": "c2c12_ker2018",
+   "target": 80.0,
+   "group": "C2C12 tuning, normal (comparison only)",
+   "n": 860,
+   "reimage": 36,
+   "band_review": 0,
+   "held": 0,
+   "uncalibrated_review": 0,
+   "passage": 0,
+   "review": 0
+  },
+  {
+   "rules": "rules_v0.5",
+   "profile": "c2c12_ker2018",
+   "target": 80.0,
+   "group": "C2C12 simulated contamination, bacteria 16.5× too large",
+   "n": 97,
+   "reimage": 91,
+   "band_review": 0,
+   "held": 0,
+   "uncalibrated_review": 0,
+   "passage": 0,
+   "review": 0
+  },
+  {
+   "rules": "rules_v0.5",
+   "profile": "c2c12_ker2018",
+   "target": 80.0,
+   "group": "C2C12 simulated lamp dimming",
+   "n": 552,
+   "reimage": 347,
+   "band_review": 0,
+   "held": 0,
+   "uncalibrated_review": 0,
+   "passage": 0,
+   "review": 0
+  },
+  {
+   "rules": "rules_v0.5",
+   "profile": "c2c12_ker2018",
+   "target": 50.0,
+   "group": "C2C12 held-out, normal",
+   "n": 1228,
+   "reimage": 149,
+   "band_review": 0,
+   "held": 0,
+   "uncalibrated_review": 42,
+   "passage": 0,
+   "review": 42
+  },
+  {
+   "rules": "rules_v0.5",
+   "profile": "c2c12_ker2018",
+   "target": 50.0,
+   "group": "C2C12 tuning, normal (comparison only)",
+   "n": 860,
+   "reimage": 36,
+   "band_review": 0,
+   "held": 0,
+   "uncalibrated_review": 21,
+   "passage": 0,
+   "review": 21
+  },
+  {
+   "rules": "rules_v0.5",
+   "profile": "c2c12_ker2018",
+   "target": 50.0,
+   "group": "C2C12 simulated contamination, bacteria 16.5× too large",
+   "n": 97,
+   "reimage": 91,
+   "band_review": 0,
+   "held": 0,
+   "uncalibrated_review": 1,
+   "passage": 0,
+   "review": 1
+  },
+  {
+   "rules": "rules_v0.5",
+   "profile": "c2c12_ker2018",
+   "target": 50.0,
+   "group": "C2C12 simulated lamp dimming",
+   "n": 552,
+   "reimage": 347,
+   "band_review": 0,
+   "held": 0,
+   "uncalibrated_review": 4,
+   "passage": 0,
+   "review": 4
   }
  ],
  "contamination_figure": "img/v3/contamination_scale.webp"

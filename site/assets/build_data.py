@@ -48,6 +48,7 @@ TILE_PX, CROP_PX, PATCH_PX = 256, 224, 14   # culture/anomaly.py: qctile, DINOv2
 BAND_LOGIT = 1.0             # culture/seg.py confidence_band (logits) around the 0 cutoff
 CONF_FLOOR = 0.30            # culture/rules.py review floor; README review-rate row
 sys.path.insert(0, REPO)
+from culture.records import SCHEMA_VERSION  # noqa: E402
 from culture.rules import AMBIGUITY_TOOLTIP, RULES_VERSION, boundary_ambiguity  # noqa: E402
 
 EXAMPLE_ORDER = ["c2c12_normal_20_40", "c2c12_normal_0_20", "c2c12_normal_40_100",
@@ -417,7 +418,7 @@ def main():
     readme = open(rel("README.md")).read()
     det = yaml.safe_load(open(rel("configs", "detectability.yaml")))
     data = {
-        "meta": {"rules": RULES_VERSION, "console_url": CONSOLE_URL, "repo_url": REPO_URL,
+        "meta": {"rules": RULES_VERSION, "schema": SCHEMA_VERSION, "console_url": CONSOLE_URL, "repo_url": REPO_URL,
                  "branch": "slice-1b-compute-cache", "generated_by": "site/assets/build_data.py"},
         "examples": build_examples(os.path.join(IMG_OUT, "ex") if args.images else None),
         "replays": build_replays(os.path.join(IMG_OUT, "tl") if args.images else None),
@@ -435,6 +436,11 @@ def main():
         "review_rate": [{"group": r["group"], "sequences": int(r["sequences"]), "n": int(r["n"]),
                          "n_review": int(r["n_review"]), "pct": float(r["review_pct"]), "note": r["note"]}
                         for r in csv.DictReader(open(rel("results", "review_rate.csv")))],
+        # scripts/review_rate.py: the current rules on cached readings and quality metrics, no model run
+        "review_rate_v05": [{"rules": r["rules"], "profile": r["profile"], "target": float(r["target"]),
+                             "group": r["group"], **{k: int(r[k]) for k in ("n", "reimage", "band_review", "held",
+                                                                            "uncalibrated_review", "passage", "review")}}
+                            for r in csv.DictReader(open(rel("results", "review_rate_v05.csv")))],
         "contamination_figure": f"{IMG_URL}/contamination_scale.webp",
     }
     with open(DATA_OUT, "w") as f:

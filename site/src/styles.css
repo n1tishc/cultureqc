@@ -833,6 +833,28 @@ code,
   text-decoration: none;
 }
 
+/* The error band: a range on 0–100%, a dot for the reading, the target mark. */
+.gauge[data-kind="range"] > i {
+  right: auto;
+  transform: none;
+  background: color-mix(in oklab, var(--cell) 55%, transparent);
+}
+
+.gauge[data-kind="range"] > b {
+  position: absolute;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  margin: -5px 0 0 -5px;
+  border-radius: 50%;
+  background: var(--cell);
+  box-shadow: 0 0 0 2px var(--stage-2);
+}
+
+.band-read {
+  margin-top: 4px;
+}
+
 .gauge-legend {
   display: flex;
   justify-content: space-between;
@@ -2662,6 +2684,64 @@ td .num {
 .prof-pair {
   display: grid;
   gap: 5px;
+}
+
+.rules-fig {
+  display: grid;
+  gap: 14px;
+  margin-top: 4px;
+}
+
+.rules-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.rules-head > span:first-child {
+  white-space: nowrap;
+}
+
+.rules-head .v {
+  font: 500 12.5px/1.3 var(--mono);
+  text-align: right;
+}
+
+.rules-track {
+  position: relative;
+  height: 14px;
+  overflow: hidden;
+  background: #eef1f4;
+  border-radius: 2px;
+}
+
+.rules-track i {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+}
+
+.rules-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+
+.rules-key i {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 6px;
+  border-radius: 2px;
+  vertical-align: -1px;
 }
 
 .prof-pair .bars-row {

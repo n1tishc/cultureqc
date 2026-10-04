@@ -8,7 +8,7 @@ import { Action, Icon, actionGloss, actionWord, short } from "./ui";
 const LAYERS = [
   ["prob", "Cell probability"],
   ["contour", "Cutoff contour"],
-  ["band", "Borderline band"],
+  ["band", "Cutoff edge"],
   ["anom", "Anomaly patches"],
 ];
 
@@ -116,6 +116,49 @@ function Gauge({ value, mark, max, kind, left, right }) {
   );
 }
 
+/* The reading's 90% error band from its setup's calibration profile, drawn on the
+   0–100% scale with the reading and the passage target, and which rule it meets
+   (culture/rules.py, rules_v0.5). A setup with no profile has no band. */
+function ErrorBand({ c, target }) {
+  const p = c.profile;
+  const cut = p.cutoff === 0 ? "0" : `${p.cutoff > 0 ? "+" : "−"}${Math.abs(p.cutoff).toFixed(1)}`;
+  if (!c.interval) {
+    return (
+      <div className="band-read">
+        <p>
+          Profile <b className="num">{p.id}</b>: no calibration for this microscope, so the reading has no error band
+          {c.pct >= target ? " and a person decides at the target." : ", and a passage at the target goes to a person."}
+        </p>
+      </div>
+    );
+  }
+  const [lo, hi] = c.interval;
+  const verdict =
+    lo < target && hi >= target
+      ? "The band includes the target, so a person decides."
+      : hi < target
+        ? "The whole band is below the target."
+        : "The whole band clears the target.";
+  return (
+    <div className="band-read">
+      <div className="gauge" data-kind="range" aria-hidden="true">
+        <i style={{ left: `${lo}%`, width: `${hi - lo}%` }} />
+        <b style={{ left: `${c.pct}%` }} />
+        <u style={{ left: `calc(${target}% - 1px)` }} />
+      </div>
+      <div className="gauge-legend">
+        <span>
+          90% band {lo.toFixed(1)}–{hi.toFixed(1)}%
+        </span>
+        <span>target {target.toFixed(0)}%</span>
+      </div>
+      <p>
+        Profile <b className="num">{p.id}</b>: cutoff {cut}, band ±{p.band_pp} pp, measured on held-out labelled images. {verdict}
+      </p>
+    </div>
+  );
+}
+
 function Reading({ link, setSolo, children }) {
   const on = () => link && setSolo(link);
   const off = () => setSolo(null);
@@ -213,7 +256,7 @@ export default function Stage({ examples, verify, liveParity }) {
 
           <Reading link="contour" setSolo={setSolo}>
             <div className="reading-top">
-              <span>Confluency, above the cell cutoff</span>
+              <span>Confluency, above this setup’s cutoff</span>
               <span className="src">Cellpose-SAM</span>
             </div>
             <div className="big-row">
@@ -227,6 +270,7 @@ export default function Stage({ examples, verify, liveParity }) {
                 the console’s default
               </p>
             </div>
+            <ErrorBand c={c} target={ex.target} />
             <div
               className="sub"
               data-link="band"
@@ -236,9 +280,8 @@ export default function Stage({ examples, verify, liveParity }) {
               onMouseLeave={() => setSolo("contour")}
               onFocus={() => setSolo("band")}
             >
-              <Gauge value={c.ambiguity} mark={c.ambiguity_ceiling} max={1} left={`boundary ambiguity ${c.ambiguity.toFixed(3)}`} right={`review above ${c.ambiguity_ceiling.toFixed(2)}`} />
               <p>
-                <b className="num">{(c.borderline_fraction * 100).toFixed(1)}%</b> of pixels sit on the cutoff’s edge (hatched).
+                <b className="num">{(c.borderline_fraction * 100).toFixed(1)}%</b> of pixels sit on the cutoff’s edge (hatched): boundary ambiguity <span className="num">{c.ambiguity.toFixed(3)}</span>, recorded but no longer used to decide.
               </p>
             </div>
           </Reading>
@@ -277,7 +320,7 @@ export default function Stage({ examples, verify, liveParity }) {
                 verify the chain <Icon name="down" />
               </a>
             </div>
-            <VerifyLine v={v} rec={ex.record} total={items.length} />
+            <VerifyLine v={v} rec={ex.record} total={examples.chain_order.length} />
           </Reading>
         </div>
       </div>

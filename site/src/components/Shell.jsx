@@ -53,7 +53,7 @@ export function TopBar({ data, page }) {
         <a className="mark" href={home ? "#top" : "/"} aria-label="cultureQC, home">
           <Logo />
           <b>cultureQC</b>
-          <span className="ver">v0.3</span>
+          <span className="ver">v0.4</span>
         </a>
         <nav className="nav" aria-label="Site">
           {HOME_NAV.map(([id, label]) => (
@@ -119,7 +119,7 @@ export function Footer({ data }) {
           <a className="mark" href="/" aria-label="cultureQC, home">
             <Logo />
             <b>cultureQC</b>
-            <span className="ver">v0.3</span>
+            <span className="ver">v0.4</span>
           </a>
           <p>
             Every figure on this site is generated from the repository’s stored output by <code>site/assets/build_data.py</code>; the numbers come from the README tables that <code>tests/test_readme_provenance.py</code> checks against their source files.

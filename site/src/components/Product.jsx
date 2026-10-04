@@ -1,6 +1,7 @@
 import { AnomalyLayer } from "./Stage";
-import { ErrorFigure, ReviewFigure, row } from "./Sections";
-import { Action, Icon, Path, actionGloss, short } from "./ui";
+import { ProfileErrorFigure } from "./Profiles";
+import { row } from "./Sections";
+import { Action, Fig, Icon, Path, actionGloss, short } from "./ui";
 
 /* The home page's product sections. Like the rest of the site, every number
    is read from data.json; the copy around it says what it is and where it
@@ -52,7 +53,7 @@ function MiniTile({ ex }) {
 }
 
 function MiniChain({ examples, ex }) {
-  const byId = Object.fromEntries(examples.items.map((e) => [e.id, e]));
+  const byId = Object.fromEntries([...examples.items, ...(examples.changes || [])].map((e) => [e.id, e]));
   const order = examples.chain_order.map((id) => byId[id]);
   const i = ex.record.index - 1;
   const rows = order.slice(Math.max(0, i - 1), i + 2);
@@ -91,7 +92,7 @@ export function HowItWorks({ data }) {
           <h2 id="how-h">One image in. A reading, a check, an action and a record out.</h2>
           <div>
             <p>
-              <code>analyze()</code> runs once per flask visit. Below, its stored output for one held-out C2C12 frame, step by step: a dense field where the cell edges are hard to call, so the frame goes to a person instead of to a passage.
+              <code>analyze()</code> runs once per flask visit. Below, its stored output for one held-out C2C12 frame, step by step: the densest normal frame among the examples, still below the passage target, so the culture continues.
             </p>
           </div>
         </header>
@@ -120,7 +121,7 @@ export function HowItWorks({ data }) {
           </Step>
           <Step n="4" title="Action" art={<MiniActions a={ex.action} />}>
             <p>
-              {ex.rules} turns the reading and the flag into one action: here, {actionGloss(ex.action)}. An anomaly flag holds a passage for review.
+              {ex.rules} turns the reading, its error band, the quality gate and the flag into one action: here, {actionGloss(ex.action)}. A passage goes to a person when the band includes the target, when the microscope has no calibration, or when the anomaly check flags the frame; an image that fails the quality gate is taken again.
             </p>
           </Step>
           <Step n="5" title="Record" art={<MiniChain examples={data.examples} ex={ex} />}>
@@ -132,29 +133,85 @@ export function HowItWorks({ data }) {
   );
 }
 
+/* What rules_v0.5 does with every held-out normal C2C12 frame (results/review_rate_v05.csv,
+   from cached readings and quality metrics, no model run), one stacked bar per target. */
+function RulesFigure({ data, letter = "B" }) {
+  const rows = data.review_rate_v05.filter((r) => r.group === "C2C12 held-out, normal");
+  const seq = data.review_rate.find((r) => r.group === "C2C12 held-out, full frames").sequences;
+  const n = rows[0].n;
+  const parts = (r) => [
+    ["Re-image", r.reimage, "var(--reimage)"],
+    ["Human review", r.review, "var(--review)"],
+    ["Passage", r.passage, "var(--passage)"],
+    ["Continue or feed", r.n - r.reimage - r.review - r.passage, "var(--rule-2)"],
+  ];
+  const pct = (k) => `${((100 * k) / n).toFixed(1)}%`;
+  return (
+    <Fig
+      letter={letter}
+      title={`What ${rows[0].rules} does with held-out frames`}
+      legend={
+        <>
+          All {n} held-out normal C2C12 frames ({seq} sequences), from the compute cache’s readings; no model run. This microscope has no labelled images, so it has no calibration profile: a reading at or above the target goes to a person, and none reaches 80%. Its quality gate runs first and asks for a new image on {rows[0].reimage} ({pct(rows[0].reimage)}). Source: <Path>results/review_rate.md</Path>.
+        </>
+      }
+    >
+      <div className="rules-fig">
+        {rows.map((r) => (
+          <div className="rules-row" key={r.target}>
+            <div className="rules-head">
+              <span>{r.target.toFixed(0)}% target</span>
+              <span className="v">
+                re-image {r.reimage} · review {r.review}
+              </span>
+            </div>
+            <div className="rules-track" role="img" aria-label={`${r.target.toFixed(0)}% target: ` + parts(r).map(([k, v]) => `${k} ${v}`).join(", ")}>
+              {parts(r).reduce(
+                (acc, [k, v, c]) => {
+                  acc.out.push(<i key={k} style={{ left: `${(100 * acc.x) / n}%`, width: `${(100 * v) / n}%`, background: c }} />);
+                  acc.x += v;
+                  return acc;
+                },
+                { x: 0, out: [] },
+              ).out}
+            </div>
+          </div>
+        ))}
+        <ul className="rules-key">
+          {parts(rows[0]).map(([k, , c]) => (
+            <li key={k}>
+              <i style={{ background: c }} />
+              {k}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </Fig>
+  );
+}
+
 export function Accuracy({ data }) {
-  const r = row(data, "Confluency error, Cellpose-SAM");
-  const [mae, n, base] = nums(r.number);
-  const rev = data.review_rate.find((x) => x.group === "C2C12 held-out, full frames");
-  const ceiling = data.examples.items[0].confluency.ambiguity_ceiling;
+  const P = data.profiles;
+  const msc = P.items.find((p) => p.id === "msc_phase");
+  const ev = P.items.find((p) => p.id === "evican_mixed");
   return (
     <section className="sec" id="accuracy" aria-labelledby="accuracy-h">
       <div className="wrap feature">
         <div className="feature-text">
           <h2 id="accuracy-h">A confluency reading you can check against experts</h2>
           <p>
-            Confluency comes from Cellpose-SAM’s probability map, not a brightness threshold. On {n} real EVICAN images with expert masks it is off by <b className="num">{mae.toFixed(2)} pp</b> on average, against {base.toFixed(2)} pp for a threshold baseline.
+            Confluency comes from Cellpose-SAM’s probability map, counted above a cutoff calibrated for each microscope on labelled images from it. On held-out images the calibrated cutoff brings the error against expert masks from {msc.shipped.mae.toFixed(2)} to <b className="num">{msc.profile.mae.toFixed(2)} pp</b> on mesenchymal stem cells ({msc.n_test} images), and from {ev.shipped.mae.toFixed(2)} to {ev.profile.mae.toFixed(2)} pp on EVICAN’s mixed microscopes ({ev.n_test} images; not fully blind, as the validation page explains).
           </p>
           <p>
-            Where cell edges are hard to call, the frame says so. Boundary ambiguity above {ceiling.toFixed(2)} sends it to a person: {rev.pct}% of {rev.n} held-out C2C12 frames, most of them dense, where passage decisions are made.
+            Every reading carries the 90% error band measured on images left out of the fit: ±{msc.band_pp.toFixed(1)} pp for the stem-cell microscope, ±{ev.band_pp.toFixed(1)} pp across EVICAN’s mixed ones. A passage needs the whole band above the target. When the band includes the target, or the microscope has no calibration yet, a person decides.
           </p>
-          <a className="more" href="/validation#confluency">
-            How confluency was measured <Icon name="passage" />
+          <a className="more" href="/validation#profiles">
+            How each setup was calibrated <Icon name="passage" />
           </a>
         </div>
         <div className="figs feature-figs">
-          <ErrorFigure data={data} />
-          <ReviewFigure data={data} />
+          <ProfileErrorFigure data={data} />
+          <RulesFigure data={data} />
         </div>
       </div>
     </section>
@@ -168,7 +225,8 @@ export function Specs({ data, verify }) {
   const okCount = verify ? verify.filter((v) => v.ok).length : null;
   const spec = [
     ["Confluency error against expert masks", row(data, "Confluency error, Cellpose-SAM")],
-    ["Frames sent to review for ambiguous edges", row(data, "Sent to human review, held-out frames: boundary ambiguity")],
+    ["Confluency error with each setup’s calibration", row(data, "Confluency error per imaging setup")],
+    ["What the rules do with held-out C2C12 frames", row(data, "Rules rules_v0.5 on held-out normal C2C12 frames")],
     ["Anomaly flags on healthy held-out frames", row(data, "Anomaly flag rate, held-out normal")],
     ["One analysis on the live console (ZeroGPU)", row(data, "Live latency, console Space on ZeroGPU")],
   ];
@@ -241,7 +299,6 @@ export function Scope({ data }) {
   const rows = data.detectability.rows;
   const gated = rows.filter((r) => detectKind(r.detectable_here)[0] === "pass");
   const elsewhere = rows.filter((r) => detectKind(r.detectable_here)[0] !== "pass");
-  const ceiling = data.examples.items[0].confluency.ambiguity_ceiling;
   return (
     <section className="sec" id="scope" aria-labelledby="scope-h">
       <div className="wrap">
@@ -259,7 +316,7 @@ export function Scope({ data }) {
                 <Icon name="check" />
                 <div>
                   <b>Confluency</b>
-                  <span>Cellpose-SAM’s reading, with a boundary-ambiguity score. Above {ceiling.toFixed(2)}, a person decides.</span>
+                  <span>Cellpose-SAM’s reading at the cutoff calibrated for the microscope, with a measured 90% error band. When the band includes the passage target, or the microscope has no calibration, a person decides.</span>
                 </div>
               </li>
               {gated.map((r) => {
@@ -269,7 +326,7 @@ export function Scope({ data }) {
                     <Icon name="check" />
                     <div>
                       <b>{name}</b>
-                      <span>{faults ? `On flask visits, the quality gate fails frames for ${faults}; the action is ${r.confirm_with.toLowerCase()}. Single-image analysis does not run it.` : r.detectable_here}</span>
+                      <span>{faults ? `Where a gate is calibrated for the microscope (here, C2C12), it fails frames for ${faults}, and the action is ${r.confirm_with.toLowerCase()}.` : r.detectable_here}</span>
                     </div>
                   </li>
                 );

@@ -2,7 +2,7 @@ import { Fig, Icon, Path, Section, Verdict } from "./ui";
 
 /* Every number below is looked up from data.json, which build_data.py copies
    from the README tables (checked against their sources by the test suite),
-   configs/detectability.yaml and results/review_rate.csv. */
+   configs/detectability.yaml, results/review_rate.csv and results/review_rate_v05.csv. */
 
 export const row = (data, prefix) => {
   const r = data.results.find((x) => x.result.startsWith(prefix));
@@ -62,10 +62,10 @@ export function ReviewFigure({ data, letter = "B" }) {
   return (
     <Fig
       letter="B"
-      title="Where the ambiguity trigger sends frames to review"
+      title="Where rules_v0.4’s ambiguity trigger sent frames to review"
       legend={
         <>
-          Held-out C2C12 frames with boundary ambiguity above {ceiling.toFixed(2)}, by confluency. Overall {all.pct}% of {all.n} frames ({all.sequences} sequences). The score rises with density, so review piles up in the {worst} band, where passage decisions are made; it is a review trigger, not a measure of the reading’s error. Source: <Src>results/review_rate.csv</Src>.
+          Held-out C2C12 frames with boundary ambiguity above {ceiling.toFixed(2)}, by confluency, under rules_v0.4. Overall {all.pct}% of {all.n} frames ({all.sequences} sequences). The score rises with density, so review piled up in the {worst} band, where passage decisions are made. It measured density, not the reading’s error, and since rules_v0.5 it no longer decides. Source: <Src>results/review_rate.csv</Src>.
         </>
       }
     >
@@ -144,7 +144,7 @@ export function Confluency({ data }) {
       title="Confluency against expert masks"
       lede={
         <p>
-          Cellpose-SAM’s probability map gives the number; the share of pixels close to its cutoff gives the boundary ambiguity, and a frame above {ceiling.toFixed(2)} goes to a person. Both were measured on real images: the number against expert masks, and the ambiguity against the number’s error, which it does not predict. It tracks density, so it is a review trigger, not a confidence.
+          Measured at Cellpose-SAM’s default cutoff, before any calibration: the number against expert masks, and the boundary ambiguity (the share of pixels close to the cutoff) against the number’s error, which it does not predict. It tracks density, so rules_v0.4 used it as a review trigger, sending frames above {ceiling.toFixed(2)} to a person. Since rules_v0.5 it is recorded but no longer decides; the calibration profiles above, with their measured error bands, took its place.
         </p>
       }
     >
@@ -389,13 +389,13 @@ export function Integration({ data }) {
 
 /* ── release notes ── */
 
-function Note({ title, children, src, was }) {
+function Note({ title, children, src, was, prev = "v0.2" }) {
   return (
     <li className="note">
       <p>
         <b>{title}</b> {children}
       </p>
-      {was ? <p className="note-was">In v0.2: {was}</p> : null}
+      {was ? <p className="note-was">In {prev}: {was}</p> : null}
       {src ? (
         <span className="src">
           <Path>{src}</Path>
@@ -412,7 +412,11 @@ export function ReleaseNotes({ data }) {
   const real = row(data, "Anomaly flag vs contamination, bacteria at real size");
   const err = row(data, "Confluency error, Cellpose-SAM");
   const v02 = row(data, "Confluency error, v0.2 headline");
-  const cut = row(data, "Confluency error, calibrated cutoff");
+  const cut = row(data, "Confluency error, EVICAN calibration profile");
+  const prof = row(data, "Confluency error per imaging setup");
+  const v05 = row(data, "Rules rules_v0.5 on held-out normal C2C12 frames");
+  const qg = row(data, "Quality gate fail rate");
+  const live = (data.examples.changes || []).map((c) => c.after.id);
   const cutMae = cut.number.match(/MAE ([\d.]+) → ([\d.]+) pp/).slice(1);
   const rev = row(data, "Sent to human review, held-out frames: boundary ambiguity");
   const amb = row(data, "Boundary ambiguity vs the reading's error");
@@ -424,11 +428,62 @@ export function ReleaseNotes({ data }) {
   const nEvican = nums(err.number)[1];
   return (
     <>
+      <article className="release" id="v0-4" aria-labelledby="v0-4-h">
+        <header className="release-head">
+          <h2 id="v0-4-h">v0.4</h2>
+          <p>
+            Rules <code>{data.meta.rules}</code>
+            <br />
+            Records schema <code>{data.meta.schema}</code>
+          </p>
+        </header>
+        <div className="release-body">
+          <section aria-labelledby="new4-h">
+            <h3 id="new4-h">New</h3>
+            <ul className="notes">
+              <Note title="Confluency calibrated per imaging setup." src={prof.source}>
+                Each microscope gets a cutoff fitted on its own labelled images and a 90% error band measured on images left out of the fit, with method and pass criteria committed before scoring: {prof.number}. Live, each through a change record the repository owner approved at the start of the stored chain: {live.join(" and ")}.
+              </Note>
+              <Note title="Passage reads the error band." src="culture/rules.py">
+                A reading whose band clears the target passages; a band that includes the target goes to a person; a microscope with no calibration never passages on its reading alone. An anomaly flag still holds a passage. On held-out C2C12, which has no calibration: {v05.number}.
+              </Note>
+              <Note title="Re-image is an action." src={qg.source}>
+                An image that fails the quality gate calibrated for its microscope is sent back to be taken again before any reading is used. Fail rates on C2C12: {qg.number}.
+              </Note>
+              <Note title="Reviews and changes are their own records." src="culture/schema.json · docs/audit_mapping.md">
+                A person’s review is a new record linked to the reading’s hash, so the reading is never edited. A profile change records the profile before and after by SHA-256, its evidence and who approved it.
+              </Note>
+            </ul>
+          </section>
+
+          <section aria-labelledby="changed4-h">
+            <h3 id="changed4-h">Changed</h3>
+            <ul className="notes">
+              <Note title="Boundary ambiguity no longer decides." src={`${amb.source} · ${rev.source}`} prev="v0.3" was={`frames above ${ceiling} went to a person: ${rev.number}.`}>
+                It tracks density, not the reading’s error: the score {amb.number}. It stays in the record.
+              </Note>
+              <Note title="The EVICAN examples are read with their setup’s profile." src={cut.source} prev="v0.3" was="Cellpose’s default cutoff, with the calibrated cutoff shown beside it as validated, not yet released.">
+                {cut.number}. {data.cutoff_disclosure}
+              </Note>
+            </ul>
+          </section>
+
+          <section aria-labelledby="uncal4-h">
+            <h3 id="uncal4-h">Left uncalibrated</h3>
+            <ul className="notes">
+              <Note title="The C2C12 microscope of the examples and replays." src="configs/confluency_profiles.yaml">
+                It has no labelled images, so its readings use Cellpose’s default cutoff with no band, and a passage at the target goes to a person. Its quality gate still runs.
+              </Note>
+            </ul>
+          </section>
+        </div>
+      </article>
+
       <article className="release" id="v0-3" aria-labelledby="v0-3-h">
         <header className="release-head">
           <h2 id="v0-3-h">v0.3</h2>
           <p>
-            Rules <code>{data.meta.rules}</code>
+            Rules <code>rules_v0.4</code>
             <br />
             Branch <code>{data.meta.branch}</code>
           </p>
@@ -474,10 +529,10 @@ export function ReleaseNotes({ data }) {
           </section>
 
           <section aria-labelledby="next-h">
-            <h3 id="next-h">Validated, not yet released</h3>
+            <h3 id="next-h">Validated, not released in v0.3</h3>
             <ul className="notes">
               <Note title="A recalibrated cell cutoff for the low reading." src={cut.source}>
-                With the cutoff recalibrated on other images, the error on the same {nEvican} images drops from {cutMae[0]} to {cutMae[1]} pp. {data.cutoff_disclosure} It moves the review trigger and the anomaly bins, which are re-derived before it ships.
+                With the cutoff recalibrated on other images, the error on the same {nEvican} images drops from {cutMae[0]} to {cutMae[1]} pp. {data.cutoff_disclosure} It moved the review trigger and the anomaly bins, so it was held. Released in v0.4, above, as the EVICAN calibration profile.
               </Note>
             </ul>
           </section>

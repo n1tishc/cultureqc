@@ -13,6 +13,7 @@ export default function ReleaseNotesPage({ data }) {
           title="Release notes"
           lede={<p>What each release added, and what changed once it was tested on real images. Every number names the file it came from.</p>}
           toc={[
+            ["v0-4", "v0.4"],
             ["v0-3", "v0.3"],
             ["v0-2", "v0.2"],
           ]}

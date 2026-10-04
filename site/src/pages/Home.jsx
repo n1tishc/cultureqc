@@ -26,8 +26,8 @@ export default function Home({ data }) {
   }, []);
 
   useEffect(() => {
-    const byId = Object.fromEntries(ex.items.map((e) => [e.id, e.record]));
-    // verifyChain runs in chain order; the stage looks results up by record index.
+    const byId = Object.fromEntries([...ex.items, ...(ex.changes || [])].map((e) => [e.id, e.record]));
+    // verifyChain runs in chain order (approved profile changes first); the stage looks results up by record index.
     verifyChain(ex.chain_order.map((id) => byId[id])).then(setVerify);
   }, [ex]);
 
