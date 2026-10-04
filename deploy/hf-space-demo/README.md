@@ -9,16 +9,17 @@ app_file: console.py
 python_version: "3.11"
 pinned: false
 license: mit
-short_description: cultureQC v0.3 review console (ZeroGPU)
+short_description: cultureQC v0.4 review console (ZeroGPU)
 ---
 
-# cultureQC v0.3 — review console
+# cultureQC v0.4 — review console
 
-One phase-contrast image in: a Cellpose-SAM confluency reading with its
-boundary ambiguity, a per-image anomaly check, a recommended action from
-`rules_v0.4`, and a hash-chained record.
+One phase-contrast image in: a Cellpose-SAM confluency reading at the cutoff
+calibrated for the imaging setup, with the 90% error band measured for it, a
+per-image anomaly check, a recommended action from `rules_v0.5`, and a
+hash-chained record.
 
-- **v0.3 site:** https://cultureqc-cvoy.vercel.app
+- **v0.4 site:** https://cultureqc-cvoy.vercel.app
 - **Source:** https://github.com/n1tishc/cultureqc/tree/slice-1b-compute-cache
   (the README's results table gives every number below its source file)
 
@@ -26,13 +27,18 @@ boundary ambiguity, a per-image anomaly check, a recommended action from
 
 - **Analyze.** Seven precomputed examples: held-out C2C12 frames, including a
   contamination stress test with bacteria pasted 16.5× too large and the same
-  kind of frame at real size, and two EVICAN images with expert masks. Each is
-  labelled "Precomputed example" with the script, device and date that made
-  it; they open instantly and use no GPU. **Analyze** runs any image live, on
-  a GPU attached for that call only (ZeroGPU): median 3.28 s
-  (`results/live_latency_zerogpu.md`). After the latest publish the live
-  results matched the stored flag and action on 7 of 7 examples
-  (`results/space_dry_run_eaad5cf6.md`).
+  kind of frame at real size, and two EVICAN images with expert masks. The
+  EVICAN images are read with the EVICAN calibration profile and its error
+  band; the C2C12 microscope has no labelled images, so it has no profile and
+  its readings carry no band. Each example is labelled "Precomputed example"
+  with the script, device and date that made it; they open instantly and use
+  no GPU. **Analyze** runs any image live, with the setup picked in the
+  console, on a GPU attached for that call only (ZeroGPU): median 3.28 s,
+  measured before the calibration profiles (`results/live_latency_zerogpu.md`).
+- **Calibration profiles.** One per imaging setup (`configs/confluency_profiles.yaml`):
+  a cutoff fitted on labelled images from that setup and a 90% error band
+  measured on images left out of the fit (`results/confluency_profiles.md`).
+  A passage needs the band to clear the target; otherwise a person decides.
 - **Flask Timeline.** Five held-out C2C12 time-lapse recordings replayed as
   visits (two normal, three with simulated faults): 3-FOV confluency with its
   noise band, the quality gate, the anomaly flag and the passage forecast.

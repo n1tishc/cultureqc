@@ -1,26 +1,91 @@
 # Confluency calibration profiles (culture/profiles.py).
 #
+# WRITTEN BY scripts/write_profiles_config.py from results/confluency_profiles.json;
+# do not edit by hand (tests/test_profiles_config.py checks they match).
+#
 # One entry per imaging setup: the Cellpose-SAM logit cutoff and the 90% error
-# band, both measured on labelled images from that setup by
+# band measured on held-out labelled images from that setup, by
 # scripts/confluency_profiles.py (results/confluency_profiles.md, where the
 # method and the acceptance criteria were committed before scoring). Every
 # record carries the profile's id and SHA-256; replacing an entry is a change
 # under change control, written as a `change` event in the record chain.
 #
-# status: validated (passed its pre-registered criteria on held-out images),
-#         failed (did not), in_domain_check (no held-out evidence),
-#         uncalibrated (no labelled images from the setup).
+# status: validated (every measurable criterion passed on held-out images; the
+#         only status whose fitted values are used), failed, in_domain_check,
+#         uncalibrated. A profile that is not validated reads like an
+#         uncalibrated setup: cutoff 0.0, band null.
 
 version: 1
-
 profiles:
   uncalibrated:
     label: Other imaging setup (uncalibrated)
-    description: >-
-      No labelled images from this imaging setup. The reading uses Cellpose's
-      default cutoff and has no error band, so a reading at or above the
-      passage target goes to a person.
+    description: No validated calibration profile for this imaging setup. The reading uses Cellpose's default cutoff
+      and has no error band, so a reading at or above the passage target goes to a person.
     cutoff: 0.0
     band_pp: null
     status: uncalibrated
     quality: null
+  evican_mixed:
+    label: 'EVICAN: mixed brightfield and phase-contrast microscopes'
+    description: Fitted on 65 labelled images from this setup; tested on 33 others.
+    cutoff: -3.5
+    band_pp: 29.4
+    status: validated
+    fitted_cutoff: -3.5
+    fitted_band_pp: 29.4
+    acceptance:
+      A1: pass
+      A2: not measurable
+      A3: not measurable
+      A4: not measurable
+      A5: pass
+    quality: null
+    evidence:
+      path: results/confluency_profiles.json
+      sha256: 44d93a44549d7acb19f734fda7f361737bc30a4ad1c7e31c39b4572c04fc70e4
+  livecell_incucyte:
+    label: LIVECell instrument, 10× phase contrast
+    description: Fitted on 756 labelled images from this setup; tested on 756 others.
+    cutoff: 0.0
+    band_pp: null
+    status: in_domain_check
+    fitted_cutoff: -0.5
+    fitted_band_pp: 5.99
+    acceptance:
+      A1: pass
+      A2: pass
+      A3: pass
+      A4: pass
+      A5: pass
+    quality: null
+    evidence:
+      path: results/confluency_profiles.json
+      sha256: 44d93a44549d7acb19f734fda7f361737bc30a4ad1c7e31c39b4572c04fc70e4
+  msc_phase:
+    label: MSC phase contrast (Solopov et al. 2025)
+    description: 320 labelled images from this setup in 3 populations; each population tested with the cutoff and
+      band fitted on the others.
+    cutoff: -1.5
+    band_pp: 7.11
+    status: validated
+    fitted_cutoff: -1.5
+    fitted_band_pp: 7.11
+    acceptance:
+      A1: pass
+      A2: not measurable
+      A3: not measurable
+      A4: not measurable
+      A5: pass
+    quality: null
+    evidence:
+      path: results/confluency_profiles.json
+      sha256: 44d93a44549d7acb19f734fda7f361737bc30a4ad1c7e31c39b4572c04fc70e4
+  c2c12_ker2018:
+    label: C2C12 time-lapse microscope (Ker et al. 2018), 5× phase contrast
+    description: 'No labelled images from this setup, so no confluency calibration: the reading uses Cellpose''s
+      default cutoff and has no error band, and a reading at or above the passage target goes to a person. Its quality
+      gate is calibrated on the tuning frames (results/quality_gate_c2c12.md).'
+    cutoff: 0.0
+    band_pp: null
+    status: uncalibrated
+    quality: c2c12
