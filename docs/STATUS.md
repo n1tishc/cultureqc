@@ -110,11 +110,12 @@ Local branch off `9d5d43f`; nothing pushed until the owner approves.
 | Five docs about the September 9–10 React frontend removed (`FRONTEND_REDESIGN`, `INTERACTIVE_FRONTEND`, `SCIENTIFIC_UI_REFINEMENT`, `LIVE_INSTRUMENT`, `DEPLOYMENT_CHECK`), with `scripts/generate_instrument_demo.py` | `d1e5b89` | That frontend's source is not on this branch and nothing cited the docs; the script's input image and output folder were gone. The `/analyze` streaming contract (still tested by `deploy/hf-space/test_api.py`) moved into `deploy/README.md` |
 | `deploy/README.md` rewritten around what runs now | `d1e5b89` | Starts with the v0.4 site and the console; the v0.2 API and raw-demo Spaces marked frozen; the v0.2 site's local setup points to `main` |
 | `demo/flask_timeline.py` (the Flask Timeline tab before the real replays) removed | `c131a1d` | No longer imported by the console. Its fixture writer moved into `scripts/growth_examples.py`, the only user; re-running it gives a byte-identical `growth_examples.png` and the same numbers |
-| `docs/PROGRESS_SUMMARY.md` brought up to 2026-10-04 | this row's commit | Console and backup numbers, open decisions, a §13 on the calibration profiles |
+| `docs/PROGRESS_SUMMARY.md` brought up to 2026-10-04 | `c8e7957` | Console and backup numbers, open decisions, a §13 on the calibration profiles |
+| README "Deployment" section described the v0.2 pairing | `cfb505f` | Now the static v0.4 site and the console Space; the site paragraph says three pages and nine stored records |
+| `HANDOFF_nb03.md` removed (owner, 2026-10-04) | this row's commit | A finished handoff note for `nb/03`; nothing cited it |
 
 Left as they are: unused helpers in `culture/` (a change there is synced into
-both Space folders), the untracked local files, and `HANDOFF_nb03.md` (the
-owner's call).
+both Space folders) and the untracked local files.
 
 ## Slices (spec §2.1), confirmed against the repo
 
