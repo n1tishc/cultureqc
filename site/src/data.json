@@ -6574,8 +6574,8 @@
    "source": "results/live_latency_zerogpu.md"
   },
   {
-   "result": "Live latency, Mac backup (Cellpose-SAM on Apple MPS; measured before calibration profiles)",
-   "number": "median 16.43 s per 1392×1040 C2C12 frame (n = 5); flag and action the same as the examples stored at the time on 7 of 7",
+   "result": "Live latency, Mac backup (Cellpose-SAM on Apple MPS; each example read with its setup's profile, on the Mac that made the stored examples)",
+   "number": "median 16.48 s per 1392×1040 C2C12 frame (n = 5); flag and action the same as stored on 7 of 7 examples",
    "provenance": "real (C2C12, EVICAN)",
    "source": "results/live_latency_mac_mps.md"
   },

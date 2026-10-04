@@ -3,7 +3,8 @@ demo/selfcheck.py — the GPU dry run's parity and latency check
 (cultureQC_upgrade_specv4.md §2B.7 item 3): re-run the first N precomputed
 Analyze examples live, compare with their stored outputs (confluency, anomaly
 score and flag, action, and the 3D view's cell-probability map: share of map
-points on the other side of the cutoff), and time each stage.
+points on the other side of the cutoff), and time each stage. Each example is
+read with its own imaging setup's calibration profile (`profile_id`).
 
     python -m demo.selfcheck [--n 5] [--out results/live_latency_gpu.md]
 
@@ -56,10 +57,12 @@ def run(n: int = 5) -> str:
     for ex in examples:
         path = precomputed.image_path(ex)
         img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
-        a = analyze_image(img, path, ex["cell_line"], ex["target_confluency"])
+        # read with the example's imaging setup, as the console does when an example is picked
+        a = analyze_image(img, path, ex["cell_line"], ex["target_confluency"], profile_id=ex.get("profile_id"))
         t = a.timings_s
         stored_map = precomputed.probmap(ex)
-        map_diff = (f"{((stored_map > 0) != (a.probmap_x1000 > 0)).mean() * 100:.3f}"
+        cut = round(((ex["record"].get("confluency_profile") or {}).get("cutoff") or 0.0) * 1000)
+        map_diff = (f"{((stored_map > cut) != (a.probmap_x1000 > cut)).mean() * 100:.3f}"
                     if stored_map is not None and stored_map.shape == a.probmap_x1000.shape else "n/a")
         if img.shape == (1040, 1392):
             totals.append(t["total"])

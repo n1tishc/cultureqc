@@ -53,7 +53,9 @@ def main():
     for i, ex in enumerate(precomputed.load()):
         client.predict(handle_file(precomputed.image_path(ex)), api_name="/on_upload")
         t0 = time.perf_counter()
-        out = client.predict(ex["cell_line"], ex["target_confluency"], api_name="/run_analysis")
+        # the setup picker's value: each example is read with its imaging setup's profile (rules_v0.5)
+        out = client.predict(ex["cell_line"], ex["target_confluency"], ex.get("profile_id") or "uncalibrated",
+                             api_name="/run_analysis")
         wall = time.perf_counter() - t0
         rec = live_record(out[2] if isinstance(out, (list, tuple)) else out)
         stored_conf = ex["confluency"]

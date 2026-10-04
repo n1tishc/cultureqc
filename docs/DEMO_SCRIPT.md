@@ -169,8 +169,12 @@ person steps in on exceptions and audits the trail.
      2026-09-29 dry run (`results/live_latency_zerogpu.md`), before the
      calibration profiles. Quote the live-vs-stored table only from a rerun
      against the current examples.
-   - The current examples were regenerated on the Mac's GPU (MPS); the
-     51.4% frame reads 51.43% there and 51.45% in the Colab GPU cache.
+   - On the Mac backup (`results/live_latency_mac_mps.md`, 2026-10-04), flag
+     and action are the same as stored on 7 of 7 examples, each read with its
+     setup's profile. The stored examples were made on that Mac, so this
+     checks the code path, not agreement across machines; across machines,
+     the 51.4% frame reads 51.43% on the Mac and 51.45% in the Colab GPU
+     cache.
 
 ## 4. Contamination, honestly (1–2 min)
 
@@ -278,7 +282,7 @@ That is estimated, never replayed, and needs confirming on their data.
 
 - **The Space is down (5xx, as on 2026-09-28):** switch to the Mac tab
   (`deploy/run_console_mac.sh`). Same console, same examples and replays;
-  live Analyze takes a median 16.43 s per C2C12 frame there
+  live Analyze takes a median 16.48 s per C2C12 frame there
   (`results/live_latency_mac_mps.md`). Say it is running on the laptop.
 - **Live Analyze is slow or errors:** stay on the precomputed examples and
   replays; they need no model. Say they are precomputed. The CPU time for a
