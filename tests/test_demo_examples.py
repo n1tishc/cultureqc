@@ -247,3 +247,20 @@ def test_cutoff_study_is_the_live_evican_profile():
         assert ex["record"]["confluency_profile"]["cutoff"] == doc["cutoff"]["calibrated"]
         # the study's reading at the pick is the card's, as displayed
         assert f'{doc["examples"][ex["id"]]["calibrated"]["pct"]:.1f}' == f'{ex["confluency"]["pct"]:.1f}', ex["id"]
+
+
+@requires("gradio")
+def test_the_setup_picker_follows_examples_and_resets_on_upload(tmp_path):
+    """Picking an example sets the setup picker to that example's profile, so pressing
+    Analyze reads it as it was stored; an upload resets the picker to `uncalibrated`,
+    so a new image is never read with the previous example's calibration."""
+    from demo.app import DEFAULT_PROFILE, PROFILE_CHOICES, on_example, on_upload
+    offered = {pid for _label, pid in PROFILE_CHOICES}
+    for ex in EXAMPLES:
+        setup = on_example(precomputed.image_path(ex))[8]        # outputs: ..., map_state, setup, ...
+        assert setup == ex["profile_id"] and setup in offered, ex["id"]
+    img = tmp_path / "upload.png"
+    import cv2
+    cv2.imwrite(str(img), np.full((64, 64), 128, np.uint8))
+    assert on_upload(str(img))[-1] == DEFAULT_PROFILE == "uncalibrated"
+    assert on_upload(None)[-1] == DEFAULT_PROFILE

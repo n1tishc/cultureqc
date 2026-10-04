@@ -39,8 +39,10 @@ writer = RecordWriter(LOG_PATH)
 CELL_LINES = ["A172", "BT474", "BV2", "Huh7", "MCF7", "SHSY5Y", "SKOV3", "SkBr3", "C2C12", "unknown"]
 # Imaging setup -> confluency profile (configs/confluency_profiles.yaml). An
 # upload is `uncalibrated` until the viewer says which setup took it: a
-# profile's band holds only for images from its own setup. Only validated
-# profiles are offered (culture.profiles.choices).
+# profile's band holds only for images from its own setup. Offered: the
+# validated profiles, the named setups without one (they keep their quality
+# gate), and `uncalibrated` (culture.profiles.choices). Picking an example sets
+# its own setup; an upload resets the picker (on_upload).
 PROFILE_CHOICES = profile_choices()
 DEFAULT_PROFILE = "uncalibrated"
 # Hash the weights once at startup, not inside the first Analyze (the Cellpose-SAM file is ~1.2 GB).
@@ -458,8 +460,10 @@ def render_results(
 # ─── Event handlers ───
 
 def on_upload(path):
+    """The last output resets the setup picker: a new image is `uncalibrated` until the
+    viewer picks the setup that took it, never read with the previous example's profile."""
     if not path:
-        return gr.update(visible=False), "", None, None, gr.update()
+        return gr.update(visible=False), "", None, None, gr.update(), DEFAULT_PROFILE
 
     # Browsers can't render TIFF in an <img> tag, and several test-data tiles
     # are real microscopy TIFFs — re-encode a browser-safe preview copy so the
@@ -471,14 +475,14 @@ def on_upload(path):
         preview_path = os.path.join(WORK_DIR, f"preview_{next(tempfile._get_candidate_names())}.png")
         cv2.imwrite(preview_path, raw)
 
-    return gr.update(visible=False), "", path, None, preview_path
+    return gr.update(visible=False), "", path, None, preview_path, DEFAULT_PROFILE
 
 
 def on_example(path):
     ex = precomputed.match(path, EXAMPLES)
     if ex is None:
-        vis, html_, orig, ov, preview = on_upload(path)
-        return preview, vis, html_, orig, ov, gr.update(), gr.update(), None, gr.update(), None, gr.update(visible=False)
+        vis, html_, orig, ov, preview, prof = on_upload(path)
+        return preview, vis, html_, orig, ov, gr.update(), gr.update(), None, prof, None, gr.update(visible=False)
     overlay = precomputed.overlay_path(ex)
     prob = precomputed.probmap(ex)
     map_view = None if prob is None else {
@@ -690,7 +694,7 @@ with gr.Blocks(
     image_view.upload(
         fn=on_upload,
         inputs=[image_view],
-        outputs=[view_toggle, results_html, original_state, overlay_state, image_view],
+        outputs=[view_toggle, results_html, original_state, overlay_state, image_view, setup],
     ).then(fn=lambda: (None, None, gr.update(visible=False), ""), inputs=None,
            outputs=[map_state, reading_state, review_panel, review_out], show_progress="hidden")
 
