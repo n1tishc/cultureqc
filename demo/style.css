@@ -549,8 +549,6 @@ footer { display: none !important; }
 .precomputed-card .classifier-note { margin-top: 6px; }
 .precomputed-card code { font-family: var(--mono); font-size: 11px; }
 .precomputed-caption { margin-top: 8px; font-size: 13px; line-height: 1.5; color: var(--text-secondary); }
-.cutoff-note { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); font-size: 13px; line-height: 1.5; color: var(--text-secondary); }
-.cutoff-note b { color: var(--amber); font-weight: 600; }
 
 /* 3D confluency view (demo/confluency_3d.py) */
 .image-pane { flex-wrap: nowrap !important; }

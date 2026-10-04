@@ -4,7 +4,7 @@ cell-probability map that the confluency number is counted from, drawn as a
 surface over the image.
 
 Height is the map's logit at each point, not cell thickness (phase contrast
-does not measure height). Points above the cutoff plane (logit 0) are counted
+does not measure height). Points above the cutoff plane (logit 0, or the imaging setup's profile cutoff) are counted
 as cell; points within ±band of it are the borderline pixels that lower the
 confidence (culture/seg.py::cpsam_confluency). The map is the stored form
 (culture.cache.downsample_probmap, 1/4 resolution), and its SHA-256 is the

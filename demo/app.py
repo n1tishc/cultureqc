@@ -242,34 +242,8 @@ def render_provenance(ex):
     the Analyze button, on {html.escape(ex["device"].upper())} ({t["wall"]:.0f} s),
     {html.escape(ex["generated_at"][:10])}.{rederived} Press Analyze to run this image live.</div>
     <div class="precomputed-caption">{html.escape(ex["caption"])}</div>
-    <div class="classifier-note">{html.escape(ex["credit"])}</div>{render_cutoff_note(ex)}
+    <div class="classifier-note">{html.escape(ex["credit"])}</div>
   </div>"""
-
-
-def render_cutoff_note(ex, doc=None):
-    """The calibrated cutoff's reading of this image, marked validated and not
-    live: the console, the stored example and its record all use the shipped
-    cutoff. Empty for images the cutoff study did not score."""
-    if ex.get("record", {}).get("confluency_profile"):
-        return ""            # read with its setup's profile since rules_v0.5; the card shows the cutoff and band
-    doc = doc if doc is not None else precomputed.cutoff_calibrated()
-    c = (doc or {}).get("examples", {}).get(ex["id"])
-    if not c:
-        return ""
-    cut, ev = doc["cutoff"], doc["eval"]
-    # The study reran the model, so its reading at the shipped cutoff can differ from this card's stored
-    # one in the last digit shown; say so rather than show two numbers for one reading without comment.
-    shipped, stored = f'{c["shipped"]["pct"]:.1f}', f'{ex["confluency"]["pct"]:.1f}'
-    rerun = "" if shipped == stored else f" in the study's rerun (this card's stored reading: {stored}%)"
-    return f"""
-    <div class="cutoff-note"><b>Calibrated cutoff: validated, not live.</b> In the cutoff study
-    (<code>{html.escape(doc["source"])}</code>) this image reads {c["calibrated"]["pct"]:.1f}% at boundary ambiguity
-    {boundary_ambiguity(c["calibrated"]["confidence"]):.3f} with the Cellpose-SAM cutoff at {format(cut["calibrated"], "g").replace("-", "−")} (picked on
-    {doc["calibration_images"]} other EVICAN images), against {shipped}% at the shipped
-    {cut["shipped"]:g}{rerun}; experts {c["gt_pct"]:.1f}%. On the {ev["n"]} held-out images: mean absolute error
-    {ev["mae_shipped"]:.2f} to {ev["mae_calibrated"]:.2f} pp. {html.escape(doc["disclosure"]["text"])} Held for a
-    release: it moves the review trigger and the anomaly bins, which are re-derived first. Everything above uses
-    the shipped cutoff.</div>"""
 
 
 def show_example(ex):
@@ -648,8 +622,8 @@ with gr.Blocks(
                 gr.Markdown(
                     "**Examples: precomputed, labelled as such; press Analyze to run one live.** "
                     "C2C12 frames are held-out frames from the Phase A replays; the contaminated ones are "
-                    "simulated (bacteria pasted at 16.5× their real size). EVICAN: one accurate case and one "
-                    "error case against the dataset's own expert masks. "
+                    "simulated (bacteria pasted at 16.5× their real size). EVICAN: two of its 33 test images, "
+                    "read with the EVICAN calibration profile and compared with the dataset's own expert masks. "
                     + " · ".join(sorted({part for e in EXAMPLES for part in e["credit"].split("; ")}))
                 )
                 # Spaces set GRADIO_CACHE_EXAMPLES=true; caching would write the

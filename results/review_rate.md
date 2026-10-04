@@ -1,6 +1,6 @@
 # Human-review rate
 
-Generated 2026-10-03T00:50:33Z by `scripts/review_rate.py`. No model runs: readings, confidences and maps are the compute cache's (Cellpose-SAM cpsam_v2, Colab GPU, nb/03), same formula as the live path. C2C12 images: Ker et al., *Sci Data* 5:180237 (2018), CC BY 4.0; fault frames are simulated from them. Frames within a sequence are not independent; n sequences is the sample size.
+Generated 2026-10-04T17:21:21Z by `scripts/review_rate.py`. No model runs: readings, confidences and maps are the compute cache's (Cellpose-SAM cpsam_v2, Colab GPU, nb/03), same formula as the live path. C2C12 images: Ker et al., *Sci Data* 5:180237 (2018), CC BY 4.0; fault frames are simulated from them. Frames within a sequence are not independent; n sequences is the sample size.
 
 ## `rules_v0.5`: error band and passage hold
 

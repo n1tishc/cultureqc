@@ -6,9 +6,11 @@ Reads results/confluency_cutoff.csv (scripts/confluency_cutoff.py) and writes
 demo/examples/cutoff_calibrated.json: the held-out MAE at the shipped and the
 calibrated cutoff, and each EVICAN example's reading at both. The disclosure
 (the result is not fully blind) is parsed from results/confluency_cutoff.md's
-curve and disclosure paragraph, so its numbers have one source. The console shows
-it beside the precomputed example as validated, not live; nothing here changes
-the shipped cutoff or any stored example. No model runs.
+curve and disclosure paragraph, so its numbers have one source. Since
+rules_v0.5 the cutoff is live as the `evican_mixed` calibration profile
+(configs/confluency_profiles.yaml, results/confluency_profiles.md), so the file
+is marked superseded; the site still reads the disclosure from it. Nothing here
+changes a profile or a stored example. No model runs.
 """
 
 from __future__ import annotations
@@ -67,7 +69,7 @@ def build(csv_path: str = CSV, md_path: str = MD) -> dict:
                                           "confidence": float(r[f"conf_cut{PICK}"])}}
     return {"generated_by": "scripts/export_cutoff_examples.py",
             "source": "results/confluency_cutoff.md",
-            "status": "validated, not live",
+            "status": "superseded: live as calibration profile evican_mixed since rules_v0.5",
             "cutoff": {"shipped": float(SHIPPED), "calibrated": float(PICK)},
             "calibration_images": int((df.split == "calib65").sum()),
             "eval": {"n": len(ev), "mae_shipped": mae(SHIPPED), "mae_calibrated": mae(PICK)},

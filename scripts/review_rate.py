@@ -36,7 +36,9 @@ are out of sample for it, and the tuning half is shown only for comparison.
 
     python scripts/review_rate.py
 
-Writes results/review_rate.md and results/review_rate.csv (one row per group).
+Writes results/review_rate.md, results/review_rate_v05.csv (the current rules: one row per
+target and group) and results/review_rate.csv (the rules_v0.4 boundary-ambiguity trigger, one row
+per group, kept for comparison).
 """
 
 from __future__ import annotations
@@ -186,6 +188,10 @@ def main():
         w = csv.DictWriter(f, fieldnames=list(rows[0]))
         w.writeheader()
         w.writerows(rows)
+    with open(os.path.join(RESULTS, "review_rate_v05.csv"), "w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=["rules", "profile", "target", *[k for k in v05_rows[0] if k != "target"]])
+        w.writeheader()
+        w.writerows({"rules": RULES_VERSION, "profile": prof.id, **r} for r in v05_rows)
 
     band_txt = (f"cutoff {prof.cutoff:+.1f}, 90% band ±{prof.band_pp:.2f} pp" if prof.band_pp is not None
                 else f"cutoff {prof.cutoff:+.1f}, no band")

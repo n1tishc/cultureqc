@@ -231,28 +231,34 @@ def test_cli(tmp_path, log):
     assert r.returncode == 1 and "missing_log" in r.stdout
 
 
-def test_stored_example_records_verify(tmp_path):
-    """The seven records the console and the site show (demo/examples/examples.json)
-    are one chain, in example order."""
+def _stored_chain() -> tuple[list[dict], int]:
+    """demo/examples/examples.json in chain order: change records first, then the readings."""
     with open(os.path.join(REPO, "demo", "examples", "examples.json")) as f:
-        records = [ex["record"] for ex in json.load(f)["examples"]]
+        doc = json.load(f)
+    readings = [ex["record"] for ex in doc["examples"]]
+    return (doc.get("changes") or []) + readings, len(readings)
+
+
+def test_stored_example_records_verify(tmp_path):
+    """The records the console and the site show (demo/examples/examples.json) are
+    one chain: the approved profile changes, then the seven readings in example order."""
+    records, n_readings = _stored_chain()
     path = str(tmp_path / "examples.jsonl")
     _write(path, records)
     res = verify_chain(path)
-    assert res.ok and res.n_records == len(records) == 7
+    assert res.ok and res.n_records == len(records) and n_readings == 7
     assert verify_chain(path, checkpoint=checkpoint(path)).ok
 
 
 def test_the_sites_checkpoint_anchors_the_stored_chain(tmp_path):
-    """site/src/data.json ships a checkpoint of the seven stored records
-    (site/assets/build_data.py); the Records section checks its tamper switches
-    against it. It must anchor the stored chain, and catch the two changes a
-    chain alone passes, by the same rules the browser applies."""
+    """site/src/data.json ships a checkpoint of the stored chain (site/assets/build_data.py);
+    the Records section checks its tamper switches against it. It must anchor the stored
+    chain, and catch the two changes a chain alone passes, by the same rules the browser
+    applies."""
     with open(os.path.join(REPO, "site", "src", "data.json")) as f:
         cp = json.load(f)["examples"]["checkpoint"]
-    with open(os.path.join(REPO, "demo", "examples", "examples.json")) as f:
-        records = [ex["record"] for ex in json.load(f)["examples"]]
-    assert cp["count"] == len(records) == 7 and cp["head_hash"] == records[-1]["record_hash"]
+    records, _ = _stored_chain()
+    assert cp["count"] == len(records) and cp["head_hash"] == records[-1]["record_hash"]
     path = str(tmp_path / "examples.jsonl")
     _write(path, records)
     assert verify_chain(path, checkpoint=cp).status == "intact"

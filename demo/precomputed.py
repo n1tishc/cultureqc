@@ -30,8 +30,9 @@ CUTOFF_JSON = os.path.join(EXAMPLES_DIR, "cutoff_calibrated.json")
 
 
 def cutoff_calibrated(path: str = CUTOFF_JSON) -> dict | None:
-    """The calibrated Cellpose-SAM cutoff (scripts/export_cutoff_examples.py
-    from results/confluency_cutoff.csv): validated, not live. None without it."""
+    """The cutoff study's calibrated Cellpose-SAM cutoff (scripts/export_cutoff_examples.py
+    from results/confluency_cutoff.csv), live as profile evican_mixed since rules_v0.5,
+    with its not-fully-blind disclosure. None without it."""
     if not os.path.exists(path):
         return None
     with open(path) as f:

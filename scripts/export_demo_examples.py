@@ -13,8 +13,10 @@ Examples (fixed before any output was seen):
                        bacteria 16.5× too large); the second pick's frame rebuilt with the
                        bacteria at their real size (scripts/contamination_scale.py, haze variant,
                        the original simulator's design; owner decision 2026-09-28)
-  EVICAN               the two real-image examples the console already showed
-                       (one accurate, one error case; results/confluency_real_summary.md)
+  EVICAN               the two real-image examples the console already showed, both among
+                       EVICAN's 33 test images (results/confluency_profiles.csv); at Cellpose's
+                       default cutoff one was accurate and one an error case
+                       (results/confluency_real_summary.md)
 Lamp dimming is left out: the anomaly flag does not catch dimming (AUROC 0.47),
 and the Flask Timeline's dimming replay already shows the quality gate
 catching it.
@@ -42,8 +44,9 @@ After a change to the rules only (culture/rules.py), re-derive the decisions
 from the stored model outputs, with no model run:
     python scripts/export_demo_examples.py --rederive
 The action, reason, rationale, caption and the record's decision fields are
-recomputed; the records are re-chained in their original order (record_id and
-timestamps kept, so every record_hash changes with decided_by); the example
+recomputed; the records are re-chained in their original order, any approved
+profile changes first (record_id and timestamps kept, so every record_hash
+changes with decided_by); the example
 gains decision_rederived = {"at", "rules"}, shown on the precomputed card.
 Model outputs (confluency, maps, anomaly, classifier, overlay) are untouched.
 """
@@ -95,8 +98,8 @@ def profile_for(kind: str) -> str:
 
 EVICAN = [
     # id, file, ground truth (%, union of the dataset's expert masks), label
-    ("evican_pc3", "test-data/evican_66_PC3.jpg", 5.50, "EVICAN PC3 (real, accurate)"),
-    ("evican_ht29", "test-data/evican_48_HT29.jpg", 51.60, "EVICAN HT29 (real, error case)"),
+    ("evican_pc3", "test-data/evican_66_PC3.jpg", 5.50, "EVICAN PC3 (real, sparse)"),
+    ("evican_ht29", "test-data/evican_48_HT29.jpg", 51.60, "EVICAN HT29 (real, band includes the target)"),
 ]
 
 
@@ -132,17 +135,57 @@ def evican_examples() -> list[dict]:
              "credit": EVICAN_CREDIT} for i, f, gt, label in EVICAN]
 
 
+GATE_WORDS = {"blur_below_threshold": "blur", "exposure_out_of_range": "exposure",
+              "uniformity_above_threshold": "uneven illumination"}
+
+
+def gate_failure(rec: dict) -> str:
+    """The quality gate's failure in words, with the measured value against this setup's limits
+    (configs/quality.yaml)."""
+    import yaml
+    q = rec["quality_gate"]
+    lim = yaml.safe_load(open(os.path.join(REPO, "configs", "quality.yaml")))["entries"][q["thresholds"]]
+    parts = []
+    for r in q["reasons"]:
+        if r == "exposure_out_of_range":
+            e = lim["exposure_mean"]
+            parts.append(f"mean intensity {q['mean_intensity']:.1f}, outside {e['low']:.1f}–{e['high']:.1f}")
+        elif r == "blur_below_threshold":
+            parts.append(f"sharpness {q['blur']:.1f}, below {lim['blur_laplacian_var']['floor']:.1f}")
+        else:
+            parts.append(f"uniformity {q['uniformity']:.1f}, above {lim['uniformity_block_std']['ceiling']:.1f}")
+    return (f"this microscope's quality gate fails it on {' and '.join(GATE_WORDS[r] for r in q['reasons'])} "
+            f"({'; '.join(parts)}; results/quality_gate_c2c12.md)")
+
+
 def caption(e: dict, rec: dict) -> str:
     """One data-driven sentence or two on what this example shows."""
     flag = rec["anomaly_flag"]
     an = ("anomaly check unavailable" if rec["anomaly_status"] != "ok" else
           f"anomaly {'flagged' if flag else 'not flagged'} (score {rec['anomaly_score']:.3f}, "
           f"threshold {rec['anomaly_threshold']:.3f})")
-    band = (rec.get("confluency_profile") or {}).get("band_pp")
+    prof = rec.get("confluency_profile") or {}
+    band, act = prof.get("band_pp"), rec["recommended_action"]
     conf = f"Cellpose-SAM reads {rec['confluency_pct']:.1f}%" + (f" (±{band:.1f} pp)" if band is not None else "")
     if e["kind"] == "evican":
-        return (f"Real image, ground truth {e['gt_pct']:.1f}% from the dataset's expert masks; {conf}; {an}. "
-                "The anomaly banks hold only C2C12 frames, so on other cell types the flag is uncalibrated.")
+        lo, hi = rec["confluency_interval"]
+        target = e.get("target_confluency", TARGET)
+        why = (f"The 90% band, {lo:.1f}–{hi:.1f}%, includes the {target:.0f}% target, so the rules "
+               "send it to a person." if act == "human_review" and lo < target <= hi else
+               f"The rules recommend {act}.")
+        return (f"Real image, one of EVICAN's 33 test images (not among the 65 its profile was fitted on); ground "
+                f"truth {e['gt_pct']:.1f}% from the dataset's expert masks. {conf} with profile {prof['id']} "
+                f"(cutoff {prof['cutoff']:+g}), against {rec['anomaly_bin_confluency_pct']:.1f}% at Cellpose's "
+                f"default cutoff. {why} The anomaly banks hold only C2C12 frames, so on other cell types the flag "
+                f"is uncalibrated; here, {an}.")
+    if act == "reimage":
+        what = (f"Held-out normal frame ({e['sequence']}, frame {e['frame']})" if e["kind"] == "c2c12_normal" else
+                f"Held-out frame with simulated contamination ({e['severity']:.0f} bacteria pasted at 16.5× their "
+                f"real size)")
+        return (f"{what}: {gate_failure(rec)}, so the rules recommend re-imaging and act on no reading. "
+                f"Still recorded: {conf}"
+                + (", inflated by the pasted bacteria counted as cells" if e["kind"] == "c2c12_contamination" else "")
+                + f"; {an}.")
     if e["kind"] == "c2c12_normal":
         return f"Held-out normal frame ({e['sequence']}, frame {e['frame']}); {conf}; {an}."
     if e["kind"] == "c2c12_contamination_real":
@@ -156,14 +199,14 @@ def caption(e: dict, rec: dict) -> str:
         return (f"Held-out frame with simulated contamination at the bacteria's real size ({e['severity']:.0f} per "
                 f"256 px tile area; the stress test's second pick, rebuilt); {an}: {chance} "
                 f"(results/contamination_scale.md). {conf}, against {clean_pct:.1f}% for the same frame without "
-                f"bacteria. The rules recommend {rec['recommended_action']}: the flag only holds a passage, and "
+                f"bacteria. The rules recommend {act}: the flag only holds a passage, and "
                 "this flask is far below the target.")
-    held = rec["recommended_action"] == "human_review" and flag
+    held = act == "human_review" and flag
     return (f"Held-out frame with simulated contamination ({e['severity']:.0f} bacteria pasted at 16.5× their "
             f"real size); {an}. {conf}: the pasted bacteria are counted as cells, so confluency alone is above "
             f"the target"
             + ("; the anomaly flag holds the passage, and the rules recommend human review." if held
-               else f", and the rules recommend {rec['recommended_action']}."))
+               else f", and the rules recommend {act}."))
 
 
 def rederive(date: str) -> None:
@@ -174,6 +217,7 @@ def rederive(date: str) -> None:
     with open(OUT_JSON) as f:
         doc = json.load(f)
     writer = RecordWriter(os.path.join(tempfile.mkdtemp(prefix="cultureqc_examples_"), "records.jsonl"))
+    doc["changes"] = [writer.append(c) for c in doc.get("changes") or []]      # the chain opens with them
     for ex in doc["examples"]:
         a, conf, qc = ex["anomaly"], ex["confluency"], ex["qc"]
         flag = a["flag"] if a["status"] == "ok" else None
@@ -214,7 +258,7 @@ def main():
     ap.add_argument("--rederive", action="store_true",
                     help="re-derive decisions from the stored outputs under the current rules; no model run")
     ap.add_argument("--change-approved-by", metavar="NAME",
-                    help="start the stored chain with one change record per confluency profile the examples use, "
+                    help="start the stored chain with one change record per validated confluency profile, "
                          "approved by NAME (only when the owner has approved putting those profiles live)")
     args = ap.parse_args()
     if args.rederive:
@@ -239,10 +283,10 @@ def main():
         uncal = get_profile(UNCALIBRATED)
         evidence = [{"path": p, "sha256": hash_file(os.path.join(REPO, p))}
                     for p in ("results/confluency_profiles.md", "results/confluency_profiles.json")]
-        for pid in sorted({profile_for(e["kind"]) for e in examples} - {UNCALIBRATED}):
+        # every validated profile goes live, whether or not an example reads with it; a setup
+        # without a calibration (c2c12_ker2018) reads like `uncalibrated`, so nothing changed for it
+        for pid in sorted(p for p, prof in load_profiles().items() if prof.status == "validated"):
             prof = get_profile(pid)
-            if prof.status != "validated":
-                continue                      # not live: reads like an uncalibrated setup, nothing changed
             changes.append(writer.append(change_event(
                 "confluency_profile", {"id": uncal.id, "sha256": uncal.sha256}, {"id": prof.id, "sha256": prof.sha256},
                 f"Calibration profile for this imaging setup ({prof.status}): cutoff {prof.cutoff:+g}, 90% error band "

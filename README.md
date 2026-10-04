@@ -99,7 +99,8 @@ checks that every number in the "Number" column appears in its source file.
 |---|---|---|---|
 | Confluency error, Cellpose-SAM | MAE 8.35 pp (n = 33); threshold baseline 11.20 pp | real (EVICAN) | `results/confluency_real_summary.md` |
 | Confluency error, v0.2 headline (superseded) | 2.3 pp vs ~31 pp for thresholding, measured on synthetic tiles | synthetic | `results/v02_headline.md` |
-| Confluency error, calibrated cutoff (validated, not shipped; not fully blind, see Known limits) | MAE 8.36 → 3.78 pp on the same 33, cutoff −3.5 picked on the other 65 eval2019 images; off by more than 10 pp: 13 → 3 | real (EVICAN) | `results/confluency_cutoff.md` |
+| Confluency error, EVICAN calibration profile (`evican_mixed`, live since `rules_v0.5`; not fully blind, see Known limits) | MAE 8.36 → 3.78 pp on the same 33, cutoff −3.5 picked on the other 65 eval2019 images; off by more than 10 pp: 13 → 3 | real (EVICAN) | `results/confluency_cutoff.md` |
+| Confluency error per imaging setup, calibration profiles (pre-registered, held-out images) | MSC 8.19 → 3.43 pp (320 images in 3 populations, each tested with the profile fitted on the others), 90% band ±7.11 pp; EVICAN 8.36 → 3.78 pp (n = 33, not fully blind), band ±29.40 pp; LIVECell in-domain check 2.14 → 2.05 pp (n = 756) | real (MSC, EVICAN, LIVECell) | `results/confluency_profiles.md` |
 | FOV sampling noise, 0.25-frame field | σ_fov = 2.828 + 0.2072 × confluency | real (C2C12) | `results/growth_signal_summary.md` |
 | Growth step ÷ FOV noise (V2) | 0.35 / 0.65 at 1 FOV; 0.61 / 1.12 at 3 FOVs (6 h / 12 h) | real, simulated visits | `results/growth_signal_summary.md` |
 | Passage forecast, 6 h visits, 3 FOVs (V3) | median absolute error 9.0 h; 90% interval covered 4/5 (n = 5 sequences, 50% target) | real, simulated visits | `results/growth_backtest.md` |
@@ -108,17 +109,18 @@ checks that every number in the "Number" column appears in its source file.
 | Anomaly flag vs contamination, bacteria at real size | AUROC 0.48 (simulated faults, n = 2 held-out sequences); flagged on 1 of 97 frames, 4 of 97 without the bacteria; confluency a median 4.3 pp lower | simulated faults | `results/contamination_scale.md` |
 | Anomaly flag vs lamp dimming | AUROC 0.47 (simulated faults) | simulated faults | `results/anomaly_summary.md` |
 | Quality gate fail rate | normal 12.1%; contamination 91.8%; dimming 51.1% | real + simulated faults | `results/quality_gate_c2c12.md` |
-| Sent to human review, held-out frames: boundary ambiguity above 0.70 (record `confidence` below 0.30) | 5.7% of 1228; 43.8% of the 160 at 40-60% confluency (14 sequences) | real (C2C12) | `results/review_rate.md` |
+| Sent to human review, held-out frames: boundary ambiguity above 0.70 (record `confidence` below 0.30; `rules_v0.4`, retired in `rules_v0.5`) | 5.7% of 1228; 43.8% of the 160 at 40-60% confluency (14 sequences) | real (C2C12) | `results/review_rate.md` |
 | Boundary ambiguity vs the reading's error (pre-registered; the score was named "confidence") | does not predict error: Spearman ρ −0.36 (95% CI −0.69 to +0.02), AURC 7.73 vs 8.35 pp in random order (p = 0.303), n = 33; tracks density: ρ −0.61 with expert confluency, −0.95 with the reading on 1228 held-out C2C12 frames | real (EVICAN, C2C12) | `results/confidence_vs_error.md` |
-| Sent to human review: passage hold on an anomaly flag (since `rules_v0.3`), 50% target | held-out normal frames: 1 of 14 passage-eligible, total 71 (5.8%); simulated contamination with bacteria 16.5× too large (4 sequences, both splits): 76 of 76 passage-eligible; at real size no frame reaches the target | real (C2C12) + simulated faults | `results/review_rate.md` |
+| Sent to human review: passage hold on an anomaly flag (`rules_v0.4`, with the ambiguity trigger), 50% target | held-out normal frames: 1 of 14 passage-eligible, total 71 (5.8%); simulated contamination with bacteria 16.5× too large (4 sequences, both splits): 76 of 76 passage-eligible; at real size no frame reaches the target | real (C2C12) + simulated faults | `results/review_rate.md` |
+| Rules `rules_v0.5` on held-out normal C2C12 frames (no calibration profile for this microscope; quality gate first) | 80% target: re-image 149 of 1228, human review 0; 50% target: human review 42 (3.4%); simulated contamination, bacteria 16.5× too large: re-image 91 of 97 | real (C2C12) + simulated faults | `results/review_rate.md` |
 | SPC (V6; not in the product) | 3.75 false alarms / 100 visits; contamination 0/2; stall 0/2 | simulated faults | `results/spc_summary.md` |
 | QC classifier accuracy, synthetic test tiles | 0.9801 (n = 653) | synthetic | `results/calibration_summary.md` |
 | QC classifier calibration (V8) | ECE 0.0139 (T = 1.5536) | synthetic | `results/calibration_summary.md` |
 | QC classifier on real normal frames | 5.0% called normal (n = 1228) | real (C2C12) | `results/classifier_c2c12.md` |
 | Live latency on CPU (V9) | 689 s per FOV at 1392 × 1040 | real-size input, 2-thread CPU | `results/live_latency.md` |
-| Live latency, console Space on ZeroGPU (one Analyze as the viewer waits, with the owner's token) | median 3.28 s (n = 6, after a first of 6.45 s); flag and action the same as stored on 7 of 7 examples | real (C2C12, EVICAN) | `results/live_latency_zerogpu.md` |
-| Live latency, Mac backup (Cellpose-SAM on Apple MPS) | median 16.43 s per 1392×1040 C2C12 frame (n = 5); flag and action the same as stored on 7 of 7 examples | real (C2C12, EVICAN) | `results/live_latency_mac_mps.md` |
-| Live latency, Colab backup (Tesla T4) | median 12.06 s per 1392×1040 C2C12 frame (n = 5); flag and action the same as stored on 7 of 7 examples | real (C2C12, EVICAN) | `results/live_latency_colab_gpu.md` |
+| Live latency, console Space on ZeroGPU (one Analyze as the viewer waits, with the owner's token; measured before calibration profiles) | median 3.28 s (n = 6, after a first of 6.45 s); flag and action the same as the examples stored at the time on 7 of 7 | real (C2C12, EVICAN) | `results/live_latency_zerogpu.md` |
+| Live latency, Mac backup (Cellpose-SAM on Apple MPS; measured before calibration profiles) | median 16.43 s per 1392×1040 C2C12 frame (n = 5); flag and action the same as the examples stored at the time on 7 of 7 | real (C2C12, EVICAN) | `results/live_latency_mac_mps.md` |
+| Live latency, Colab backup (Tesla T4; measured before calibration profiles) | median 12.06 s per 1392×1040 C2C12 frame (n = 5); flag and action the same as the examples stored at the time on 7 of 7 | real (C2C12, EVICAN) | `results/live_latency_colab_gpu.md` |
 
 The contamination faults paste DeepBacs bacteria imaged at 79 nm/px into
 1.3 µm/px frames, so they are 16.5× too large. Rebuilt with the bacteria at
@@ -135,11 +137,11 @@ drove, and the proof cannot drift apart.
 
 | Output | Detail |
 |---|---|
-| **Confluency** | Cellpose-SAM (`cpsam_v2`) probability map. 8.35 pp mean absolute error on real held-out EVICAN images, reading low (V1). A threshold baseline is computed alongside for comparison. Shown with its **boundary ambiguity**, the share of pixels near the cutoff (min(1, 4 × share within ±1 logit); the record stores 1 − it as `confidence`). Above 0.70 the rules send the image to review. It is a density-sensitive review trigger, not an error estimate: it does not predict the reading's error ([below](#known-limits)). |
+| **Confluency** | Cellpose-SAM (`cpsam_v2`) probability map, counted above the cutoff of the imaging setup's calibration profile (`configs/confluency_profiles.yaml`), with the profile's 90% error band recorded as `confluency_interval`. At Cellpose's default cutoff it is 8.35 pp mean absolute error on real held-out EVICAN images, reading low (V1); with the EVICAN profile, 3.78 pp (not fully blind, [below](#known-limits)). A setup with no profile is read at the default cutoff, with no band. A threshold baseline is computed alongside for comparison. The record also keeps the **boundary ambiguity**, the share of pixels near the cutoff (min(1, 4 × share within ±1 logit); stored as 1 − it in `confidence`). It does not predict the reading's error ([below](#known-limits)), and since `rules_v0.5` it no longer decides. |
 | **Anomaly check** | DINOv2-small patch distances on the 256 px centre tile against banks of normal C2C12 patches, one per confluency bin; flag = score above the bin's 5%-FPR threshold, with a patch heatmap (`culture/anomaly.py`, `configs/anomaly.yaml`). Shown for review; a flag turns `passage` into `human_review` (continue and feed unchanged). Uncalibrated outside the tested imaging setup; see [Site calibration](#site-calibration). |
-| **Action** | Deterministic rules (`rules_v0.4`) over confluency, timing and the anomaly flag (plus the QC flag only when the classifier is not demoted): `passage`, `feed`, `continue`, `human_review`. No model decides this. `continue` (keep culturing, no action now) was called `hold` up to `rules_v0.3`; v0.4 changed the label only, and every decision is the same ([CHANGELOG](CHANGELOG.md)). |
+| **Action** | Deterministic rules (`rules_v0.5`) over confluency and its error band, timing, the quality gate and the anomaly flag (plus the QC flag only when the classifier is not demoted): `passage`, `feed`, `continue`, `human_review`, `reimage`. No model decides this. A passage needs the reading's 90% band to clear the target; a band that includes the target, or a reading at the target from a setup with no calibration profile, goes to a person; an image that fails its setup's quality gate returns `reimage` ([CHANGELOG](CHANGELOG.md)). |
 | **QC classifier (demoted)** | EfficientNet-B0 over the centred 256 px tile: `normal`, `contamination_suspected`, `detachment`, `image_quality`. Trained on synthetic tiles only; accuracy 0.9801 on synthetic test tiles, but 5.0% of real held-out C2C12 normal frames are called normal. Temperature-scaled (`configs/calibration.yaml`). Recorded and shown collapsed; not used for the action, and no Grad-CAM evidence is drawn while demoted (`configs/qc.yaml`). |
-| **Record** | Appended to a hash-chained JSONL log (`culture/records.py`, 40-field schema in `culture/schema.json`), with the model versions and the SHA-256 of every config it used. The console's records also carry `confluency_map_hash`, the SHA-256 of the Cellpose-SAM map the confluency was counted from (1/4 resolution, int16), so the 3D view below can be checked against the record. Every record carries the SHA-256 of the one before it. Editing a record breaks its own hash or, if that hash is recomputed, the next link. Rewriting every later record, or deleting the newest ones, is caught only against an anchored checkpoint: the record count and head hash, stored outside the log ([audit mapping](docs/audit_mapping.md#the-chain)). |
+| **Record** | Appended to a hash-chained JSONL log (`culture/records.py`; schema in `culture/schema.json`: a 49-field reading, and reviews and profile changes as their own record types), with the model versions and the SHA-256 of every config it used. The console's records also carry `confluency_map_hash`, the SHA-256 of the Cellpose-SAM map the confluency was counted from (1/4 resolution, int16), so the 3D view below can be checked against the record. Every record carries the SHA-256 of the one before it. Editing a record breaks its own hash or, if that hash is recomputed, the next link. Rewriting every later record, or deleting the newest ones, is caught only against an anchored checkpoint: the record count and head hash, stored outside the log ([audit mapping](docs/audit_mapping.md#the-chain)). |
 
 ```bash
 python -m culture.records verify events.jsonl                  # the chain alone
@@ -184,8 +186,8 @@ every replayed visit is labelled `"provenance": "replay_simulated"`.
 
 ## Validation on real images
 
-Confluency was checked with the *unretuned, shipped* pipeline on held-out
-EVICAN images (CC BY 4.0) that the model was never tuned or trained on:
+Confluency was checked with Cellpose-SAM at its *default* cutoff, before any
+calibration, on held-out EVICAN images (CC BY 4.0) that the model was never tuned or trained on:
 
 | Method | Real-image MAE (pp, n = 33) | Provenance |
 |---|---:|---|
@@ -200,6 +202,14 @@ reading against 65% ground truth**, reported rather than omitted. Full numbers
 and the dataset licence check:
 [`results/confluency_real_summary.md`](results/confluency_real_summary.md),
 [`docs/DATASETS.md`](docs/DATASETS.md).
+
+Since `rules_v0.5` the reading is calibrated per imaging setup: a cutoff fitted
+on labelled images from that setup, and a 90% error band measured on images
+left out of the fit, with method and pass criteria committed before scoring
+(`results/confluency_profiles.md`). The EVICAN and MSC profiles passed every
+criterion their test images could measure; neither set has test images in the
+60–90% band, so accuracy there is still untested. The C2C12 microscope of the
+examples and replays has no labelled images, so it stays uncalibrated.
 
 ## Measurement noise
 
@@ -316,10 +326,11 @@ error failed: on the 33 held-out EVICAN images, Spearman ρ with the absolute
 error is −0.36 with a 95% CI reaching +0.02, sorting by it is no better than
 random order (AURC 7.73 vs 8.35 pp, p = 0.303), and with expert confluency held fixed the correlation is +0.02.
 It tracks density instead (ρ −0.61 with expert confluency, −0.95 with the
-reading on held-out C2C12), which is why review piles up at 40–60%. It is now
-shown as **boundary ambiguity** (1 − the record's `confidence`), with the
-review trigger unchanged. Seen after the check, not tested: an image the model
-reads as 0% scores as unambiguous, so a complete miss is not sent to review
+reading on held-out C2C12), which is why `rules_v0.4`'s review piled up at
+40–60%. It is now shown as **boundary ambiguity** (1 − the record's
+`confidence`), and since `rules_v0.5` it is recorded but no longer sends an
+image to review. Seen after the check, not tested: an image the model reads as
+0% scores as unambiguous, so under `rules_v0.4` a complete miss was not sent to review
 (3 of the 33, all at 12–19% expert confluency; `results/confidence_vs_error.md`).
 
 **The anomaly check is calibrated for one setup.** On held-out normal C2C12
@@ -335,8 +346,8 @@ contamination not tested), the anomaly flag is at chance (held-out AUROC 0.48;
 flagged on 1 of 97 frames, against 4 of 97 for the same frames without them),
 the quality gate fails no more often, and confluency reads a median 4.3 pp
 lower (`results/contamination_scale.md`). So the passage hold (since `rules_v0.3`)
-gives no protection against it: a realistically contaminated flask that
-reached its target would be recommended for passage. Contamination has to be
+gives no protection against it: a realistically contaminated flask whose
+reading's band cleared the target would be recommended for passage. Contamination has to be
 confirmed by culture, Gram stain or PCR. The passage hold still stops a
 passage when the flag fires for any reason; because the banks hold only C2C12
 frames, on other cell types it can also stop a healthy flask's passage (it
@@ -360,7 +371,7 @@ report)". The switch is `classifier.demoted` in `configs/qc.yaml`. It was
 trained entirely on synthetic contamination made with the same oversized
 bacteria.
 
-**A better confluency cutoff is validated but not shipped.** Much of V1's
+**The EVICAN calibration is not fully blind.** Much of V1's
 under-read is Cellpose-SAM's cutoff: a pixel counts as cell only above logit 0.
 A cutoff picked on the 65 eval2019 images outside the 33, by a rule fixed
 before scoring, lowers held-out MAE from 8.36 to 3.78 pp
@@ -370,12 +381,13 @@ images, and a quarter-resolution sweep showing the evaluation curve was seen
 before the rule was written. The rule picked −3.5, which is not the
 evaluation-best (−3.0 gives 3.40 pp); calibration MAE is flat from −3.5 to −2.5
 (6.95–7.00 pp). The 33 are all under 500,000 px, while 28 of the 65
-calibration images are larger. It is held for a release because it moves what was set at the old cutoff: on
-held-out C2C12 the ambiguity trigger would send no frame to review (69 today on
-the same quarter-resolution maps) and 471 of 1228 frames change anomaly bin.
-The floor and bins have to be re-derived first; the steps are listed in
-`docs/audit_mapping.md`. Everything else in this README, the site and the
-console uses the shipped cutoff.
+calibration images are larger. Since `rules_v0.5` (owner approval, 2026-10-04)
+it is live as the `evican_mixed` profile, with a 90% error band of ±29.4 pp
+(`results/confluency_profiles.md`): several calibration images are read far off
+(one at 2% against 65%), so at an 80% target any EVICAN reading of 50.6% or
+more goes to a person. What it moved has been handled: the boundary-ambiguity
+trigger no longer decides, and the anomaly check still picks its density bin
+from the reading at the default cutoff, which its banks were calibrated on.
 
 **The passage band is unvalidated.** C2C12 "50%" is 50% as Cellpose-SAM reads
 it, about 8 pp below true coverage (V1), and no held-out sequence reaches
@@ -509,7 +521,9 @@ in `docs/STATUS.md`: demoting the QC classifier rather than retraining it
 (2026-09-27), letting an anomaly flag hold a passage (`rules_v0.3`,
 2026-09-28), showing contamination at both the exaggerated and the real
 bacterial size (2026-09-28), holding the calibrated cutoff for a release
-(2026-09-30), and renaming `hold` to `continue` (`rules_v0.4`, 2026-09-30).
+(2026-09-30), renaming `hold` to `continue` (`rules_v0.4`, 2026-09-30), and
+putting the EVICAN and MSC calibration profiles live with the C2C12 microscope
+left uncalibrated (`rules_v0.5`, 2026-10-04).
 
 ## Credits
 

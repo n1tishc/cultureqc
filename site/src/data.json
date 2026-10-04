@@ -1,6 +1,6 @@
 {
  "meta": {
-  "rules": "rules_v0.4",
+  "rules": "rules_v0.5",
   "console_url": "https://huggingface.co/spaces/LongGrainRice/cultureqc-console",
   "repo_url": "https://github.com/n1tishc/cultureqc/tree/slice-1b-compute-cache",
   "branch": "slice-1b-compute-cache",
@@ -26,19 +26,35 @@
     "contour": "img/v3/ex/c2c12_normal_20_40_contour.json",
     "map_w": 348,
     "map_h": 260,
-    "band_pct_of_frame": 12.21,
+    "band_pct_of_frame": 12.19,
     "confluency": {
      "pct": 39.41,
      "confidence": 0.512,
      "method": "probmap",
      "model": "cpsam_v2",
      "borderline_fraction": 0.1221,
-     "instance_pct": 38.66,
+     "instance_pct": 38.67,
      "band_logit": 1.0,
      "floor": 0.3,
      "ambiguity": 0.488,
      "ambiguity_ceiling": 0.7,
-     "ambiguity_tooltip": "Share of pixels near the cell/background cutoff, as min(1, 4 × share within ±1 logit); rises with density; a review trigger, not a probability that the reading is right."
+     "ambiguity_tooltip": "Share of pixels near the cell/background cutoff, as min(1, 4 × share within ±1 logit); rises with density; a review trigger, not a probability that the reading is right.",
+     "profile": {
+      "band_pp": null,
+      "cutoff": 0.0,
+      "id": "c2c12_ker2018",
+      "sha256": "93e2dbea64c45d046038c82849f681c93832c94abdd1a6fae18fd86aec4e0b61",
+      "status": "uncalibrated"
+     },
+     "interval": null
+    },
+    "quality_gate": {
+     "blur": 109.905,
+     "mean_intensity": 114.394,
+     "passed": true,
+     "reasons": [],
+     "thresholds": "c2c12",
+     "uniformity": 12.961
     },
     "target": 80.0,
     "anomaly": {
@@ -367,14 +383,14 @@
     "action": "continue",
     "action_reason": "Confluency 39.4% below target 80%. No action needed.",
     "rationale": "Confluency 39.4% below target (80%); recommend no action required; continue monitoring.",
-    "rules": "rules_v0.4",
-    "device": "cpu",
-    "generated_at": "2026-09-27",
+    "rules": "rules_v0.5",
+    "device": "mps",
+    "generated_at": "2026-10-04",
     "record": {
-     "index": 2,
-     "canonical": "{\"action_reason\":\"Confluency 39.4% below target 80%. No action needed.\",\"analysed_at\":\"2026-09-27T23:16:45.350161+00:00\",\"anomaly_bank_sha256\":\"870ff30ce3339db29bb9dd7aae35713c154f24b7a3a0980b7b19bf559813463a\",\"anomaly_bin\":\"20-40\",\"anomaly_flag\":false,\"anomaly_score\":0.22051,\"anomaly_status\":\"ok\",\"anomaly_threshold\":0.328964,\"anomaly_used_in_decision\":true,\"anomaly_z\":-0.8371,\"captured_at\":\"2026-09-27T23:16:45.348457+00:00\",\"cell_line\":\"unknown\",\"config_hashes\":{\"anomaly.yaml\":\"2776ce48025a554c2d3487c0d98433ef376ee4b9de1f5b25d48508bf82721184\",\"calibration.yaml\":\"b0917ebc04a8c7091f79e6ab221df9e2ea6f10144c918200a7390953a5b6d23d\",\"detectability.yaml\":\"5c7310f638cbbcc646f71b329207e790c3ac5136c457ddc0af641ffa9e6ca010\",\"qc.yaml\":\"53c8f2ad51b5937d1d81baafb454de186df3c1a192f4400ee6bb936dfb63b959\"},\"confluency_confidence\":0.512,\"confluency_map_hash\":\"aa852ef551a30010222d7fabcf496ba570fd1e3dfe264a61252aad02a9fb62e8\",\"confluency_method\":\"probmap\",\"confluency_pct\":39.41,\"decided_by\":\"rules_v0.4\",\"eta_to_target_hours\":null,\"flask_id\":\"demo\",\"growth_trend\":null,\"image_hash\":\"d859aad2ba840be1ece5803022c91b81f97d66e191825e766563b5ceb557a179\",\"image_ref\":\"c2c12_normal_20_40.png\",\"model_versions\":{\"dino\":\"facebook/dinov2-small\",\"qc\":\"qc_effnetb0_v1\",\"seg\":\"cpsam_v2\",\"vlm\":\"template\"},\"model_weights_hash\":null,\"pixel_size_um\":null,\"prev_record_hash\":\"131bb0d677f2034ecc0211d04969419221ed2f90f6a5037cad87ad74df6b8f69\",\"protocol_stage\":null,\"qc_calibrated\":true,\"qc_confidence\":0.4079,\"qc_evidence_bbox\":null,\"qc_flag\":\"normal\",\"qc_rationale\":\"Confluency 39.4% below target (80%); recommend no action required; continue monitoring.\",\"qc_severity\":null,\"qc_used_in_decision\":false,\"recommended_action\":\"continue\",\"record_id\":\"fe7e2ddd-bd19-48ae-a34b-dac22ee56126\",\"review_outcome\":null,\"reviewed_by\":null,\"schema_version\":\"0.3\"}",
-     "record_hash": "64806d48ee69a5bf19517c4cedcd989e9b2fc974589b4b7cee494ad15bd1aeba",
-     "prev_record_hash": "131bb0d677f2034ecc0211d04969419221ed2f90f6a5037cad87ad74df6b8f69"
+     "index": 4,
+     "canonical": "{\"action_reason\":\"Confluency 39.4% below target 80%. No action needed.\",\"analysed_at\":\"2026-10-04T17:23:41.150258+00:00\",\"anomaly_bank_sha256\":\"870ff30ce3339db29bb9dd7aae35713c154f24b7a3a0980b7b19bf559813463a\",\"anomaly_bin\":\"20-40\",\"anomaly_bin_confluency_pct\":39.41,\"anomaly_flag\":false,\"anomaly_score\":0.22051,\"anomaly_status\":\"ok\",\"anomaly_threshold\":0.328964,\"anomaly_used_in_decision\":true,\"anomaly_z\":-0.8371,\"captured_at\":\"2026-10-04T17:23:41.147576+00:00\",\"cell_line\":\"unknown\",\"config_hashes\":{\"anomaly.yaml\":\"2776ce48025a554c2d3487c0d98433ef376ee4b9de1f5b25d48508bf82721184\",\"calibration.yaml\":\"b0917ebc04a8c7091f79e6ab221df9e2ea6f10144c918200a7390953a5b6d23d\",\"confluency_profiles.yaml\":\"0df03470a8fd3abb63a254a7bad2a972ca3c2dcaf0c84dd0fb9f029403499017\",\"detectability.yaml\":\"104b51773f11971cf9b019eaec5836c1419a0b9d4b687c3d48ca73358f16a383\",\"qc.yaml\":\"53c8f2ad51b5937d1d81baafb454de186df3c1a192f4400ee6bb936dfb63b959\",\"quality.yaml\":\"e86534e26c560eabd02f28dc79c19ab731803113b75deb53d9567e4d255f768c\"},\"confluency_confidence\":0.512,\"confluency_interval\":null,\"confluency_map_hash\":\"7a8d6c32e16f287d76efe09d0d78c355d21d34a9866ef40fc002415c9efeaacc\",\"confluency_method\":\"probmap\",\"confluency_pct\":39.41,\"confluency_profile\":{\"band_pp\":null,\"cutoff\":0.0,\"id\":\"c2c12_ker2018\",\"sha256\":\"93e2dbea64c45d046038c82849f681c93832c94abdd1a6fae18fd86aec4e0b61\",\"status\":\"uncalibrated\"},\"decided_by\":\"rules_v0.5\",\"environment\":null,\"eta_to_target_hours\":null,\"flask_id\":\"demo\",\"fov\":null,\"growth_trend\":null,\"image_hash\":\"d859aad2ba840be1ece5803022c91b81f97d66e191825e766563b5ceb557a179\",\"image_ref\":\"c2c12_normal_20_40.png\",\"imager_id\":null,\"lineage\":null,\"model_versions\":{\"dino\":\"facebook/dinov2-small\",\"qc\":\"qc_effnetb0_v1\",\"seg\":\"cpsam_v2\",\"vlm\":\"template\"},\"model_weights_hash\":{\"dino\":\"ae1e99fcefd534ed978cdeb8326f08030c96e28b7a81ffcbc98a857c84d14be1\",\"qc\":\"c126318c27ecbd29514aef60254637f014499ae52d0d004a358158f860b0529d\",\"seg\":\"0f1cc3f7ecdd8a037a57c6c48d9d8921391be4cbce3fa9f13c3e3a2e1253c667\"},\"pixel_size_um\":null,\"prev_record_hash\":\"b8a55f485fe0cab7c66f40f3e3c3f721f40c60c816e7b31ecc461e19634fe647\",\"protocol_stage\":null,\"qc_calibrated\":true,\"qc_confidence\":0.4079,\"qc_evidence_bbox\":null,\"qc_flag\":\"normal\",\"qc_rationale\":\"Confluency 39.4% below target (80%); recommend no action required; continue monitoring.\",\"qc_severity\":null,\"qc_used_in_decision\":false,\"quality_gate\":{\"blur\":109.905,\"mean_intensity\":114.394,\"passed\":true,\"reasons\":[],\"thresholds\":\"c2c12\",\"uniformity\":12.961},\"recommended_action\":\"continue\",\"record_id\":\"b995f4f7-e600-4ea2-8861-c57fdbbe4a28\",\"record_type\":\"reading\",\"recovery_request\":null,\"schema_version\":\"0.4\"}",
+     "record_hash": "0e9d4885a6296082a72e14c257f017c4613be5d59be9ba4bf31bf6e30d446102",
+     "prev_record_hash": "b8a55f485fe0cab7c66f40f3e3c3f721f40c60c816e7b31ecc461e19634fe647"
     }
    },
    {
@@ -395,19 +411,35 @@
     "contour": "img/v3/ex/c2c12_normal_0_20_contour.json",
     "map_w": 348,
     "map_h": 260,
-    "band_pct_of_frame": 5.68,
+    "band_pct_of_frame": 5.65,
     "confluency": {
      "pct": 16.82,
      "confidence": 0.775,
      "method": "probmap",
      "model": "cpsam_v2",
-     "borderline_fraction": 0.0563,
-     "instance_pct": 16.4,
+     "borderline_fraction": 0.0562,
+     "instance_pct": 16.39,
      "band_logit": 1.0,
      "floor": 0.3,
      "ambiguity": 0.225,
      "ambiguity_ceiling": 0.7,
-     "ambiguity_tooltip": "Share of pixels near the cell/background cutoff, as min(1, 4 × share within ±1 logit); rises with density; a review trigger, not a probability that the reading is right."
+     "ambiguity_tooltip": "Share of pixels near the cell/background cutoff, as min(1, 4 × share within ±1 logit); rises with density; a review trigger, not a probability that the reading is right.",
+     "profile": {
+      "band_pp": null,
+      "cutoff": 0.0,
+      "id": "c2c12_ker2018",
+      "sha256": "93e2dbea64c45d046038c82849f681c93832c94abdd1a6fae18fd86aec4e0b61",
+      "status": "uncalibrated"
+     },
+     "interval": null
+    },
+    "quality_gate": {
+     "blur": 120.139,
+     "mean_intensity": 147.006,
+     "passed": true,
+     "reasons": [],
+     "thresholds": "c2c12",
+     "uniformity": 15.362
     },
     "target": 80.0,
     "anomaly": {
@@ -736,14 +768,14 @@
     "action": "continue",
     "action_reason": "Confluency 16.8% below target 80%. No action needed.",
     "rationale": "Confluency 16.8% below target (80%); recommend no action required; continue monitoring.",
-    "rules": "rules_v0.4",
-    "device": "cpu",
-    "generated_at": "2026-09-27",
+    "rules": "rules_v0.5",
+    "device": "mps",
+    "generated_at": "2026-10-04",
     "record": {
-     "index": 1,
-     "canonical": "{\"action_reason\":\"Confluency 16.8% below target 80%. No action needed.\",\"analysed_at\":\"2026-09-27T23:09:45.771053+00:00\",\"anomaly_bank_sha256\":\"870ff30ce3339db29bb9dd7aae35713c154f24b7a3a0980b7b19bf559813463a\",\"anomaly_bin\":\"0-20\",\"anomaly_flag\":false,\"anomaly_score\":0.231322,\"anomaly_status\":\"ok\",\"anomaly_threshold\":0.307557,\"anomaly_used_in_decision\":true,\"anomaly_z\":-0.0463,\"captured_at\":\"2026-09-27T23:09:45.768784+00:00\",\"cell_line\":\"unknown\",\"config_hashes\":{\"anomaly.yaml\":\"2776ce48025a554c2d3487c0d98433ef376ee4b9de1f5b25d48508bf82721184\",\"calibration.yaml\":\"b0917ebc04a8c7091f79e6ab221df9e2ea6f10144c918200a7390953a5b6d23d\",\"detectability.yaml\":\"5c7310f638cbbcc646f71b329207e790c3ac5136c457ddc0af641ffa9e6ca010\",\"qc.yaml\":\"53c8f2ad51b5937d1d81baafb454de186df3c1a192f4400ee6bb936dfb63b959\"},\"confluency_confidence\":0.775,\"confluency_map_hash\":\"882b36a8c9215c76ffff0a2d1b1f726123c69abe5f6903837252488e3ac48166\",\"confluency_method\":\"probmap\",\"confluency_pct\":16.82,\"decided_by\":\"rules_v0.4\",\"eta_to_target_hours\":null,\"flask_id\":\"demo\",\"growth_trend\":null,\"image_hash\":\"9fb8e6e8b2cf05396a99fd6c90cebeab32c542585c6eb683e401351076a401ca\",\"image_ref\":\"c2c12_normal_0_20.png\",\"model_versions\":{\"dino\":\"facebook/dinov2-small\",\"qc\":\"qc_effnetb0_v1\",\"seg\":\"cpsam_v2\",\"vlm\":\"template\"},\"model_weights_hash\":null,\"pixel_size_um\":null,\"prev_record_hash\":\"0000000000000000000000000000000000000000000000000000000000000000\",\"protocol_stage\":null,\"qc_calibrated\":true,\"qc_confidence\":0.7866,\"qc_evidence_bbox\":null,\"qc_flag\":\"contamination_suspected\",\"qc_rationale\":\"Confluency 16.8% below target (80%); recommend no action required; continue monitoring.\",\"qc_severity\":null,\"qc_used_in_decision\":false,\"recommended_action\":\"continue\",\"record_id\":\"69184219-ac1f-41c4-862f-26d944b9903d\",\"review_outcome\":null,\"reviewed_by\":null,\"schema_version\":\"0.3\"}",
-     "record_hash": "131bb0d677f2034ecc0211d04969419221ed2f90f6a5037cad87ad74df6b8f69",
-     "prev_record_hash": "0000000000000000000000000000000000000000000000000000000000000000"
+     "index": 3,
+     "canonical": "{\"action_reason\":\"Confluency 16.8% below target 80%. No action needed.\",\"analysed_at\":\"2026-10-04T17:23:23.851558+00:00\",\"anomaly_bank_sha256\":\"870ff30ce3339db29bb9dd7aae35713c154f24b7a3a0980b7b19bf559813463a\",\"anomaly_bin\":\"0-20\",\"anomaly_bin_confluency_pct\":16.82,\"anomaly_flag\":false,\"anomaly_score\":0.231322,\"anomaly_status\":\"ok\",\"anomaly_threshold\":0.307557,\"anomaly_used_in_decision\":true,\"anomaly_z\":-0.0463,\"captured_at\":\"2026-10-04T17:23:22.909664+00:00\",\"cell_line\":\"unknown\",\"config_hashes\":{\"anomaly.yaml\":\"2776ce48025a554c2d3487c0d98433ef376ee4b9de1f5b25d48508bf82721184\",\"calibration.yaml\":\"b0917ebc04a8c7091f79e6ab221df9e2ea6f10144c918200a7390953a5b6d23d\",\"confluency_profiles.yaml\":\"0df03470a8fd3abb63a254a7bad2a972ca3c2dcaf0c84dd0fb9f029403499017\",\"detectability.yaml\":\"104b51773f11971cf9b019eaec5836c1419a0b9d4b687c3d48ca73358f16a383\",\"qc.yaml\":\"53c8f2ad51b5937d1d81baafb454de186df3c1a192f4400ee6bb936dfb63b959\",\"quality.yaml\":\"e86534e26c560eabd02f28dc79c19ab731803113b75deb53d9567e4d255f768c\"},\"confluency_confidence\":0.775,\"confluency_interval\":null,\"confluency_map_hash\":\"e477878f6643128eeb82daf082a38ce7f206708f2e30dbb39ff87e1a831f8289\",\"confluency_method\":\"probmap\",\"confluency_pct\":16.82,\"confluency_profile\":{\"band_pp\":null,\"cutoff\":0.0,\"id\":\"c2c12_ker2018\",\"sha256\":\"93e2dbea64c45d046038c82849f681c93832c94abdd1a6fae18fd86aec4e0b61\",\"status\":\"uncalibrated\"},\"decided_by\":\"rules_v0.5\",\"environment\":null,\"eta_to_target_hours\":null,\"flask_id\":\"demo\",\"fov\":null,\"growth_trend\":null,\"image_hash\":\"9fb8e6e8b2cf05396a99fd6c90cebeab32c542585c6eb683e401351076a401ca\",\"image_ref\":\"c2c12_normal_0_20.png\",\"imager_id\":null,\"lineage\":null,\"model_versions\":{\"dino\":\"facebook/dinov2-small\",\"qc\":\"qc_effnetb0_v1\",\"seg\":\"cpsam_v2\",\"vlm\":\"template\"},\"model_weights_hash\":{\"dino\":\"ae1e99fcefd534ed978cdeb8326f08030c96e28b7a81ffcbc98a857c84d14be1\",\"qc\":\"c126318c27ecbd29514aef60254637f014499ae52d0d004a358158f860b0529d\",\"seg\":\"0f1cc3f7ecdd8a037a57c6c48d9d8921391be4cbce3fa9f13c3e3a2e1253c667\"},\"pixel_size_um\":null,\"prev_record_hash\":\"beba3f4bcfcc77503c7cc1b5cbffadcfc230b8d0c36c78572bd203f67e15f7be\",\"protocol_stage\":null,\"qc_calibrated\":true,\"qc_confidence\":0.7866,\"qc_evidence_bbox\":null,\"qc_flag\":\"contamination_suspected\",\"qc_rationale\":\"Confluency 16.8% below target (80%); recommend no action required; continue monitoring.\",\"qc_severity\":null,\"qc_used_in_decision\":false,\"quality_gate\":{\"blur\":120.139,\"mean_intensity\":147.006,\"passed\":true,\"reasons\":[],\"thresholds\":\"c2c12\",\"uniformity\":15.362},\"recommended_action\":\"continue\",\"record_id\":\"42679008-984a-45bd-914a-5b124c19f801\",\"record_type\":\"reading\",\"recovery_request\":null,\"schema_version\":\"0.4\"}",
+     "record_hash": "b8a55f485fe0cab7c66f40f3e3c3f721f40c60c816e7b31ecc461e19634fe647",
+     "prev_record_hash": "beba3f4bcfcc77503c7cc1b5cbffadcfc230b8d0c36c78572bd203f67e15f7be"
     }
    },
    {
@@ -764,19 +796,35 @@
     "contour": "img/v3/ex/c2c12_normal_40_100_contour.json",
     "map_w": 348,
     "map_h": 260,
-    "band_pct_of_frame": 24.63,
+    "band_pct_of_frame": 24.59,
     "confluency": {
-     "pct": 51.42,
-     "confidence": 0.013,
+     "pct": 51.43,
+     "confidence": 0.015,
      "method": "probmap",
      "model": "cpsam_v2",
-     "borderline_fraction": 0.2467,
-     "instance_pct": 47.36,
+     "borderline_fraction": 0.2463,
+     "instance_pct": 47.4,
      "band_logit": 1.0,
      "floor": 0.3,
-     "ambiguity": 0.987,
+     "ambiguity": 0.985,
      "ambiguity_ceiling": 0.7,
-     "ambiguity_tooltip": "Share of pixels near the cell/background cutoff, as min(1, 4 × share within ±1 logit); rises with density; a review trigger, not a probability that the reading is right."
+     "ambiguity_tooltip": "Share of pixels near the cell/background cutoff, as min(1, 4 × share within ±1 logit); rises with density; a review trigger, not a probability that the reading is right.",
+     "profile": {
+      "band_pp": null,
+      "cutoff": 0.0,
+      "id": "c2c12_ker2018",
+      "sha256": "93e2dbea64c45d046038c82849f681c93832c94abdd1a6fae18fd86aec4e0b61",
+      "status": "uncalibrated"
+     },
+     "interval": null
+    },
+    "quality_gate": {
+     "blur": 179.569,
+     "mean_intensity": 141.815,
+     "passed": true,
+     "reasons": [],
+     "thresholds": "c2c12",
+     "uniformity": 16.983
     },
     "target": 80.0,
     "anomaly": {
@@ -1102,17 +1150,17 @@
       "patch": 14
      }
     },
-    "action": "human_review",
-    "action_reason": "Boundary ambiguity 0.99 is above 0.70 (record confidence 0.01 below floor 0.30): many pixels sit near the cell/background cutoff; recommend manual inspection.",
-    "rationale": "Confluency 51.4% below target (80%); recommend pause automated decisions and flag for human review.",
-    "rules": "rules_v0.4",
-    "device": "cpu",
-    "generated_at": "2026-09-27",
+    "action": "continue",
+    "action_reason": "Confluency 51.4% below target 80%. No action needed.",
+    "rationale": "Confluency 51.4% below target (80%); recommend no action required; continue monitoring.",
+    "rules": "rules_v0.5",
+    "device": "mps",
+    "generated_at": "2026-10-04",
     "record": {
-     "index": 3,
-     "canonical": "{\"action_reason\":\"Boundary ambiguity 0.99 is above 0.70 (record confidence 0.01 below floor 0.30): many pixels sit near the cell/background cutoff; recommend manual inspection.\",\"analysed_at\":\"2026-09-27T23:23:33.215277+00:00\",\"anomaly_bank_sha256\":\"870ff30ce3339db29bb9dd7aae35713c154f24b7a3a0980b7b19bf559813463a\",\"anomaly_bin\":\"40-100\",\"anomaly_flag\":false,\"anomaly_score\":0.263359,\"anomaly_status\":\"ok\",\"anomaly_threshold\":0.427394,\"anomaly_used_in_decision\":true,\"anomaly_z\":-0.3491,\"captured_at\":\"2026-09-27T23:23:33.213017+00:00\",\"cell_line\":\"unknown\",\"config_hashes\":{\"anomaly.yaml\":\"2776ce48025a554c2d3487c0d98433ef376ee4b9de1f5b25d48508bf82721184\",\"calibration.yaml\":\"b0917ebc04a8c7091f79e6ab221df9e2ea6f10144c918200a7390953a5b6d23d\",\"detectability.yaml\":\"5c7310f638cbbcc646f71b329207e790c3ac5136c457ddc0af641ffa9e6ca010\",\"qc.yaml\":\"53c8f2ad51b5937d1d81baafb454de186df3c1a192f4400ee6bb936dfb63b959\"},\"confluency_confidence\":0.013,\"confluency_map_hash\":\"9243d66e825673a24fa70f8bd3f29ca06898b2a6c5bc74ed1e32d0a280dfaff0\",\"confluency_method\":\"probmap\",\"confluency_pct\":51.42,\"decided_by\":\"rules_v0.4\",\"eta_to_target_hours\":null,\"flask_id\":\"demo\",\"growth_trend\":null,\"image_hash\":\"fdbbf70aa4216bbc7cf8c827a91df276d15eab0371675306863a95b8b11c475a\",\"image_ref\":\"c2c12_normal_40_100.png\",\"model_versions\":{\"dino\":\"facebook/dinov2-small\",\"qc\":\"qc_effnetb0_v1\",\"seg\":\"cpsam_v2\",\"vlm\":\"template\"},\"model_weights_hash\":null,\"pixel_size_um\":null,\"prev_record_hash\":\"64806d48ee69a5bf19517c4cedcd989e9b2fc974589b4b7cee494ad15bd1aeba\",\"protocol_stage\":null,\"qc_calibrated\":true,\"qc_confidence\":0.3927,\"qc_evidence_bbox\":null,\"qc_flag\":\"contamination_suspected\",\"qc_rationale\":\"Confluency 51.4% below target (80%); recommend pause automated decisions and flag for human review.\",\"qc_severity\":null,\"qc_used_in_decision\":false,\"recommended_action\":\"human_review\",\"record_id\":\"9a7b34be-dc9b-4dfd-8536-966ccd3dc739\",\"review_outcome\":null,\"reviewed_by\":null,\"schema_version\":\"0.3\"}",
-     "record_hash": "6547a7a9e7abfe835d7c0454a296387c38f0aaac80df40e041c7663585b3ab94",
-     "prev_record_hash": "64806d48ee69a5bf19517c4cedcd989e9b2fc974589b4b7cee494ad15bd1aeba"
+     "index": 5,
+     "canonical": "{\"action_reason\":\"Confluency 51.4% below target 80%. No action needed.\",\"analysed_at\":\"2026-10-04T17:23:57.869992+00:00\",\"anomaly_bank_sha256\":\"870ff30ce3339db29bb9dd7aae35713c154f24b7a3a0980b7b19bf559813463a\",\"anomaly_bin\":\"40-100\",\"anomaly_bin_confluency_pct\":51.43,\"anomaly_flag\":false,\"anomaly_score\":0.263359,\"anomaly_status\":\"ok\",\"anomaly_threshold\":0.427394,\"anomaly_used_in_decision\":true,\"anomaly_z\":-0.3491,\"captured_at\":\"2026-10-04T17:23:57.866662+00:00\",\"cell_line\":\"unknown\",\"config_hashes\":{\"anomaly.yaml\":\"2776ce48025a554c2d3487c0d98433ef376ee4b9de1f5b25d48508bf82721184\",\"calibration.yaml\":\"b0917ebc04a8c7091f79e6ab221df9e2ea6f10144c918200a7390953a5b6d23d\",\"confluency_profiles.yaml\":\"0df03470a8fd3abb63a254a7bad2a972ca3c2dcaf0c84dd0fb9f029403499017\",\"detectability.yaml\":\"104b51773f11971cf9b019eaec5836c1419a0b9d4b687c3d48ca73358f16a383\",\"qc.yaml\":\"53c8f2ad51b5937d1d81baafb454de186df3c1a192f4400ee6bb936dfb63b959\",\"quality.yaml\":\"e86534e26c560eabd02f28dc79c19ab731803113b75deb53d9567e4d255f768c\"},\"confluency_confidence\":0.015,\"confluency_interval\":null,\"confluency_map_hash\":\"c24b3ce86fc4e588e5d48cd7ef9b1f8513dc1013e4427e6c859c93240c21df49\",\"confluency_method\":\"probmap\",\"confluency_pct\":51.43,\"confluency_profile\":{\"band_pp\":null,\"cutoff\":0.0,\"id\":\"c2c12_ker2018\",\"sha256\":\"93e2dbea64c45d046038c82849f681c93832c94abdd1a6fae18fd86aec4e0b61\",\"status\":\"uncalibrated\"},\"decided_by\":\"rules_v0.5\",\"environment\":null,\"eta_to_target_hours\":null,\"flask_id\":\"demo\",\"fov\":null,\"growth_trend\":null,\"image_hash\":\"fdbbf70aa4216bbc7cf8c827a91df276d15eab0371675306863a95b8b11c475a\",\"image_ref\":\"c2c12_normal_40_100.png\",\"imager_id\":null,\"lineage\":null,\"model_versions\":{\"dino\":\"facebook/dinov2-small\",\"qc\":\"qc_effnetb0_v1\",\"seg\":\"cpsam_v2\",\"vlm\":\"template\"},\"model_weights_hash\":{\"dino\":\"ae1e99fcefd534ed978cdeb8326f08030c96e28b7a81ffcbc98a857c84d14be1\",\"qc\":\"c126318c27ecbd29514aef60254637f014499ae52d0d004a358158f860b0529d\",\"seg\":\"0f1cc3f7ecdd8a037a57c6c48d9d8921391be4cbce3fa9f13c3e3a2e1253c667\"},\"pixel_size_um\":null,\"prev_record_hash\":\"0e9d4885a6296082a72e14c257f017c4613be5d59be9ba4bf31bf6e30d446102\",\"protocol_stage\":null,\"qc_calibrated\":true,\"qc_confidence\":0.3927,\"qc_evidence_bbox\":null,\"qc_flag\":\"contamination_suspected\",\"qc_rationale\":\"Confluency 51.4% below target (80%); recommend no action required; continue monitoring.\",\"qc_severity\":null,\"qc_used_in_decision\":false,\"quality_gate\":{\"blur\":179.569,\"mean_intensity\":141.815,\"passed\":true,\"reasons\":[],\"thresholds\":\"c2c12\",\"uniformity\":16.983},\"recommended_action\":\"continue\",\"record_id\":\"68aaae80-0da5-4c30-86b7-fd7ee839ff99\",\"record_type\":\"reading\",\"recovery_request\":null,\"schema_version\":\"0.4\"}",
+     "record_hash": "0fbd08a33ffb2373d33f2f497418758649554cc7b3bc3107c27032e9ed886a28",
+     "prev_record_hash": "0e9d4885a6296082a72e14c257f017c4613be5d59be9ba4bf31bf6e30d446102"
     }
    },
    {
@@ -1145,7 +1193,23 @@
      "floor": 0.3,
      "ambiguity": 0.291,
      "ambiguity_ceiling": 0.7,
-     "ambiguity_tooltip": "Share of pixels near the cell/background cutoff, as min(1, 4 × share within ±1 logit); rises with density; a review trigger, not a probability that the reading is right."
+     "ambiguity_tooltip": "Share of pixels near the cell/background cutoff, as min(1, 4 × share within ±1 logit); rises with density; a review trigger, not a probability that the reading is right.",
+     "profile": {
+      "band_pp": null,
+      "cutoff": 0.0,
+      "id": "c2c12_ker2018",
+      "sha256": "93e2dbea64c45d046038c82849f681c93832c94abdd1a6fae18fd86aec4e0b61",
+      "status": "uncalibrated"
+     },
+     "interval": null
+    },
+    "quality_gate": {
+     "blur": 268.346,
+     "mean_intensity": 147.701,
+     "passed": true,
+     "reasons": [],
+     "thresholds": "c2c12",
+     "uniformity": 20.593
     },
     "target": 80.0,
     "anomaly": {
@@ -1474,21 +1538,21 @@
     "action": "continue",
     "action_reason": "Confluency 12.2% below target 80%. No action needed.",
     "rationale": "Confluency 12.2% below target (80%); recommend no action required; continue monitoring. The anomaly check flagged this image for review.",
-    "rules": "rules_v0.4",
+    "rules": "rules_v0.5",
     "device": "mps",
-    "generated_at": "2026-09-29",
+    "generated_at": "2026-10-04",
     "record": {
-     "index": 5,
-     "canonical": "{\"action_reason\":\"Confluency 12.2% below target 80%. No action needed.\",\"analysed_at\":\"2026-09-29T01:01:07.944854+00:00\",\"anomaly_bank_sha256\":\"870ff30ce3339db29bb9dd7aae35713c154f24b7a3a0980b7b19bf559813463a\",\"anomaly_bin\":\"0-20\",\"anomaly_flag\":true,\"anomaly_score\":0.328035,\"anomaly_status\":\"ok\",\"anomaly_threshold\":0.307557,\"anomaly_used_in_decision\":true,\"anomaly_z\":2.2441,\"captured_at\":\"2026-09-29T01:01:07.941459+00:00\",\"cell_line\":\"unknown\",\"config_hashes\":{\"anomaly.yaml\":\"2776ce48025a554c2d3487c0d98433ef376ee4b9de1f5b25d48508bf82721184\",\"calibration.yaml\":\"b0917ebc04a8c7091f79e6ab221df9e2ea6f10144c918200a7390953a5b6d23d\",\"detectability.yaml\":\"cb73861f0e9f666ea24c2e352debe327d517d3f09f6026a4d8d9a98204494282\",\"qc.yaml\":\"53c8f2ad51b5937d1d81baafb454de186df3c1a192f4400ee6bb936dfb63b959\"},\"confluency_confidence\":0.709,\"confluency_map_hash\":\"dee6f7cd120f56b36dbc148652d10afd51ba646535501fcf3253bb7a6a1c8019\",\"confluency_method\":\"probmap\",\"confluency_pct\":12.18,\"decided_by\":\"rules_v0.4\",\"eta_to_target_hours\":null,\"flask_id\":\"demo\",\"growth_trend\":null,\"image_hash\":\"9d0dd9d855160c8337e050868aa87623256c33bbb6414c276acf296f2e523cb8\",\"image_ref\":\"c2c12_contamination_real_size.png\",\"model_versions\":{\"dino\":\"facebook/dinov2-small\",\"qc\":\"qc_effnetb0_v1\",\"seg\":\"cpsam_v2\",\"vlm\":\"template\"},\"model_weights_hash\":null,\"pixel_size_um\":null,\"prev_record_hash\":\"f683a512c43b05a00b5de34a6c399eebaa0ecaa16f87bb8426649afa0ddab97f\",\"protocol_stage\":null,\"qc_calibrated\":true,\"qc_confidence\":0.9731,\"qc_evidence_bbox\":null,\"qc_flag\":\"image_quality\",\"qc_rationale\":\"Confluency 12.2% below target (80%); recommend no action required; continue monitoring. The anomaly check flagged this image for review.\",\"qc_severity\":null,\"qc_used_in_decision\":false,\"recommended_action\":\"continue\",\"record_id\":\"a45b181a-bfc6-49fc-8d7b-7a910cd05f24\",\"review_outcome\":null,\"reviewed_by\":null,\"schema_version\":\"0.3\"}",
-     "record_hash": "950f35cbe2faa8cf748e958847aaa1b73d7dafd3ee8abb6f74bed1aa0009e32e",
-     "prev_record_hash": "f683a512c43b05a00b5de34a6c399eebaa0ecaa16f87bb8426649afa0ddab97f"
+     "index": 7,
+     "canonical": "{\"action_reason\":\"Confluency 12.2% below target 80%. No action needed.\",\"analysed_at\":\"2026-10-04T17:24:30.319741+00:00\",\"anomaly_bank_sha256\":\"870ff30ce3339db29bb9dd7aae35713c154f24b7a3a0980b7b19bf559813463a\",\"anomaly_bin\":\"0-20\",\"anomaly_bin_confluency_pct\":12.18,\"anomaly_flag\":true,\"anomaly_score\":0.328035,\"anomaly_status\":\"ok\",\"anomaly_threshold\":0.307557,\"anomaly_used_in_decision\":true,\"anomaly_z\":2.2441,\"captured_at\":\"2026-10-04T17:24:30.315447+00:00\",\"cell_line\":\"unknown\",\"config_hashes\":{\"anomaly.yaml\":\"2776ce48025a554c2d3487c0d98433ef376ee4b9de1f5b25d48508bf82721184\",\"calibration.yaml\":\"b0917ebc04a8c7091f79e6ab221df9e2ea6f10144c918200a7390953a5b6d23d\",\"confluency_profiles.yaml\":\"0df03470a8fd3abb63a254a7bad2a972ca3c2dcaf0c84dd0fb9f029403499017\",\"detectability.yaml\":\"104b51773f11971cf9b019eaec5836c1419a0b9d4b687c3d48ca73358f16a383\",\"qc.yaml\":\"53c8f2ad51b5937d1d81baafb454de186df3c1a192f4400ee6bb936dfb63b959\",\"quality.yaml\":\"e86534e26c560eabd02f28dc79c19ab731803113b75deb53d9567e4d255f768c\"},\"confluency_confidence\":0.709,\"confluency_interval\":null,\"confluency_map_hash\":\"dee6f7cd120f56b36dbc148652d10afd51ba646535501fcf3253bb7a6a1c8019\",\"confluency_method\":\"probmap\",\"confluency_pct\":12.18,\"confluency_profile\":{\"band_pp\":null,\"cutoff\":0.0,\"id\":\"c2c12_ker2018\",\"sha256\":\"93e2dbea64c45d046038c82849f681c93832c94abdd1a6fae18fd86aec4e0b61\",\"status\":\"uncalibrated\"},\"decided_by\":\"rules_v0.5\",\"environment\":null,\"eta_to_target_hours\":null,\"flask_id\":\"demo\",\"fov\":null,\"growth_trend\":null,\"image_hash\":\"9d0dd9d855160c8337e050868aa87623256c33bbb6414c276acf296f2e523cb8\",\"image_ref\":\"c2c12_contamination_real_size.png\",\"imager_id\":null,\"lineage\":null,\"model_versions\":{\"dino\":\"facebook/dinov2-small\",\"qc\":\"qc_effnetb0_v1\",\"seg\":\"cpsam_v2\",\"vlm\":\"template\"},\"model_weights_hash\":{\"dino\":\"ae1e99fcefd534ed978cdeb8326f08030c96e28b7a81ffcbc98a857c84d14be1\",\"qc\":\"c126318c27ecbd29514aef60254637f014499ae52d0d004a358158f860b0529d\",\"seg\":\"0f1cc3f7ecdd8a037a57c6c48d9d8921391be4cbce3fa9f13c3e3a2e1253c667\"},\"pixel_size_um\":null,\"prev_record_hash\":\"9071f670154414cef11754bb9318222745c4cd0f8a35179f61076cdfe3e0abb1\",\"protocol_stage\":null,\"qc_calibrated\":true,\"qc_confidence\":0.9731,\"qc_evidence_bbox\":null,\"qc_flag\":\"image_quality\",\"qc_rationale\":\"Confluency 12.2% below target (80%); recommend no action required; continue monitoring. The anomaly check flagged this image for review.\",\"qc_severity\":null,\"qc_used_in_decision\":false,\"quality_gate\":{\"blur\":268.346,\"mean_intensity\":147.701,\"passed\":true,\"reasons\":[],\"thresholds\":\"c2c12\",\"uniformity\":20.593},\"recommended_action\":\"continue\",\"record_id\":\"e02a16e5-f293-4f1d-a541-2580ed4e28d8\",\"record_type\":\"reading\",\"recovery_request\":null,\"schema_version\":\"0.4\"}",
+     "record_hash": "68404dcda8f035f9fa6125f5d64cb2c29c0e36f7e9f6fafc20d831d4a1b91d57",
+     "prev_record_hash": "9071f670154414cef11754bb9318222745c4cd0f8a35179f61076cdfe3e0abb1"
     }
    },
    {
     "id": "c2c12_contamination_1",
     "label": "C2C12 contamination stress test (bacteria 16.5× too large)",
     "kind": "c2c12_contamination",
-    "caption": "Held-out frame with simulated contamination (246 bacteria pasted at 16.5× their real size); anomaly flagged (score 0.623, threshold 0.427). Cellpose-SAM reads 86.6%: the pasted bacteria are counted as cells, so confluency alone is above the target; the anomaly flag holds the passage, and the rules recommend human review.",
+    "caption": "Held-out frame with simulated contamination (246 bacteria pasted at 16.5× their real size): this microscope's quality gate fails it on exposure (mean intensity 49.7, outside 95.3–148.4; results/quality_gate_c2c12.md), so the rules recommend re-imaging and act on no reading. Still recorded: Cellpose-SAM reads 86.6%, inflated by the pasted bacteria counted as cells; anomaly flagged (score 0.623, threshold 0.427).",
     "credit": "C2C12: Ker et al., Sci Data 5:180237 (2018), CC BY 4.0",
     "sequence": "c2c12_090325_exp1_F0013_Data__fault_contam",
     "frame": 637,
@@ -1505,16 +1569,34 @@
     "band_pct_of_frame": 8.53,
     "confluency": {
      "pct": 86.64,
-     "confidence": 0.658,
+     "confidence": 0.657,
      "method": "probmap",
      "model": "cpsam_v2",
-     "borderline_fraction": 0.0856,
-     "instance_pct": 79.89,
+     "borderline_fraction": 0.0857,
+     "instance_pct": 79.71,
      "band_logit": 1.0,
      "floor": 0.3,
-     "ambiguity": 0.342,
+     "ambiguity": 0.343,
      "ambiguity_ceiling": 0.7,
-     "ambiguity_tooltip": "Share of pixels near the cell/background cutoff, as min(1, 4 × share within ±1 logit); rises with density; a review trigger, not a probability that the reading is right."
+     "ambiguity_tooltip": "Share of pixels near the cell/background cutoff, as min(1, 4 × share within ±1 logit); rises with density; a review trigger, not a probability that the reading is right.",
+     "profile": {
+      "band_pp": null,
+      "cutoff": 0.0,
+      "id": "c2c12_ker2018",
+      "sha256": "93e2dbea64c45d046038c82849f681c93832c94abdd1a6fae18fd86aec4e0b61",
+      "status": "uncalibrated"
+     },
+     "interval": null
+    },
+    "quality_gate": {
+     "blur": 328.072,
+     "mean_intensity": 49.747,
+     "passed": false,
+     "reasons": [
+      "exposure_out_of_range"
+     ],
+     "thresholds": "c2c12",
+     "uniformity": 15.37
     },
     "target": 80.0,
     "anomaly": {
@@ -1840,24 +1922,24 @@
       "patch": 14
      }
     },
-    "action": "human_review",
-    "action_reason": "Confluency 86.6% >= target 80%, but the anomaly check flagged this image; passage held for human review.",
-    "rationale": "Confluency 86.6% above target (80%); recommend pause automated decisions and flag for human review. The anomaly check flagged this image, so it is not passaged automatically.",
-    "rules": "rules_v0.4",
-    "device": "cpu",
-    "generated_at": "2026-09-27",
+    "action": "reimage",
+    "action_reason": "Image failed the quality gate (exposure out of range); re-image before any decision.",
+    "rationale": "Confluency 86.6% above target (80%); recommend re-image this field before any decision. The anomaly check flagged this image for review.",
+    "rules": "rules_v0.5",
+    "device": "mps",
+    "generated_at": "2026-10-04",
     "record": {
-     "index": 4,
-     "canonical": "{\"action_reason\":\"Confluency 86.6% >= target 80%, but the anomaly check flagged this image; passage held for human review.\",\"analysed_at\":\"2026-09-27T23:30:18.744201+00:00\",\"anomaly_bank_sha256\":\"870ff30ce3339db29bb9dd7aae35713c154f24b7a3a0980b7b19bf559813463a\",\"anomaly_bin\":\"40-100\",\"anomaly_flag\":true,\"anomaly_score\":0.623284,\"anomaly_status\":\"ok\",\"anomaly_threshold\":0.427394,\"anomaly_used_in_decision\":true,\"anomaly_z\":5.297,\"captured_at\":\"2026-09-27T23:30:18.741790+00:00\",\"cell_line\":\"unknown\",\"config_hashes\":{\"anomaly.yaml\":\"2776ce48025a554c2d3487c0d98433ef376ee4b9de1f5b25d48508bf82721184\",\"calibration.yaml\":\"b0917ebc04a8c7091f79e6ab221df9e2ea6f10144c918200a7390953a5b6d23d\",\"detectability.yaml\":\"5c7310f638cbbcc646f71b329207e790c3ac5136c457ddc0af641ffa9e6ca010\",\"qc.yaml\":\"53c8f2ad51b5937d1d81baafb454de186df3c1a192f4400ee6bb936dfb63b959\"},\"confluency_confidence\":0.658,\"confluency_map_hash\":\"83ff967fa278898032c2a347c72b947f6903797f8e814dab25dbb3e04bec4f6e\",\"confluency_method\":\"probmap\",\"confluency_pct\":86.64,\"decided_by\":\"rules_v0.4\",\"eta_to_target_hours\":null,\"flask_id\":\"demo\",\"growth_trend\":null,\"image_hash\":\"92fad07b5d16a1e0872ac5cd07ef468983ab2ad39fee51829a3ad0e5e7df03bf\",\"image_ref\":\"c2c12_contamination_1.png\",\"model_versions\":{\"dino\":\"facebook/dinov2-small\",\"qc\":\"qc_effnetb0_v1\",\"seg\":\"cpsam_v2\",\"vlm\":\"template\"},\"model_weights_hash\":null,\"pixel_size_um\":null,\"prev_record_hash\":\"6547a7a9e7abfe835d7c0454a296387c38f0aaac80df40e041c7663585b3ab94\",\"protocol_stage\":null,\"qc_calibrated\":true,\"qc_confidence\":0.9897,\"qc_evidence_bbox\":null,\"qc_flag\":\"contamination_suspected\",\"qc_rationale\":\"Confluency 86.6% above target (80%); recommend pause automated decisions and flag for human review. The anomaly check flagged this image, so it is not passaged automatically.\",\"qc_severity\":null,\"qc_used_in_decision\":false,\"recommended_action\":\"human_review\",\"record_id\":\"b5eeefd9-f734-4e05-89fc-fdad0c5b0fee\",\"review_outcome\":null,\"reviewed_by\":null,\"schema_version\":\"0.3\"}",
-     "record_hash": "f683a512c43b05a00b5de34a6c399eebaa0ecaa16f87bb8426649afa0ddab97f",
-     "prev_record_hash": "6547a7a9e7abfe835d7c0454a296387c38f0aaac80df40e041c7663585b3ab94"
+     "index": 6,
+     "canonical": "{\"action_reason\":\"Image failed the quality gate (exposure out of range); re-image before any decision.\",\"analysed_at\":\"2026-10-04T17:24:14.429840+00:00\",\"anomaly_bank_sha256\":\"870ff30ce3339db29bb9dd7aae35713c154f24b7a3a0980b7b19bf559813463a\",\"anomaly_bin\":\"40-100\",\"anomaly_bin_confluency_pct\":86.64,\"anomaly_flag\":true,\"anomaly_score\":0.623284,\"anomaly_status\":\"ok\",\"anomaly_threshold\":0.427394,\"anomaly_used_in_decision\":true,\"anomaly_z\":5.297,\"captured_at\":\"2026-10-04T17:24:14.426899+00:00\",\"cell_line\":\"unknown\",\"config_hashes\":{\"anomaly.yaml\":\"2776ce48025a554c2d3487c0d98433ef376ee4b9de1f5b25d48508bf82721184\",\"calibration.yaml\":\"b0917ebc04a8c7091f79e6ab221df9e2ea6f10144c918200a7390953a5b6d23d\",\"confluency_profiles.yaml\":\"0df03470a8fd3abb63a254a7bad2a972ca3c2dcaf0c84dd0fb9f029403499017\",\"detectability.yaml\":\"104b51773f11971cf9b019eaec5836c1419a0b9d4b687c3d48ca73358f16a383\",\"qc.yaml\":\"53c8f2ad51b5937d1d81baafb454de186df3c1a192f4400ee6bb936dfb63b959\",\"quality.yaml\":\"e86534e26c560eabd02f28dc79c19ab731803113b75deb53d9567e4d255f768c\"},\"confluency_confidence\":0.657,\"confluency_interval\":null,\"confluency_map_hash\":\"ea5240562976915b30fa9e27f79394783e6423bc3c707ca383b2a081530f715c\",\"confluency_method\":\"probmap\",\"confluency_pct\":86.64,\"confluency_profile\":{\"band_pp\":null,\"cutoff\":0.0,\"id\":\"c2c12_ker2018\",\"sha256\":\"93e2dbea64c45d046038c82849f681c93832c94abdd1a6fae18fd86aec4e0b61\",\"status\":\"uncalibrated\"},\"decided_by\":\"rules_v0.5\",\"environment\":null,\"eta_to_target_hours\":null,\"flask_id\":\"demo\",\"fov\":null,\"growth_trend\":null,\"image_hash\":\"92fad07b5d16a1e0872ac5cd07ef468983ab2ad39fee51829a3ad0e5e7df03bf\",\"image_ref\":\"c2c12_contamination_1.png\",\"imager_id\":null,\"lineage\":null,\"model_versions\":{\"dino\":\"facebook/dinov2-small\",\"qc\":\"qc_effnetb0_v1\",\"seg\":\"cpsam_v2\",\"vlm\":\"template\"},\"model_weights_hash\":{\"dino\":\"ae1e99fcefd534ed978cdeb8326f08030c96e28b7a81ffcbc98a857c84d14be1\",\"qc\":\"c126318c27ecbd29514aef60254637f014499ae52d0d004a358158f860b0529d\",\"seg\":\"0f1cc3f7ecdd8a037a57c6c48d9d8921391be4cbce3fa9f13c3e3a2e1253c667\"},\"pixel_size_um\":null,\"prev_record_hash\":\"0fbd08a33ffb2373d33f2f497418758649554cc7b3bc3107c27032e9ed886a28\",\"protocol_stage\":null,\"qc_calibrated\":true,\"qc_confidence\":0.9897,\"qc_evidence_bbox\":null,\"qc_flag\":\"contamination_suspected\",\"qc_rationale\":\"Confluency 86.6% above target (80%); recommend re-image this field before any decision. The anomaly check flagged this image for review.\",\"qc_severity\":null,\"qc_used_in_decision\":false,\"quality_gate\":{\"blur\":328.072,\"mean_intensity\":49.747,\"passed\":false,\"reasons\":[\"exposure_out_of_range\"],\"thresholds\":\"c2c12\",\"uniformity\":15.37},\"recommended_action\":\"reimage\",\"record_id\":\"19f9e4db-bad8-4b35-b72d-71a6bdc58838\",\"record_type\":\"reading\",\"recovery_request\":{\"action\":\"reimage\",\"reasons\":[\"exposure_out_of_range\"]},\"schema_version\":\"0.4\"}",
+     "record_hash": "9071f670154414cef11754bb9318222745c4cd0f8a35179f61076cdfe3e0abb1",
+     "prev_record_hash": "0fbd08a33ffb2373d33f2f497418758649554cc7b3bc3107c27032e9ed886a28"
     }
    },
    {
     "id": "evican_pc3",
-    "label": "EVICAN PC3 (real, accurate)",
+    "label": "EVICAN PC3 (real, sparse)",
     "kind": "evican",
-    "caption": "Real image, ground truth 5.5% from the dataset's expert masks; Cellpose-SAM reads 5.1%; anomaly flagged (score 0.348, threshold 0.308). The anomaly banks hold only C2C12 frames, so on other cell types the flag is uncalibrated.",
+    "caption": "Real image, one of EVICAN's 33 test images (not among the 65 its profile was fitted on); ground truth 5.5% from the dataset's expert masks. Cellpose-SAM reads 6.6% (±29.4 pp) with profile evican_mixed (cutoff -3.5), against 5.1% at Cellpose's default cutoff. The rules recommend continue. The anomaly banks hold only C2C12 frames, so on other cell types the flag is uncalibrated; here, anomaly flagged (score 0.348, threshold 0.308).",
     "credit": "EVICAN: Bioinformatics 36(12):3863 (2020), CC BY 4.0",
     "sequence": null,
     "frame": null,
@@ -1871,20 +1953,32 @@
     "contour": "img/v3/ex/evican_pc3_contour.json",
     "map_w": 127,
     "map_h": 103,
-    "band_pct_of_frame": 0.72,
+    "band_pct_of_frame": 0.82,
     "confluency": {
-     "pct": 5.13,
-     "confidence": 0.969,
+     "pct": 6.6,
+     "confidence": 0.965,
      "method": "probmap",
      "model": "cpsam_v2",
-     "borderline_fraction": 0.0077,
+     "borderline_fraction": 0.0086,
      "instance_pct": 5.13,
      "band_logit": 1.0,
      "floor": 0.3,
-     "ambiguity": 0.031,
+     "ambiguity": 0.035,
      "ambiguity_ceiling": 0.7,
-     "ambiguity_tooltip": "Share of pixels near the cell/background cutoff, as min(1, 4 × share within ±1 logit); rises with density; a review trigger, not a probability that the reading is right."
+     "ambiguity_tooltip": "Share of pixels near the cell/background cutoff, as min(1, 4 × share within ±1 logit); rises with density; a review trigger, not a probability that the reading is right.",
+     "profile": {
+      "band_pp": 29.4,
+      "cutoff": -3.5,
+      "id": "evican_mixed",
+      "sha256": "73107886731e276e5fada6bc4694f74893a13c51326d3e515643aca2bb0535fd",
+      "status": "validated"
+     },
+     "interval": [
+      0.0,
+      36.0
+     ]
     },
+    "quality_gate": null,
     "target": 80.0,
     "anomaly": {
      "score": 0.347918,
@@ -2210,23 +2304,23 @@
      }
     },
     "action": "continue",
-    "action_reason": "Confluency 5.1% below target 80%. No action needed.",
-    "rationale": "Confluency 5.1% below target (80%); recommend no action required; continue monitoring. The anomaly check flagged this image for review.",
-    "rules": "rules_v0.4",
-    "device": "cpu",
-    "generated_at": "2026-09-27",
+    "action_reason": "Confluency 6.6% below target 80%. No action needed.",
+    "rationale": "Confluency 6.6% below target (80%); recommend no action required; continue monitoring. The anomaly check flagged this image for review.",
+    "rules": "rules_v0.5",
+    "device": "mps",
+    "generated_at": "2026-10-04",
     "record": {
-     "index": 6,
-     "canonical": "{\"action_reason\":\"Confluency 5.1% below target 80%. No action needed.\",\"analysed_at\":\"2026-09-27T23:38:53.711604+00:00\",\"anomaly_bank_sha256\":\"870ff30ce3339db29bb9dd7aae35713c154f24b7a3a0980b7b19bf559813463a\",\"anomaly_bin\":\"0-20\",\"anomaly_flag\":true,\"anomaly_score\":0.347918,\"anomaly_status\":\"ok\",\"anomaly_threshold\":0.307557,\"anomaly_used_in_decision\":true,\"anomaly_z\":2.715,\"captured_at\":\"2026-09-27T23:38:53.710879+00:00\",\"cell_line\":\"unknown\",\"config_hashes\":{\"anomaly.yaml\":\"2776ce48025a554c2d3487c0d98433ef376ee4b9de1f5b25d48508bf82721184\",\"calibration.yaml\":\"b0917ebc04a8c7091f79e6ab221df9e2ea6f10144c918200a7390953a5b6d23d\",\"detectability.yaml\":\"5c7310f638cbbcc646f71b329207e790c3ac5136c457ddc0af641ffa9e6ca010\",\"qc.yaml\":\"53c8f2ad51b5937d1d81baafb454de186df3c1a192f4400ee6bb936dfb63b959\"},\"confluency_confidence\":0.969,\"confluency_map_hash\":\"2d6d82480ab6ba6ad1b9f862425046751f980c58eed37b2acb36d368bf5152ae\",\"confluency_method\":\"probmap\",\"confluency_pct\":5.13,\"decided_by\":\"rules_v0.4\",\"eta_to_target_hours\":null,\"flask_id\":\"demo\",\"growth_trend\":null,\"image_hash\":\"7899fdcd618e09e1ec771d98a72920c1fec0a6be6d67fed9b7cd8f10632ee256\",\"image_ref\":\"evican_pc3.jpg\",\"model_versions\":{\"dino\":\"facebook/dinov2-small\",\"qc\":\"qc_effnetb0_v1\",\"seg\":\"cpsam_v2\",\"vlm\":\"template\"},\"model_weights_hash\":null,\"pixel_size_um\":null,\"prev_record_hash\":\"950f35cbe2faa8cf748e958847aaa1b73d7dafd3ee8abb6f74bed1aa0009e32e\",\"protocol_stage\":null,\"qc_calibrated\":true,\"qc_confidence\":0.9998,\"qc_evidence_bbox\":null,\"qc_flag\":\"image_quality\",\"qc_rationale\":\"Confluency 5.1% below target (80%); recommend no action required; continue monitoring. The anomaly check flagged this image for review.\",\"qc_severity\":null,\"qc_used_in_decision\":false,\"recommended_action\":\"continue\",\"record_id\":\"0e19f6f6-98e2-4725-a24b-72ff5d08bf07\",\"review_outcome\":null,\"reviewed_by\":null,\"schema_version\":\"0.3\"}",
-     "record_hash": "da4eebf2c67f91612e56273290be008c81b953648c25d75b16c247bb8d4b6e94",
-     "prev_record_hash": "950f35cbe2faa8cf748e958847aaa1b73d7dafd3ee8abb6f74bed1aa0009e32e"
+     "index": 8,
+     "canonical": "{\"action_reason\":\"Confluency 6.6% below target 80%. No action needed.\",\"analysed_at\":\"2026-10-04T17:24:34.712592+00:00\",\"anomaly_bank_sha256\":\"870ff30ce3339db29bb9dd7aae35713c154f24b7a3a0980b7b19bf559813463a\",\"anomaly_bin\":\"0-20\",\"anomaly_bin_confluency_pct\":5.13,\"anomaly_flag\":true,\"anomaly_score\":0.347918,\"anomaly_status\":\"ok\",\"anomaly_threshold\":0.307557,\"anomaly_used_in_decision\":true,\"anomaly_z\":2.715,\"captured_at\":\"2026-10-04T17:24:34.711599+00:00\",\"cell_line\":\"unknown\",\"config_hashes\":{\"anomaly.yaml\":\"2776ce48025a554c2d3487c0d98433ef376ee4b9de1f5b25d48508bf82721184\",\"calibration.yaml\":\"b0917ebc04a8c7091f79e6ab221df9e2ea6f10144c918200a7390953a5b6d23d\",\"confluency_profiles.yaml\":\"0df03470a8fd3abb63a254a7bad2a972ca3c2dcaf0c84dd0fb9f029403499017\",\"detectability.yaml\":\"104b51773f11971cf9b019eaec5836c1419a0b9d4b687c3d48ca73358f16a383\",\"qc.yaml\":\"53c8f2ad51b5937d1d81baafb454de186df3c1a192f4400ee6bb936dfb63b959\",\"quality.yaml\":\"e86534e26c560eabd02f28dc79c19ab731803113b75deb53d9567e4d255f768c\"},\"confluency_confidence\":0.965,\"confluency_interval\":[0.0,36.0],\"confluency_map_hash\":\"e443fe195cd97aeae9e0ba1446a2015f860b072ab4dc6b5e6f411e87f1c1f109\",\"confluency_method\":\"probmap\",\"confluency_pct\":6.6,\"confluency_profile\":{\"band_pp\":29.4,\"cutoff\":-3.5,\"id\":\"evican_mixed\",\"sha256\":\"73107886731e276e5fada6bc4694f74893a13c51326d3e515643aca2bb0535fd\",\"status\":\"validated\"},\"decided_by\":\"rules_v0.5\",\"environment\":null,\"eta_to_target_hours\":null,\"flask_id\":\"demo\",\"fov\":null,\"growth_trend\":null,\"image_hash\":\"7899fdcd618e09e1ec771d98a72920c1fec0a6be6d67fed9b7cd8f10632ee256\",\"image_ref\":\"evican_pc3.jpg\",\"imager_id\":null,\"lineage\":null,\"model_versions\":{\"dino\":\"facebook/dinov2-small\",\"qc\":\"qc_effnetb0_v1\",\"seg\":\"cpsam_v2\",\"vlm\":\"template\"},\"model_weights_hash\":{\"dino\":\"ae1e99fcefd534ed978cdeb8326f08030c96e28b7a81ffcbc98a857c84d14be1\",\"qc\":\"c126318c27ecbd29514aef60254637f014499ae52d0d004a358158f860b0529d\",\"seg\":\"0f1cc3f7ecdd8a037a57c6c48d9d8921391be4cbce3fa9f13c3e3a2e1253c667\"},\"pixel_size_um\":null,\"prev_record_hash\":\"68404dcda8f035f9fa6125f5d64cb2c29c0e36f7e9f6fafc20d831d4a1b91d57\",\"protocol_stage\":null,\"qc_calibrated\":true,\"qc_confidence\":0.9998,\"qc_evidence_bbox\":null,\"qc_flag\":\"image_quality\",\"qc_rationale\":\"Confluency 6.6% below target (80%); recommend no action required; continue monitoring. The anomaly check flagged this image for review.\",\"qc_severity\":null,\"qc_used_in_decision\":false,\"quality_gate\":null,\"recommended_action\":\"continue\",\"record_id\":\"ae6ba791-9681-402d-ad99-013cc9804ada\",\"record_type\":\"reading\",\"recovery_request\":null,\"schema_version\":\"0.4\"}",
+     "record_hash": "51c5c74a8c0636ab378809ec33c7269fb88db92c376204979508380fb76369e7",
+     "prev_record_hash": "68404dcda8f035f9fa6125f5d64cb2c29c0e36f7e9f6fafc20d831d4a1b91d57"
     }
    },
    {
     "id": "evican_ht29",
-    "label": "EVICAN HT29 (real, error case)",
+    "label": "EVICAN HT29 (real, band includes the target)",
     "kind": "evican",
-    "caption": "Real image, ground truth 51.6% from the dataset's expert masks; Cellpose-SAM reads 29.4%; anomaly not flagged (score 0.264, threshold 0.329). The anomaly banks hold only C2C12 frames, so on other cell types the flag is uncalibrated.",
+    "caption": "Real image, one of EVICAN's 33 test images (not among the 65 its profile was fitted on); ground truth 51.6% from the dataset's expert masks. Cellpose-SAM reads 52.9% (±29.4 pp) with profile evican_mixed (cutoff -3.5), against 29.3% at Cellpose's default cutoff. The 90% band, 23.5–82.3%, includes the 80% target, so the rules send it to a person. The anomaly banks hold only C2C12 frames, so on other cell types the flag is uncalibrated; here, anomaly not flagged (score 0.264, threshold 0.329).",
     "credit": "EVICAN: Bioinformatics 36(12):3863 (2020), CC BY 4.0",
     "sequence": null,
     "frame": null,
@@ -2240,20 +2334,32 @@
     "contour": "img/v3/ex/evican_ht29_contour.json",
     "map_w": 111,
     "map_h": 104,
-    "band_pct_of_frame": 18.21,
+    "band_pct_of_frame": 4.21,
     "confluency": {
-     "pct": 29.35,
-     "confidence": 0.266,
+     "pct": 52.91,
+     "confidence": 0.828,
      "method": "probmap",
      "model": "cpsam_v2",
-     "borderline_fraction": 0.1835,
-     "instance_pct": 27.92,
+     "borderline_fraction": 0.0429,
+     "instance_pct": 27.88,
      "band_logit": 1.0,
      "floor": 0.3,
-     "ambiguity": 0.734,
+     "ambiguity": 0.172,
      "ambiguity_ceiling": 0.7,
-     "ambiguity_tooltip": "Share of pixels near the cell/background cutoff, as min(1, 4 × share within ±1 logit); rises with density; a review trigger, not a probability that the reading is right."
+     "ambiguity_tooltip": "Share of pixels near the cell/background cutoff, as min(1, 4 × share within ±1 logit); rises with density; a review trigger, not a probability that the reading is right.",
+     "profile": {
+      "band_pp": 29.4,
+      "cutoff": -3.5,
+      "id": "evican_mixed",
+      "sha256": "73107886731e276e5fada6bc4694f74893a13c51326d3e515643aca2bb0535fd",
+      "status": "validated"
+     },
+     "interval": [
+      23.51,
+      82.31
+     ]
     },
+    "quality_gate": null,
     "target": 80.0,
     "anomaly": {
      "score": 0.264345,
@@ -2579,20 +2685,88 @@
      }
     },
     "action": "human_review",
-    "action_reason": "Boundary ambiguity 0.73 is above 0.70 (record confidence 0.27 below floor 0.30): many pixels sit near the cell/background cutoff; recommend manual inspection.",
-    "rationale": "Confluency 29.4% below target (80%); recommend pause automated decisions and flag for human review.",
-    "rules": "rules_v0.4",
-    "device": "cpu",
-    "generated_at": "2026-09-27",
+    "action_reason": "Confluency 52.9% is within its error band (±29.4 pp) of the target 80%: the reading can't tell which side of the target the flask is on; recommend a person checks.",
+    "rationale": "Confluency 52.9% below target (80%); recommend pause automated decisions and flag for human review.",
+    "rules": "rules_v0.5",
+    "device": "mps",
+    "generated_at": "2026-10-04",
     "record": {
-     "index": 7,
-     "canonical": "{\"action_reason\":\"Boundary ambiguity 0.73 is above 0.70 (record confidence 0.27 below floor 0.30): many pixels sit near the cell/background cutoff; recommend manual inspection.\",\"analysed_at\":\"2026-09-27T23:40:46.207769+00:00\",\"anomaly_bank_sha256\":\"870ff30ce3339db29bb9dd7aae35713c154f24b7a3a0980b7b19bf559813463a\",\"anomaly_bin\":\"20-40\",\"anomaly_flag\":false,\"anomaly_score\":0.264345,\"anomaly_status\":\"ok\",\"anomaly_threshold\":0.328964,\"anomaly_used_in_decision\":true,\"anomaly_z\":0.3087,\"captured_at\":\"2026-09-27T23:40:46.206970+00:00\",\"cell_line\":\"unknown\",\"config_hashes\":{\"anomaly.yaml\":\"2776ce48025a554c2d3487c0d98433ef376ee4b9de1f5b25d48508bf82721184\",\"calibration.yaml\":\"b0917ebc04a8c7091f79e6ab221df9e2ea6f10144c918200a7390953a5b6d23d\",\"detectability.yaml\":\"5c7310f638cbbcc646f71b329207e790c3ac5136c457ddc0af641ffa9e6ca010\",\"qc.yaml\":\"53c8f2ad51b5937d1d81baafb454de186df3c1a192f4400ee6bb936dfb63b959\"},\"confluency_confidence\":0.266,\"confluency_map_hash\":\"496989e812a06c11a8cff83b7e0d89ad512adcb62f1ce3f951f112e3c3964348\",\"confluency_method\":\"probmap\",\"confluency_pct\":29.35,\"decided_by\":\"rules_v0.4\",\"eta_to_target_hours\":null,\"flask_id\":\"demo\",\"growth_trend\":null,\"image_hash\":\"fcb51649176a0802becb6c638965178232f8d5e8bb0073f1ace58e6256f3a1c0\",\"image_ref\":\"evican_ht29.jpg\",\"model_versions\":{\"dino\":\"facebook/dinov2-small\",\"qc\":\"qc_effnetb0_v1\",\"seg\":\"cpsam_v2\",\"vlm\":\"template\"},\"model_weights_hash\":null,\"pixel_size_um\":null,\"prev_record_hash\":\"da4eebf2c67f91612e56273290be008c81b953648c25d75b16c247bb8d4b6e94\",\"protocol_stage\":null,\"qc_calibrated\":true,\"qc_confidence\":0.6352,\"qc_evidence_bbox\":null,\"qc_flag\":\"image_quality\",\"qc_rationale\":\"Confluency 29.4% below target (80%); recommend pause automated decisions and flag for human review.\",\"qc_severity\":null,\"qc_used_in_decision\":false,\"recommended_action\":\"human_review\",\"record_id\":\"ba42f8e0-3474-4121-9734-71d4806f9f28\",\"review_outcome\":null,\"reviewed_by\":null,\"schema_version\":\"0.3\"}",
-     "record_hash": "a3aea8576f5aa60a3829dd9614103b11df31374eed7f415a8a5959e00afaa83e",
-     "prev_record_hash": "da4eebf2c67f91612e56273290be008c81b953648c25d75b16c247bb8d4b6e94"
+     "index": 9,
+     "canonical": "{\"action_reason\":\"Confluency 52.9% is within its error band (\\u00b129.4 pp) of the target 80%: the reading can't tell which side of the target the flask is on; recommend a person checks.\",\"analysed_at\":\"2026-10-04T17:24:39.021186+00:00\",\"anomaly_bank_sha256\":\"870ff30ce3339db29bb9dd7aae35713c154f24b7a3a0980b7b19bf559813463a\",\"anomaly_bin\":\"20-40\",\"anomaly_bin_confluency_pct\":29.3,\"anomaly_flag\":false,\"anomaly_score\":0.264345,\"anomaly_status\":\"ok\",\"anomaly_threshold\":0.328964,\"anomaly_used_in_decision\":true,\"anomaly_z\":0.3087,\"captured_at\":\"2026-10-04T17:24:39.020447+00:00\",\"cell_line\":\"unknown\",\"config_hashes\":{\"anomaly.yaml\":\"2776ce48025a554c2d3487c0d98433ef376ee4b9de1f5b25d48508bf82721184\",\"calibration.yaml\":\"b0917ebc04a8c7091f79e6ab221df9e2ea6f10144c918200a7390953a5b6d23d\",\"confluency_profiles.yaml\":\"0df03470a8fd3abb63a254a7bad2a972ca3c2dcaf0c84dd0fb9f029403499017\",\"detectability.yaml\":\"104b51773f11971cf9b019eaec5836c1419a0b9d4b687c3d48ca73358f16a383\",\"qc.yaml\":\"53c8f2ad51b5937d1d81baafb454de186df3c1a192f4400ee6bb936dfb63b959\",\"quality.yaml\":\"e86534e26c560eabd02f28dc79c19ab731803113b75deb53d9567e4d255f768c\"},\"confluency_confidence\":0.828,\"confluency_interval\":[23.51,82.31],\"confluency_map_hash\":\"418f43be91f75b6a9eb9a85a28600709e49948b8df3ba55a612c1bffe8ab8d32\",\"confluency_method\":\"probmap\",\"confluency_pct\":52.91,\"confluency_profile\":{\"band_pp\":29.4,\"cutoff\":-3.5,\"id\":\"evican_mixed\",\"sha256\":\"73107886731e276e5fada6bc4694f74893a13c51326d3e515643aca2bb0535fd\",\"status\":\"validated\"},\"decided_by\":\"rules_v0.5\",\"environment\":null,\"eta_to_target_hours\":null,\"flask_id\":\"demo\",\"fov\":null,\"growth_trend\":null,\"image_hash\":\"fcb51649176a0802becb6c638965178232f8d5e8bb0073f1ace58e6256f3a1c0\",\"image_ref\":\"evican_ht29.jpg\",\"imager_id\":null,\"lineage\":null,\"model_versions\":{\"dino\":\"facebook/dinov2-small\",\"qc\":\"qc_effnetb0_v1\",\"seg\":\"cpsam_v2\",\"vlm\":\"template\"},\"model_weights_hash\":{\"dino\":\"ae1e99fcefd534ed978cdeb8326f08030c96e28b7a81ffcbc98a857c84d14be1\",\"qc\":\"c126318c27ecbd29514aef60254637f014499ae52d0d004a358158f860b0529d\",\"seg\":\"0f1cc3f7ecdd8a037a57c6c48d9d8921391be4cbce3fa9f13c3e3a2e1253c667\"},\"pixel_size_um\":null,\"prev_record_hash\":\"51c5c74a8c0636ab378809ec33c7269fb88db92c376204979508380fb76369e7\",\"protocol_stage\":null,\"qc_calibrated\":true,\"qc_confidence\":0.6352,\"qc_evidence_bbox\":null,\"qc_flag\":\"image_quality\",\"qc_rationale\":\"Confluency 52.9% below target (80%); recommend pause automated decisions and flag for human review.\",\"qc_severity\":null,\"qc_used_in_decision\":false,\"quality_gate\":null,\"recommended_action\":\"human_review\",\"record_id\":\"0f98b5a9-8392-48d3-b1d8-24ec9cbe8f4e\",\"record_type\":\"reading\",\"recovery_request\":null,\"schema_version\":\"0.4\"}",
+     "record_hash": "083bf44878ab4f48e3c56298499b432fb8aef6fe960b5d1d2e11a3e4d6d885da",
+     "prev_record_hash": "51c5c74a8c0636ab378809ec33c7269fb88db92c376204979508380fb76369e7"
+    }
+   }
+  ],
+  "changes": [
+   {
+    "id": "change1",
+    "kind": "change",
+    "label": "Profile change: evican_mixed",
+    "subject": "confluency_profile",
+    "after": {
+     "id": "evican_mixed",
+     "sha256": "73107886731e276e5fada6bc4694f74893a13c51326d3e515643aca2bb0535fd"
+    },
+    "before": {
+     "id": "uncalibrated",
+     "sha256": "dcc4e5ba00c75b9ef5b9ca257b2998dc45a568c9f4a6956f278dfd05cd836bfb"
+    },
+    "reason": "Calibration profile for this imaging setup (validated): cutoff -3.5, 90% error band ±29.4 pp, measured on held-out labelled images (results/confluency_profiles.md).",
+    "approved_by": "repository owner",
+    "evidence": [
+     {
+      "path": "results/confluency_profiles.md",
+      "sha256": "6363de46ad7a0df5981710820d111684c58e9b4b9718783bbee6b4a7d949724a"
+     },
+     {
+      "path": "results/confluency_profiles.json",
+      "sha256": "44d93a44549d7acb19f734fda7f361737bc30a4ad1c7e31c39b4572c04fc70e4"
+     }
+    ],
+    "record": {
+     "index": 1,
+     "canonical": "{\"after\":{\"id\":\"evican_mixed\",\"sha256\":\"73107886731e276e5fada6bc4694f74893a13c51326d3e515643aca2bb0535fd\"},\"approved_by\":{\"id\":\"owner\",\"name\":\"repository owner\"},\"before\":{\"id\":\"uncalibrated\",\"sha256\":\"dcc4e5ba00c75b9ef5b9ca257b2998dc45a568c9f4a6956f278dfd05cd836bfb\"},\"effective_from\":\"2026-10-04T17:22:59.462362+00:00\",\"evidence\":[{\"path\":\"results/confluency_profiles.md\",\"sha256\":\"6363de46ad7a0df5981710820d111684c58e9b4b9718783bbee6b4a7d949724a\"},{\"path\":\"results/confluency_profiles.json\",\"sha256\":\"44d93a44549d7acb19f734fda7f361737bc30a4ad1c7e31c39b4572c04fc70e4\"}],\"prev_record_hash\":\"0000000000000000000000000000000000000000000000000000000000000000\",\"reason\":\"Calibration profile for this imaging setup (validated): cutoff -3.5, 90% error band \\u00b129.4 pp, measured on held-out labelled images (results/confluency_profiles.md).\",\"record_id\":\"ff730d21-fe66-47ed-83bf-7f5a4b368fb8\",\"record_type\":\"change\",\"recorded_at\":\"2026-10-04T17:22:59.462388+00:00\",\"schema_version\":\"0.4\",\"subject\":\"confluency_profile\"}",
+     "record_hash": "97d9f61cae90ec0702756075a895e41674e2c4681ad97aa4a8b418991cf7a870",
+     "prev_record_hash": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+   },
+   {
+    "id": "change2",
+    "kind": "change",
+    "label": "Profile change: msc_phase",
+    "subject": "confluency_profile",
+    "after": {
+     "id": "msc_phase",
+     "sha256": "12e63a226d11df77d6e946b5183a45e5ccdc11c1060ec4812d76731eae7b1558"
+    },
+    "before": {
+     "id": "uncalibrated",
+     "sha256": "dcc4e5ba00c75b9ef5b9ca257b2998dc45a568c9f4a6956f278dfd05cd836bfb"
+    },
+    "reason": "Calibration profile for this imaging setup (validated): cutoff -1.5, 90% error band ±7.11 pp, measured on held-out labelled images (results/confluency_profiles.md).",
+    "approved_by": "repository owner",
+    "evidence": [
+     {
+      "path": "results/confluency_profiles.md",
+      "sha256": "6363de46ad7a0df5981710820d111684c58e9b4b9718783bbee6b4a7d949724a"
+     },
+     {
+      "path": "results/confluency_profiles.json",
+      "sha256": "44d93a44549d7acb19f734fda7f361737bc30a4ad1c7e31c39b4572c04fc70e4"
+     }
+    ],
+    "record": {
+     "index": 2,
+     "canonical": "{\"after\":{\"id\":\"msc_phase\",\"sha256\":\"12e63a226d11df77d6e946b5183a45e5ccdc11c1060ec4812d76731eae7b1558\"},\"approved_by\":{\"id\":\"owner\",\"name\":\"repository owner\"},\"before\":{\"id\":\"uncalibrated\",\"sha256\":\"dcc4e5ba00c75b9ef5b9ca257b2998dc45a568c9f4a6956f278dfd05cd836bfb\"},\"effective_from\":\"2026-10-04T17:22:59.462541+00:00\",\"evidence\":[{\"path\":\"results/confluency_profiles.md\",\"sha256\":\"6363de46ad7a0df5981710820d111684c58e9b4b9718783bbee6b4a7d949724a\"},{\"path\":\"results/confluency_profiles.json\",\"sha256\":\"44d93a44549d7acb19f734fda7f361737bc30a4ad1c7e31c39b4572c04fc70e4\"}],\"prev_record_hash\":\"97d9f61cae90ec0702756075a895e41674e2c4681ad97aa4a8b418991cf7a870\",\"reason\":\"Calibration profile for this imaging setup (validated): cutoff -1.5, 90% error band \\u00b17.11 pp, measured on held-out labelled images (results/confluency_profiles.md).\",\"record_id\":\"cba72cce-667c-4d09-a30f-ac9d95a1aa2d\",\"record_type\":\"change\",\"recorded_at\":\"2026-10-04T17:22:59.462552+00:00\",\"schema_version\":\"0.4\",\"subject\":\"confluency_profile\"}",
+     "record_hash": "beba3f4bcfcc77503c7cc1b5cbffadcfc230b8d0c36c78572bd203f67e15f7be",
+     "prev_record_hash": "97d9f61cae90ec0702756075a895e41674e2c4681ad97aa4a8b418991cf7a870"
     }
    }
   ],
   "chain_order": [
+   "change1",
+   "change2",
    "c2c12_normal_0_20",
    "c2c12_normal_20_40",
    "c2c12_normal_40_100",
@@ -2604,11 +2778,11 @@
   "generated_by": "scripts/export_demo_examples.py",
   "checkpoint": {
    "scope": "demo/examples/examples.json",
-   "count": 7,
-   "head_hash": "a3aea8576f5aa60a3829dd9614103b11df31374eed7f415a8a5959e00afaa83e",
+   "count": 9,
+   "head_hash": "083bf44878ab4f48e3c56298499b432fb8aef6fe960b5d1d2e11a3e4d6d885da",
    "schema_version": "1",
    "hash_alg": "sha256",
-   "created_at": "2026-10-02T06:51:53.014143+00:00"
+   "created_at": "2026-10-04T17:31:46.451509+00:00"
   }
  },
  "replays": [
@@ -2632,6 +2806,11 @@
     "reimage_before_onset": 0
    },
    "target_note": "Passage target 50% in these replays: the held-out C2C12 recordings never pass 57.0%, as Cellpose-SAM measures them. The Analyze examples use 80%.",
+   "profile": {
+    "id": "c2c12_ker2018",
+    "status": "uncalibrated",
+    "calibrated": false
+   },
    "frame_hw": [
     1040,
     1392
@@ -3501,6 +3680,11 @@
     "reimage_before_onset": 5
    },
    "target_note": "Passage target 50% in these replays: the held-out C2C12 recordings never pass 57.0%, as Cellpose-SAM measures them. The Analyze examples use 80%.",
+   "profile": {
+    "id": "c2c12_ker2018",
+    "status": "uncalibrated",
+    "calibrated": false
+   },
    "frame_hw": [
     1040,
     1392
@@ -4176,6 +4360,11 @@
     "reimage_before_onset": 0
    },
    "target_note": "Passage target 50% in these replays: the held-out C2C12 recordings never pass 57.0%, as Cellpose-SAM measures them. The Analyze examples use 80%.",
+   "profile": {
+    "id": "c2c12_ker2018",
+    "status": "uncalibrated",
+    "calibrated": false
+   },
    "frame_hw": [
     1040,
     1392
@@ -4860,6 +5049,11 @@
     "reimage_before_onset": 6
    },
    "target_note": "Passage target 50% in these replays: the held-out C2C12 recordings never pass 57.0%, as Cellpose-SAM measures them. The Analyze examples use 80%.",
+   "profile": {
+    "id": "c2c12_ker2018",
+    "status": "uncalibrated",
+    "calibrated": false
+   },
    "frame_hw": [
     1040,
     1392
@@ -5498,6 +5692,11 @@
     "reimage_before_onset": 0
    },
    "target_note": "Passage target 50% in these replays: the held-out C2C12 recordings never pass 57.0%, as Cellpose-SAM measures them. The Analyze examples use 80%.",
+   "profile": {
+    "id": "c2c12_ker2018",
+    "status": "uncalibrated",
+    "calibrated": false
+   },
    "frame_hw": [
     1040,
     1392
@@ -6254,10 +6453,16 @@
    "source": "results/v02_headline.md"
   },
   {
-   "result": "Confluency error, calibrated cutoff (validated, not shipped; not fully blind, see Known limits)",
+   "result": "Confluency error, EVICAN calibration profile (evican_mixed, live since rules_v0.5; not fully blind, see Known limits)",
    "number": "MAE 8.36 → 3.78 pp on the same 33, cutoff −3.5 picked on the other 65 eval2019 images; off by more than 10 pp: 13 → 3",
    "provenance": "real (EVICAN)",
    "source": "results/confluency_cutoff.md"
+  },
+  {
+   "result": "Confluency error per imaging setup, calibration profiles (pre-registered, held-out images)",
+   "number": "MSC 8.19 → 3.43 pp (320 images in 3 populations, each tested with the profile fitted on the others), 90% band ±7.11 pp; EVICAN 8.36 → 3.78 pp (n = 33, not fully blind), band ±29.40 pp; LIVECell in-domain check 2.14 → 2.05 pp (n = 756)",
+   "provenance": "real (MSC, EVICAN, LIVECell)",
+   "source": "results/confluency_profiles.md"
   },
   {
    "result": "FOV sampling noise, 0.25-frame field",
@@ -6308,7 +6513,7 @@
    "source": "results/quality_gate_c2c12.md"
   },
   {
-   "result": "Sent to human review, held-out frames: boundary ambiguity above 0.70 (record confidence below 0.30)",
+   "result": "Sent to human review, held-out frames: boundary ambiguity above 0.70 (record confidence below 0.30; rules_v0.4, retired in rules_v0.5)",
    "number": "5.7% of 1228; 43.8% of the 160 at 40-60% confluency (14 sequences)",
    "provenance": "real (C2C12)",
    "source": "results/review_rate.md"
@@ -6320,8 +6525,14 @@
    "source": "results/confidence_vs_error.md"
   },
   {
-   "result": "Sent to human review: passage hold on an anomaly flag (since rules_v0.3), 50% target",
+   "result": "Sent to human review: passage hold on an anomaly flag (rules_v0.4, with the ambiguity trigger), 50% target",
    "number": "held-out normal frames: 1 of 14 passage-eligible, total 71 (5.8%); simulated contamination with bacteria 16.5× too large (4 sequences, both splits): 76 of 76 passage-eligible; at real size no frame reaches the target",
+   "provenance": "real (C2C12) + simulated faults",
+   "source": "results/review_rate.md"
+  },
+  {
+   "result": "Rules rules_v0.5 on held-out normal C2C12 frames (no calibration profile for this microscope; quality gate first)",
+   "number": "80% target: re-image 149 of 1228, human review 0; 50% target: human review 42 (3.4%); simulated contamination, bacteria 16.5× too large: re-image 91 of 97",
    "provenance": "real (C2C12) + simulated faults",
    "source": "results/review_rate.md"
   },
@@ -6356,24 +6567,493 @@
    "source": "results/live_latency.md"
   },
   {
-   "result": "Live latency, console Space on ZeroGPU (one Analyze as the viewer waits, with the owner's token)",
-   "number": "median 3.28 s (n = 6, after a first of 6.45 s); flag and action the same as stored on 7 of 7 examples",
+   "result": "Live latency, console Space on ZeroGPU (one Analyze as the viewer waits, with the owner's token; measured before calibration profiles)",
+   "number": "median 3.28 s (n = 6, after a first of 6.45 s); flag and action the same as the examples stored at the time on 7 of 7",
    "provenance": "real (C2C12, EVICAN)",
    "source": "results/live_latency_zerogpu.md"
   },
   {
-   "result": "Live latency, Mac backup (Cellpose-SAM on Apple MPS)",
-   "number": "median 16.43 s per 1392×1040 C2C12 frame (n = 5); flag and action the same as stored on 7 of 7 examples",
+   "result": "Live latency, Mac backup (Cellpose-SAM on Apple MPS; measured before calibration profiles)",
+   "number": "median 16.43 s per 1392×1040 C2C12 frame (n = 5); flag and action the same as the examples stored at the time on 7 of 7",
    "provenance": "real (C2C12, EVICAN)",
    "source": "results/live_latency_mac_mps.md"
   },
   {
-   "result": "Live latency, Colab backup (Tesla T4)",
-   "number": "median 12.06 s per 1392×1040 C2C12 frame (n = 5); flag and action the same as stored on 7 of 7 examples",
+   "result": "Live latency, Colab backup (Tesla T4; measured before calibration profiles)",
+   "number": "median 12.06 s per 1392×1040 C2C12 frame (n = 5); flag and action the same as the examples stored at the time on 7 of 7",
    "provenance": "real (C2C12, EVICAN)",
    "source": "results/live_latency_colab_gpu.md"
   }
  ],
+ "profiles": {
+  "items": [
+   {
+    "id": "msc_phase",
+    "label": "MSC phase contrast (Solopov et al. 2025)",
+    "status": "validated",
+    "study": "held-out",
+    "n_calib": 320,
+    "n_test": 320,
+    "cutoff": -1.5,
+    "band_pp": 7.113,
+    "shipped": {
+     "n": 320.0,
+     "mae": 8.188,
+     "median_ae": 6.752,
+     "bias": -7.92,
+     "over10": 94.0,
+     "slope": 0.651,
+     "intercept": 1.777,
+     "r2": 0.803
+    },
+    "profile": {
+     "n": 320.0,
+     "mae": 3.426,
+     "median_ae": 2.604,
+     "bias": 0.216,
+     "over10": 13.0,
+     "slope": 0.921,
+     "intercept": 2.422,
+     "r2": 0.893
+    },
+    "bands": [
+     {
+      "band": "0-20%",
+      "n": 114,
+      "mae0": 3.859,
+      "bias0": -3.14,
+      "mae": 3.134,
+      "bias": 1.221,
+      "coverage": 0.877
+     },
+     {
+      "band": "20-40%",
+      "n": 140,
+      "mae0": 8.034,
+      "bias0": -8.006,
+      "mae": 3.259,
+      "bias": 0.24,
+      "coverage": 0.921
+     },
+     {
+      "band": "40-60%",
+      "n": 62,
+      "mae0": 15.37,
+      "bias0": -15.37,
+      "mae": 4.188,
+      "bias": -1.301,
+      "coverage": 0.871
+     },
+     {
+      "band": "60-90%",
+      "n": 4,
+      "mae0": 25.663,
+      "bias0": -25.663,
+      "mae": 5.75,
+      "bias": -5.75,
+      "coverage": 0.75
+     },
+     {
+      "band": "90-100%",
+      "n": 0,
+      "mae0": null,
+      "bias0": null,
+      "mae": null,
+      "bias": null,
+      "coverage": null
+     }
+    ],
+    "coverage": 0.894,
+    "calls": {
+     "80": {
+      "profile_review": 0.0,
+      "profile_agree": 1.0,
+      "profile_n": 320,
+      "shipped_review": 0.169,
+      "shipped_agree": 1.0,
+      "shipped_n": 266
+     },
+     "70": {
+      "profile_review": 0.009,
+      "profile_agree": 1.0,
+      "profile_n": 317,
+      "shipped_review": 0.169,
+      "shipped_agree": 1.0,
+      "shipped_n": 266
+     }
+    },
+    "acceptance": {
+     "A1": {
+      "verdict": "pass",
+      "detail": "3.43 pp"
+     },
+     "A2": {
+      "verdict": "not measurable",
+      "detail": "n = 4"
+     },
+     "A3": {
+      "verdict": "not measurable",
+      "detail": "n = 4"
+     },
+     "A4": {
+      "verdict": "not measurable",
+      "detail": "4 test images at 60–100%"
+     },
+     "A5": {
+      "verdict": "pass",
+      "detail": "89.4%; at 60–90%: 75% of 4"
+     }
+    },
+    "transfer": {
+     "evican_mixed": 9.836,
+     "livecell_incucyte": 5.802,
+     "msc_phase": 3.426
+    },
+    "learning": {
+     "2": [
+      4.124,
+      7.923
+     ],
+     "5": [
+      3.958,
+      4.585
+     ],
+     "10": [
+      3.814,
+      4.282
+     ],
+     "20": [
+      3.655,
+      4.193
+     ]
+    },
+    "folds": [
+     {
+      "cutoff": -1.5,
+      "band_pp": 7.63,
+      "n_calib": 208,
+      "calib_mae": 3.632
+     },
+     {
+      "cutoff": -1.5,
+      "band_pp": 6.425,
+      "n_calib": 208,
+      "calib_mae": 3.067
+     },
+     {
+      "cutoff": -1.5,
+      "band_pp": 7.696,
+      "n_calib": 224,
+      "calib_mae": 3.567
+     }
+    ]
+   },
+   {
+    "id": "evican_mixed",
+    "label": "EVICAN: mixed brightfield and phase-contrast microscopes",
+    "status": "validated",
+    "study": "held-out",
+    "n_calib": 65,
+    "n_test": 33,
+    "cutoff": -3.5,
+    "band_pp": 29.404,
+    "shipped": {
+     "n": 33.0,
+     "mae": 8.356,
+     "median_ae": 5.488,
+     "bias": -8.326,
+     "over10": 13.0,
+     "slope": 0.726,
+     "intercept": -3.021,
+     "r2": 0.747
+    },
+    "profile": {
+     "n": 33.0,
+     "mae": 3.779,
+     "median_ae": 2.784,
+     "bias": 1.631,
+     "over10": 3.0,
+     "slope": 0.935,
+     "intercept": 2.897,
+     "r2": 0.861
+    },
+    "bands": [
+     {
+      "band": "0-20%",
+      "n": 23,
+      "mae0": 6.737,
+      "bias0": -6.694,
+      "mae": 3.442,
+      "bias": 1.883,
+      "coverage": 1.0
+     },
+     {
+      "band": "20-40%",
+      "n": 7,
+      "mae0": 10.338,
+      "bias0": -10.338,
+      "mae": 3.086,
+      "bias": 2.165,
+      "coverage": 1.0
+     },
+     {
+      "band": "40-60%",
+      "n": 3,
+      "mae0": 16.149,
+      "bias0": -16.149,
+      "mae": 7.978,
+      "bias": -1.546,
+      "coverage": 1.0
+     },
+     {
+      "band": "60-90%",
+      "n": 0,
+      "mae0": null,
+      "bias0": null,
+      "mae": null,
+      "bias": null,
+      "coverage": null
+     },
+     {
+      "band": "90-100%",
+      "n": 0,
+      "mae0": null,
+      "bias0": null,
+      "mae": null,
+      "bias": null,
+      "coverage": null
+     }
+    ],
+    "coverage": 1.0,
+    "calls": {
+     "80": {
+      "profile_review": 0.061,
+      "profile_agree": 1.0,
+      "profile_n": 31,
+      "shipped_review": 0.061,
+      "shipped_agree": 1.0,
+      "shipped_n": 31
+     },
+     "70": {
+      "profile_review": 0.061,
+      "profile_agree": 1.0,
+      "profile_n": 31,
+      "shipped_review": 0.061,
+      "shipped_agree": 1.0,
+      "shipped_n": 31
+     }
+    },
+    "acceptance": {
+     "A1": {
+      "verdict": "pass",
+      "detail": "3.78 pp"
+     },
+     "A2": {
+      "verdict": "not measurable",
+      "detail": "n = 0"
+     },
+     "A3": {
+      "verdict": "not measurable",
+      "detail": "n = 0"
+     },
+     "A4": {
+      "verdict": "not measurable",
+      "detail": "0 test images at 60–100%"
+     },
+     "A5": {
+      "verdict": "pass",
+      "detail": "100.0%; at 60–90%: no images"
+     }
+    },
+    "transfer": {
+     "evican_mixed": 3.779,
+     "livecell_incucyte": 6.884,
+     "msc_phase": 4.698
+    },
+    "learning": {
+     "2": [
+      4.579,
+      4.792
+     ],
+     "5": [
+      4.301,
+      4.579
+     ],
+     "10": [
+      4.579,
+      4.579
+     ],
+     "20": [
+      4.023,
+      4.579
+     ]
+    },
+    "folds": [
+     {
+      "cutoff": -3.5,
+      "band_pp": 29.404,
+      "n_calib": 65,
+      "calib_mae": 6.947
+     }
+    ]
+   },
+   {
+    "id": "livecell_incucyte",
+    "label": "LIVECell instrument, 10× phase contrast",
+    "status": "in_domain_check",
+    "study": "in-domain check",
+    "n_calib": 756,
+    "n_test": 756,
+    "cutoff": -0.5,
+    "band_pp": 5.994,
+    "shipped": {
+     "n": 756.0,
+     "mae": 2.139,
+     "median_ae": 1.493,
+     "bias": -0.438,
+     "over10": 7.0,
+     "slope": 1.005,
+     "intercept": -0.63,
+     "r2": 0.985
+    },
+    "profile": {
+     "n": 756.0,
+     "mae": 2.046,
+     "median_ae": 1.232,
+     "bias": 0.912,
+     "over10": 15.0,
+     "slope": 1.013,
+     "intercept": 0.399,
+     "r2": 0.985
+    },
+    "bands": [
+     {
+      "band": "0-20%",
+      "n": 201,
+      "mae0": 1.19,
+      "bias0": -0.289,
+      "mae": 1.117,
+      "bias": 0.319,
+      "coverage": 0.995
+     },
+     {
+      "band": "20-40%",
+      "n": 261,
+      "mae0": 2.142,
+      "bias0": -0.322,
+      "mae": 2.22,
+      "bias": 1.149,
+      "coverage": 0.935
+     },
+     {
+      "band": "40-60%",
+      "n": 147,
+      "mae0": 3.219,
+      "bias0": -1.522,
+      "mae": 2.594,
+      "bias": 0.548,
+      "coverage": 0.932
+     },
+     {
+      "band": "60-90%",
+      "n": 91,
+      "mae0": 2.718,
+      "bias0": -0.402,
+      "mae": 2.784,
+      "bias": 1.65,
+      "coverage": 0.879
+     },
+     {
+      "band": "90-100%",
+      "n": 56,
+      "mae0": 1.765,
+      "bias0": 1.274,
+      "mae": 1.929,
+      "bias": 1.697,
+      "coverage": 1.0
+     }
+    ],
+    "coverage": 0.948,
+    "calls": {
+     "80": {
+      "profile_review": 0.042,
+      "profile_agree": 1.0,
+      "profile_n": 724,
+      "shipped_review": 0.058,
+      "shipped_agree": 0.997,
+      "shipped_n": 712
+     },
+     "70": {
+      "profile_review": 0.054,
+      "profile_agree": 0.994,
+      "profile_n": 715,
+      "shipped_review": 0.058,
+      "shipped_agree": 0.996,
+      "shipped_n": 712
+     }
+    },
+    "acceptance": {
+     "A1": {
+      "verdict": "pass",
+      "detail": "2.05 pp"
+     },
+     "A2": {
+      "verdict": "pass",
+      "detail": "2.78 pp, n = 91"
+     },
+     "A3": {
+      "verdict": "pass",
+      "detail": "+1.65 pp, n = 91"
+     },
+     "A4": {
+      "verdict": "pass",
+      "detail": "100.0% of 724, review 4.2%"
+     },
+     "A5": {
+      "verdict": "pass",
+      "detail": "94.8%; at 60–90%: 88% of 91"
+     }
+    },
+    "transfer": {
+     "evican_mixed": 6.697,
+     "livecell_incucyte": 2.046,
+     "msc_phase": 3.279
+    },
+    "learning": {
+     "2": [
+      2.139,
+      2.811
+     ],
+     "5": [
+      2.139,
+      2.759
+     ],
+     "10": [
+      2.139,
+      2.594
+     ],
+     "20": [
+      2.093,
+      2.177
+     ]
+    },
+    "folds": [
+     {
+      "cutoff": -0.5,
+      "band_pp": 5.994,
+      "n_calib": 756,
+      "calib_mae": 2.232
+     }
+    ]
+   }
+  ],
+  "cutoffs": {
+   "evican_mixed": -3.5,
+   "livecell_incucyte": -0.5,
+   "msc_phase": -1.5
+  },
+  "source": "results/confluency_profiles.md"
+ },
  "cutoff_disclosure": "Not fully blind: the cutoff idea came from error analysis of these 33 images, and a quarter-resolution sweep showing the evaluation curve was seen before the rule was written. The rule picked −3.5, which is not the evaluation-best (−3.0 gives 3.40 pp); calibration MAE is flat from −3.5 to −2.5 (6.95–7.00 pp). The 33 are all under 500,000 px, while 28 of the 65 calibration images are larger.",
  "decisions": [
   "The QC classifier is demoted: recorded and shown collapsed, not used for the action.",

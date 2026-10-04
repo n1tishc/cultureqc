@@ -92,16 +92,20 @@ def test_stored_record_matches_the_schema(ex):
 
 
 def test_stored_chain_starts_with_the_approved_profile_changes():
-    """A profile other than `uncalibrated` reads an example only after a change
-    record that replaces `uncalibrated` with it, by SHA-256, at the chain's start."""
+    """Every validated profile went live through a change record that replaces
+    `uncalibrated` with it, by SHA-256, at the chain's start, whether or not an
+    example reads with it (msc_phase has no example image). A named setup without
+    a calibration (c2c12_ker2018) reads like `uncalibrated`, so it has none."""
+    from culture.profiles import load_profiles
     with open(precomputed.EXAMPLES_JSON) as f:
         changes = json.load(f).get("changes") or []
-    used = {e["profile_id"] for e in EXAMPLES} - {UNCALIBRATED}
+    validated = {p for p, prof in load_profiles().items() if prof.status == "validated"}
     after = {c["after"]["id"]: c for c in changes}
-    assert set(after) == used
-    for pid in used:
+    assert len(after) == len(changes) and set(after) == validated
+    for pid in {e["profile_id"] for e in EXAMPLES} - validated:
+        assert get_profile(pid).status == "uncalibrated" and get_profile(pid).band_pp is None, pid
+    for pid in validated:
         c, prof = after[pid], get_profile(pid)
-        assert prof.status == "validated"
         assert c["record_type"] == "change" and c["subject"] == "confluency_profile"
         assert c["before"] == {"id": UNCALIBRATED, "sha256": get_profile(UNCALIBRATED).sha256}
         assert c["after"] == {"id": pid, "sha256": prof.sha256}
@@ -172,7 +176,9 @@ def test_3d_map_is_the_recorded_one(ex):
     # observed on the 7 examples: max 0.15 pp and 0.0014 (1/4-resolution sampling)
     assert (m > round(cut * 1000)).mean() * 100 == pytest.approx(c["pct"], abs=0.5)
     assert (m > 0).mean() * 100 == pytest.approx(c["extra"]["pct_default_cutoff"], abs=0.5)
-    assert (np.abs(m) < 1000).mean() == pytest.approx(c["extra"]["borderline_fraction"], abs=0.005)
+    # borderline: within ±1 logit of the cutoff the reading was counted at (culture/seg.py)
+    assert (np.abs(m.astype(np.int32) - round(cut * 1000)) < 1000).mean() == pytest.approx(
+        c["extra"]["borderline_fraction"], abs=0.005)
 
 
 @pytest.mark.parametrize("ex", [e for e in EXAMPLES if "cache" in e], ids=lambda e: e["id"])
@@ -218,13 +224,11 @@ def test_examples_are_not_cached_on_spaces():
     assert r.returncode == 0, r.stderr[-2000:]
 
 
-@requires("gradio")
-def test_cutoff_note_matches_the_cutoff_study():
-    """The console's calibrated-cutoff note (demo/examples/cutoff_calibrated.json)
-    is exactly what scripts/export_cutoff_examples.py derives from
-    results/confluency_cutoff.csv, is marked not live, and appears only on the
-    EVICAN examples, and only on records that predate confluency profiles
-    (since rules_v0.5 the card shows the profile's cutoff and band instead)."""
+def test_cutoff_study_is_the_live_evican_profile():
+    """demo/examples/cutoff_calibrated.json is exactly what scripts/export_cutoff_examples.py
+    derives from results/confluency_cutoff.csv, is marked superseded, and its calibrated
+    cutoff is the one the EVICAN examples are read with (profile evican_mixed), so the site's
+    not-fully-blind disclosure is about the cutoff that is live."""
     repo = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     csv = os.path.join(repo, "results", "confluency_cutoff.csv")
     doc = precomputed.cutoff_calibrated()
@@ -234,21 +238,12 @@ def test_cutoff_note_matches_the_cutoff_study():
     sys.path.insert(0, os.path.join(repo, "scripts"))
     from export_cutoff_examples import build
     assert doc == build(csv)
-    assert doc["status"] == "validated, not live"
-    from demo.app import render_cutoff_note
-    for ex in EXAMPLES:
-        note = render_cutoff_note(ex, doc)
-        if ex["record"].get("confluency_profile"):
-            assert note == ""
-        elif ex["kind"] == "evican":
-            c = doc["examples"][ex["id"]]
-            assert "validated, not live" in note and f'{c["calibrated"]["pct"]:.1f}%' in note
-            assert "Not fully blind" in note
-            # Compared as displayed: the note's shipped reading is the card's, digit for digit, or the
-            # note says it is the study's rerun and shows the card's number too (HT29: 29.3 vs 29.4).
-            shipped, stored = f'{c["shipped"]["pct"]:.1f}%', f'{ex["confluency"]["pct"]:.1f}%'
-            assert shipped in note
-            if shipped != stored:
-                assert "rerun" in note and f"stored reading: {stored}" in note, ex["id"]
-        else:
-            assert note == ""
+    assert doc["status"].startswith("superseded") and "evican_mixed" in doc["status"]
+    assert doc["disclosure"]["text"].startswith("Not fully blind")
+    evican = [e for e in EXAMPLES if e["kind"] == "evican"]
+    assert evican
+    for ex in evican:
+        assert ex["profile_id"] == "evican_mixed"
+        assert ex["record"]["confluency_profile"]["cutoff"] == doc["cutoff"]["calibrated"]
+        # the study's reading at the pick is the card's, as displayed
+        assert f'{doc["examples"][ex["id"]]["calibrated"]["pct"]:.1f}' == f'{ex["confluency"]["pct"]:.1f}', ex["id"]

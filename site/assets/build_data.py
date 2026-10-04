@@ -176,10 +176,11 @@ def save_alpha(alpha, dst):
     Image.fromarray(rgba, "RGBA").save(dst, optimize=True)
 
 
-def contour_path(logits):
-    """SVG path of the Cellpose-SAM cutoff (logit 0), in map pixel units."""
+def contour_path(logits, cut=0.0):
+    """SVG path of the cutoff the reading was counted at (the profile's; Cellpose-SAM's
+    default is logit 0), in map pixel units."""
     import cv2
-    mask = (logits > 0).astype(np.uint8)
+    mask = (logits > cut).astype(np.uint8)
     cs, _ = cv2.findContours(mask, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
     parts = []
     for c in cs:
@@ -195,16 +196,18 @@ def contour_path(logits):
 def example_layers(ex, out_dir):
     logits = np.load(rel("demo", "examples", ex["probmap"]))["prob_x1000"].astype(np.float32) / 1000.0
     ident = ex["id"]
+    cut = (ex["record"].get("confluency_profile") or {}).get("cutoff", 0.0)    # the band and contour sit on it
     if out_dir:
         src = rel("demo", "examples", ex["image"])
         save_webp(src, os.path.join(out_dir, f"{ident}.webp"))
         save_webp(src, os.path.join(out_dir, f"{ident}_thumb.webp"), max_w=320, quality=78)
         save_alpha(1.0 / (1.0 + np.exp(-logits)), os.path.join(out_dir, f"{ident}_prob.png"))
-        save_alpha((np.abs(logits) < BAND_LOGIT).astype(np.float32), os.path.join(out_dir, f"{ident}_band.png"))
+        save_alpha((np.abs(logits - cut) < BAND_LOGIT).astype(np.float32), os.path.join(out_dir, f"{ident}_band.png"))
         with open(os.path.join(out_dir, f"{ident}_contour.json"), "w") as f:
-            json.dump({"w": logits.shape[1], "h": logits.shape[0], "d": contour_path(logits)}, f, separators=(",", ":"))
+            json.dump({"w": logits.shape[1], "h": logits.shape[0], "d": contour_path(logits, cut)}, f,
+                      separators=(",", ":"))
     return {"map_w": int(logits.shape[1]), "map_h": int(logits.shape[0]),
-            "band_pct_of_frame": round(float((np.abs(logits) < BAND_LOGIT).mean()) * 100, 2)}
+            "band_pct_of_frame": round(float((np.abs(logits - cut) < BAND_LOGIT).mean()) * 100, 2)}
 
 
 def og_image(out_path):
