@@ -182,8 +182,8 @@ python deploy/sync_space.py                     # mirrors culture/, config/, con
 nothing beyond the PRO plan, needs no switching on before the call or back to
 CPU after it, and stays fast after the call if the link is opened again. The
 same models already run on ZeroGPU in `cultureqc-demo`. The costs: a GPU is
-attached per live Analyze (in the 2026-09-29 dry run the first took 6.45 s and
-the rest a median 3.28 s; in the 2026-09-28 run, commit `0210c79`, one of 7
+attached per live Analyze (in the 2026-10-04 dry run, `results/space_dry_run_e6c44671.md`,
+the first took 6.22 s and the rest a median 3.22 s; in the 2026-09-28 run, commit `0210c79`, one of 7
 took 18.50 s, cause not measured), each Analyze draws on the viewer's ZeroGPU
 quota (a signed-out Analyze also ran, checked once on EVICAN PC3), and the startup self-check cannot
 run (no GPU at startup), so the dry run is `scripts/space_dry_run.py` from

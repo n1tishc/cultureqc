@@ -48,6 +48,10 @@ acceptance criteria were committed before scoring (`1ef52cb`, `2baa18f`):
   carries the not-fully-blind disclosure.
 - The site is v0.4: each example shows its error band against the target, and
   the release notes have a v0.4 entry.
+- The console Space was republished (Space commit `e6c44671`). Run live there
+  on ZeroGPU, each example read with its setup's profile, flag and action were
+  the same as stored on 7 of 7, readings within 0.04 pp; a median 3.22 s per
+  Analyze (`results/space_dry_run_e6c44671.md`).
 
 ### Rules `rules_v0.5`
 

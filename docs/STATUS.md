@@ -92,10 +92,12 @@ any new image was scored. Details: `CHANGELOG.md`.
 | Owner decision: the console's C2C12 microscope stays uncalibrated (no labelled images; the owner is not asked to label cells) | `0bbc20a` | `c2c12_ker2018` keeps its quality gate with no band; a reading at or above the target goes to a person |
 | Owner approval (2026-10-04) to put both validated profiles live | `94e1628` | The stored chain opens with two change records approved by "repository owner"; the seven examples regenerated on MPS match the dry run (HT29 52.9%, band 23.5–82.3%, human review; stress test re-image on exposure; 51.4% frame continue) |
 | Site v0.4 | `33ced8e` | Error band on the example cards, v0.5 rules figure, v0.4 release notes; checked in headless Chromium |
+| Console Space republished with the profiles (owner approved; the owner ran the publish) | Space commit `e6c44671` | Running on ZeroGPU about 4 min after upload; `/run_analysis` takes the setup (`profile_id`). Dry run (`results/space_dry_run_e6c44671.md`): anomaly flag and action the same as stored on 7 of 7 examples, each read with its setup's profile, readings within 0.04 pp; first Analyze 6.22 s, median of the rest 3.22 s (n = 6). One live HT29 record: `rules_v0.5`, schema 0.4, `evican_mixed` with the config's SHA-256, human review. Checked in a browser on the live Space: HT29 band and Human Review, stress test Re-image on exposure, 51.4% frame Continue with no band, PC3 Continue; no page errors |
 
-Still open: the console Space is not republished with v0.5, and its
-live-vs-stored dry run (`results/live_latency_zerogpu.md`, 2026-09-29) predates
-the profiles; re-run it after the next publish.
+Still open: merging into `slice-1b-compute-cache` and pushing (redeploys the
+site), on the owner's approval. The console Space's own README still quotes
+the 2026-09-29 latency, labelled as measured before the profiles; it is
+refreshed on the next publish.
 
 ## Slices (spec §2.1), confirmed against the repo
 

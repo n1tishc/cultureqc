@@ -17,11 +17,11 @@ example or replay is on screen; say "live" only after pressing Analyze.
 ## Before the call
 
 - [ ] Space on ZeroGPU; the log shows `ZeroGPU`, `anomaly banks verified` and `models loaded`.
-- [ ] `results/live_latency_zerogpu.md` from the dry run (`scripts/space_dry_run.py`) is committed; quote its numbers, not a guess.
-      The 2026-09-29 run predates the calibration profiles: rerun it once the console Space carries them, and until then
-      don't say live matches stored on 7 of 7.
+- [ ] The dry run (`scripts/space_dry_run.py`) of the published Space is committed: `results/space_dry_run_e6c44671.md`
+      (2026-10-04, Space commit `e6c44671`, each example read with its setup's profile); quote its numbers, not a guess.
+      Rerun it after any republish.
 - [ ] Signed in to huggingface.co in the call browser, Space opened from huggingface.co/spaces/LongGrainRice/cultureqc-console (Analyze then uses the PRO GPU quota).
-- [ ] Space opened 10 minutes early (it sleeps after 48 h without visitors; a boot takes minutes) and one live Analyze done; in the 2026-09-29 dry run the first took 6.45 s and the rest a median 3.28 s; in the 2026-09-28 run (commit `0210c79`) one of 7 took 18.50 s.
+- [ ] Space opened 10 minutes early (it sleeps after 48 h without visitors; a boot takes minutes) and one live Analyze done; in the 2026-10-04 dry run the first took 6.22 s and the rest a median 3.22 s; in the 2026-09-28 run (commit `0210c79`) one of 7 took 18.50 s.
 - [ ] Expect a small "Successfully acquired a GPU" toast (top right) on each live Analyze: that is ZeroGPU attaching
       the GPU. If asked, it is the live run on a GPU, not a precomputed result.
 - [ ] The 3D views turn on their own at the dry run. If they don't, check macOS System Settings →
@@ -165,16 +165,16 @@ person steps in on exceptions and audits the trail.
    says the map is held in memory for this view while the record keeps its
    hash. Precomputed examples are never written into this chain, and the card
    says so.
-   - On the Space (ZeroGPU) a live Analyze took a median 3.28 s in the
-     2026-09-29 dry run (`results/live_latency_zerogpu.md`), before the
-     calibration profiles. Quote the live-vs-stored table only from a rerun
-     against the current examples.
+   - On the Space (ZeroGPU) a live Analyze took a median 3.22 s in the
+     2026-10-04 dry run (`results/space_dry_run_e6c44671.md`), and flag and
+     action were the same as stored on 7 of 7 examples, each read with its
+     setup's profile; readings were within 0.04 pp of the stored ones.
    - On the Mac backup (`results/live_latency_mac_mps.md`, 2026-10-04), flag
      and action are the same as stored on 7 of 7 examples, each read with its
      setup's profile. The stored examples were made on that Mac, so this
      checks the code path, not agreement across machines; across machines,
-     the 51.4% frame reads 51.43% on the Mac and 51.45% in the Colab GPU
-     cache.
+     the 51.4% frame reads 51.43% on the Mac, 51.47% on the Space's GPU and
+     51.45% in the Colab GPU cache.
 
 ## 4. Contamination, honestly (1–2 min)
 

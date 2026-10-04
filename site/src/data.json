@@ -6568,10 +6568,10 @@
    "source": "results/live_latency.md"
   },
   {
-   "result": "Live latency, console Space on ZeroGPU (one Analyze as the viewer waits, with the owner's token; measured before calibration profiles)",
-   "number": "median 3.28 s (n = 6, after a first of 6.45 s); flag and action the same as the examples stored at the time on 7 of 7",
+   "result": "Live latency, console Space on ZeroGPU (one Analyze as the viewer waits, with the owner's token; each example read with its setup's profile)",
+   "number": "median 3.22 s (n = 6, after a first of 6.22 s); flag and action the same as stored on 7 of 7 examples",
    "provenance": "real (C2C12, EVICAN)",
-   "source": "results/live_latency_zerogpu.md"
+   "source": "results/space_dry_run_e6c44671.md"
   },
   {
    "result": "Live latency, Mac backup (Cellpose-SAM on Apple MPS; each example read with its setup's profile, on the Mac that made the stored examples)",
