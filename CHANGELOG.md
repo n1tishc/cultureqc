@@ -29,6 +29,26 @@ acceptance criteria were committed before scoring (`1ef52cb`, `2baa18f`):
   images, so it stays `uncalibrated`: a reading at or above the target goes to
   a person.
 
+### Live (2026-10-04, owner approval)
+
+- `evican_mixed` and `msc_phase` went live through two `change` records
+  (`uncalibrated` → profile, by SHA-256, with the result files as evidence,
+  approved by the repository owner) at the start of the stored chain.
+- The seven console examples were re-run under `rules_v0.5` (Apple MPS). EVICAN
+  HT29 reads 52.9% against the experts' 51.6% (29.3% at the default cutoff);
+  its band, 23.5–82.3%, includes the 80% target, so it goes to human review.
+  EVICAN PC3 reads 6.6% (experts 5.5%). The C2C12 stress test (bacteria 16.5×
+  too large) fails the quality gate on exposure and returns `reimage`; the
+  51.4% C2C12 frame, sent to review by the ambiguity trigger before, now
+  continues.
+- **Hashes changed:** every stored example record is new (new readings,
+  profile fields and `rules_v0.5`), and the chain is two records longer.
+- The cutoff study's console note ("validated, not live") is gone; its file
+  `demo/examples/cutoff_calibrated.json` is marked superseded and still
+  carries the not-fully-blind disclosure.
+- The site is v0.4: each example shows its error band against the target, and
+  the release notes have a v0.4 entry.
+
 ### Rules `rules_v0.5`
 
 - **Passage reads the error band.** A reading whose band clears the target

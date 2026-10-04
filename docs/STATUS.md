@@ -77,6 +77,26 @@ The claims checker (`culture/claims.py`, mirrored under `deploy/`) blocks the
 two claims generically: any integration claim ("integrates with …", allowed
 only negated), and any statement that another system lacks audit trails.
 
+## Confluency calibration profiles (branch `confluency-calibration`, from 2026-10-02)
+
+Local branch off `slice-1b-compute-cache`; nothing pushed or merged until the
+owner approves each step. Method and acceptance criteria were committed before
+any new image was scored. Details: `CHANGELOG.md`.
+
+| Step | Commit | Result |
+|---|---|---|
+| Pre-registration (method, splits, criteria A1–A5), then MSC facts and leave-one-population-out, before scoring | `1ef52cb`, `2baa18f` | `results/confluency_profiles.md` keeps the pre-registered text above the results |
+| Rules `rules_v0.5`, record schema 0.4 (reading, review, change), docs | `ff04c0f`, `722da84`, `6f41558` | Passage reads the error band; boundary ambiguity no longer decides; `reimage` is an action |
+| Scored once on each setup's held-out images | `753cd49`, `c3fa9ce` | MSC 8.19 → 3.43 pp, band ±7.11; EVICAN 8.36 → 3.78 pp (not fully blind), band ±29.40; LIVECell in-domain check 2.14 → 2.05 pp. EVICAN reproduced the cutoff study's −3.5 / 3.78 |
+| Config written from the results | `2b29a58` | `evican_mixed` and `msc_phase` validated (A1 and A5 pass; A2–A4 not measurable); `livecell_incucyte` an in-domain check, not used live |
+| Owner decision: the console's C2C12 microscope stays uncalibrated (no labelled images; the owner is not asked to label cells) | `0bbc20a` | `c2c12_ker2018` keeps its quality gate with no band; a reading at or above the target goes to a person |
+| Owner approval (2026-10-04) to put both validated profiles live | `94e1628` | The stored chain opens with two change records approved by "repository owner"; the seven examples regenerated on MPS match the dry run (HT29 52.9%, band 23.5–82.3%, human review; stress test re-image on exposure; 51.4% frame continue) |
+| Site v0.4 | `33ced8e` | Error band on the example cards, v0.5 rules figure, v0.4 release notes; checked in headless Chromium |
+
+Still open: the console Space is not republished with v0.5, and its
+live-vs-stored dry run (`results/live_latency_zerogpu.md`, 2026-09-29) predates
+the profiles; re-run it after the next publish.
+
 ## Slices (spec §2.1), confirmed against the repo
 
 | Slice | Status | Evidence in repo | Notes |

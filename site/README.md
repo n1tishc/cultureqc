@@ -27,8 +27,9 @@ is what the v0.3 Vercel project serves at https://cultureqc-cvoy.vercel.app. The
 
 - No number is typed into a component. They come from `data.json`, which copies
   them from the README tables (checked by `tests/test_readme_provenance.py`),
-  the console's examples and records, the replays, `configs/detectability.yaml`
-  and `results/review_rate.csv`.
+  the console's examples and records, the replays, `configs/detectability.yaml`,
+  `results/confluency_profiles.json`, and `results/review_rate_v05.csv` (with
+  `results/review_rate.csv` for the `rules_v0.4` comparison).
 - `tests/test_claims.py` scans the components' text with the same claims policy
   as the README and the console.
 - Cyan is what the segmentation model computed and magenta what the anomaly
