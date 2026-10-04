@@ -2,8 +2,8 @@
 """
 Three example segments for the §6.4 checkpoint ("Backtest table + 3 example
 segments (good, poor, plateau)"). SYNTHETIC fixture sequences — same
-fixture-through-real-Cache pattern as demo/flask_timeline.py and
-scripts/backtest_growth.py; culture/growth.py and culture/replay.py run
+fixture-through-real-Cache pattern as scripts/backtest_growth.py;
+culture/growth.py and culture/replay.py run
 their real code paths against fabricated data. Never a claim about real
 growth.
 
@@ -16,6 +16,8 @@ Outputs:
 
 from __future__ import annotations
 
+import hashlib
+import json
 import os
 import sys
 import tempfile
@@ -32,7 +34,6 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from culture.cache import Cache
 from culture.growth import fit_growth
 from culture.replay import build_replay_visits
-from demo.flask_timeline import _write_sequence
 from demo.theme import ACCENT, BG_CARD, BORDER, TEXT_PRIMARY, TEXT_SECONDARY
 
 RESULTS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "results")
@@ -52,6 +53,76 @@ EXAMPLES = [
         "low": 10.0, "high": 45.0, "t_mid_frac": 0.40, "k": 0.09, "n_frames": 14, "hours_apart": 9.0,
     },
 ]
+
+
+def _fake_sha(tag: str) -> str:
+    return hashlib.sha256(tag.encode()).hexdigest()
+
+
+def _logistic(t_hours, t_mid_hours, k, low, high):
+    return low + (high - low) / (1.0 + np.exp(-k * (t_hours - t_mid_hours)))
+
+
+def _append_parquet(cache_dir: str, name: str, rows: list[dict]) -> None:
+    path = os.path.join(cache_dir, name)
+    new_df = pd.DataFrame(rows)
+    if os.path.exists(path):
+        new_df = pd.concat([pd.read_parquet(path), new_df], ignore_index=True)
+    new_df.to_parquet(path, index=False)
+
+
+def _write_sequence(
+    cache_dir: str, sequence_id: str, start: str, n_frames: int, hours_apart: float,
+    low: float, high: float, t_mid_frac: float, k: float, rng: np.random.Generator,
+) -> None:
+    """Writes one fixture sequence's rows (a noisy logistic, every frame
+    "normal" and passing the quality gate) into cache_dir's parquet tables,
+    appending to whatever is already there."""
+    base = pd.Timestamp(start)
+    t_mid = t_mid_frac * (n_frames - 1) * hours_apart
+    shas = [_fake_sha(f"{sequence_id}-{i}") for i in range(n_frames)]
+
+    images_rows, conf_rows, logits_rows, quality_rows = [], [], [], []
+    for i, sha in enumerate(shas):
+        t_hours = i * hours_apart
+        images_rows.append({
+            "image_sha256": sha, "dataset": "demo_fixture", "source_path": f"/demo/{sequence_id}/{i}.png",
+            "sequence_id": sequence_id, "frame_idx": i,
+            "timestamp": (base + pd.Timedelta(hours=t_hours)).isoformat(),
+            "height": 256, "width": 256, "bit_depth": "uint8", "normalization": "grayscale_imread",
+        })
+
+        full_pct = float(np.clip(_logistic(t_hours, t_mid, k, low, high) + rng.normal(0, 1.5), 0, 100))
+        conf_rows.append({
+            "image_sha256": sha, "crop_spec": "full", "model_name": "seg", "model_version": "cpsam_v2",
+            "pct": full_pct, "confidence": 0.82, "extra": json.dumps({}),
+        })
+        for c in range(4):
+            crop_pct = float(np.clip(full_pct + rng.normal(0, 3.5), 0, 100))
+            conf_rows.append({
+                "image_sha256": sha, "crop_spec": f"crop_f0.25_s1_k{c}", "model_name": "seg",
+                "model_version": "cpsam_v2", "pct": crop_pct, "confidence": 0.78,
+                "extra": json.dumps({"frac": 0.25}),
+            })
+
+        base_logits = np.array([4.0, -1.0, -1.0, -1.0])  # argmax "normal"
+        noisy_logits = base_logits + rng.normal(0, 0.3, 4)
+        logits_rows.append({
+            "image_sha256": sha, "crop_spec": "full", "model_name": "qc", "model_version": "qc_effnetb0_v1",
+            "logits": json.dumps([float(x) for x in noisy_logits]),
+        })
+
+        quality_rows.append({
+            "blur_laplacian_var": float(rng.uniform(250, 700)),
+            "exposure_mean": float(rng.uniform(128.0, 128.8)),
+            "uniformity_block_std": float(rng.uniform(0.15, 0.9)),
+            "image_sha256": sha, "model_name": "quality", "model_version": "quality_v1",
+        })
+
+    _append_parquet(cache_dir, "images.parquet", images_rows)
+    _append_parquet(cache_dir, "confluency.parquet", conf_rows)
+    _append_parquet(cache_dir, "logits.parquet", logits_rows)
+    _append_parquet(cache_dir, "quality.parquet", quality_rows)
 
 
 def build_and_fit(example: dict, seed: int = 0):
@@ -96,7 +167,6 @@ def plot_example(ax, example, visits, result):
     for spine in ax.spines.values():
         spine.set_color(BORDER)
     ax.grid(True, color=BORDER, alpha=0.4, linewidth=0.5)
-    fig = ax.get_figure()
     for label in ax.get_xticklabels():
         label.set_rotation(20)
         label.set_ha("right")
@@ -125,7 +195,7 @@ def main():
         "# Growth model — 3 example segments (SYNTHETIC, §6.4 checkpoint)",
         "",
         "Fabricated fixture sequences replayed through the real culture/replay.py + culture/growth.py",
-        "code path (same pattern as demo/flask_timeline.py / scripts/backtest_growth.py) — never a claim",
+        "code path (same pattern as scripts/backtest_growth.py) — never a claim",
         "about real cell growth.",
         "",
     ]

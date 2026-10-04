@@ -1,7 +1,7 @@
 # Growth model — 3 example segments (SYNTHETIC, §6.4 checkpoint)
 
 Fabricated fixture sequences replayed through the real culture/replay.py + culture/growth.py
-code path (same pattern as demo/flask_timeline.py / scripts/backtest_growth.py) — never a claim
+code path (same pattern as scripts/backtest_growth.py) — never a claim
 about real cell growth.
 
 - **good** (Good — healthy growth, target reached with a tight interval): **logistic** chosen (logistic AIC=-15.9, gompertz AIC=-10.9) &middot; T* = 76h, 90% CI [64h, 93h] &middot; doubling (early) 12.0h
