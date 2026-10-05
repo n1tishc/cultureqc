@@ -91,3 +91,48 @@ Secondary, reported but not judged against a limit:
 
 Nothing in the product. No profile, cutoff, band or rule changes because of
 this result, whichever way it goes. It is reported as scored.
+
+## Results
+
+Scored 2026-10-05 by `scripts/confluency_dense_tiles.py score`; one row per region in `results/confluency_dense_tiles.csv`.
+
+Included: 39 quarters (500 × 500 px) with ground truth 60–90%, from 27 images (populations 218-4 / 218-5 / 218-6: 6 / 24 / 9).
+
+| # | measure | result (95% interval, images resampled) | limit | verdict |
+|---|---|---|---|---|
+| D2 | MAE | 11.94 pp (8.05–16.29) | ≤ 5 pp | fail |
+| D3 | mean signed error | -7.80 pp (-12.68 to -3.41) | \|bias\| ≤ 3 pp | fail |
+
+Per population, at the fold cutoff: 218-4: n = 6, MAE 10.62, bias -7.22, 218-5: n = 24, MAE 13.34, bias -8.40, 218-6: n = 9, MAE 9.07, bias -6.58. Median absolute error 8.90 pp; 16 of 39 off by more than 10 pp.
+
+Secondary (not judged):
+
+- Shipped cutoff 0.0 on the same quarters: MAE 27.82 pp (22.90–33.27), bias -27.54 pp.
+- Band coverage: 17 of 39 quarters (43.6%) read within their fold's band (bands measured on whole images; a quarter is a smaller, noisier field).
+- Passage call at T = 80% on quarters with ground truth 60–100% (39 from 27 images, 0 at or above 80%): passage 0, continue 34, review 5; of the 34 not sent to review, 34 agree with ground truth (100.0%).
+- Field size, 4 × 4 grid (250 × 250 px): 439 tiles from 162 images, MAE 17.00 pp (14.81–19.31), bias -11.11 pp (-13.92 to -8.53).
+
+## What it means (written after scoring)
+
+- **D2 and D3 fail.** At the calibrated cutoff, dense regions of held-out MSC
+  images read 7.80 pp low on average, and 16 of 39 are off by more than
+  10 pp. All three populations read low (−6.58 to −8.40 pp).
+- **The error depends on density.** The whole-image results already showed
+  the trend at the calibrated cutoff (`results/confluency_profiles.json`,
+  `msc_phase` bands): mean signed error +1.22 pp at 0–20%, +0.24 at 20–40%,
+  −1.30 at 40–60% and −5.75 at 60–90% (n = 4). The quarters confirm it with
+  more data. One cutoff per setup fixes the overall level; it cannot remove
+  an error that grows with density. Smaller fields read lower still (4 × 4
+  grid: −11.11 pp).
+- **The band understates the error here.** The ±7.1 pp band, measured on
+  whole images, covers 17 of 39 dense quarters (43.6%).
+- **The passage line tests nothing.** No quarter reaches 80% ground truth
+  (the highest is 77.2%), so "34 of 34 agree" only says that none was
+  passaged wrongly; no correct passage could be observed.
+- **Direction.** A dense culture reads below its true confluency, so the
+  rules would hold a passage that is due: the flask continues past its
+  target. That is a late passage, not a safe default.
+- **Product.** As pre-registered, nothing changes. A density-dependent
+  calibration (a curve from reading to expert value, fitted on calibration
+  folds only and tested on held-out dense images) would be the next test,
+  and it needs dense labelled images to fit and to test on.
