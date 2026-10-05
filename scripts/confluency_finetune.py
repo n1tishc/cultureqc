@@ -4,7 +4,8 @@ Fine-tuning Cellpose-SAM on a setup's own labelled images: does it read dense ce
 Development runs only (MSC, leave one population out). These images have already been scored as whole
 images and as dense quarters (results/confluency_profiles.md, results/confluency_dense_tiles.md), so nothing
 here is a held-out result: it checks that the recipe works, beside the sealed test in
-results/confluency_mcellseg.md, and compares two cheap alternatives (rescaling, SAMCell).
+results/confluency_mcellseg.md, and compares alternatives (rescaling; SAMCell and DINOCell, each run by its
+own script in its own environment: scripts/alt_model_samcell.py, scripts/alt_model_dinocell.py).
 
 GPU steps run on Colab (nb/06_confluency_evidence.ipynb):
 
@@ -51,10 +52,14 @@ from confluency_profiles import GRID, msc_items  # noqa: E402
 
 RUNS = os.path.join("cache", "finetune")
 MAPS = os.path.join("cache", "probmaps_ft")
-ALT = os.path.join("cache", "probmaps_alt", "samcell", "msc")
+ALT_ROOT = os.path.join("cache", "probmaps_alt")
 POPS = ["218-4", "218-5", "218-6"]
 RECIPE = {"learning_rate": 1e-5, "weight_decay": 0.1, "n_epochs": 100, "batch_size": 1}
-SAMCELL_GRID = [0.01, 0.03, 0.05, 0.07, 0.09, 0.12, 0.15, 0.2, 0.25, 0.3]
+# other models (development only): map key, cutoff grid on their own output, and their own default cutoff
+ALTS = {"samcell": ("dist", [0.01, 0.03, 0.05, 0.07, 0.09, 0.12, 0.15, 0.2, 0.25, 0.3], 0.09,
+                    "SAMCell-Generalist (distance map)"),
+        "dinocell": ("prob", [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9], 0.5,
+                     "DINOCell (cell probability)")}
 LO, HI = 60.0, 90.0
 CURVES = os.path.join("results", "confluency_finetune_dev_curves.json")
 OUT_MD = os.path.join("results", "confluency_finetune_dev.md")
@@ -190,7 +195,7 @@ def cmd_curves(a):
     items = msc_items()
     quarters = regions(items, 2, LO, HI)
     out = {"generated_by": "scripts/confluency_finetune.py curves", "environment": environment(),
-           "grid": GRID, "samcell_grid": SAMCELL_GRID,
+           "grid": GRID, "alt_grids": {k: v[1] for k, v in ALTS.items()},
            "gt": {i["name"]: float((cv2.imread(i["mask"], cv2.IMREAD_GRAYSCALE) > 0).mean() * 100) for i in items},
            "group": {i["name"]: i["group"] for i in items},
            "quarters": [{"name": q["name"], "cell": q["cell"], "gt": q["gt"]} for q in quarters],
@@ -214,9 +219,10 @@ def cmd_curves(a):
         add(run, lambda n, r=run: os.path.join(MAPS, r, "msc", n + ".npz"), GRID, "prob")
         if os.path.exists(os.path.join(RUNS, run, "manifest.json")):
             out["manifests"][run] = json.load(open(os.path.join(RUNS, run, "manifest.json")))
-    add("samcell", lambda n: os.path.join(ALT, n + ".npz"), SAMCELL_GRID, "dist")
-    if os.path.exists(os.path.join(os.path.dirname(ALT), "manifest.json")):
-        out["manifests"]["samcell"] = json.load(open(os.path.join(os.path.dirname(ALT), "manifest.json")))
+    for key, (field, grid, _, _) in ALTS.items():
+        add(key, lambda n, k=key: os.path.join(ALT_ROOT, k, "msc", n + ".npz"), grid, field)
+        if os.path.exists(os.path.join(ALT_ROOT, key, "manifest.json")):
+            out["manifests"][key] = json.load(open(os.path.join(ALT_ROOT, key, "manifest.json")))
     json.dump(out, open(CURVES, "w"))
     print("wrote", CURVES)
 
@@ -260,7 +266,7 @@ def calibrated_j(C: dict, rows: dict, h: str, grid: list[float]) -> int:
 
 def cmd_dev(a):
     C = json.load(open(CURVES))
-    grid, sgrid = C["grid"], C["samcell_grid"]
+    grid = C["grid"]
     j0 = grid.index(0.0)
     R = C["runs"]
     arms = {}
@@ -277,10 +283,12 @@ def cmd_dev(a):
             run = next((r for r in ft if r.startswith(f"msc_{h}_n{n}_")), None)
             return R.get(run) if run else None
         arms[f"fine-tuned on {n} images (other two populations), cutoff 0.0"] = score_arm(C, rows_of, lambda h: j0)
-    if "samcell" in R:
-        arms["SAMCell-Generalist, its own cutoff 0.09"] = score_arm(C, lambda h: R["samcell"], lambda h: sgrid.index(0.09))
-        arms["SAMCell-Generalist, calibrated cutoff (other two populations)"] = score_arm(
-            C, lambda h: R["samcell"], lambda h: calibrated_j(C, R["samcell"], h, sgrid))
+    for key, (_, _, own, label) in ALTS.items():
+        if key in R:
+            g = C["alt_grids"][key]
+            arms[f"{label}, its own cutoff {own}"] = score_arm(C, lambda h, k=key: R[k], lambda h, g=g, o=own: g.index(o))
+            arms[f"{label}, calibrated cutoff (other two populations)"] = score_arm(
+                C, lambda h, k=key: R[k], lambda h, k=key, g=g: calibrated_j(C, R[k], h, g))
     json.dump({"generated_by": "scripts/confluency_finetune.py dev", "arms": arms, "environment": C["environment"],
                "runs": {k: {f: m.get(f) for f in ("run", "n", "weights_sha256", "seconds")} for k, m in C["manifests"].items()}},
               open(OUT_JSON, "w"), indent=1)
@@ -298,7 +306,7 @@ def write_dev_md(arms: dict, manifests: dict, env: dict) -> None:
         "",
         "**Status: development, not a held-out result.** These 320 MSC images were already scored as whole",
         "images (`results/confluency_profiles.md`) and as dense quarters (`results/confluency_dense_tiles.md`).",
-        "The runs here check the fine-tuning recipe and compare two alternatives; the held-out answer is the",
+        "The runs here check the fine-tuning recipe and compare alternatives; the held-out answer is the",
         "sealed test in `results/confluency_mcellseg.md`. Generated by `scripts/confluency_finetune.py dev` from",
         f"`{CURVES}` (maps computed on {env.get('gpu') or env.get('device')}, commit `{(env.get('commit') or '?')[:7]}`).",
         "",
