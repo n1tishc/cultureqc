@@ -117,22 +117,28 @@ Secondary (not judged):
 - **D2 and D3 fail.** At the calibrated cutoff, dense regions of held-out MSC
   images read 7.80 pp low on average, and 16 of 39 are off by more than
   10 pp. All three populations read low (−6.58 to −8.40 pp).
-- **The error depends on density.** The whole-image results already showed
-  the trend at the calibrated cutoff (`results/confluency_profiles.json`,
-  `msc_phase` bands): mean signed error +1.22 pp at 0–20%, +0.24 at 20–40%,
-  −1.30 at 40–60% and −5.75 at 60–90% (n = 4). The quarters confirm it with
-  more data. One cutoff per setup fixes the overall level; it cannot remove
-  an error that grows with density. Smaller fields read lower still (4 × 4
-  grid: −11.11 pp).
+- **Spread wide, skewed low.** Errors run from −44.5 to +12.4 pp: 13
+  quarters read more than 10 pp low and 3 more than 10 pp high.
+- **Consistent with an error that grows with density, not proof of it.**
+  The whole-image results show the same direction at the calibrated cutoff
+  (`results/confluency_profiles.json`, `msc_phase` bands): mean signed error
+  +1.22 pp at 0–20%, +0.24 at 20–40%, −1.30 at 40–60% and −5.75 at 60–90%
+  (n = 4), grouped by expert value too. But regions here are selected by
+  their expert value, so wherever mask and map disagree locally, the regions
+  that land in 60–90% are more often those where the mask covers more than
+  the map; that alone pulls readings below the mask, and more so in smaller
+  fields (the 4 × 4 grid's −11.11 pp is what it predicts). This design
+  cannot separate the two.
 - **The band understates the error here.** The ±7.1 pp band, measured on
   whole images, covers 17 of 39 dense quarters (43.6%).
 - **The passage line tests nothing.** No quarter reaches 80% ground truth
-  (the highest is 77.2%), so "34 of 34 agree" only says that none was
-  passaged wrongly; no correct passage could be observed.
-- **Direction.** A dense culture reads below its true confluency, so the
-  rules would hold a passage that is due: the flask continues past its
-  target. That is a late passage, not a safe default.
-- **Product.** As pre-registered, nothing changes. A density-dependent
+  (the highest is 77.2%) and no reading comes near the 86.4–87.7% a
+  passage needs with its fold's band (the highest is 80.7%), so "34 of 34
+  agree" shows neither a correct passage nor safety.
+- **Direction.** On average a dense region reads below its expert value,
+  which would delay a passage that is due; but the spread runs both ways.
+- **Product.** As pre-registered, nothing changes. The next test needs dense
+  labelled images from one setup, to fit and to test on: it would show
+  whether one cutoff is enough there, or whether a density-dependent
   calibration (a curve from reading to expert value, fitted on calibration
-  folds only and tested on held-out dense images) would be the next test,
-  and it needs dense labelled images to fit and to test on.
+  images only) is needed.
