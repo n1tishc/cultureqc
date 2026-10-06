@@ -209,7 +209,13 @@ export function DenseTest({ data }) {
           A fine-tuned profile would be a model of the lab’s own, trained on {d.sealed.n_train}–{d.swapped.n_train} images with every cell outlined, recorded as a change with its weights’ SHA-256, and checked on held-out images before use. Here the fine-tuned weights are a measurement; they inherit Cellpose-SAM’s non-commercial terms.
         </Note>
         <Note title="Why MSC still reads “Validated” above.">
-          That status covers the criteria its test images could measure; the passage-range ones (A2–A4) were not measurable on MSC or EVICAN. This is the first held-out measurement of them, and its limits are its own: {d.scope}, and {b.C.n_ge_T} images at or above {d.limits.target}%.
+          That status covers the criteria its test images could measure; the passage-range ones (A2–A4) were not measurable on MSC or EVICAN.{" "}
+          {d.msc_dense ? (
+            <>
+              Dense regions of the MSC images themselves read {fx(Math.abs(d.msc_dense.bias))} pp {d.msc_dense.bias < 0 ? "low" : "high"} on average at that profile’s cutoff, {d.msc_dense.over10} of {d.msc_dense.n} off by more than 10 pp, in a test that could not separate density from how the regions were picked (<Path>{d.msc_dense.source}</Path>).{" "}
+            </>
+          ) : null}
+          This is the first held-out measurement of the passage range on whole images, and its limits are its own: {d.scope}, and {b.C.n_ge_T} images at or above {d.limits.target}%.
         </Note>
       </ul>
     </Section>

@@ -8309,7 +8309,14 @@
   "sources": [
    "results/confluency_mcellseg.md",
    "results/confluency_mcellseg_swap.md"
-  ]
+  ],
+  "msc_dense": {
+   "n": 39,
+   "bias": -7.798451,
+   "mae": 11.936503,
+   "over10": 16,
+   "source": "results/confluency_dense_tiles.md"
+  }
  },
  "cutoff_disclosure": "Not fully blind: the cutoff idea came from error analysis of these 33 images, and a quarter-resolution sweep showing the evaluation curve was seen before the rule was written. The rule picked −3.5, which is not the evaluation-best (−3.0 gives 3.40 pp); calibration MAE is flat from −3.5 to −2.5 (6.95–7.00 pp). The 33 are all under 500,000 px, while 28 of the 65 calibration images are larger.",
  "decisions": [

@@ -442,6 +442,13 @@ def build_dense_test():
         return {a: sorted(r3(float(r["gt_pct"])) for r in rows if r[f"{a}_call"] in ("passage", "continue")
                           and (r[f"{a}_call"] == "passage") != (float(r["gt_pct"]) >= mc.T)) for a in "CF"}
 
+    # dense regions of the MSC images at the MSC profile's cutoff (results/confluency_dense_tiles.md, scored once)
+    dt = rel("results", "confluency_dense_tiles.json")
+    msc_dense = None
+    if os.path.exists(dt):
+        pr = json.load(open(dt))["primary"]
+        msc_dense = {"n": pr["n_regions"], "bias": r6(pr["bias"]), "mae": r6(pr["mae"]), "over10": pr["stats"]["over10"],
+                     "source": "results/confluency_dense_tiles.md"}
     w1 = wrong(v1_csv, lambda r: r["split"] == "test" and r["setup"] in cal)
     w2 = wrong(sw_csv, lambda r: r["split"] == "test")
 
@@ -461,6 +468,7 @@ def build_dense_test():
                  "wrong": {a: sorted(w1[a] + w2[a]) for a in "CF"}},
         "limits": {"mae": mc.MAE_MAX, "bias": mc.BIAS_MAX, "agree": mc.AGREE_MIN, "cover": mc.COVER_MIN, "target": mc.T},
         "sources": ["results/confluency_mcellseg.md", "results/confluency_mcellseg_swap.md"],
+        "msc_dense": msc_dense,
     }
 
 
