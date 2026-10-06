@@ -234,6 +234,31 @@ Supplementary, MSC on an incubator imager (lazy masks): 9 test images, calibrate
 
 ![Readings against expert confluency on the 90 test images, one panel per arm](confluency_mcellseg.png)
 
+### Calls and band coverage per setup (computed after scoring from the CSV)
+
+The pre-registration promised every measure per setup, and `score` wrote only MAE and bias per setup.
+This table fills that gap. It is a description of `results/confluency_mcellseg.csv`, not a second
+scoring, and its pooled totals match B4 and B5 above.
+
+| setup | test at 60–100% (≥ 80%) | arm | passage / continue / to a person | agree of decided | within band, all test images |
+|---|---|---|---|---|---|
+| `cd7_huvec_dic` | 4 (2) | Z | 0 / 4 / 0 | 2 of 4 | no band |
+|  |  | C | 0 / 0 / 4 | none decided | 18 of 18 |
+|  |  | F | 2 / 1 / 1 | 3 of 3 | 17 of 18 |
+|  |  | R | 0 / 0 / 4 | none decided | 18 of 18 |
+| `lsm_hek_1024` | 9 (2) | Z | 0 / 5 / 4 | 5 of 5 | no band |
+|  |  | C | 0 / 3 / 6 | 3 of 3 | 15 of 18 |
+|  |  | F | 4 / 4 / 1 | 6 of 8 | 12 of 18 |
+|  |  | R | 2 / 4 / 3 | 6 of 6 | 13 of 18 |
+| `oir_1024` | 8 (0) | Z | 0 / 8 / 0 | 8 of 8 | no band |
+|  |  | C | 0 / 1 / 7 | 1 of 1 | 16 of 17 |
+|  |  | F | 0 / 1 / 7 | 1 of 1 | 15 of 17 |
+|  |  | R | 0 / 1 / 7 | 1 of 1 | 17 of 17 |
+| `lsm_2796` | 1 (0) | Z | 0 / 1 / 0 | 1 of 1 | no band |
+|  |  | C | 0 / 1 / 0 | 1 of 1 | 32 of 37 |
+|  |  | F | 0 / 0 / 1 | none decided | 37 of 37 |
+|  |  | R | 0 / 0 / 1 | none decided | 34 of 37 |
+
 ## What it means (written after scoring)
 
 - **1. The shipped method does not meet the passage-range criteria on these setups, but it fails safe.**
@@ -258,10 +283,16 @@ Supplementary, MSC on an incubator imager (lazy masks): 9 test images, calibrate
     ±15.5 pp band.
   - B4: 10 of 12 decided calls agree. Both disagreements are passage calls on `lsm_hek_1024` flasks at
     77.9% and 79.3%, within 2.1 pp of the 80% threshold.
+    - Both come from one unit (`hek|fumgw`, whose four test images are at 68.7%, 74.2%, 77.9% and
+      79.3%), so the bootstrap treats them as one cluster.
+    - F's band on that setup (±3.59 pp) covers only 12 of its 18 test images: the band was too narrow
+      exactly where the early calls happened.
   - All 4 ready flasks are called passage. C sends all 4 to a person.
   - F sends 11.1% of test images to a person; C sends 22.2%.
 - **3. Rescaling does not help.** MAE(C) − MAE(R) at 60–90% is −2.53 pp (−7.61 to +2.41), and −0.85 pp on
-  all test images. R's bias passes B3, but its error and bands are larger.
+  all test images. R's bias passes B3, but its pooled error and three of its four bands are larger.
+  Per setup it is mixed: on `lsm_hek_1024` R reads closer than C (MAE 3.13 against 5.24, band ±4.41
+  against ±8.79), and on `lsm_2796` slightly closer (8.92 against 10.04).
 - **Without a profile the reading is not usable on these setups.**
   - Read at 0.0, the test images of the calibrated setups read 25.7 pp low on average, and the 15 uncalibrated test
     images read 40.1 pp low.
@@ -275,4 +306,8 @@ Supplementary, MSC on an incubator imager (lazy masks): 9 test images, calibrate
   - One lab, 20× and 40× objectives, and only 4 test images at or above 80%.
   - F's cutoff and band come from the two fold models, each trained on about half the images of the
     model that read the test images, as pre-registered.
-  - F needs instance masks of the setup's own images. C needs only the confluency they give.
+  - The F that was tested is one model for the lab, fine-tuned on the 79 calibration images of all four
+    setups pooled. A separate fine-tuned model per setup, as "What changes downstream" words the
+    proposal, was not tested.
+  - F needs instance masks (every cell outlined) of the lab's own images. C needs only an expert
+    confluency value per image.
