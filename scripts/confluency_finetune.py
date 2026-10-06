@@ -15,6 +15,8 @@ GPU steps run on Colab (nb/06_confluency_evidence.ipynb):
     python scripts/confluency_finetune.py maps --run base_d89                 # zero-shot, rescaled to 89 px cells
     python scripts/confluency_finetune.py curves                              # readings at every cutoff -> results/
 
+    python scripts/confluency_finetune.py final --n 20                        # nb/07: 20 images of all three (seed 0)
+
 CPU, on the Mac:
 
     .venv/bin/python scripts/confluency_finetune.py dev                       # results/confluency_finetune_dev.md
@@ -168,6 +170,23 @@ def cmd_train(a):
         print(name, "already trained")
         return
     man = train_run(name, [cal[k] for k in pick])
+    print(json.dumps({k: man[k] for k in ("run", "n", "weights_sha256", "seconds")}))
+
+
+def cmd_final(a):
+    """The model a fine-tuned MSC profile would use, if the repository owner approves one: the development
+    runs' recipe and n, drawn at random (seed 0) from all three populations. Fixed before training. Its cutoff
+    and band would come from the development runs' out-of-population readings, not from this model's
+    readings of its own setup. A measurement until approved: nothing in the product loads it."""
+    items = msc_items()
+    assert len(items) == 320, len(items)
+    rng = np.random.default_rng(a.seed)
+    pick = sorted(rng.choice(len(items), a.n, replace=False))
+    name = f"msc_all_n{a.n}_s{a.seed}"
+    if os.path.exists(os.path.join(RUNS, name, "manifest.json")):
+        print(name, "already trained")
+        return
+    man = train_run(name, [items[k] for k in pick])
     print(json.dumps({k: man[k] for k in ("run", "n", "weights_sha256", "seconds")}))
 
 
@@ -335,12 +354,15 @@ def main():
     t.add_argument("--holdout", required=True, choices=POPS)
     t.add_argument("--n", type=int, default=20)
     t.add_argument("--seed", type=int, default=0)
+    fi = sub.add_parser("final")
+    fi.add_argument("--n", type=int, default=20)
+    fi.add_argument("--seed", type=int, default=0)
     m = sub.add_parser("maps")
     m.add_argument("--run", required=True)
     sub.add_parser("curves")
     sub.add_parser("dev")
     a = ap.parse_args()
-    {"train": cmd_train, "maps": cmd_maps, "curves": cmd_curves, "dev": cmd_dev}[a.cmd](a)
+    {"train": cmd_train, "final": cmd_final, "maps": cmd_maps, "curves": cmd_curves, "dev": cmd_dev}[a.cmd](a)
 
 
 if __name__ == "__main__":
