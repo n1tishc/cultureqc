@@ -205,6 +205,33 @@ the weights are marked not cleared for commercial use pending review.
   `https://www.kaggle.com/api/v1/datasets/download/maximsolopov/msu-smooth-1-20`
   (130 MB zip; it served without a login on 2026-10-02).
 
+## mCellSeg — used, held-out passage-range test (2026-10-05/06)
+
+- **What:** Alam, Jackson, Lord & Meijering, *Computer Methods and Programs in
+  Biomedicine* (2026); data Zenodo doi:10.5281/zenodo.20174259 (published
+  2026-05-15). 200 annotated transmitted-light images (DIC and bright-field) of
+  HEK-293T and HUVEC cultures, 20× and 40×, with hand-traced instance masks
+  reviewed by a senior cell biologist; 100 more unlabelled.
+- **License:** **CC BY 4.0**; attribution wherever its images or derived numbers
+  appear. Used for evaluation and for fine-tuning measurements only; images and
+  masks are **not redistributed** (`data/sources/mcellseg/`, gitignored).
+- **Training overlap:** published after Cellpose-SAM and not one of its 18
+  training datasets (above).
+- **Use:** the sealed test `results/confluency_mcellseg.md` and its swapped
+  replication `results/confluency_mcellseg_swap.md`, each scored once; both are
+  shown on the site's validation page.
+- **Download:** `mCellSeg.zip` from the Zenodo record, MD5
+  `ed06d6e4c10e93b81703984cef852246`.
+
+## MSC on an incubator imager (Joas et al. 2025) — used, supplementary check (2026-10-05)
+
+- **What:** Zenodo doi:10.5281/zenodo.15421541, the in-house `Aufnahme-*` MSC
+  images in its `livecell/` folder (none is a LIVECell image), 1280 × 960 px,
+  with the authors' confluence-oriented "lazy" masks.
+- **License:** **CC BY 4.0**. Not redistributed (`data/sources/msc_lazy/`,
+  gitignored).
+- **Use:** the supplementary row of `results/confluency_mcellseg.md` (19 images).
+
 ## C2C12 time-lapse — used, Phase A replay fleet (`nb/03`)
 
 - **What:** Ker et al. 2018, *Sci Data* 5:180237, doi:10.1038/sdata.2018.237;

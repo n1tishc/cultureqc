@@ -403,6 +403,67 @@ def build_profiles():
             "source": "results/confluency_profiles.md"}
 
 
+def build_dense_test():
+    """The passage-range test on a dense dataset no model had seen (mCellSeg): the sealed test
+    (results/confluency_mcellseg.{md,json,csv}, scored once) and its pre-registered swapped replication
+    (results/confluency_mcellseg_swap.{md,json,csv}, scored once). Every image, read by models that never
+    trained on it, with the shipped method (C) and the fine-tuned one (F)."""
+    srcs = [rel("results", f) for f in ("confluency_mcellseg.json", "confluency_mcellseg.csv",
+                                        "confluency_mcellseg_swap.json", "confluency_mcellseg_swap.csv")]
+    if not all(os.path.exists(p) for p in srcs):
+        return None
+    v1, v1_csv, sw, sw_csv = json.load(open(srcs[0])), srcs[1], json.load(open(srcs[2])), srcs[3]
+    sys.path.insert(0, rel("scripts"))
+    import confluency_mcellseg as mc      # the pre-registered limits, not retyped here
+    cal = set(v1["calibrated_setups"])
+    pts = [{"half": "sealed", "gt": r3(float(r["gt_pct"])), "C": r3(float(r["C_reading"])), "F": r3(float(r["F_reading"]))}
+           for r in csv.DictReader(open(v1_csv)) if r["split"] == "test" and r["setup"] in cal]
+    pts += [{"half": "swapped", "gt": r3(float(r["gt_pct"])), "C": r3(float(r["C_reading"])), "F": r3(float(r["F_reading"]))}
+            for r in csv.DictReader(open(sw_csv)) if r["split"] == "test"]
+
+    def r6(x):    # full enough that the page's toFixed(2) rounds as the results files do (7.9353 -> 7.94)
+        return None if x is None else round(float(x), 6)
+
+    def crit(c):
+        keep = ("n", "n_60_90", "n_60_100", "n_ge_T", "B1_mae", "B2_mae", "B3_bias", "B4_passage", "B4_continue",
+                "B4_review", "B4_decided", "B4_agree", "B4_ready_called_continue", "B5_covered", "B5_n", "review_share")
+        return {k: (r6(c[k]) if isinstance(c[k], float) else c[k]) for k in keep} | {"verdicts": c["verdicts"]}
+
+    def contrast(k):
+        return {"diff": r6(k["mae_60_90_diff"]), "ci": [r6(x) for x in k["ci"]],
+                "diff_all": r6(k["mae_all_diff"]), "ci_all": [r6(x) for x in k["ci_all"]]}
+
+    def within5(arm, half=None):
+        return sum(abs(p[arm] - p["gt"]) <= 5 for p in pts if half in (None, p["half"]))
+
+    def wrong(path, keep):
+        # decided calls at T on images at 60% or more that disagree with the experts: the expert value of each
+        rows = [r for r in csv.DictReader(open(path)) if keep(r) and float(r["gt_pct"]) >= mc.LO]
+        return {a: sorted(r3(float(r["gt_pct"])) for r in rows if r[f"{a}_call"] in ("passage", "continue")
+                          and (r[f"{a}_call"] == "passage") != (float(r["gt_pct"]) >= mc.T)) for a in "CF"}
+
+    w1 = wrong(v1_csv, lambda r: r["split"] == "test" and r["setup"] in cal)
+    w2 = wrong(sw_csv, lambda r: r["split"] == "test")
+
+    return {
+        "dataset": "mCellSeg (Alam, Jackson, Lord & Meijering 2026), CC BY 4.0, doi:10.5281/zenodo.20174259",
+        "setups": len(cal), "points": pts,
+        # from the pre-registration's "What it cannot show" (results/confluency_mcellseg.md)
+        "scope": "one lab, 20× and 40× objectives, two cell lines (HEK-293T and HUVEC), transmitted light",
+        "sealed": {"C": crit(v1["criteria"]["C"]), "F": crit(v1["criteria"]["F"]), "contrast": contrast(v1["contrasts"]["C-F"]),
+                   "within5": {a: within5(a, "sealed") for a in "CF"}, "wrong": w1,
+                   "n_train": v1["fine_tuned_runs"]["mcellseg_ftF"]["n"]},
+        "swapped": {"C": crit(sw["criteria"]["C"]), "F": crit(sw["criteria"]["F"]), "contrast": contrast(sw["contrast"]),
+                    "within5": {a: within5(a, "swapped") for a in "CF"}, "wrong": w2,
+                    "n_train": sw["fine_tuned_runs"]["mcellseg_swap_ftF"]["n"]},
+        "both": {"C": crit(sw["both_halves"]["criteria"]["C"]), "F": crit(sw["both_halves"]["criteria"]["F"]),
+                 "contrast": contrast(sw["both_halves"]["contrast"]), "within5": {a: within5(a) for a in "CF"},
+                 "wrong": {a: sorted(w1[a] + w2[a]) for a in "CF"}},
+        "limits": {"mae": mc.MAE_MAX, "bias": mc.BIAS_MAX, "agree": mc.AGREE_MIN, "cover": mc.COVER_MIN, "target": mc.T},
+        "sources": ["results/confluency_mcellseg.md", "results/confluency_mcellseg_swap.md"],
+    }
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--images", action="store_true")
@@ -432,6 +493,7 @@ def main():
         "oversize_factor": re.search(r"bacteria ([\d.]+)× too large", readme).group(1),
         "results": results_rows(readme),
         "profiles": build_profiles(),
+        "dense_test": build_dense_test(),
         # scripts/export_cutoff_examples.py, from results/confluency_cutoff.md: why 3.78 pp is not fully blind
         "cutoff_disclosure": json.load(open(rel("demo", "examples", "cutoff_calibrated.json")))["disclosure"]["text"],
         "decisions": readme_bullets(readme, "**What changed because of it**"),

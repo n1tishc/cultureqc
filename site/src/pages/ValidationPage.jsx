@@ -1,3 +1,4 @@
+import { DenseTest } from "../components/DenseTest";
 import { Profiles } from "../components/Profiles";
 import { Confluency, Detectability, Validation } from "../components/Sections";
 import { CtaBand, Footer, PageHead, TopBar } from "../components/Shell";
@@ -16,12 +17,14 @@ export default function ValidationPage({ data }) {
           lede={<p>{data.validation_intro}</p>}
           toc={[
             ...(data.profiles ? [["profiles", "Confluency calibrated per imaging setup"]] : []),
+            ...(data.dense_test ? [["dense", "The passage range, on a lab it had never seen"]] : []),
             ["confluency", "Confluency against expert masks"],
             ["checks", `Checks ${v[0].id}–${v[v.length - 1].id}`],
             ["detectability", "What it can and cannot see"],
           ]}
         />
         <Profiles data={data} />
+        <DenseTest data={data} />
         <Confluency data={data} />
         <Validation data={data} />
         <Detectability data={data} />
