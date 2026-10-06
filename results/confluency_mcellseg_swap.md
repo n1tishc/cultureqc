@@ -187,10 +187,10 @@ MAE(C) − MAE(F) at 60–90%: +4.60 pp (+1.36 to +8.06); all images +5.40 pp (+
     comparison as pre-registered, not judged.
 - **On this half, F met all five criteria and C did not.**
   - F: B1 1.71 pp, B2 2.55 pp, B3 −1.29 pp, B4 5 of 5, B5 78 of 79. It reads 76 of 79 test images within
-    5 pp; C reads 36. No arm had met every criterion on held-out images before.
+    5 pp; C reads 36. No arm had met every criterion on mCellSeg before, in either half.
   - B4 rests on few decisions. F sent 9 of the 14 images at 60–100% to a person, including 5 of the 6 ready
-    flasks; its one passage call (95.9%) and four continue calls were correct. Its `oir_1024` band
-    (±23.75 pp) sends every image of that setup to a person.
+    flasks; its one passage call (95.9%) and four continue calls were correct. With its `oir_1024` band
+    (±23.75 pp), all 4 of that setup's test images at 60% or more went to a person.
   - C failed B1 (7.40 pp) and B2 (7.39 pp), passed B3–B5, and sent 11 of the 14 to a person. Neither arm called
     a ready flask continue.
 - **Both halves together (secondary): fine-tuning reads the passage range better.**
