@@ -180,7 +180,7 @@ export function DenseTest({ data }) {
       lede={
         <>
           <p>
-            The MSC and EVICAN profiles above could not measure the passage range: their test images held almost no flasks at 60–90%. This test can. {d.dataset}: {n} images from {d.setups} microscope setups, every cell outlined by hand, published after Cellpose-SAM and not in its training data. It compares the shipped method, a calibration profile per setup, with the same model fine-tuned on the lab’s own labelled images and then calibrated. The split, the method and the pass marks were committed before any image was read, and each half of the data was scored once: first as a sealed test, then with the halves swapped.
+            The MSC and EVICAN profiles above could not measure the passage range: their test images held almost no flasks at 60–90%. This test can. {d.dataset}: {n} images from {d.setups} microscope setups, every cell outlined by hand, published after Cellpose-SAM and not in its training data. It compares the shipped method, a calibration profile per setup, with the same model fine-tuned on the lab’s own labelled images and then calibrated. The split, the method and the pass marks were committed before any image was read, and the sealed test was scored once. Swapping the halves was planned after that score and committed before its models were trained; what had already been seen is listed in its write-up, and it too was scored once.
           </p>
           <p className="sources">
             <Path>{d.sources[0]}</Path> · <Path>{d.sources[1]}</Path>
