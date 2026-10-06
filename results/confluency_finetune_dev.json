@@ -1,0 +1,244 @@
+{
+ "generated_by": "scripts/confluency_finetune.py dev",
+ "arms": {
+  "zero-shot, cutoff 0.0": {
+   "populations": [
+    "218-4",
+    "218-5",
+    "218-6"
+   ],
+   "whole": {
+    "n": 320,
+    "mae": 8.185530312500001,
+    "bias": -7.9183734375,
+    "over10": 94
+   },
+   "whole_60_90": {
+    "n": 4,
+    "mae": 25.703200000000002,
+    "bias": -25.703200000000002,
+    "over10": 4
+   },
+   "dense_quarters": {
+    "n": 39,
+    "mae": 27.83718974358975,
+    "bias": -27.549005128205135,
+    "over10": 36
+   }
+  },
+  "zero-shot, calibrated cutoff (other two populations)": {
+   "populations": [
+    "218-4",
+    "218-5",
+    "218-6"
+   ],
+   "whole": {
+    "n": 320,
+    "mae": 3.4267624999999997,
+    "bias": 0.21920937500000015,
+    "over10": 13
+   },
+   "whole_60_90": {
+    "n": 4,
+    "mae": 5.744375,
+    "bias": -5.744375,
+    "over10": 1
+   },
+   "dense_quarters": {
+    "n": 39,
+    "mae": 11.98603076923077,
+    "bias": -7.846625641025639,
+    "over10": 16
+   }
+  },
+  "zero-shot rescaled to 89 px cells, calibrated cutoff": {
+   "populations": [
+    "218-4",
+    "218-5",
+    "218-6"
+   ],
+   "whole": {
+    "n": 320,
+    "mae": 3.153135937499999,
+    "bias": -0.49466031250000003,
+    "over10": 8
+   },
+   "whole_60_90": {
+    "n": 4,
+    "mae": 5.312850000000001,
+    "bias": -5.2499,
+    "over10": 0
+   },
+   "dense_quarters": {
+    "n": 39,
+    "mae": 10.320553846153848,
+    "bias": -6.668615384615385,
+    "over10": 13
+   }
+  },
+  "fine-tuned on 20 images (other two populations), cutoff 0.0": {
+   "populations": [
+    "218-4",
+    "218-5",
+    "218-6"
+   ],
+   "whole": {
+    "n": 320,
+    "mae": 1.3854221875000001,
+    "bias": -0.1704815624999997,
+    "over10": 0
+   },
+   "whole_60_90": {
+    "n": 4,
+    "mae": 1.5830249999999992,
+    "bias": 1.5830249999999992,
+    "over10": 0
+   },
+   "dense_quarters": {
+    "n": 39,
+    "mae": 2.666174358974359,
+    "bias": 1.7714256410256415,
+    "over10": 2
+   }
+  },
+  "SAMCell-Generalist (distance map), its own cutoff 0.09": {
+   "populations": [
+    "218-4",
+    "218-5",
+    "218-6"
+   ],
+   "whole": {
+    "n": 320,
+    "mae": 7.531479999999999,
+    "bias": 4.812716875,
+    "over10": 103
+   },
+   "whole_60_90": {
+    "n": 4,
+    "mae": 11.179575000000002,
+    "bias": -11.179575000000002,
+    "over10": 2
+   },
+   "dense_quarters": {
+    "n": 39,
+    "mae": 20.0711282051282,
+    "bias": -19.653610256410257,
+    "over10": 28
+   }
+  },
+  "SAMCell-Generalist (distance map), calibrated cutoff (other two populations)": {
+   "populations": [
+    "218-4",
+    "218-5",
+    "218-6"
+   ],
+   "whole": {
+    "n": 320,
+    "mae": 5.918630625,
+    "bias": -1.103849375,
+    "over10": 50
+   },
+   "whole_60_90": {
+    "n": 4,
+    "mae": 21.477700000000006,
+    "bias": -21.477700000000006,
+    "over10": 4
+   },
+   "dense_quarters": {
+    "n": 39,
+    "mae": 28.62675897435897,
+    "bias": -28.62675897435897,
+    "over10": 38
+   }
+  },
+  "DINOCell (cell probability), its own cutoff 0.5": {
+   "populations": [
+    "218-4",
+    "218-5",
+    "218-6"
+   ],
+   "whole": {
+    "n": 320,
+    "mae": 8.992435,
+    "bias": 8.725017500000002,
+    "over10": 106
+   },
+   "whole_60_90": {
+    "n": 4,
+    "mae": 18.191874999999996,
+    "bias": 18.191874999999996,
+    "over10": 4
+   },
+   "dense_quarters": {
+    "n": 39,
+    "mae": 18.902430769230765,
+    "bias": 18.847928205128206,
+    "over10": 34
+   }
+  },
+  "DINOCell (cell probability), calibrated cutoff (other two populations)": {
+   "populations": [
+    "218-4",
+    "218-5",
+    "218-6"
+   ],
+   "whole": {
+    "n": 320,
+    "mae": 3.86925375,
+    "bias": 0.17507062500000012,
+    "over10": 22
+   },
+   "whole_60_90": {
+    "n": 4,
+    "mae": 6.468149999999998,
+    "bias": 4.623649999999998,
+    "over10": 1
+   },
+   "dense_quarters": {
+    "n": 39,
+    "mae": 10.466317948717952,
+    "bias": 4.883979487179488,
+    "over10": 18
+   }
+  }
+ },
+ "environment": {
+  "commit": "ae9d86303ed58e09ad261e09f5b5396f4620e4f8",
+  "torch": "2.11.0+cu130",
+  "cellpose": "4.2.1.1",
+  "device": "cuda",
+  "gpu": "NVIDIA A100-SXM4-40GB"
+ },
+ "runs": {
+  "msc_218-4_n20_s0": {
+   "run": "msc_218-4_n20_s0",
+   "n": 20,
+   "weights_sha256": "5fba4f1190b9fdd8eafb1690f441590dde18b8c1a0446d6257e4cb84c713f2b4",
+   "seconds": 301.5
+  },
+  "msc_218-5_n20_s0": {
+   "run": "msc_218-5_n20_s0",
+   "n": 20,
+   "weights_sha256": "168313fe74884710842862c351292c1ee69f7efac0fd22a19313ec74eeb83e18",
+   "seconds": 298.1
+  },
+  "msc_218-6_n20_s0": {
+   "run": "msc_218-6_n20_s0",
+   "n": 20,
+   "weights_sha256": "c11af358b932d273ba2446ba8653c82c36a7d6bab1dbdf2cb45d40e1559c017e",
+   "seconds": 293.7
+  },
+  "samcell": {
+   "run": null,
+   "n": null,
+   "weights_sha256": "d16deb01d7769af8d8c3e22fec68092d8ac197cfffd27958c29258f54eade2c1",
+   "seconds": null
+  },
+  "dinocell": {
+   "run": null,
+   "n": null,
+   "weights_sha256": "1d7b06351332d3bc8bbe6412623af4ab6e07dfef4a6718b9adc28ee7333ced92",
+   "seconds": null
+  }
+ }
+}

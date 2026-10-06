@@ -182,3 +182,97 @@ Calls use rules_v0.5 at T = 80%:
 - If F passes where C fails, adding fine-tuning to the calibration procedure becomes a proposal for the
   repository owner to decide on: a fine-tuned model per setup, with its weights' hash in the profile and the
   change record.
+
+## Results
+
+Scored 2026-10-06 by `scripts/confluency_mcellseg.py score`; one row per image in `results/confluency_mcellseg.csv`.
+
+Test images in the calibrated setups (cd7_huvec_dic, lsm_2796, lsm_hek_1024, oir_1024): 90; 22 at 60–90%, 22 at 60–100%, 4 at or above 80%.
+
+| | Z: zero-shot, shipped cutoff 0.0, no band (uncalibrated) | C: zero-shot + per-setup calibration (the shipped method) | F: fine-tuned on the calibration images + per-setup calibration | R: zero-shot, rescaled by the calibration cells' diameter + per-setup calibration |
+|---|---|---|---|---|
+| B1 MAE, all test images (95% interval) | 26.49 (20.67–32.38) **fail** | 7.80 (5.94–9.80) **fail** | 2.65 (1.67–3.96) **pass** | 8.65 (5.76–12.18) **fail** |
+| B2 MAE, 60–90% | 28.85 (15.10–43.60) **fail** | 9.67 (6.91–12.26) **fail** | 5.21 (2.62–8.82) **fail** | 12.19 (6.78–17.60) **fail** |
+| B3 mean signed error, 60–90% | -26.36 (-42.76 to -10.68) **fail** | -3.52 (-8.20 to +0.91) **fail** | +4.91 (+2.19 to +8.56) **fail** | -1.72 (-7.12 to +3.62) **pass** |
+| B4 calls at T = 80 on 60–100% (passage / continue / review; agree of decided) | 0 / 18 / 4; 16 of 18 **fail** | 0 / 5 / 17; 5 of 5 **pass** | 6 / 6 / 10; 10 of 12 **fail** | 2 / 5 / 15; 7 of 7 **pass** |
+| B5 band coverage, all test images | no band | 81 of 90 (90.0%) **pass** | 81 of 90 (90.0%) **pass** | 82 of 90 (91.1%) **pass** |
+| ready (≥ 80%) called continue | 2 | 0 | 0 | 0 |
+| share of test images sent to a person | 4.4% | 22.2% | 11.1% | 36.7% |
+
+Contrasts on the same test images (positive = the second arm reads closer to the experts; 95% interval, units resampled):
+
+- MAE(C) − MAE(F): 60–90% +4.45 pp (+0.83 to +7.94); all test images +5.14 pp (+3.32 to +6.85).
+- MAE(C) − MAE(R): 60–90% -2.53 pp (-7.61 to +2.41); all test images -0.85 pp (-3.13 to +1.27).
+
+Profiles fitted on the calibration images (cutoff, band, n):
+
+- C/cd7_huvec_dic: cutoff -4.0, band ±22.58 pp, n = 18, calibration MAE 5.52
+- R/cd7_huvec_dic: cutoff -2.5, band ±34.27 pp, n = 18, calibration MAE 8.62
+- F/cd7_huvec_dic: cutoff +0.0, band ±3.15 pp, n = 18, calibration MAE 0.97
+- C/lsm_2796: cutoff -4.0, band ±19.66 pp, n = 33, calibration MAE 8.77
+- R/lsm_2796: cutoff -2.5, band ±23.97 pp, n = 33, calibration MAE 5.65
+- F/lsm_2796: cutoff +0.0, band ±12.48 pp, n = 33, calibration MAE 2.71
+- C/lsm_hek_1024: cutoff +0.0, band ±8.79 pp, n = 14, calibration MAE 2.71
+- R/lsm_hek_1024: cutoff +0.5, band ±4.41 pp, n = 14, calibration MAE 1.71
+- F/lsm_hek_1024: cutoff +0.0, band ±3.59 pp, n = 14, calibration MAE 1.23
+- C/oir_1024: cutoff -4.0, band ±26.42 pp, n = 14, calibration MAE 10.73
+- R/oir_1024: cutoff -4.0, band ±51.29 pp, n = 14, calibration MAE 20.53
+- F/oir_1024: cutoff +0.0, band ±15.46 pp, n = 14, calibration MAE 2.76
+
+Per setup (test images; MAE / bias, then the same at 60–90%):
+
+| setup | n | Z | C | F | R | n 60–90 | Z | C | F | R |
+|---|---|---|---|---|---|---|---|---|---|---|
+| cd7_huvec_dic | 18 | 22.63 / -22.58 | 4.95 / +1.61 | 1.04 / +0.16 | 7.36 / -1.55 | 4 | 27.97 / -27.97 | 6.96 / +0.18 | 1.53 / +1.53 | 15.48 / -12.18 |
+| lsm_2796 | 37 | 32.92 / -32.92 | 10.04 / -9.40 | 2.10 / -0.82 | 8.92 / -4.08 | 1 | 61.06 / -61.06 | 23.96 / -23.96 | 3.61 / +3.61 | 7.58 / +7.58 |
+| lsm_hek_1024 | 18 | 5.24 / -1.22 | 5.24 / -1.22 | 3.27 / +2.51 | 3.13 / +0.20 | 9 | 8.01 / -1.92 | 8.01 / -1.92 | 4.55 / +4.06 | 3.93 / +0.84 |
+| oir_1024 | 17 | 39.08 / -39.08 | 8.66 / -4.34 | 4.93 / +3.98 | 15.26 / +5.39 | 8 | 48.70 / -48.70 | 11.10 / -4.62 | 8.00 / +7.73 | 20.42 / -0.54 |
+
+Uncalibrated setups (too few calibration images; read at 0.0, no band): 15 test images, MAE 40.05, bias -40.05; 7 at 60–90% (MAE 57.59, bias -57.59); calls 15 continue, 0 review.
+
+Supplementary, MSC on an incubator imager (lazy masks): 9 test images, calibrated cutoff -1.5: MAE 3.71, bias -2.53 (at 0.0: 12.55, -12.55); band ±45.56 covers 9 of 9; 2 test images at 60–90%.
+
+![Readings against expert confluency on the 90 test images, one panel per arm](confluency_mcellseg.png)
+
+## What it means (written after scoring)
+
+- **1. The shipped method does not meet the passage-range criteria on these setups, but it fails safe.**
+  - C misses B1 (7.80 pp), B2 (9.67 pp) and B3 (−3.52 pp).
+  - It passes B4 only by deciding few dense images. Of the 22 test images at 60–100%, it sends 17 to a
+    person and decides 5, all correctly. No ready flask is called continue.
+  - The cause is visible in the profiles. On three of the four setups the best cutoff is the bottom of
+    the grid (−4.0), and the bands are ±19.7 to ±26.4 pp. The zero-shot model sees these 73–215 px cells
+    poorly, calibration widens the band, and the rules hand the passage range to a person.
+  - Whether a cutoff below −4.0 would read better was not tested. The grid was fixed in advance.
+- **2. Fine-tuning reads the passage range better than calibration alone.** This is the pre-registered
+  comparison, and it holds.
+  - MAE(C) − MAE(F) at 60–90% is +4.45 pp (95% interval +0.83 to +7.94), entirely above zero.
+  - On all test images the difference is +5.14 pp (+3.32 to +6.85).
+  - F reads 77 of 90 test images within 5 pp; C reads 37.
+  - F passes B1 (2.65 pp) and B5 (90.0%), where C fails B1. The rule in "What changes downstream"
+    therefore applies.
+- **F still misses three passage-range criteria.**
+  - B2: 5.21 pp, against a limit of 5.
+  - B3: +4.91 pp. Where C reads low, F reads high. Three images at 60–90% read more than 10 pp high: two
+    `oir_1024` images at 65.3% and 71.0% read about 92%, and both were sent to a person by that setup's
+    ±15.5 pp band.
+  - B4: 10 of 12 decided calls agree. Both disagreements are passage calls on `lsm_hek_1024` flasks at
+    77.9% and 79.3%, within 2.1 pp of the 80% threshold.
+  - All 4 ready flasks are called passage. C sends all 4 to a person.
+  - F sends 11.1% of test images to a person; C sends 22.2%.
+- **3. Rescaling does not help.** MAE(C) − MAE(R) at 60–90% is −2.53 pp (−7.61 to +2.41), and −0.85 pp on
+  all test images. R's bias passes B3, but its error and bands are larger.
+- **Without a profile the reading is not usable on these setups.**
+  - Read at 0.0, the test images of the calibrated setups read 25.7 pp low on average, and the 15 uncalibrated test
+    images read 40.1 pp low.
+  - Read the way the product reads a setup without a profile, 4 ready flasks are called continue: 2 in
+    the calibrated setups and 2 in the uncalibrated ones (85.0% read 5.5%, 89.6% read 40.1%).
+  - In practice, a flask that is ready would be left to overgrow rather than passaged early.
+- **Supplementary, incubator imager.** Calibrated, the MSC set reads 3.71 pp from the lazy masks on 9 test
+  images. But its band (±45.56 pp, from 10 calibration images) is too wide to decide anything, and only 2
+  test images are at 60–90%.
+- **Limits.**
+  - One lab, 20× and 40× objectives, and only 4 test images at or above 80%.
+  - F's cutoff and band come from the two fold models, each trained on about half the images of the
+    model that read the test images, as pre-registered.
+  - F needs instance masks of the setup's own images. C needs only the confluency they give.
