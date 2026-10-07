@@ -186,8 +186,10 @@ def cmd_figure(a):
     fig.tight_layout(rect=[0, 0, 1, 0.985])
     fig.savefig(OUT_PNG, dpi=110)
     lines += [f"Drawn: one test image per setup, the one at 60–90% closest to {MID:.0f}% (rule fixed before the run). "
-              f"Each drawn reading is within {TOL} pp of the scored one. Readings are the scored model's; '(drawn …)' is the "
-              "retrained model's at full resolution.", "", f"![before/after]({os.path.basename(OUT_PNG)})", ""]
+              f"Each drawn fine-tuned reading is within {TOL} pp of the scored one. 'reading' is the scored test's; "
+              "'(drawn …)' is the coverage shown, recomputed on the GPU at full resolution: the shipped model at the "
+              "calibrated cutoff on the left, the retrained model at the fine-tuned cutoff on the right.", "",
+              f"![before/after]({os.path.basename(OUT_PNG)})", ""]
     open(OUT_MD, "w").write("\n".join(lines))
     print("\n".join(lines))
 
