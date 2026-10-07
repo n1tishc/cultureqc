@@ -582,3 +582,12 @@ footer { display: none !important; }
 .setup-field input { padding-right: 34px !important; text-overflow: ellipsis; }
 .confluency-meta .ambiguity-note { color: var(--text-muted); }
 .band-line .amb { display: block; margin-top: 4px; color: var(--text-muted); font-size: 12px; }
+
+/* The fine-tuned model's demo set (demo/lab_demo.py): Colab-hosted console only */
+.ft-card { border-left: 3px solid var(--accent); }
+.ft-head, .lab-line { font-size: 13px; line-height: 1.5; color: var(--text-secondary); }
+.ft-head code, .lab-line code { font-size: 12px; }
+.lab-line b { color: var(--text-primary); font-family: var(--mono); font-weight: 600; }
+.ft-number { font-family: var(--mono); font-size: 36px; font-weight: 700; color: var(--text-primary); line-height: 1; margin-top: 8px; }
+.ft-number .unit { font-size: 18px; color: var(--text-secondary); font-weight: 600; margin-left: 2px; }
+.ft-refused { margin-top: 8px; font-size: 14px; color: var(--amber); }

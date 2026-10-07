@@ -28,7 +28,7 @@ from culture.rules import ACTIONS, AMBIGUITY_TOOLTIP, boundary_ambiguity
 from culture import detectability
 from culture.anomaly import LIVE_LIMITS
 from culture.visuals import anomaly_tile_view, png
-from demo import confluency_3d, precomputed, replay_3d, replay_timeline, viz3d
+from demo import confluency_3d, lab_demo, precomputed, replay_3d, replay_timeline, viz3d
 from demo.analysis import analyze_image, build_record
 from demo.theme import CultureQCTheme
 
@@ -53,6 +53,11 @@ _warm_weights()
 # and EVICAN frames run once through demo/analysis.py, shown instantly and
 # labelled as precomputed; Analyze re-runs them live.
 EXAMPLES = precomputed.load()
+# The approved fine-tuned model's demo set (demo/lab_demo.py): empty unless CULTUREQC_FINETUNED is set, as on the
+# Colab-hosted console (nb/11_lab_demo.ipynb). With it empty, nothing below changes.
+LAB_IMAGES = lab_demo.available()
+if LAB_IMAGES:
+    CELL_LINES = CELL_LINES[:-1] + lab_demo.CELL_LINES + CELL_LINES[-1:]
 # The demoted classifier's collapsed heading. The rate is "called normal" on held-out
 # normal frames, results/classifier_c2c12.md; tests/test_replay_notes.py checks it.
 CLASSIFIER_SUMMARY = ("Demoted — known wrong on real frames (5.0% of normal frames called normal); "
@@ -136,7 +141,9 @@ def run_analysis(original_path, cell_line, target_confluency, profile_id=None):
         return gr.update(), gr.update(visible=False), err, None, None, None, gr.update(visible=False)
 
     target_confluency = float(target_confluency or 80.0)
-    a = analyze_image(img, original_path, cell_line, target_confluency, profile_id=profile_id)
+    lab = lab_demo.match(original_path, LAB_IMAGES)        # the fine-tuned model reads the demo set only
+    a = analyze_image(img, original_path, cell_line, target_confluency, profile_id=profile_id,
+                      finetuned_id=lab_demo.model_id() if lab else None)
     overlay_path = os.path.join(WORK_DIR, f"overlay_{next(tempfile._get_candidate_names())}.png")
     cv2.imwrite(overlay_path, cv2.cvtColor(a.overlay, cv2.COLOR_RGB2BGR))
 
@@ -160,6 +167,8 @@ def run_analysis(original_path, cell_line, target_confluency, profile_id=None):
         record=finalized,
         chain_ok=chain_ok,
         record_count=writer.record_count,
+        finetuned=a.finetuned,
+        lab=lab,
     )
 
     known = precomputed.match(original_path, EXAMPLES)   # same image as an example: same opening camera
@@ -333,6 +342,45 @@ def confluency_card(record, confluency_pct, confluency_confidence, confluency_me
 """
 
 
+def lab_card(lab, delay_ms):
+    """The experts' coverage of a demo-set image, for comparison; neither model sees it."""
+    if not lab:
+        return ""
+    return f"""
+  <div class="rc-card lab-card" style="animation-delay:{delay_ms}ms">
+    <div class="lab-line">Demo image <code>{html.escape(lab["name"])}</code> · experts' outline coverage
+      <b>{lab["experts_pct"]:.1f}%</b></div>
+    <div class="band-line">From the experts' own mask, shown for comparison; neither model uses it.
+      {html.escape(lab_demo.CREDIT)}</div>
+  </div>
+"""
+
+
+def finetuned_card(fr, delay_ms):
+    """The fine-tuned model's reading (culture/finetuned.py), beside the shipped one: its weights check, and no
+    part in the action."""
+    if not fr:
+        return ""
+    c = fr.get("check") or {}
+    status = c.get("status", "unknown")
+    if fr.get("confluency_pct") is None:
+        reading = f'<div class="ft-refused">No reading: {html.escape(fr.get("reason") or status)}</div>'
+    else:
+        reading = f'<div class="ft-number">{fr["confluency_pct"]:.1f}<span class="unit">%</span></div>'
+    return f"""
+  <div class="rc-card ft-card" style="animation-delay:{delay_ms}ms">
+    <div class="ft-head">Fine-tuned model <code>{html.escape(fr["id"])}</code> ·
+      {html.escape(str(fr.get("status", "")).replace("_", " "))} · decides nothing</div>
+    {reading}
+    <div class="band-line">Weights check: <b>{html.escape(status)}</b> · SHA-256
+      <code>{html.escape((c.get("sha256") or "")[:12])}…</code> · approvals log head
+      <code>{html.escape((c.get("approvals_head") or "none")[:12])}…</code><br>Read at cutoff
+      {fr.get("cutoff", 0.0):+.1f} with no error band; recorded beside the reading above and left out of the
+      action.</div>
+  </div>
+"""
+
+
 def render_results(
     anomaly_html,
     demoted,
@@ -351,6 +399,8 @@ def render_results(
     chain_ok,
     record_count,
     example=None,
+    finetuned=None,
+    lab=None,
 ):
     flag_label, flag_color_key = FLAG_META.get(qc_flag, (qc_flag.replace("_", " ").title(), "amber"))
     flag_color = STATUS_COLORS[flag_color_key]
@@ -397,9 +447,9 @@ def render_results(
     if demoted:
         return f"""
 <div class="rc-stack">
-{provenance_html}
+{provenance_html}{lab_card(lab, 0)}
 {confluency_card(record, confluency_pct, confluency_confidence, confluency_method, target_confluency, 0)}
-{anomaly_html}
+{finetuned_card(finetuned, 50)}{anomaly_html}
 
   <div class="rc-card action-card" style="animation-delay:200ms">
     <span class="action-badge" style="background:{_tint(action_color, 0.15)};color:{action_color}">{html.escape(action_label)}</span>
@@ -441,8 +491,8 @@ def render_results(
     <div class="classifier-note">{html.escape(calibration_line)}</div>
   </div>
 
-{confluency_card(record, confluency_pct, confluency_confidence, confluency_method, target_confluency, 100)}
-  <div class="rc-card action-card" style="animation-delay:200ms">
+{lab_card(lab, 100)}{confluency_card(record, confluency_pct, confluency_confidence, confluency_method, target_confluency, 100)}
+{finetuned_card(finetuned, 150)}  <div class="rc-card action-card" style="animation-delay:200ms">
     <span class="action-badge" style="background:{_tint(action_color, 0.15)};color:{action_color}">{html.escape(action_label)}</span>
   </div>
 
@@ -491,6 +541,14 @@ def on_example(path):
     prof = (ex["record"].get("confluency_profile") or {}).get("id", DEFAULT_PROFILE)
     return (overlay, gr.update(visible=True, value="Overlay"), show_example(ex), precomputed.image_path(ex),
             overlay, ex["cell_line"], ex["target_confluency"], map_view, prof, None, gr.update(visible=False))
+
+
+def on_lab_image(name):
+    """A demo-set image, analysed from its own file (not a browser copy), so its hash matches; the setup picker
+    resets to `uncalibrated` (this lab has no profile) and the cell line follows the image."""
+    lab = next(i for i in LAB_IMAGES if i["name"] == name)
+    return (gr.update(visible=False), "", lab["path"], None, lab_demo.preview(lab["path"], WORK_DIR),
+            DEFAULT_PROFILE, lab["cell_line"])
 
 
 def switch_view(choice, original_path, overlay_path, map_view):
@@ -644,6 +702,21 @@ with gr.Blocks(
                     cache_examples=False,
                     label="",
                 )
+
+            if LAB_IMAGES:
+                with gr.Row(elem_classes="real-examples-row lab-demo-row"):
+                    gr.Markdown(
+                        f"**Fine-tuned demo set: {len(LAB_IMAGES)} test images from the lab the fine-tuned model "
+                        "was trained on; it never saw these images.** Press one, then Analyze. Only these images get "
+                        "the fine-tuned reading, shown beside the shipped one; it decides nothing. "
+                        + lab_demo.CREDIT)
+                    for _lab in LAB_IMAGES:
+                        gr.Button(_lab["label"], size="sm", elem_classes="lab-btn").click(
+                            fn=(lambda n: lambda: on_lab_image(n))(_lab["name"]), inputs=None,
+                            outputs=[view_toggle, results_html, original_state, overlay_state, image_view, setup,
+                                     cell_line],
+                        ).then(fn=lambda: (None, None, gr.update(visible=False), ""), inputs=None,
+                               outputs=[map_state, reading_state, review_panel, review_out], show_progress="hidden")
 
         with gr.Tab("Flask Timeline"):
             # Precomputed replays (scripts/export_demo_replays.py): no cache, no
