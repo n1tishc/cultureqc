@@ -173,3 +173,33 @@ def test_shipped_model_mismatch_reads_nothing(setup, monkeypatch):
     with pytest.raises(NotApproved) as e:
         seg.cpsam_confluency(np.zeros((10, 10), np.uint8))
     assert e.value.check.status == "mismatch" and calls == []
+
+
+def test_a_model_loaded_from_failed_weights_is_not_kept(setup, monkeypatch):
+    tmp, w, log = setup
+    import culture.seg as seg
+    shipped = tmp / "cpsam_v2"
+    built = []
+
+    class Shipped:
+        pretrained_model = str(shipped)
+
+        def __init__(self):
+            self.bytes = shipped.read_bytes()
+            built.append(self)
+
+        def eval(self, img, **kw):
+            assert self.bytes == b"weights v1", "read with weights that failed the check"
+            prob = np.zeros(img.shape)
+            return np.zeros(img.shape, int), [None, None, prob], None
+
+    approve(log, "cpsam_v2", w)                              # approves b"weights v1"
+    monkeypatch.setattr(approvals, "APPROVALS_PATH", str(log))
+    monkeypatch.setattr(seg, "_new_model", lambda pretrained_model=None: Shipped())
+    monkeypatch.setattr(seg, "_cp_model", None)
+    shipped.write_bytes(b"tampered weights")
+    with pytest.raises(NotApproved):
+        seg.cpsam_confluency(np.zeros((10, 10), np.uint8))
+    shipped.write_bytes(b"weights v1")                       # file restored: the next call must rebuild
+    r = seg.cpsam_confluency(np.zeros((10, 10), np.uint8))
+    assert len(built) == 2 and r.extra["model_check"]["status"] == "match"

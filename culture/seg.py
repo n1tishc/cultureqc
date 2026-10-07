@@ -146,9 +146,14 @@ def cpsam_confluency(
     latest approved change record for cpsam_v2 (culture/approvals.py); a
     mismatch raises approvals.NotApproved and nothing is read.
     """
-    from culture.approvals import require
+    from culture.approvals import NotApproved, require
+    global _cp_model
     model = _get_model()
-    model_check = require("model", "cpsam_v2", weights_path(model))
+    try:
+        model_check = require("model", "cpsam_v2", weights_path(model))
+    except NotApproved:
+        _cp_model = None             # never keep a model whose file failed the check: the next call rebuilds it
+        raise
     masks, flows, styles = model.eval(img, diameter=None, channels=[0, 0])
 
     if method == "probmap":
