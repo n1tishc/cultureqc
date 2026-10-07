@@ -584,7 +584,8 @@ footer { display: none !important; }
 .band-line .amb { display: block; margin-top: 4px; color: var(--text-muted); font-size: 12px; }
 
 /* The fine-tuned model's demo set (demo/lab_demo.py): Colab-hosted console only */
-.ft-card { border-left: 3px solid var(--accent); }
+.ft-card { padding: 14px 16px; border: 1px solid var(--border); border-left: 3px solid var(--accent); background: var(--bg-card); }
+.lab-card { padding: 0 2px; }
 .ft-head, .lab-line { font-size: 13px; line-height: 1.5; color: var(--text-secondary); }
 .ft-head code, .lab-line code { font-size: 12px; }
 .lab-line b { color: var(--text-primary); font-family: var(--mono); font-weight: 600; }
