@@ -11,7 +11,7 @@ This is the GMP audit-trail pattern mapped to 21 CFR Part 11 §11.10(e):
 computer-generated, time-stamped, model-versioned records
 (docs/audit_mapping.md).
 
-Three record types share one chain (schema 0.4, culture/schema.json):
+Three record types share one chain (schema 0.5, culture/schema.json):
   reading  one analysed image: the numbers, the profile, the action, the reason
   review   a person's decision on a reading, linked to that reading's hash;
            the reading itself is never edited, so a review cannot change what
@@ -59,7 +59,7 @@ from datetime import datetime, timezone
 
 
 GENESIS_HASH = "0" * 64
-SCHEMA_VERSION = "0.4"  # culture/schema.json; stamped by culture/pipeline.py and demo/analysis.py
+SCHEMA_VERSION = "0.5"  # culture/schema.json; stamped by culture/pipeline.py and demo/analysis.py
 RECORD_TYPES = ("reading", "review", "change")
 SIGNATURE_MEANINGS = ("review", "approval", "rejection")
 

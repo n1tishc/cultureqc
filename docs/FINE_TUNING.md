@@ -1,8 +1,11 @@
 # Fine-tuned confluency profiles: the procedure, and where it stands
 
-**Status: not in the product.** The pipeline reads every image with Cellpose-SAM `cpsam_v2`
-(`culture/seg.py`) and loads no fine-tuned weights. This page sets out how a lab's fine-tuned profile would be
-made and checked, using the procedure the mCellSeg tests followed. The product side (step 6) is not built.
+**Status: shown beside the reading, never deciding.** Every decision still comes from Cellpose-SAM `cpsam_v2`
+(`culture/seg.py`) and the setup's calibration profile. The pipeline can also read an image with a fine-tuned
+model, after checking its weights against an approved change record, and record that reading beside the shipped
+one; the rules never see it (step 6). One fine-tuned model is approved for this, `mcellseg_ftF_r2`, the model in
+the before/after picture (`results/confluency_finetune_figure.md`). It is not in the console Space. This page sets
+out how a lab's fine-tuned profile would be made and checked, using the procedure the mCellSeg tests followed.
 
 ## Why consider it
 
@@ -49,14 +52,25 @@ made and checked, using the procedure the mCellSeg tests followed. The product s
    - The readings are committed before scoring.
    - `score` refuses to run a second time. Pass marks: error ≤ 5 pp on all images and at 60–90%, |bias| ≤ 3 pp
      at 60–90%, ≥ 95% of decided passage calls agreeing with the experts, and ≥ 85% of images within the band.
-5. **Recorded as a change.** If the profile passes and the repository owner approves it, its entry (cutoff,
-   band, weights SHA-256) would replace the setup's previous one through a `change` record
-   (`culture/records.py`, `change_event`), naming the evidence files by SHA-256 and the approver.
-6. **Used in readings: not built.**
-   - The pipeline would need to load a profile's own weights.
-   - It would also need a run-time check that the weights and the profile match the approved record. Today the
-     hashes are recorded but not checked against an approved set at run time (`docs/audit_mapping.md`, 10.2).
-   - Until a profile is validated, it reads like an uncalibrated setup (`culture/profiles.py`).
+5. **Recorded as a change.** The weights are approved with a `model` change record in
+   `configs/approved_changes.jsonl`, a hash-chained log (`scripts/approve_change.py`): the model id and its
+   weights' SHA-256, the record it replaces, the reason, the evidence files by SHA-256 and the approver. A later
+   record for the same id replaces the earlier one. `mcellseg_ftF_r2` was approved this way to read beside the
+   shipped model only; the shipped `cpsam_v2` has a baseline record in the same log.
+6. **Used in readings: shown, not deciding.**
+   - `analyze(..., finetuned_id=...)` (`culture/pipeline.py`, `culture/finetuned.py`) reads the image with the
+     fine-tuned model too, at Cellpose's default cutoff with no band, as a profile that is not validated does
+     (`culture/profiles.py`). The reading goes into the record's `finetuned_reading` with
+     `used_in_decision: false`.
+   - Before it loads, the model's weights are checked against the latest approved change record for its id
+     (`culture/approvals.py`). On a mismatch, a missing file or no approval, nothing loads: `finetuned_reading`
+     records the refusal, with `confluency_pct` null and the reason. The shipped model gets the same check
+     before every reading; if its weights don't match, it does not read and no record is written
+     (`docs/audit_mapping.md`, 10.2).
+   - Not built: a fine-tuned profile that decides. That needs a profile that passes its criteria on held-out
+     images, and a calibration profile tied to the fine-tuned weights.
+   - Product-path readings with the fine-tuned model have not been run yet: the before/after picture's readings
+     came from the research scripts, which read the raw images.
 
 ## What the tests taught
 

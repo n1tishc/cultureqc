@@ -86,7 +86,17 @@ def test_classifier_calibrated_and_demoted(record):
     assert "QC flag" not in record["action_reason"]
     assert record["qc_rationale"].startswith("Confluency ")
     assert set(record["config_hashes"]) == {"qc.yaml", "calibration.yaml", "detectability.yaml", "anomaly.yaml",
-                                            "confluency_profiles.yaml", "quality.yaml"}
+                                            "confluency_profiles.yaml", "quality.yaml", "approved_changes.jsonl",
+                                            "finetuned_models.yaml"}
+
+
+def test_shipped_weights_checked_against_the_approvals_log(record):
+    from culture.approvals import approved
+    mc = record["model_check"]
+    assert mc["id"] == "cpsam_v2" and mc["status"] == "match"
+    assert mc["sha256"] == mc["approved_sha256"] == record["model_weights_hash"]["seg"]
+    assert mc["approvals_head"] == approved()["head"]
+    assert record["finetuned_reading"] is None                    # none asked for
 
 
 def test_anomaly_recorded_and_an_input_to_the_rules(record):

@@ -77,5 +77,5 @@ def test_demoted_rationale_states_no_classifier_finding():
 def test_records_hash_the_configs_they_used():
     h = config_hashes()
     assert set(h) == {"qc.yaml", "calibration.yaml", "detectability.yaml", "anomaly.yaml",
-                      "confluency_profiles.yaml", "quality.yaml"}
+                      "confluency_profiles.yaml", "quality.yaml", "approved_changes.jsonl", "finetuned_models.yaml"}
     assert all(len(v) == 64 for v in h.values())

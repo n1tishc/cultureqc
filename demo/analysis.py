@@ -57,6 +57,7 @@ class Analysis:
     probmap_x1000: np.ndarray | None = None
     profile: Profile | None = None
     quality: QualityResult | None = None     # None: no gate calibrated for this setup
+    finetuned: dict | None = None            # culture/finetuned.py: recorded, never decides
 
     @property
     def interval(self) -> list[float] | None:
@@ -100,7 +101,7 @@ def _build_overlay(img_gray, cell_mask, evidence_boxes):
 
 
 def analyze_image(img: np.ndarray, image_path: str, cell_line: str, target_confluency: float,
-                  profile_id: str | None = None) -> Analysis:
+                  profile_id: str | None = None, finetuned_id: str | None = None) -> Analysis:
     t = {}
     profile = get_profile(profile_id)
     t0 = time.perf_counter()
@@ -114,6 +115,13 @@ def analyze_image(img: np.ndarray, image_path: str, cell_line: str, target_confl
                             on_visual=lambda prob, fg: captured.update(prob=prob, fg=fg))
     threshold_confluency(img)  # baseline computed for parity; not shown in this surface
     t["segmentation"] = time.perf_counter() - t0
+
+    finetuned = None
+    if finetuned_id:                         # beside the shipped reading; left out of everything below
+        from culture.finetuned import read as finetuned_read
+        t0 = time.perf_counter()
+        finetuned = finetuned_read(img, finetuned_id)
+        t["finetuned"] = time.perf_counter() - t0
 
     t0 = time.perf_counter()
     # B2: shown for review; a flag holds a passage (rules v0.3). Its density
@@ -175,7 +183,8 @@ def analyze_image(img: np.ndarray, image_path: str, cell_line: str, target_confl
     return Analysis(confluency=conf, qc=qc, demoted=demoted, anomaly=anomaly, action=action, reason=reason,
                     rationale=rationale, evidence_boxes=evidence_boxes, overlay=overlay,
                     timings_s={k: round(v, 3) for k, v in t.items()},
-                    probmap_x1000=downsample_probmap(captured["prob"]), profile=profile, quality=quality)
+                    probmap_x1000=downsample_probmap(captured["prob"]), profile=profile, quality=quality,
+                    finetuned=finetuned)
 
 
 def build_record(a: Analysis, image_path: str, cell_line: str, captured_at: str | None = None,
@@ -232,5 +241,7 @@ def build_record(a: Analysis, image_path: str, cell_line: str, captured_at: str 
             "vlm": a.rationale["method"],
         },
         "model_weights_hash": weights_hashes(),
+        "model_check": a.confluency.extra.get("model_check"),
+        "finetuned_reading": a.finetuned,
         "config_hashes": config_hashes(),
     }
