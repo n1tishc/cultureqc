@@ -69,8 +69,11 @@ out how a lab's fine-tuned profile would be made and checked, using the procedur
      (`docs/audit_mapping.md`, 10.2).
    - Not built: a fine-tuned profile that decides. That needs a profile that passes its criteria on held-out
      images, and a calibration profile tied to the fine-tuned weights.
-   - Product-path readings with the fine-tuned model have not been run yet: the before/after picture's readings
-     came from the research scripts, which read the raw images.
+   - Product path checked on Colab (`results/finetuned_product_readings.md`, rules fixed before the run): the 90
+     sealed test images read through `analyze` with both models. The fine-tuned readings were within 0.01 pp of
+     the research scripts' readings of the same weights, the shipped readings within 0.01 pp of the committed
+     ones, and every check matched. A copy of the fine-tuned weights with one byte changed was refused, and that
+     image's shipped reading and action were the same as in its first record.
 
 ## What the tests taught
 

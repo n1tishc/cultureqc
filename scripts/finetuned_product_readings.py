@@ -128,8 +128,10 @@ def cmd_compare(a):
                                                      + ". The picture's numbers are not presented as the product's."),
              "", "## One changed byte", "",
              f"`{t['flask_id']}` read again with a copy of the fine-tuned weights with one byte changed:", "",
-             f"- Fine-tuned check: `{t['finetuned_reading']['check']['status']}`, reading "
-             f"{t['finetuned_reading']['confluency_pct']}; reason: {t['finetuned_reading']['reason']}.",
+             f"- Fine-tuned check: `{t['finetuned_reading']['check']['status']}`, "
+             + ("no reading" if t["finetuned_reading"]["confluency_pct"] is None
+                else f"reading {t['finetuned_reading']['confluency_pct']:.2f}%")
+             + f"; reason: {t['finetuned_reading']['reason']}.",
              f"- Shipped reading {t['confluency_pct']:.2f}% and action `{t['recommended_action']}`, against "
              f"{same['confluency_pct']:.2f}% and `{same['recommended_action']}` in its first record.", "",
              "## The picture's four images, as the product reads them", "",
