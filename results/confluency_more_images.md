@@ -1,9 +1,10 @@
 # More training images: does fine-tuning on 169 images read new setups better than on 79?
 
-**Status: pre-registration.** This file, `scripts/confluency_more_images.py` and the training sets in
-`results/confluency_more_images_plan.json` were committed before any model below was trained and before any
-fine-tuned model read any of the test images. The results section is added afterwards by
-`scripts/confluency_more_images.py score`, run once.
+**Status: scored once (`02c860e`), from the readings committed in `cb62b3b`.** This file,
+`scripts/confluency_more_images.py` and the training sets in `results/confluency_more_images_plan.json` were
+committed (`e2df3b3`) before any model below was trained and before any fine-tuned model read any of the test
+images. The results section was added afterwards by `scripts/confluency_more_images.py score`, run once; "What it
+means" was written after it.
 
 ## Why
 
@@ -167,3 +168,34 @@ Approved fine-tuned model against the shipped model (reported, whatever it shows
 | `Polymer_Test_61.tif` | polymer_lowmag | 89.6 | 40.1 | 93.9 | 93.7 | 84.5 | 94.6 | 93.5 |
 
 ![MAE by number of training images](confluency_more_images.png)
+
+## What it means
+
+- **The rule fixed in advance is met, by about 1 pp.** On the 31 images of four setups none of these models trained
+  on, the model fine-tuned on all 169 images reads with a mean error of 3.81 pp, against 4.88 pp for the approved
+  model (79 images): +1.07 pp (+0.45 to +2.04), and 24 of 31 within 5 pp against 21.
+- **The interval covers which test images were drawn, not how training went.** Each model was trained once. The two
+  draws of about 40 images, same recipe, differ by 1.31 pp (5.98 and 4.67), more than the gain. The result holds
+  for these two trained models; another training run on the same 169 images could land closer to the approved
+  model. The curve falls from about 40 images to about 120 (3.38) and is flat beyond that within this variation:
+  the 169-image model (3.81) does not beat the 120-image one. The 120-image model is not a candidate: only the
+  169-image model was named before the readings, and choosing another now would be choosing on the test images.
+- **Mostly one setup.** Of the 1.07 pp, 0.68 comes from `jp_bf_2048` (6 images, 4 units) and 0.34 from
+  `polymer_lowmag` (13 images, 2 units); `bf_20x_3440` adds 0.09 and `huvec_bf_2752` −0.03.
+- **On `jp_bf_2048` the 169-image model is less wrong, not right.** These 6 images are dense (experts 70.7–85.0%),
+  and both models read all 6 high: the approved model by 13.76 pp on average (70.7% read as 92.7% on
+  `JP_Polymers_3h_17h_20x_P1_1_BF.tif`), the 169-image model by 10.27 pp. Of the five the experts put at 70–79%,
+  the approved model reads all five above an 80% passage target and the 169-image model four. At 60–90% the gain
+  is +1.75 pp with an interval that includes zero (−0.06 to +3.48); that contrast was reported, not judged.
+- **Transfer (question 2).** On setups it never trained on, the approved model reads with a mean error of 4.88 pp,
+  against 33.78 pp for the shipped model at the cutoff the product uses for an uncalibrated setup (0.0): +28.90 pp
+  (+21.15 to +39.48). The shipped model reads low on every one of the 31; the approved model reads slightly high on
+  average (+2.43 pp), and 10 pp or more high on most of the dense `jp_bf_2048` images. These are four other setups
+  of the same lab, not another lab.
+- **What follows, as fixed before scoring.** Nothing changes before the call: the product, the approved model, the
+  demo and the site stay as they are. `mcellseg_more_n169` is at most a proposal to the repository owner, and these
+  31 images are its only evidence: they were the last mCellSeg images no fine-tuned model had read, and it trained
+  on every image of the sealed test, so it has no sealed-test result of its own. It would need its own change
+  record before the product could show it. Its weights are in the owner's Drive (SHA-256 `80ac7c01eb66…`), not in
+  the repository.
+- Training ran on an NVIDIA L4: 2.2 hours for the 169-image model, 4.8 hours for all four.
