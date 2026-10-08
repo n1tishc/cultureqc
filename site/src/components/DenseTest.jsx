@@ -1,4 +1,4 @@
-import { Fig, Path, Section, Verdict } from "./ui";
+import { Fig, Icon, Path, Section, Verdict } from "./ui";
 
 /* The passage-range test on a dense dataset no model had seen (results/confluency_mcellseg.md, sealed,
    scored once; results/confluency_mcellseg_swap.md, its pre-registered replication with the halves
@@ -19,7 +19,7 @@ const HALVES = [
   ["both", "Both halves"],
 ];
 
-function Scatter({ d, arm, letter, title }) {
+export function Scatter({ d, arm, letter, title }) {
   const pts = d.points;
   const n = pts.length;
   const w5 = d.both.within5[arm];
@@ -165,6 +165,38 @@ function Note({ title, children }) {
         <b>{title}</b> {children}
       </p>
     </li>
+  );
+}
+
+/* The home page's short version: the two readings side by side, the shipped one first, and where the
+   full test is. The fine-tuned model is evidence here, as on the validation page; it decides nothing. */
+export function PassageRange({ data }) {
+  const d = data.dense_test;
+  if (!d) return null;
+  const n = d.points.length;
+  const b = d.both;
+  return (
+    <Section
+      id="passage"
+      title="In the passage range, on a lab no model had seen"
+      lede={
+        <>
+          <p>
+            {n} images from a public dataset with every cell outlined by hand, published after Cellpose-SAM. The shipped method fails safe: it sent {b.C.B4_review} of the {b.C.n_60_100} images at 60% or more to a person and called no ready flask continue. Fine-tuned on the lab’s own labelled images, the same model read within 5 pp of the experts on {b.within5.F} of {n} images, against {b.within5.C}. That is evidence for a lab training its own model, not a change to the product: the fine-tuned reading is shown beside the shipped one for four of these images in the live console, and decides nothing.
+          </p>
+          <p>
+            <a className="more" href="/validation#dense">
+              The full test, with the pass marks committed before scoring <Icon name="passage" />
+            </a>
+          </p>
+        </>
+      }
+    >
+      <div className="figs g2">
+        <Scatter d={d} arm="C" letter="A" title="Shipped method: a calibration profile per setup" />
+        <Scatter d={d} arm="F" letter="B" title="Fine-tuned on the lab’s own images, then calibrated" />
+      </div>
+    </Section>
   );
 }
 

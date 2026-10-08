@@ -3,6 +3,7 @@ import Stage from "../components/Stage";
 import Timeline from "../components/Timeline";
 import Records from "../components/Records";
 import { Accuracy, HowItWorks, Scope, Specs } from "../components/Product";
+import { PassageRange } from "../components/DenseTest";
 import { Integration, row } from "../components/Sections";
 import { CtaBand, Footer, TopBar } from "../components/Shell";
 import { Icon, Section } from "../components/ui";
@@ -74,6 +75,7 @@ export default function Home({ data }) {
 
         <HowItWorks data={data} />
         <Accuracy data={data} />
+        <PassageRange data={data} />
 
         <Section
           id="timeline"

@@ -20,7 +20,7 @@ const HOME_NAV = [
 
 /* Home sections without a nav entry, observed so none of the links above
    stays lit while they are on screen. */
-const UNLISTED = ["top", "accuracy", "specs", "scope"];
+const UNLISTED = ["top", "accuracy", "passage", "specs", "scope"];
 
 const PAGES = [
   ["validation", "/validation", "Validation"],
