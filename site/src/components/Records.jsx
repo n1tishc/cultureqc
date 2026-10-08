@@ -13,7 +13,6 @@ import { Icon, Path, actionWord, short } from "./ui";
    (count and head hash), which catches the two a chain alone passes. */
 
 const FIELDS = [
-  ["schema_version", "These stored records are schema 0.4. The live console writes 0.5, which adds model_check (the segmentation weights’ SHA-256, compared with the latest approved change record before the model reads) and finetuned_reading (a fine-tuned model’s reading beside the shipped one, never used to decide)."],
   ["record_type", "reading, review or change: one chain holds all three."],
   ["confluency_profile", "The imaging setup’s calibration: its id and SHA-256, cutoff and error band."],
   ["confluency_interval", "The reading ± that band, measured on held-out labelled images from the setup."],
@@ -87,7 +86,11 @@ function Json({ obj, bad }) {
 
 export default function Records({ examples, data }) {
   const clsReal = row(data, "QC classifier on real normal frames").number.match(/^[\d.]+%/)[0];
+  const stored = JSON.parse(examples.items[0].record.canonical).schema_version;
   const fields = [
+    ["schema_version", stored === data.meta.schema
+      ? `Schema ${stored}, the version the live console writes.`
+      : `These stored records are schema ${stored}. The live console writes ${data.meta.schema}, which adds model_check (the segmentation weights’ SHA-256, compared with the latest approved change record before the model reads) and finetuned_reading (a fine-tuned model’s reading beside the shipped one, never used to decide).`],
     ...FIELDS.slice(0, -1),
     ["qc_flag · qc_confidence · qc_used_in_decision",
       `The demoted QC classifier’s call, kept for traceability and never used for the action (qc_used_in_decision: false). It does not transfer to these frames: on real normal C2C12 frames it called ${clsReal} normal, so a normal frame can carry contamination_suspected here.`],

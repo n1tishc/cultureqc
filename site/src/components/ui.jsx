@@ -83,8 +83,11 @@ export const actionGloss = (a) => ACTION_GLOSS[a] || "";
 /* eslint-disable-next-line no-undef */
 const REF = (typeof __COMMIT__ !== "undefined" && __COMMIT__) || "slice-1b-compute-cache";
 const BLOB = `https://github.com/n1tishc/cultureqc/blob/${REF}/`;
-// A path that starts a word: "site/..." matches, "website/..." does not.
-const REPO_PATH = /(?<![\w\/.-])((?:results|docs|configs|culture|scripts|tests|demo|site|deploy|nb)\/[\w.\/-]*[\w\/])/g;
+const PATH_BODY = String.raw`(?:results|docs|configs|culture|scripts|tests|demo|site|deploy|nb)\/[\w.\/-]*[\w\/]`;
+const IS_PATH = new RegExp(`^${PATH_BODY}$`);
+// A path that starts a word: "site/..." matches, "website/..." does not. A lookbehind would say this more
+// simply, but Safari before 16.4 cannot parse one, and a pattern it cannot parse stops the whole page.
+const IN_TEXT = new RegExp(String.raw`(^|[^\w\/.-])(` + PATH_BODY + ")", "g");
 
 function OnePath({ path }) {
   const parts = path.split("/");
@@ -102,7 +105,7 @@ function OnePath({ path }) {
       ))}
     </code>
   );
-  return new RegExp(`^${REPO_PATH.source}$`).test(path) ? (
+  return IS_PATH.test(path) ? (
     <a className="path" href={BLOB + path} target="_blank" rel="noreferrer">
       {code}
     </a>
@@ -127,9 +130,10 @@ export function Linked({ children }) {
   const text = String(children);
   const out = [];
   let last = 0;
-  for (const m of text.matchAll(REPO_PATH)) {
-    out.push(text.slice(last, m.index), <OnePath key={m.index} path={m[0]} />);
-    last = m.index + m[0].length;
+  for (const m of text.matchAll(IN_TEXT)) {
+    const at = m.index + m[1].length;
+    out.push(text.slice(last, at), <OnePath key={at} path={m[2]} />);
+    last = at + m[2].length;
   }
   out.push(text.slice(last));
   return out;
