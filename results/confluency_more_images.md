@@ -199,3 +199,11 @@ Approved fine-tuned model against the shipped model (reported, whatever it shows
   record before the product could show it. Its weights are in the owner's Drive (SHA-256 `80ac7c01eb66…`), not in
   the repository.
 - Training ran on an NVIDIA L4: 2.2 hours for the 169-image model, 4.8 hours for all four.
+
+## Addendum, 2026-10-08 (written after scoring; nothing above is changed)
+
+On 2026-10-08 the repository owner chose to show the approved fine-tuned model, `mcellseg_ftF_r2`, unchanged, in
+the public console's demo set: four mCellSeg test images get its reading beside the shipped one, and it decides
+nothing (`demo/lab_demo.py`, `CHANGELOG.md`). That changes the demo before the call, which "What follows" above
+said would not happen. The decision does not rest on this test. `mcellseg_more_n169` is not used anywhere, and the
+model shown is the one approved in `configs/approved_changes.jsonl` before this test was scored.

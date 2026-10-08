@@ -41,8 +41,8 @@ hash-chained record.
   that lab (`mcellseg_ftF_r2`) reads the image too, and its reading is shown
   in a second card beside the shipped one: "not validated", it decides
   nothing, and the record keeps it in `finetuned_reading`. The images are
-  matched by the SHA-256 of the exact file, so an upload never gets the
-  fine-tuned reading. Before every reading its weights are checked against the
+  matched by the SHA-256 of the exact file: any other image, including a
+  changed copy of one of them, gets no fine-tuned reading. Before every reading its weights are checked against the
   approved change record (`configs/approved_changes.jsonl`); a mismatch shows
   "No reading". Results: `results/confluency_mcellseg.md`.
 - **Calibration profiles.** One per imaging setup (`configs/confluency_profiles.yaml`):

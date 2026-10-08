@@ -11,6 +11,15 @@ Called with the local Hugging Face token, so the GPU time should be charged to t
 owner's ZeroGPU quota (as on the call, signed in on huggingface.co), not the
 smaller anonymous one. Each Analyze appends a record to the Space's session
 chain, as pressing the button does.
+
+Then the fine-tuned demo set (demo/lab_demo.py): each of its four images is
+uploaded as the exact file and analyzed, and one more upload is a copy of the
+first with its last byte changed. The four must carry a fine-tuned reading
+whose weights check is `match`; the changed copy and every precomputed example
+must carry none. The anomaly status and action of each are reported, and the
+readings are set beside the product-path records of the same images
+(results/finetuned_product_readings.jsonl, read on an A100; the Space's GPU
+differs, so the gap is reported, not judged).
 """
 
 from __future__ import annotations
@@ -29,7 +38,10 @@ from gradio_client import Client, handle_file
 from huggingface_hub import HfApi, get_token
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from demo import precomputed  # noqa: E402
+from demo import lab_demo, precomputed  # noqa: E402
+
+PRODUCT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "results",
+                       "finetuned_product_readings.jsonl")
 
 
 def live_record(results_html: str) -> dict:
@@ -58,6 +70,7 @@ def main():
                              api_name="/run_analysis")
         wall = time.perf_counter() - t0
         rec = live_record(out[2] if isinstance(out, (list, tuple)) else out)
+        assert rec.get("finetuned_reading") is None, f"{ex['id']}: a precomputed example got a fine-tuned reading"
         stored_conf = ex["confluency"]
         rows.append({
             "key": ex["id"], "order": i + 1, "wall_s": wall,
@@ -70,6 +83,7 @@ def main():
         print(f"{r['key']}: {wall:.1f} s, {r['pct_live']:.2f}% vs {r['pct_stored']:.2f}%, "
               f"{r['action_live']} vs {r['action_stored']}", flush=True)
 
+    lab = lab_rows(client)
     same = sum(r["flag_live"] == r["flag_stored"] and r["action_live"] == r["action_stored"] for r in rows)
     warm = [r["wall_s"] for r in rows[1:]]
     lines = [
@@ -92,11 +106,67 @@ def main():
         f"First Analyze of this run: {rows[0]['wall_s']:.2f} s.",
         f"Median of the rest: {statistics.median(warm):.2f} s (n = {len(warm)}).",
         f"Anomaly flag and action the same as stored: {same} of {len(rows)} examples.",
+        "No precomputed example carried a fine-tuned reading.",
         "",
-    ]
+    ] + lab_lines(lab)
     with open(args.out, "w") as f:
         f.write("\n".join(lines))
     print("wrote", args.out)
+
+
+def lab_rows(client) -> list[dict]:
+    import tempfile
+
+    product = {}
+    for x in open(PRODUCT):
+        if x.strip():
+            r = json.loads(x)
+            product.setdefault(r["flask_id"], r)
+    tmp = tempfile.mkdtemp()
+    cases = [(n, os.path.join(lab_demo.DATA, "images", n), line, True) for n, _, line, _ in lab_demo.IMAGES]
+    first = cases[0]
+    changed = os.path.join(tmp, "changed_" + first[0])
+    b = bytearray(open(first[1], "rb").read())
+    b[-1] ^= 1
+    open(changed, "wb").write(bytes(b))
+    cases.append(("changed copy of " + first[0], changed, first[2], False))
+    rows = []
+    for name, path, line, listed in cases:
+        client.predict(handle_file(path), api_name="/on_upload")
+        t0 = time.perf_counter()
+        out = client.predict(line, 80.0, "uncalibrated", api_name="/run_analysis")
+        wall = time.perf_counter() - t0
+        rec = live_record(out[2] if isinstance(out, (list, tuple)) else out)
+        fr = rec.get("finetuned_reading")
+        if listed:
+            assert fr is not None and fr["check"]["status"] == "match", (name, fr)
+        else:
+            assert fr is None, (name, fr)
+        p = product.get(name, {})
+        rows.append({"name": name, "wall_s": wall, "shipped": rec["confluency_pct"],
+                     "shipped_product": p.get("confluency_pct"), "ft": fr and fr["confluency_pct"],
+                     "ft_product": (p.get("finetuned_reading") or {}).get("confluency_pct"),
+                     "anomaly": f"{rec['anomaly_status']} {rec.get('anomaly_flag')}",
+                     "action": rec["recommended_action"], "reason": rec["action_reason"]})
+        print(f"{name}: {wall:.1f} s, shipped {rec['confluency_pct']:.2f}%, fine-tuned "
+              f"{'none' if fr is None else fr['confluency_pct']}, {rows[-1]['anomaly']}, {rec['recommended_action']}",
+              flush=True)
+    return rows
+
+
+def lab_lines(rows: list[dict]) -> list[str]:
+    f = lambda v: "–" if v is None else f"{v:.2f}"
+    out = ["## Fine-tuned demo set", "",
+           "Each demo image uploaded as the exact file (target 80%, uncalibrated), then a copy of the first with its "
+           "last byte changed. Product-path values: `results/finetuned_product_readings.jsonl` (A100).", "",
+           "| image | wall time (s) | shipped live / product (%) | fine-tuned live / product (%) | anomaly | action | reason |",
+           "|---|---|---|---|---|---|---|"]
+    for r in rows:
+        out.append(f"| {r['name']} | {r['wall_s']:.2f} | {f(r['shipped'])} / {f(r['shipped_product'])} | "
+                   f"{f(r['ft'])} / {f(r['ft_product'])} | {r['anomaly']} | {r['action']} | {r['reason']} |")
+    out += ["", "The four listed files carried a fine-tuned reading with weights check `match`; the changed copy "
+            "carried none.", ""]
+    return out
 
 
 if __name__ == "__main__":

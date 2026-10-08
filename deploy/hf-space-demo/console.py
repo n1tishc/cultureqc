@@ -36,8 +36,9 @@ import zerogpu  # noqa: E402
 
 # The approved fine-tuned model's demo set (demo/lab_demo.py): four test images
 # from the lab it was trained on get its reading beside the shipped one, and it
-# decides nothing; uploads never get it. On by default here; a Space variable
-# CULTUREQC_FINETUNED set to empty turns it off without a republish. The weights
+# decides nothing; any other image gets no fine-tuned reading. On by default
+# here; a Space variable CULTUREQC_FINETUNED set to empty turns it off without a
+# republish. The weights
 # are not in this Space: they come from a private model repo, read with the
 # CULTUREQC_HF_TOKEN secret. If they can't be fetched, the set stays off and the
 # console runs as before.

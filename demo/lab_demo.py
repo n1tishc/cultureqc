@@ -4,7 +4,8 @@ demo/lab_demo.py — the approved fine-tuned model's demo set, for the Colab-hos
 Off unless CULTUREQC_FINETUNED names a fine-tuned model (configs/finetuned_models.yaml). The console Space
 (deploy/hf-space-demo/console.py) and the Colab launcher (nb/11_lab_demo.ipynb) set it; demo/app.py run on its own
 does not. When it is on, the fine-tuned model reads only the images listed here, each matched by the SHA-256 of the
-exact file analysed: never an upload, so its reading is never shown for a lab it was not trained on. The
+exact file analysed: any other image, including an edited copy, gets no fine-tuned reading, so it is never shown
+for a lab it was not trained on. The
 fine-tuned reading is shown beside the shipped one and decides nothing (culture/finetuned.py).
 
 The weights are not in this repository. On the Space they are downloaded at startup from a private model repo

@@ -48,6 +48,9 @@ def main():
     info = api.model_info(a.repo, files_metadata=True)
     stored = next((s for s in info.siblings if s.rfilename == name), None)
     sha = stored.lfs.sha256 if stored is not None and stored.lfs else None
+    if sha is None:
+        print(f"{a.repo}/{name}: uploaded; the Hub gave no SHA-256 to compare (the Space checks the file at startup)")
+        return
     if sha != c.sha256:
         sys.exit(f"uploaded, but the Hub's SHA-256 {sha} is not the approved {c.sha256}: tell me")
     print(f"{a.repo}/{name}: private, SHA-256 matches the approved record")
