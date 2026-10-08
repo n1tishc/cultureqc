@@ -10,7 +10,7 @@ truth. `--check` reports drift without writing, which is the useful form in CI.
 
 There are two Spaces, both fed from the same repo root: `hf-space` (the FastAPI
 backend the product frontend calls) and `hf-space-demo` (the review console,
-demo/app.py, for the call day; its raw-output app.py is kept beside it).
+demo/app.py; its raw-output app.py is kept beside it).
 Everything else inside each — api.py/app.py/console.py/zerogpu.py, Dockerfile,
 requirements.txt, packages.txt, README.md — is hand-written and never touched
 by this script.

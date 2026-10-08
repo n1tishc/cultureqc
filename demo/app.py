@@ -636,15 +636,15 @@ with gr.Blocks(
             with gr.Row(elem_classes="topbar-controls"):
                 with gr.Row(elem_classes="control-cluster"):
                     cell_line = gr.Dropdown(
-                        choices=CELL_LINES, value="A172", show_label=False, container=False,
+                        choices=CELL_LINES, value="unknown", label="Cell line", show_label=False, container=False,
                         elem_classes=["topbar-field", "cell-line-field"],
                     )
                     target_conf = gr.Number(
-                        value=80, minimum=0, maximum=100, step=5, show_label=False, container=False,
+                        value=80, minimum=0, maximum=100, step=5, label="Passage target", show_label=False, container=False,
                         elem_classes=["topbar-field", "target-field"],
                     )
                     setup = gr.Dropdown(
-                        choices=PROFILE_CHOICES, value=DEFAULT_PROFILE, show_label=False, container=False,
+                        choices=PROFILE_CHOICES, value=DEFAULT_PROFILE, label="Imaging setup", show_label=False, container=False,
                         elem_classes=["topbar-field", "setup-field"],
                     )
                 analyze_btn = gr.Button("Analyze", variant="primary", elem_classes=["analyze-btn"])
@@ -665,7 +665,8 @@ with gr.Blocks(
                     landscape_note = gr.HTML(visible=False)
 
                 with gr.Column(scale=38, min_width=0, elem_classes="results-pane"):
-                    results_html = gr.HTML('<div class="rc-empty">Upload an image to begin analysis.</div>')
+                    results_html = gr.HTML('<div class="rc-empty">Upload a phase-contrast image and press Analyze, '
+                                           'or pick a stored example below the image.</div>')
                     reading_state = gr.State(None)   # the last live reading, for the review form
                     with gr.Column(visible=False, elem_classes="review-panel") as review_panel:
                         gr.HTML('<div class="review-head">Review this reading</div><div class="review-sub">Writes a '
@@ -684,7 +685,7 @@ with gr.Blocks(
             with gr.Row(elem_classes="real-examples-row"):
                 gr.Markdown(
                     "**Examples: precomputed, labelled as such; press Analyze to run one live.** "
-                    "C2C12 frames are held-out frames from the Phase A replays; the contaminated ones are "
+                    "C2C12 frames are held-out frames from the recorded time-lapse replays; the contaminated ones are "
                     "simulated (bacteria pasted at 16.5× their real size). EVICAN: two of its 33 test images, "
                     "read with the EVICAN calibration profile and compared with the dataset's own expert masks. "
                     + " · ".join(sorted({part for e in EXAMPLES for part in e["credit"].split("; ")}))
@@ -731,7 +732,7 @@ with gr.Blocks(
                 '<span style="color:var(--text-secondary);font-size:0.85em;line-height:1.5">'
                 f'{html.escape(_first["target_note"])}<br>'
                 "Precomputed from held-out sequences: every number below was produced before the app "
-                "started, by the same code the Phase A checks used. No SPC or trend charts; the QC "
+                "started, by the same code the held-out validation checks used. No SPC or trend charts; the QC "
                 "classifier is not shown (demoted, see the Analyze tab).</span></div>"
             )
             timeline_choice = gr.Radio(

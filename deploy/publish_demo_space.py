@@ -64,7 +64,7 @@ def main():
         commit = api.upload_folder(
             repo_id=SPACE_ID, repo_type="space",
             folder_path=stage,
-            commit_message="cultureQC review console (call day)",
+            commit_message="cultureQC review console",
         )
         print(commit.commit_url)
 

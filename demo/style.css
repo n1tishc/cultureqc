@@ -114,6 +114,33 @@ footer { display: none !important; }
 }
 .control-cluster .cell-line-field { border-right: 1px solid var(--border) !important; }
 
+/* Each field's label, which Gradio renders for screen readers only once
+   container=False, shown as a small caption inside the field. */
+.control-cluster .topbar-field { position: relative !important; }
+.control-cluster .topbar-field .sr-only {
+  position: absolute !important;
+  top: 5px !important;
+  left: 12px !important;
+  z-index: 1;
+  width: auto !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  clip: auto !important;
+  clip-path: none !important;
+  overflow: visible !important;
+  white-space: nowrap !important;
+  font-size: 10px !important;
+  line-height: 1 !important;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+.control-cluster .topbar-field .wrap-inner { padding-top: 13px !important; }
+.control-cluster .target-field input[type="number"] { padding: 21px 24px 7px 12px !important; }
+.control-cluster .target-field::after { top: calc(50% + 7px) !important; }
+
 .topbar-field { max-width: 160px !important; flex: none !important; border-radius: 8px !important; }
 .topbar-field input, .topbar-field select { font-size: 13px !important; }
 
@@ -178,12 +205,18 @@ footer { display: none !important; }
 
 /* ── Main split pane ── */
 
+/* The image and the results fill the window below the controls, at a fixed
+   height so a long result scrolls inside its pane. It used to take whatever
+   height the rows below left over; once the examples and the fine-tuned demo
+   set took ~370 px, that was 0 px on a laptop screen. The rows below now
+   scroll into view under it. */
 .main-row {
   display: grid !important;
   grid-template-columns: 62fr 38fr !important;
   grid-template-rows: minmax(0, 1fr) !important;
   align-items: stretch !important;
-  flex: 1 1 0 !important;
+  flex: 0 0 auto !important;
+  height: max(420px, calc(100vh - 270px)) !important;
   min-height: 0 !important;
   gap: 20px !important;
   padding: 20px 0 !important;
@@ -592,3 +625,15 @@ footer { display: none !important; }
 .ft-number { font-family: var(--mono); font-size: 36px; font-weight: 700; color: var(--text-primary); line-height: 1; margin-top: 8px; }
 .ft-number .unit { font-size: 18px; color: var(--text-secondary); font-weight: 600; margin-left: 2px; }
 .ft-refused { margin-top: 8px; font-size: 14px; color: var(--amber); }
+
+/* Narrow windows: the controls wrap, and the image stacks above the results,
+   which then grow with their content (the page scrolls, not the pane). */
+@media (max-width: 900px) {
+  .gradio-container { padding: 0 14px !important; }
+  .topbar-controls { flex-wrap: wrap !important; }
+  .control-cluster { flex-wrap: wrap !important; flex: 1 1 100% !important; }
+  .control-cluster .setup-field { min-width: 0 !important; max-width: none !important; border-left: none !important; }
+  .main-row { grid-template-columns: minmax(0, 1fr) !important; grid-template-rows: auto auto !important; height: auto !important; }
+  .main-row .image-pane { height: min(70vh, 480px) !important; }
+  .main-row .results-pane { overflow-y: visible !important; }
+}

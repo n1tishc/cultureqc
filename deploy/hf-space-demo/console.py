@@ -1,4 +1,4 @@
-"""cultureQC review console on this Space, for the call day
+"""cultureQC review console on this Space
 (cultureQC_upgrade_specv4.md §2B.7, D1).
 
     python console.py              # http://127.0.0.1:7860
