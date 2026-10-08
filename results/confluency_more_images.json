@@ -1,0 +1,546 @@
+{
+ "n": 31,
+ "n_60_90": 11,
+ "units": 13,
+ "arms": {
+  "Z": {
+   "mae": 33.78275598477802,
+   "ci": [
+    24.193923742362625,
+    46.82427332854611
+   ],
+   "bias": -33.78275598477802,
+   "within5": 2,
+   "mae_60_90": 55.982908432621635,
+   "bias_60_90": -55.982908432621635,
+   "per_setup": {
+    "bf_20x_3440": 24.88496843733099,
+    "huvec_bf_2752": 13.935537823611812,
+    "jp_bf_2048": 64.1283671061198,
+    "polymer_lowmag": 31.35948723833113
+   }
+  },
+  "A": {
+   "mae": 4.882190622669058,
+   "ci": [
+    2.654621479036245,
+    8.607076407101253
+   ],
+   "bias": 2.4303971927184507,
+   "within5": 21,
+   "mae_60_90": 9.293275770819951,
+   "bias_60_90": 8.8811757913105,
+   "per_setup": {
+    "bf_20x_3440": 1.863502019672796,
+    "huvec_bf_2752": 1.7199036405670647,
+    "jp_bf_2048": 13.758488496144613,
+    "polymer_lowmag": 3.6161036620171134
+   }
+  },
+  "mcellseg_more_n169": {
+   "mae": 3.812569096442186,
+   "ci": [
+    2.135599715123431,
+    6.595241334967687
+   ],
+   "bias": 2.3086691819365304,
+   "within5": 24,
+   "mae_60_90": 7.545848097655566,
+   "bias_60_90": 7.209187324415073,
+   "per_setup": {
+    "bf_20x_3440": 1.5084177680502975,
+    "huvec_bf_2752": 1.9853561704794398,
+    "jp_bf_2048": 10.266860326131185,
+    "polymer_lowmag": 2.813824092815424
+   }
+  },
+  "mcellseg_more_n40_s0": {
+   "mae": 5.976117038985985,
+   "ci": [
+    3.8333121940789634,
+    9.930735791209942
+   ],
+   "bias": 2.4068975524058813,
+   "within5": 19,
+   "mae_60_90": 10.049601162315907,
+   "bias_60_90": 8.078247966434796,
+   "per_setup": {
+    "bf_20x_3440": 3.4136283548539756,
+    "huvec_bf_2752": 3.4102421559024254,
+    "jp_bf_2048": 14.80104923248291,
+    "polymer_lowmag": 4.269487488555885
+   }
+  },
+  "mcellseg_more_n40_s1": {
+   "mae": 4.670455778747547,
+   "ci": [
+    2.455956148437582,
+    9.092107360811152
+   ],
+   "bias": 4.545179090772384,
+   "within5": 24,
+   "mae_60_90": 9.537083200327036,
+   "bias_60_90": 9.537083200327036,
+   "per_setup": {
+    "bf_20x_3440": 2.578767239048135,
+    "huvec_bf_2752": 3.0854001766830965,
+    "jp_bf_2048": 14.108781019846598,
+    "polymer_lowmag": 2.089208030998223
+   }
+  },
+  "mcellseg_more_n120_s0": {
+   "mae": 3.3752539009306926,
+   "ci": [
+    2.0995366783003973,
+    5.473076836992833
+   ],
+   "bias": 1.7911036333475583,
+   "within5": 24,
+   "mae_60_90": 6.450789229971426,
+   "bias_60_90": 5.3589690393481835,
+   "per_setup": {
+    "bf_20x_3440": 1.897360059491618,
+    "huvec_bf_2752": 1.820719647897704,
+    "jp_bf_2048": 8.227761586507162,
+    "polymer_lowmag": 2.5234263340219028
+   }
+  }
+ },
+ "primary": {
+  "all": 1.069621526226872,
+  "ci": [
+   0.44992228657990274,
+   2.0448524151795855
+  ],
+  "60_90": 1.7474276731643856,
+  "ci_60_90": [
+   -0.05675751894684922,
+   3.483046537116362
+  ]
+ },
+ "approved_vs_shipped": {
+  "all": 28.900565362108964,
+  "ci": [
+   21.14679627136244,
+   39.478914726121346
+  ],
+  "60_90": 46.68963266180168,
+  "ci_60_90": [
+   38.98203290838441,
+   57.54803865883518
+  ]
+ },
+ "n_train": {
+  "A": 79,
+  "mcellseg_more_n169": 169,
+  "mcellseg_more_n40_s0": 41,
+  "mcellseg_more_n40_s1": 42,
+  "mcellseg_more_n120_s0": 120
+ },
+ "rows": [
+  {
+   "name": "BF-HUVEC_Glx_Polymers-02_S131-0008.tif",
+   "setup": "huvec_bf_2752",
+   "unit": "huvec|glx|polymers",
+   "gt": 47.91590964147287,
+   "cluster": "huvec_bf_2752/huvec|glx|polymers",
+   "Z": 36.67421717012134,
+   "A": 49.3580920068672,
+   "mcellseg_more_n169": 50.392254249873616,
+   "mcellseg_more_n40_s0": 52.08478155544321,
+   "mcellseg_more_n40_s1": 51.13534030586451,
+   "mcellseg_more_n120_s0": 48.81087799123694
+  },
+  {
+   "name": "BF-HUVEC_Glx_Polymers-02_S132-0002.tif",
+   "setup": "huvec_bf_2752",
+   "unit": "huvec|glx|polymers",
+   "gt": 64.1343351080637,
+   "cluster": "huvec_bf_2752/huvec|glx|polymers",
+   "Z": 39.3749539202056,
+   "A": 61.86778522076172,
+   "mcellseg_more_n169": 62.28270085524098,
+   "mcellseg_more_n40_s0": 67.32274419657904,
+   "mcellseg_more_n40_s1": 67.2213357347489,
+   "mcellseg_more_n120_s0": 59.96691141620324
+  },
+  {
+   "name": "BF-HUVEC_Glx_Polymers-02_S132-0008.tif",
+   "setup": "huvec_bf_2752",
+   "unit": "huvec|glx|polymers",
+   "gt": 40.76416097910347,
+   "cluster": "huvec_bf_2752/huvec|glx|polymers",
+   "Z": 29.59915845129761,
+   "A": 42.014717228050216,
+   "mcellseg_more_n169": 42.04333607178969,
+   "mcellseg_more_n40_s0": 43.837304753328276,
+   "mcellseg_more_n40_s1": 43.98971367332322,
+   "mcellseg_more_n120_s0": 41.37596899224806
+  },
+  {
+   "name": "BF-HUVEC_Glx_Polymers-02_S135-0008.tif",
+   "setup": "huvec_bf_2752",
+   "unit": "huvec|glx|polymers",
+   "gt": 36.83024664539097,
+   "cluster": "huvec_bf_2752/huvec|glx|polymers",
+   "Z": 28.254171537959216,
+   "A": 38.75057270601618,
+   "mcellseg_more_n169": 39.16451737339906,
+   "mcellseg_more_n40_s0": 40.04079049229019,
+   "mcellseg_more_n40_s1": 39.63986336682676,
+   "mcellseg_more_n120_s0": 38.43892518221267
+  },
+  {
+   "name": "CellsOnly_Polymer-47.tif",
+   "setup": "polymer_lowmag",
+   "unit": "cellsonly|polymer",
+   "gt": 48.976194242328376,
+   "cluster": "polymer_lowmag/cellsonly|polymer",
+   "Z": 20.191988294843405,
+   "A": 43.95444479595065,
+   "mcellseg_more_n169": 45.27018744068333,
+   "mcellseg_more_n40_s0": 43.858549509648846,
+   "mcellseg_more_n40_s1": 52.11187124327744,
+   "mcellseg_more_n120_s0": 46.75794843403986
+  },
+  {
+   "name": "CellsOnly_Polymer-48.tif",
+   "setup": "polymer_lowmag",
+   "unit": "cellsonly|polymer",
+   "gt": 55.823022419627755,
+   "cluster": "polymer_lowmag/cellsonly|polymer",
+   "Z": 20.32798525501571,
+   "A": 52.50747824510514,
+   "mcellseg_more_n169": 54.220581792361614,
+   "mcellseg_more_n40_s0": 45.863359620497945,
+   "mcellseg_more_n40_s1": 56.094486493836115,
+   "mcellseg_more_n120_s0": 53.591446096204976
+  },
+  {
+   "name": "CellsOnly_Polymer-55.tif",
+   "setup": "polymer_lowmag",
+   "unit": "cellsonly|polymer",
+   "gt": 44.167153795921806,
+   "cluster": "polymer_lowmag/cellsonly|polymer",
+   "Z": 19.40525467644085,
+   "A": 38.52619702140209,
+   "mcellseg_more_n169": 41.283348605493764,
+   "mcellseg_more_n40_s0": 39.84611981799798,
+   "mcellseg_more_n40_s1": 45.374707722446914,
+   "mcellseg_more_n120_s0": 42.15221604314122
+  },
+  {
+   "name": "CellsOnly_Polymer_46.tif",
+   "setup": "polymer_lowmag",
+   "unit": "cellsonly|polymer",
+   "gt": 48.97808181664981,
+   "cluster": "polymer_lowmag/cellsonly|polymer",
+   "Z": 16.386435688405797,
+   "A": 48.849321705426355,
+   "mcellseg_more_n169": 49.83404691186383,
+   "mcellseg_more_n40_s0": 49.158517125884735,
+   "mcellseg_more_n40_s1": 51.817584576171214,
+   "mcellseg_more_n120_s0": 49.90395654280418
+  },
+  {
+   "name": "HEK_FUMGW_GFP_2_BF.tif",
+   "setup": "bf_20x_3440",
+   "unit": "hek|fumgw|gfp",
+   "gt": 14.944902650081124,
+   "cluster": "bf_20x_3440/hek|fumgw|gfp",
+   "Z": 11.086947336398053,
+   "A": 14.865907247160628,
+   "mcellseg_more_n169": 14.263360262303948,
+   "mcellseg_more_n40_s0": 15.924874932395891,
+   "mcellseg_more_n40_s1": 14.974310438074633,
+   "mcellseg_more_n120_s0": 15.218437330989723
+  },
+  {
+   "name": "HEK_FUMGW_GFP_3_BF.tif",
+   "setup": "bf_20x_3440",
+   "unit": "hek|fumgw|gfp",
+   "gt": 11.670700378583017,
+   "cluster": "bf_20x_3440/hek|fumgw|gfp",
+   "Z": 7.825023661438616,
+   "A": 11.314308409951325,
+   "mcellseg_more_n169": 11.003709775554354,
+   "mcellseg_more_n40_s0": 12.579595389399675,
+   "mcellseg_more_n40_s1": 12.719138723634396,
+   "mcellseg_more_n120_s0": 11.547567942130883
+  },
+  {
+   "name": "HEK_FUMGW_GFP_4_BF.tif",
+   "setup": "bf_20x_3440",
+   "unit": "hek|fumgw|gfp",
+   "gt": 15.085688209843159,
+   "cluster": "bf_20x_3440/hek|fumgw|gfp",
+   "Z": 9.31576189832342,
+   "A": 15.306871957815035,
+   "mcellseg_more_n169": 15.015675703082747,
+   "mcellseg_more_n40_s0": 16.993400148729044,
+   "mcellseg_more_n40_s1": 15.908945713899406,
+   "mcellseg_more_n120_s0": 15.951494050838292
+  },
+  {
+   "name": "JP_Polymers_17h_20x_CO_1_BF.tif",
+   "setup": "jp_bf_2048",
+   "unit": "jp|polymers|co",
+   "gt": 75.8631706237793,
+   "cluster": "jp_bf_2048/jp|polymers|co",
+   "Z": 3.821086883544922,
+   "A": 93.38984489440918,
+   "mcellseg_more_n169": 89.47267532348633,
+   "mcellseg_more_n40_s0": 94.91479396820068,
+   "mcellseg_more_n40_s1": 94.51887607574463,
+   "mcellseg_more_n120_s0": 86.76066398620605
+  },
+  {
+   "name": "JP_Polymers_17h_20x_P1_1_BF.tif",
+   "setup": "jp_bf_2048",
+   "unit": "jp|polymers|p1",
+   "gt": 78.45468521118164,
+   "cluster": "jp_bf_2048/jp|polymers|p1",
+   "Z": 18.854880332946777,
+   "A": 96.4125394821167,
+   "mcellseg_more_n169": 92.99192428588867,
+   "mcellseg_more_n40_s0": 97.79415130615234,
+   "mcellseg_more_n40_s1": 96.73466682434082,
+   "mcellseg_more_n120_s0": 88.8364315032959
+  },
+  {
+   "name": "JP_Polymers_17h_20x_P2_1_BF.tif",
+   "setup": "jp_bf_2048",
+   "unit": "jp|polymers|p2",
+   "gt": 75.84009170532227,
+   "cluster": "jp_bf_2048/jp|polymers|p2",
+   "Z": 3.327059745788574,
+   "A": 88.50986957550049,
+   "mcellseg_more_n169": 85.97519397735596,
+   "mcellseg_more_n40_s0": 88.55304718017578,
+   "mcellseg_more_n40_s1": 88.78488540649414,
+   "mcellseg_more_n120_s0": 84.01920795440674
+  },
+  {
+   "name": "JP_Polymers_17h_20x_P3_1_BF.tif",
+   "setup": "jp_bf_2048",
+   "unit": "jp|polymers|p3",
+   "gt": 84.97254848480225,
+   "cluster": "jp_bf_2048/jp|polymers|p3",
+   "Z": 5.483055114746094,
+   "A": 87.87064552307129,
+   "mcellseg_more_n169": 85.42611598968506,
+   "mcellseg_more_n40_s0": 88.9857292175293,
+   "mcellseg_more_n40_s1": 87.54146099090576,
+   "mcellseg_more_n120_s0": 83.13496112823486
+  },
+  {
+   "name": "JP_Polymers_3h_17h_20x_CO_1_BF.tif",
+   "setup": "jp_bf_2048",
+   "unit": "jp|polymers|co",
+   "gt": 73.31998348236084,
+   "cluster": "jp_bf_2048/jp|polymers|co",
+   "Z": 28.023838996887207,
+   "A": 82.8361988067627,
+   "mcellseg_more_n169": 78.98750305175781,
+   "mcellseg_more_n40_s0": 82.87253379821777,
+   "mcellseg_more_n40_s1": 82.32564926147461,
+   "mcellseg_more_n120_s0": 76.69906616210938
+  },
+  {
+   "name": "JP_Polymers_3h_17h_20x_P1_1_BF.tif",
+   "setup": "jp_bf_2048",
+   "unit": "jp|polymers|p1",
+   "gt": 70.69711685180664,
+   "cluster": "jp_bf_2048/jp|polymers|p1",
+   "Z": 14.867472648620605,
+   "A": 92.67942905426025,
+   "mcellseg_more_n169": 87.89534568786621,
+   "mcellseg_more_n40_s0": 94.83363628387451,
+   "mcellseg_more_n40_s1": 93.89474391937256,
+   "mcellseg_more_n120_s0": 85.3886604309082
+  },
+  {
+   "name": "Lipo_20x_1_BF.tif",
+   "setup": "bf_20x_3440",
+   "unit": "lipo",
+   "gt": 25.307514196863167,
+   "cluster": "bf_20x_3440/lipo",
+   "Z": 0.3094493645213629,
+   "A": 26.784664007571664,
+   "mcellseg_more_n169": 27.07894469983775,
+   "mcellseg_more_n40_s0": 30.908742901568413,
+   "mcellseg_more_n40_s1": 27.6521007977285,
+   "mcellseg_more_n120_s0": 27.153266968631694
+  },
+  {
+   "name": "P3_Hep_20x_1_BF.tif",
+   "setup": "bf_20x_3440",
+   "unit": "p3|hep",
+   "gt": 64.52640785559763,
+   "cluster": "bf_20x_3440/p3|hep",
+   "Z": 0.847645686857761,
+   "A": 70.22647376960519,
+   "mcellseg_more_n169": 68.39446153326122,
+   "mcellseg_more_n40_s0": 72.23487358031369,
+   "mcellseg_more_n40_s1": 71.23970727420227,
+   "mcellseg_more_n120_s0": 69.61406503515414
+  },
+  {
+   "name": "P3_si_20x_1_BF.tif",
+   "setup": "bf_20x_3440",
+   "unit": "p3|si",
+   "gt": 37.745335316387234,
+   "cluster": "bf_20x_3440/p3|si",
+   "Z": 1.6922745402920498,
+   "A": 40.68465217685235,
+   "mcellseg_more_n169": 40.030007774472686,
+   "mcellseg_more_n40_s0": 41.94701527852893,
+   "mcellseg_more_n40_s1": 41.02457409410492,
+   "mcellseg_more_n120_s0": 40.454865805840996
+  },
+  {
+   "name": "P4_Hep_20x_1_BF.tif",
+   "setup": "bf_20x_3440",
+   "unit": "p4|hep",
+   "gt": 43.87057193077339,
+   "cluster": "bf_20x_3440/p4|hep",
+   "Z": 1.172373580313683,
+   "A": 46.79166948350459,
+   "mcellseg_more_n169": 45.972713290968095,
+   "mcellseg_more_n40_s0": 48.49610431314224,
+   "mcellseg_more_n40_s1": 48.73566792861006,
+   "mcellseg_more_n120_s0": 46.90850628718226
+  },
+  {
+   "name": "P4_si_20x_2_BF.tif",
+   "setup": "bf_20x_3440",
+   "unit": "p4|si",
+   "gt": 20.640515143320716,
+   "cluster": "bf_20x_3440/p4|si",
+   "Z": 2.462412114656571,
+   "A": 21.854330043266632,
+   "mcellseg_more_n169": 21.263013791238507,
+   "mcellseg_more_n40_s0": 22.016055976203354,
+   "mcellseg_more_n40_s1": 22.167328623580314,
+   "mcellseg_more_n120_s0": 21.876047863710113
+  },
+  {
+   "name": "Polymer_Test_026.tif",
+   "setup": "polymer_lowmag",
+   "unit": "polymer|test",
+   "gt": 21.203383738033754,
+   "cluster": "polymer_lowmag/polymer|test",
+   "Z": 0.9305059067663735,
+   "A": 20.147068228278822,
+   "mcellseg_more_n169": 20.790781166269355,
+   "mcellseg_more_n40_s0": 19.622879926256388,
+   "mcellseg_more_n40_s1": 21.23139043317757,
+   "mcellseg_more_n120_s0": 20.978889126566006
+  },
+  {
+   "name": "Polymer_Test_146.tif",
+   "setup": "polymer_lowmag",
+   "unit": "polymer|test",
+   "gt": 53.56068761167031,
+   "cluster": "polymer_lowmag/polymer|test",
+   "Z": 17.705840210806418,
+   "A": 50.77800836271133,
+   "mcellseg_more_n169": 52.267439064540355,
+   "mcellseg_more_n40_s0": 46.95819014255574,
+   "mcellseg_more_n40_s1": 55.50167019942515,
+   "mcellseg_more_n120_s0": 51.2758005427994
+  },
+  {
+   "name": "Polymer_Test_147.tif",
+   "setup": "polymer_lowmag",
+   "unit": "polymer|test",
+   "gt": 29.6097316938308,
+   "cluster": "polymer_lowmag/polymer|test",
+   "Z": 17.570762789962874,
+   "A": 26.618710339924696,
+   "mcellseg_more_n169": 27.534795544906395,
+   "mcellseg_more_n40_s0": 27.81495036730825,
+   "mcellseg_more_n40_s1": 29.79804628873851,
+   "mcellseg_more_n120_s0": 28.82477158429658
+  },
+  {
+   "name": "Polymer_Test_149.tif",
+   "setup": "polymer_lowmag",
+   "unit": "polymer|test",
+   "gt": 39.484316852737905,
+   "cluster": "polymer_lowmag/polymer|test",
+   "Z": 14.821690590111642,
+   "A": 32.320893141945774,
+   "mcellseg_more_n169": 34.45295055821372,
+   "mcellseg_more_n40_s0": 31.31345029239766,
+   "mcellseg_more_n40_s1": 38.30877192982456,
+   "mcellseg_more_n120_s0": 34.309728867623605
+  },
+  {
+   "name": "Polymer_Test_150.tif",
+   "setup": "polymer_lowmag",
+   "unit": "polymer|test",
+   "gt": 27.54762616614957,
+   "cluster": "polymer_lowmag/polymer|test",
+   "Z": 11.790217502224435,
+   "A": 23.445984292003317,
+   "mcellseg_more_n169": 25.61993236287728,
+   "mcellseg_more_n40_s0": 22.78867964387569,
+   "mcellseg_more_n40_s1": 26.781382425447887,
+   "mcellseg_more_n120_s0": 24.055130162970016
+  },
+  {
+   "name": "Polymer_Test_164.tif",
+   "setup": "polymer_lowmag",
+   "unit": "polymer|test",
+   "gt": 57.91142592347411,
+   "cluster": "polymer_lowmag/polymer|test",
+   "Z": 23.061256013063243,
+   "A": 54.81265722229578,
+   "mcellseg_more_n169": 56.80325698397988,
+   "mcellseg_more_n40_s0": 55.73690365859041,
+   "mcellseg_more_n40_s1": 63.06291098459773,
+   "mcellseg_more_n120_s0": 59.026876737720116
+  },
+  {
+   "name": "Polymer_Test_165.tif",
+   "setup": "polymer_lowmag",
+   "unit": "polymer|test",
+   "gt": 75.63744062276345,
+   "cluster": "polymer_lowmag/polymer|test",
+   "Z": 34.14579478546906,
+   "A": 82.90600272366262,
+   "mcellseg_more_n169": 82.85901104149953,
+   "mcellseg_more_n40_s0": 70.78091210236767,
+   "mcellseg_more_n40_s1": 78.67103194661497,
+   "mcellseg_more_n120_s0": 82.45973632101501
+  },
+  {
+   "name": "Polymer_Test_27.tif",
+   "setup": "polymer_lowmag",
+   "unit": "polymer|test",
+   "gt": 71.4841792186552,
+   "cluster": "polymer_lowmag/polymer|test",
+   "Z": 19.89385765913108,
+   "A": 71.6480585085336,
+   "mcellseg_more_n169": 75.89754411881083,
+   "mcellseg_more_n40_s0": 70.61697090400696,
+   "mcellseg_more_n40_s1": 73.95555804690179,
+   "mcellseg_more_n120_s0": 73.13814001952042
+  },
+  {
+   "name": "Polymer_Test_61.tif",
+   "setup": "polymer_lowmag",
+   "unit": "polymer|test",
+   "gt": 89.60166537805432,
+   "cluster": "polymer_lowmag/polymer|test",
+   "Z": 40.07998600935164,
+   "A": 93.877710688119,
+   "mcellseg_more_n169": 93.65020924610042,
+   "mcellseg_more_n40_s0": 84.48295963575224,
+   "mcellseg_more_n40_s1": 94.55162426518416,
+   "mcellseg_more_n120_s0": 93.46244001816329
+  }
+ ],
+ "verdict": "more images read these setups better"
+}
