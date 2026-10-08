@@ -12,9 +12,11 @@ SPACES_ZERO_GPU is unset and zerogpu.py is not used. app.py (the raw-output
 page, its own ZeroGPU Space) is kept beside it; the README frontmatter's
 app_file picks which one runs.
 
-`demo/`, the anomaly banks and `culture/`, `config/`, `configs/` are mirrored
-in by deploy/sync_space.py. The startup log states what the call depends on:
-`cuda: True`, whether the banks verified, and the model warm-up time.
+`demo/`, the anomaly banks, the fine-tuned demo set's images and `culture/`,
+`config/`, `configs/` are mirrored in by deploy/sync_space.py. The startup log
+states what the call depends on: `cuda: True`, whether the banks verified,
+whether the fine-tuned demo set is on and its weights match, and the model
+warm-up time.
 """
 from __future__ import annotations
 
@@ -32,9 +34,44 @@ sys.path.insert(0, ROOT)
 
 import zerogpu  # noqa: E402
 
+# The approved fine-tuned model's demo set (demo/lab_demo.py): four test images
+# from the lab it was trained on get its reading beside the shipped one, and it
+# decides nothing; uploads never get it. On by default here; a Space variable
+# CULTUREQC_FINETUNED set to empty turns it off without a republish. The weights
+# are not in this Space: they come from a private model repo, read with the
+# CULTUREQC_HF_TOKEN secret. If they can't be fetched, the set stays off and the
+# console runs as before.
+FINETUNED = "mcellseg_ftF_r2"
+FINETUNED_REPO = "LongGrainRice/cultureqc-finetuned"
+os.environ.setdefault("CULTUREQC_FINETUNED", FINETUNED)
+
+
+def finetuned_setup() -> None:
+    from demo import lab_demo
+
+    model = lab_demo.model_id()
+    if not model:
+        print("cultureQC console: fine-tuned demo set off", flush=True)
+        return
+    repo = os.environ.get("CULTUREQC_FINETUNED_REPO", FINETUNED_REPO)
+    path, how = lab_demo.fetch_weights(model, repo, token=os.environ.get("CULTUREQC_HF_TOKEN") or None)
+    if path is None:
+        os.environ[lab_demo.MODEL_ENV] = ""              # before demo.app is imported: no buttons
+        print(f"cultureQC console: fine-tuned demo set OFF: {how}", flush=True)
+        return
+    from culture.approvals import check
+
+    c = check("model", model, path)
+    n = len(lab_demo.available())
+    print(f"cultureQC console: fine-tuned demo set on: {model} ({how}), weights {c.status}"
+          + ("" if c.ok else f" ({c.reason}; every reading will be refused)")
+          + f", {n} of {len(lab_demo.IMAGES)} demo images present", flush=True)
+
 
 def startup_report() -> None:
     import torch
+
+    finetuned_setup()
 
     if zerogpu.ZERO_GPU:
         # No GPU in this process: asking torch.cuda for a device name here
@@ -70,6 +107,12 @@ def startup_report() -> None:
 
         t0 = time.perf_counter()
         analyze_image(np.full((512, 512), 128, np.uint8), os.path.join(ROOT, "console.py"), "unknown", 80.0)
+        from demo import lab_demo
+
+        if lab_demo.model_id():
+            from culture.finetuned import preload
+
+            preload(lab_demo.model_id())
         print(f"cultureQC console: models warmed up in {time.perf_counter() - t0:.1f} s", flush=True)
 
     # Dry run (Thu Oct 1): parity + latency report in the log, for results/live_latency_gpu.md.

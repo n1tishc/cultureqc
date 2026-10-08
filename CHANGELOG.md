@@ -3,6 +3,19 @@
 Changes that affect what a record says, what the rules decide, or what a
 viewer is told. Commit hashes are on branch `slice-1b-compute-cache` unless a section names another.
 
+## Run-time model check and the fine-tuned demo set (from 2026-10-07, branch `confluency-evidence-v2`)
+
+- **Schema 0.5.** Every record gains `model_check`: before Cellpose-SAM reads an image, its weights' SHA-256 is
+  compared with the latest approved `model` change record in `configs/approved_changes.jsonl`; on a mismatch
+  nothing is read and no record is written (`culture/approvals.py`, `f554898`).
+- **`finetuned_reading`.** A fine-tuned model's reading can be recorded beside the shipped one. It decides
+  nothing: the rules, the anomaly check and the rationale use the shipped reading only. Its weights are checked
+  the same way, and a refusal is recorded with `confluency_pct` null (`culture/finetuned.py`, `docs/FINE_TUNING.md`).
+- **The console's fine-tuned demo set.** Four mCellSeg test images get the reading of `mcellseg_ftF_r2`
+  (`not_validated`), matched by the SHA-256 of the exact file; every other image, including any upload, has
+  `finetuned_reading: null` (`demo/lab_demo.py`). The weights are not in the Space; it downloads them at startup
+  from a private model repo, and without them the demo set is off.
+
 ## Confluency calibration profiles (from 2026-10-02, branch `confluency-calibration`)
 
 The confluency reading is now calibrated per imaging setup and carries a

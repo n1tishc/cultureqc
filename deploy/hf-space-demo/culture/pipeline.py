@@ -28,9 +28,12 @@ def config_hashes() -> dict:
     from culture.anomaly import ANOMALY_CONFIG_PATH
     from culture.profiles import PROFILES_PATH
     from culture.quality import _DEFAULT_CONFIG_PATH as QUALITY_CONFIG_PATH
+    from culture.approvals import APPROVALS_PATH
+    from culture.finetuned import CONFIG_PATH as FINETUNED_CONFIG_PATH
     paths = {"qc.yaml": QC_CONFIG_PATH, "calibration.yaml": DEFAULT_CALIBRATION_PATH,
              "detectability.yaml": detectability.DEFAULT_PATH, "anomaly.yaml": ANOMALY_CONFIG_PATH,
-             "confluency_profiles.yaml": PROFILES_PATH, "quality.yaml": QUALITY_CONFIG_PATH}
+             "confluency_profiles.yaml": PROFILES_PATH, "quality.yaml": QUALITY_CONFIG_PATH,
+             "approved_changes.jsonl": APPROVALS_PATH, "finetuned_models.yaml": FINETUNED_CONFIG_PATH}
     return {name: hash_file(p) for name, p in paths.items() if os.path.exists(p)}
 
 
@@ -52,6 +55,7 @@ def analyze(
     imager_id: str | None = None,
     fov: dict | None = None,
     environment: dict | None = None,
+    finetuned_id: str | None = None,
 ) -> dict:
     """
     Full pipeline: profile + quality gate + confluency + anomaly + QC + rules
@@ -61,6 +65,12 @@ def analyze(
     imager_id, fov, environment, protocol_stage, and profile_id (which
     imaging setup took the image). Returns the finalized record (already
     appended to the log).
+
+    The shipped model's weights are checked against the approvals log before
+    it reads (culture/approvals.py); a mismatch raises approvals.NotApproved
+    and no record is written, because there is no reading. finetuned_id adds a
+    fine-tuned model's reading beside the shipped one (culture/finetuned.py):
+    recorded, never used in the decision, refused if its weights don't match.
     """
     import cv2
     import numpy as np
@@ -87,6 +97,12 @@ def analyze(
         {"on_visual": segmentation_ready} if observer or details is not None else {}))
     emit({"stage": "segmentation", "status": "complete", "visuals": dict(visuals),
           "confluency_pct": conf_result.pct})
+
+    # ── A fine-tuned model's reading: shown beside the shipped one, never decides ──
+    finetuned = None
+    if finetuned_id:
+        from culture.finetuned import read as finetuned_read
+        finetuned = finetuned_read(img, finetuned_id)
 
     # ── Per-image anomaly (B2): shown for review; a flag holds a passage (rules v0.3).
     #    Its density bins were calibrated on the reading at Cellpose's default cutoff. ──
@@ -191,6 +207,8 @@ def analyze(
             "vlm": rat["method"],
         },
         "model_weights_hash": weights_hashes(),
+        "model_check": conf_result.extra["model_check"],
+        "finetuned_reading": finetuned,
         "config_hashes": config_hashes(),
     }
 

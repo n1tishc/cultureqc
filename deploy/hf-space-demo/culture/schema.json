@@ -42,8 +42,11 @@
         },
         "schema_version": {
           "type": "string",
-          "const": "0.4",
-          "description": "0.4: three record types in one chain (reading, review, change); a reading names its confluency profile and error band; reviews are separate records; host-platform keys (lineage, imager, field of view, environment); reimage action; weights hashed."
+          "enum": [
+            "0.4",
+            "0.5"
+          ],
+          "description": "0.4: three record types in one chain (reading, review, change); a reading names its confluency profile and error band; reviews are separate records; host-platform keys (lineage, imager, field of view, environment); reimage action; weights hashed. 0.5: a reading records the run-time check of the shipped model's weights against the approvals log (model_check) and, when asked for, a fine-tuned model's reading that decides nothing (finetuned_reading)."
         },
         "record_hash": {
           "type": "string",
@@ -470,9 +473,163 @@
             "reasons"
           ],
           "additionalProperties": false
+        },
+        "model_check": {
+          "type": "object",
+          "required": [
+            "id",
+            "status",
+            "sha256",
+            "approved_sha256",
+            "approvals_head"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "status": {
+              "enum": [
+                "match",
+                "mismatch",
+                "missing_file",
+                "not_approved",
+                "approvals_unavailable"
+              ]
+            },
+            "sha256": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "approved_sha256": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "approvals_head": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "record_hash of the approvals log's last record when the check ran"
+            }
+          },
+          "additionalProperties": false,
+          "description": "The shipped model's weights checked against the latest approved change record for it in configs/approved_changes.jsonl (culture/approvals.py). A reading exists only when the status is match: on any other status the model does not read."
+        },
+        "finetuned_reading": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "A fine-tuned model's reading of the same image (culture/finetuned.py), beside the shipped one. Never used in the decision. If its weights do not match the approved change record, confluency_pct is null and check gives the status and reason.",
+          "required": [
+            "id",
+            "base",
+            "status",
+            "cutoff",
+            "band_pp",
+            "check",
+            "reason",
+            "confluency_pct",
+            "used_in_decision"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "base": {
+              "type": "string"
+            },
+            "status": {
+              "enum": [
+                "not_validated"
+              ]
+            },
+            "cutoff": {
+              "type": "number"
+            },
+            "band_pp": {
+              "type": "null"
+            },
+            "check": {
+              "type": "object",
+              "required": [
+                "id",
+                "status",
+                "sha256",
+                "approved_sha256",
+                "approvals_head"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "status": {
+                  "enum": [
+                    "match",
+                    "mismatch",
+                    "missing_file",
+                    "not_approved",
+                    "approvals_unavailable"
+                  ]
+                },
+                "sha256": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "approved_sha256": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "approvals_head": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "record_hash of the approvals log's last record when the check ran"
+                }
+              },
+              "additionalProperties": false
+            },
+            "reason": {
+              "type": "string"
+            },
+            "confluency_pct": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 100
+            },
+            "used_in_decision": {
+              "const": false
+            }
+          },
+          "additionalProperties": false
         }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "if": {
+        "properties": {
+          "schema_version": {
+            "const": "0.5"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "model_check",
+          "finetuned_reading"
+        ]
+      }
     },
     {
       "type": "object",
@@ -505,7 +662,10 @@
         },
         "schema_version": {
           "type": "string",
-          "const": "0.4"
+          "enum": [
+            "0.4",
+            "0.5"
+          ]
         },
         "recorded_at": {
           "type": "string",
@@ -623,7 +783,10 @@
         },
         "schema_version": {
           "type": "string",
-          "const": "0.4"
+          "enum": [
+            "0.4",
+            "0.5"
+          ]
         },
         "recorded_at": {
           "type": "string",

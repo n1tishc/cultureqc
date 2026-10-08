@@ -54,7 +54,8 @@ _warm_weights()
 # labelled as precomputed; Analyze re-runs them live.
 EXAMPLES = precomputed.load()
 # The approved fine-tuned model's demo set (demo/lab_demo.py): empty unless CULTUREQC_FINETUNED is set, as on the
-# Colab-hosted console (nb/11_lab_demo.ipynb). With it empty, nothing below changes.
+# console Space (deploy/hf-space-demo/console.py) and the Colab console (nb/11_lab_demo.ipynb). With it empty,
+# nothing below changes.
 LAB_IMAGES = lab_demo.available()
 if LAB_IMAGES:
     CELL_LINES = CELL_LINES[:-1] + lab_demo.CELL_LINES + CELL_LINES[-1:]

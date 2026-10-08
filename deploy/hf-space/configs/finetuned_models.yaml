@@ -1,0 +1,29 @@
+# Fine-tuned segmentation models (culture/finetuned.py).
+#
+# A fine-tuned model reads an image beside the shipped model and decides
+# nothing: its reading goes into the record's `finetuned_reading`, never into
+# the rules. Before it loads, its weights are checked against the latest
+# approved change record for its id in configs/approved_changes.jsonl; a
+# mismatch is recorded as a refusal, with no reading.
+#
+# status: not_validated (shown, never decides). A fine-tuned model reads at
+# Cellpose's default cutoff with no error band, as a profile that is not
+# validated does (culture/profiles.py).
+#
+# path: the weights file, relative to the repository (cache/ is not tracked);
+# CULTUREQC_WEIGHTS_DIR, if set, is searched first for the file's name.
+
+version: 1
+models:
+  mcellseg_ftF_r2:
+    label: Fine-tuned on mCellSeg (79 images, 4 imaging setups)
+    base: cpsam_v2
+    status: not_validated
+    cutoff: 0.0
+    path: cache/finetune/mcellseg_ftF_r2/models/mcellseg_ftF_r2
+    description: Cellpose-SAM fine-tuned with the documented recipe on the 79 calibration images of the mCellSeg
+      passage-range test, retrained for the before/after picture. Not validated; its readings decide nothing.
+    evidence:
+      - results/confluency_mcellseg.md
+      - results/confluency_mcellseg_swap.md
+      - results/confluency_finetune_figure.md

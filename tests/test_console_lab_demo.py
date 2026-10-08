@@ -1,5 +1,6 @@
 """The fine-tuned model's demo set in the console (demo/lab_demo.py): off unless CULTUREQC_FINETUNED is set, and
-when on, the fine-tuned model reads only the listed images, matched by the exact file. No model is loaded."""
+when on, the fine-tuned model reads only the listed images, matched by the exact file; its weights are downloaded
+to the configured path, never checked or trusted here. No model is loaded and nothing is downloaded."""
 
 import json
 import os
@@ -69,11 +70,11 @@ def lab(monkeypatch, tmp_path):
 
 
 @requires("gradio")
-def test_public_console_never_reads_the_finetuned_model(monkeypatch, tmp_path):
+def test_console_without_the_variable_never_reads_the_finetuned_model(monkeypatch, tmp_path):
     monkeypatch.delenv(lab_demo.MODEL_ENV, raising=False)
     import importlib
     from demo import app
-    app = importlib.reload(app)                               # built as the public console builds it
+    app = importlib.reload(app)                               # built as demo/app.py builds it on its own
     assert app.LAB_IMAGES == [] and "HEK293T" not in app.CELL_LINES
     seen = _capture(monkeypatch, app)
     with pytest.raises(Stop):
@@ -128,3 +129,50 @@ def test_the_listed_files_are_the_dataset_bytes():
         pytest.skip("mCellSeg not on disk")
     for n, s in present:
         assert lab_demo.hash_file(os.path.join(lab_demo.DATA, "images", n)) == s, n
+
+
+def test_files_are_the_images_and_their_masks():
+    f = lab_demo.files()
+    assert len(f) == 2 * len(lab_demo.IMAGES) and all(p.startswith("data/sources/mcellseg/") for p in f)
+    assert sum(p.endswith("_mask.tif") for p in f) == len(lab_demo.IMAGES)
+
+
+def _weights_config(monkeypatch, tmp_path):
+    import culture.finetuned as ft
+    target = tmp_path / "w" / "mcellseg_ftF_r2"
+    monkeypatch.setattr(ft, "load_config", lambda *a, **k: {"mcellseg_ftF_r2": {"path": str(target)}})
+    monkeypatch.setattr(ft, "weights_file", lambda entry: entry["path"])
+    return target
+
+
+def test_fetch_weights_downloads_to_the_configured_path(monkeypatch, tmp_path):
+    import huggingface_hub
+    target = _weights_config(monkeypatch, tmp_path)
+    seen = []
+
+    def fake(repo_id, filename, local_dir=None, token=None):
+        seen.append((repo_id, filename, local_dir, token))
+        os.makedirs(local_dir, exist_ok=True)
+        open(os.path.join(local_dir, filename), "wb").write(b"w")
+        return os.path.join(local_dir, filename)
+
+    monkeypatch.setattr(huggingface_hub, "hf_hub_download", fake)
+    path, how = lab_demo.fetch_weights("mcellseg_ftF_r2", "owner/private", token="t")
+    assert path == str(target) and target.exists() and "owner/private" in how
+    assert seen == [("owner/private", "mcellseg_ftF_r2", str(target.parent), "t")]
+    assert lab_demo.fetch_weights("mcellseg_ftF_r2", "owner/private") == (str(target), "already on disk")
+    assert len(seen) == 1                                     # no second download
+
+
+def test_fetch_weights_failure_turns_nothing_on(monkeypatch, tmp_path):
+    import huggingface_hub
+    _weights_config(monkeypatch, tmp_path)
+
+    def fail(*a, **k):
+        raise OSError("401 Client Error\nsecret details")
+
+    monkeypatch.setattr(huggingface_hub, "hf_hub_download", fail)
+    path, why = lab_demo.fetch_weights("mcellseg_ftF_r2", "owner/private", token="hf_secret")
+    assert path is None and "owner/private" in why and "401" in why
+    assert "secret details" not in why and "hf_secret" not in why
+    assert lab_demo.fetch_weights("other", "owner/private")[0] is None

@@ -28,14 +28,21 @@ DURATION_S = 60
 
 def load_models() -> None:
     """Cellpose-SAM, the QC classifier and DINOv2, loaded onto "cuda" once in
-    the main process. Loading only: a forward pass here would have no GPU."""
+    the main process. Loading only: a forward pass here would have no GPU.
+    With the fine-tuned demo set on (demo/lab_demo.py), the fine-tuned model
+    too, if its weights pass the approvals check."""
     from culture.cache import _get_dino
     from culture.qc import _get_model as qc_model
     from culture.seg import _get_model as seg_model
+    from demo import lab_demo
 
     seg_model()
     qc_model()
     _get_dino()
+    if lab_demo.model_id():
+        from culture.finetuned import preload
+
+        preload(lab_demo.model_id())
 
 
 def wrap_live_analysis(app_module) -> None:

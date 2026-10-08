@@ -35,6 +35,16 @@ hash-chained record.
   no GPU. **Analyze** runs any image live, with the setup picked in the
   console, on a GPU attached for that call only (ZeroGPU): median 3.28 s,
   measured before the calibration profiles (`results/live_latency_zerogpu.md`).
+- **Fine-tuned demo set.** Four test images from one lab (mCellSeg, Alam et al.
+  2026, CC BY 4.0, Zenodo record 20174259) have buttons under the examples.
+  For these four only, a Cellpose-SAM model fine-tuned on 79 other images from
+  that lab (`mcellseg_ftF_r2`) reads the image too, and its reading is shown
+  in a second card beside the shipped one: "not validated", it decides
+  nothing, and the record keeps it in `finetuned_reading`. The images are
+  matched by the SHA-256 of the exact file, so an upload never gets the
+  fine-tuned reading. Before every reading its weights are checked against the
+  approved change record (`configs/approved_changes.jsonl`); a mismatch shows
+  "No reading". Results: `results/confluency_mcellseg.md`.
 - **Calibration profiles.** One per imaging setup (`configs/confluency_profiles.yaml`):
   a cutoff fitted on labelled images from that setup and a 90% error band
   measured on images left out of the fit (`results/confluency_profiles.md`).
@@ -60,12 +70,14 @@ rewrite or a deleted tail; that takes an anchored checkpoint
 **Licences.** `license: mit` above covers the code. Model weights and datasets
 carry their own licences: the Cellpose-SAM weights are trained on CC BY-NC
 data, so the pipeline as built is not cleared for commercial use pending
-review (README, "Licences and commercial use").
+review (README, "Licences and commercial use"). The fine-tuned weights inherit
+those terms; they are not in this Space and not published. The four demo
+images are mCellSeg's, CC BY 4.0.
 
 ## Running and publishing
 
 ```bash
-python deploy/sync_space.py   # mirrors culture/, config/, configs/, demo/ and the anomaly banks in
+python deploy/sync_space.py   # mirrors culture/, config/, configs/, demo/, the anomaly banks and the demo images in
 cd deploy/hf-space-demo
 pip install -r requirements.txt
 python console.py              # http://127.0.0.1:7860
@@ -73,14 +85,25 @@ python console.py              # http://127.0.0.1:7860
 
 - **Publish:** `.venv/bin/python deploy/publish_demo_space.py` from the repo
   root. It syncs first and refuses to upload unless the anomaly banks match
-  `configs/anomaly.yaml`. Then run `scripts/space_dry_run.py`.
+  `configs/anomaly.yaml` and the four demo images are the listed files, or if
+  any file over 500 MB (weights) is in the folder. Then run
+  `scripts/space_dry_run.py`.
+- **Fine-tuned weights:** downloaded at startup from the private model repo
+  `LongGrainRice/cultureqc-finetuned` (uploaded once with
+  `scripts/upload_finetuned_weights.py`), read with the Space secret
+  `CULTUREQC_HF_TOKEN` (a read-only token for that repo). Without them the
+  demo set stays off and the console runs as before. The Space variable
+  `CULTUREQC_FINETUNED` set to empty turns the demo set off without a
+  republish.
 - **Hardware:** ZeroGPU. `zerogpu.py` is used only when `SPACES_ZERO_GPU` is
   set; a dedicated GPU tier, CPU, and the Mac (`deploy/run_console_mac.sh`)
   and Colab (`nb/05_console_colab.ipynb`) backups run `console.py` without it.
   On CPU the precomputed examples and replays still work; a live Analyze
   takes minutes (V9: 689 s per FOV).
-- **Startup log:** `cuda: True`, `anomaly banks verified`, and the model
-  warm-up time. Anything else means the call runs on the precomputed examples.
+- **Startup log:** `cuda: True`, `anomaly banks verified`,
+  `fine-tuned demo set on: … weights match, 4 of 4 demo images present`, and
+  the model warm-up time. Anything else means the call runs on the precomputed
+  examples, or without the demo set.
 - **Gradio:** the console uses Gradio 6 APIs, so `sdk_version` is 6.26.0.
 
 ## The raw-output page (`app.py`)

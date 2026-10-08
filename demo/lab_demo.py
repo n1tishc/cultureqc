@@ -1,11 +1,14 @@
 """
 demo/lab_demo.py — the approved fine-tuned model's demo set, for the Colab-hosted console only.
 
-Off unless CULTUREQC_FINETUNED names a fine-tuned model (configs/finetuned_models.yaml); the Colab launcher
-(nb/11_lab_demo.ipynb) sets it and the public console never does. When it is on, the fine-tuned model reads only
-the images listed here, each matched by the SHA-256 of the exact file analysed: never an upload, so its reading is
-never shown for a lab it was not trained on. The fine-tuned reading is shown beside the shipped one and decides
-nothing (culture/finetuned.py).
+Off unless CULTUREQC_FINETUNED names a fine-tuned model (configs/finetuned_models.yaml). The console Space
+(deploy/hf-space-demo/console.py) and the Colab launcher (nb/11_lab_demo.ipynb) set it; demo/app.py run on its own
+does not. When it is on, the fine-tuned model reads only the images listed here, each matched by the SHA-256 of the
+exact file analysed: never an upload, so its reading is never shown for a lab it was not trained on. The
+fine-tuned reading is shown beside the shipped one and decides nothing (culture/finetuned.py).
+
+The weights are not in this repository. On the Space they are downloaded at startup from a private model repo
+(fetch_weights); whether they are the approved ones is checked before every reading, not here.
 
 The four images are test images of the sealed mCellSeg test (results/confluency_mcellseg.md), which the
 fine-tuned model never trained on, chosen with the repository owner for the demo: three it reads close to the
@@ -60,6 +63,33 @@ def available(data: str = DATA) -> list[dict]:
             out.append({"name": name, "path": path, "sha256": sha, "cell_line": line, "label": label,
                         "experts_pct": experts_pct(mask)})
     return out
+
+
+def files() -> list[str]:
+    """The demo images and their masks, relative to the repository root (deploy/sync_space.py copies them)."""
+    rel = os.path.relpath(DATA, REPO)
+    return [os.path.join(rel, d, n if d == "images" else n[:-4] + "_mask.tif")
+            for n, *_ in IMAGES for d in ("images", "masks")]
+
+
+def fetch_weights(model_id: str, repo_id: str, token: str | None = None) -> tuple[str | None, str]:
+    """Download a fine-tuned model's weights from a Hugging Face model repo to the path
+    configs/finetuned_models.yaml names, unless a file is already there. A private repo is read with token
+    (the Space's CULTUREQC_HF_TOKEN secret). Returns (path, what happened) or (None, why not)."""
+    from culture.finetuned import load_config, weights_file
+    entry = load_config().get(model_id)
+    if entry is None:
+        return None, f"no fine-tuned model {model_id!r} in configs/finetuned_models.yaml"
+    path = weights_file(entry)
+    if os.path.exists(path):
+        return path, "already on disk"
+    try:
+        from huggingface_hub import hf_hub_download
+        got = hf_hub_download(repo_id, os.path.basename(path), local_dir=os.path.dirname(path), token=token)
+    except Exception as e:                                    # no network, no access, no such repo or file
+        first = (str(e).strip().splitlines() or [""])[0][:200]
+        return None, f"could not download {os.path.basename(path)} from {repo_id}: {type(e).__name__} {first}"
+    return got, f"downloaded from {repo_id}"
 
 
 def match(path: str | None, images: list[dict]) -> dict | None:

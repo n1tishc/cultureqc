@@ -10,12 +10,17 @@ keeps the raw model demo, and `LongGrainRice/cultureqc-api` (see
 deploy/publish_space.py) keeps serving the product frontend. Nothing here
 touches either.
 
-Before uploading it syncs the mirrors (including the untracked `demo/` and
-anomaly banks), checks the tracked ones, and refuses to publish unless the
-banks match configs/anomaly.yaml: a missing or wrong banks file would only
-show up on the call as "Anomaly check: Unavailable". The Hub stores the 67 MB
-banks file through LFS automatically.
+Before uploading it syncs the mirrors (including the untracked `demo/`,
+anomaly banks and fine-tuned demo images), checks the tracked ones, and
+refuses to publish unless the banks match configs/anomaly.yaml and the four
+demo images are the listed files (demo/lab_demo.py): a missing or wrong banks
+file would only show up on the call as "Anomaly check: Unavailable", and
+missing images as a console without the demo set. The Hub stores the 67 MB
+banks file through LFS automatically. The fine-tuned weights are never part
+of the Space: it downloads them from a private model repo at startup
+(console.py).
 """
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -39,6 +44,17 @@ def main():
                                str(space / "cache/anomaly/banks.npz"))
     if banks is None:
         sys.exit(f"not publishing: {reason}")
+    from culture.records import hash_file
+    from demo import lab_demo
+
+    wrong = [n for n, sha, *_ in lab_demo.IMAGES
+             if not os.path.exists(os.path.join(lab_demo.DATA, "images", n))
+             or hash_file(os.path.join(lab_demo.DATA, "images", n)) != sha]
+    if wrong:
+        sys.exit(f"not publishing: fine-tuned demo images missing or not the listed files: {wrong}")
+    stray = [str(p) for p in space.rglob("*") if p.is_file() and p.stat().st_size > 500e6]
+    if stray:
+        sys.exit(f"not publishing: files over 500 MB in the Space folder (weights belong in the private repo): {stray}")
     with tempfile.TemporaryDirectory() as tmp:
         stage = Path(tmp) / "space"
         shutil.copytree(ROOT / "deploy/hf-space-demo", stage,

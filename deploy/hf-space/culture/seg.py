@@ -89,21 +89,33 @@ def threshold_confluency(img: np.ndarray) -> ConfluencyResult:
 _cp_model = None
 
 
+def _new_model(pretrained_model: str | None = None):
+    import torch
+    from cellpose import models
+    kw = {} if pretrained_model is None else {"pretrained_model": pretrained_model}
+    # Device selection, not analysis logic: the deployment target is a CPU-only
+    # container, where a hard gpu=True asks cellpose for a device that is not
+    # there. Segmentation behaviour and the reported confluency are unchanged.
+    # CULTUREQC_DEVICE=mps opts in to Apple's GPU (the call-day Mac backup,
+    # deploy/README.md); the default stays CUDA-if-present, else CPU.
+    if os.environ.get("CULTUREQC_DEVICE") == "mps" and torch.backends.mps.is_available():
+        return models.CellposeModel(gpu=True, device=torch.device("mps"), **kw)
+    return models.CellposeModel(gpu=torch.cuda.is_available(), **kw)
+
+
 def _get_model():
     global _cp_model
     if _cp_model is None:
-        import torch
-        from cellpose import models
-        # Device selection, not analysis logic: the deployment target is a CPU-only
-        # container, where a hard gpu=True asks cellpose for a device that is not
-        # there. Segmentation behaviour and the reported confluency are unchanged.
-        # CULTUREQC_DEVICE=mps opts in to Apple's GPU (the call-day Mac backup,
-        # deploy/README.md); the default stays CUDA-if-present, else CPU.
-        if os.environ.get("CULTUREQC_DEVICE") == "mps" and torch.backends.mps.is_available():
-            _cp_model = models.CellposeModel(gpu=True, device=torch.device("mps"))
-        else:
-            _cp_model = models.CellposeModel(gpu=torch.cuda.is_available())
+        _cp_model = _new_model()
     return _cp_model
+
+
+def weights_path(model) -> str | None:
+    """The weights file a loaded CellposeModel was built from."""
+    path = getattr(model, "pretrained_model", None)
+    if isinstance(path, (list, tuple)):                      # cellpose>=4 may give per-stage paths
+        path = path[0] if path else None
+    return path or None
 
 
 def cpsam_confluency(
@@ -129,8 +141,19 @@ def cpsam_confluency(
     Confidence (probmap only):
         Fraction of pixels within ±band of the cutoff. Many borderline
         pixels → low confidence.
+
+    Before the model reads the image, its weights are checked against the
+    latest approved change record for cpsam_v2 (culture/approvals.py); a
+    mismatch raises approvals.NotApproved and nothing is read.
     """
+    from culture.approvals import NotApproved, require
+    global _cp_model
     model = _get_model()
+    try:
+        model_check = require("model", "cpsam_v2", weights_path(model))
+    except NotApproved:
+        _cp_model = None             # never keep a model whose file failed the check: the next call rebuilds it
+        raise
     masks, flows, styles = model.eval(img, diameter=None, channels=[0, 0])
 
     if method == "probmap":
@@ -158,6 +181,7 @@ def cpsam_confluency(
 
     if on_visual is not None:
         on_visual(flows[2], fg)
+    extra["model_check"] = model_check.record_fields()
 
     return ConfluencyResult(
         pct=round(pct, 2),
