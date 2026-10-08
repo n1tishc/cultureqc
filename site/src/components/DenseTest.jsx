@@ -3,7 +3,8 @@ import { Fig, Path, Section, Verdict } from "./ui";
 /* The passage-range test on a dense dataset no model had seen (results/confluency_mcellseg.md, sealed,
    scored once; results/confluency_mcellseg_swap.md, its pre-registered replication with the halves
    swapped, scored once). Every number comes from data.dense_test, which build_data.py copies from those
-   results files. Not in the product: the fine-tuned weights are a measurement. */
+   results files. The fine-tuned model reads four of this lab's test images in the live console, beside the
+   shipped reading, and decides nothing (demo/lab_demo.py). */
 
 const fx = (x, d = 2) => Number(x).toFixed(d);
 const sgn = (x, d = 2) => (x >= 0 ? `+${fx(x, d)}` : `−${fx(Math.abs(x), d)}`);
@@ -205,8 +206,9 @@ export function DenseTest({ data }) {
         <Note title="It does not yet decide passage on its own.">
           Over both halves {b.F.B4_agree} of its {b.F.B4_decided} decided calls agreed with the experts, short of the {d.limits.agree * 100}% mark: passage calls on flasks at {b.wrong.F.map((x) => `${fx(x, 1)}%`).join(" and ")}. It still sends {pct(b.F.review_share)} of images to a person, and the rule that sends a reading to a person when its band includes the target stays.
         </Note>
-        <Note title="Not in the product.">
-          A fine-tuned profile would be a model of the lab’s own, trained on {d.sealed.n_train}–{d.swapped.n_train} images with every cell outlined, recorded as a change with its weights’ SHA-256, and checked on held-out images before use. Here the fine-tuned weights are a measurement; they inherit Cellpose-SAM’s non-commercial terms.
+        <Note title="In the live console, beside the shipped reading.">
+          Four of this lab’s test images have buttons in the{" "}
+          <a href={data.meta.console_url} target="_blank" rel="noreferrer">live console</a>. For those four only, a retrain of the fine-tuned model scored here (the same {d.sealed.n_train} images and recipe) reads the image too, in its own card beside the shipped reading. It is marked not validated, it decides nothing, and an upload never gets it. Before every reading its weights are checked against an approved change record. A fine-tuned model that decided would be a model of the lab’s own, trained on {d.sealed.n_train}–{d.swapped.n_train} images with every cell outlined, approved as a change, and checked on held-out images first. The weights inherit Cellpose-SAM’s non-commercial terms and are not published.
         </Note>
         <Note title="Why MSC still reads “Validated” above.">
           That status covers the criteria its test images could measure; the passage-range ones (A2–A4) were not measurable on MSC or EVICAN.{" "}

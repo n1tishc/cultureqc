@@ -4,7 +4,9 @@
 (`culture/seg.py`) and the setup's calibration profile. The pipeline can also read an image with a fine-tuned
 model, after checking its weights against an approved change record, and record that reading beside the shipped
 one; the rules never see it (step 6). One fine-tuned model is approved for this, `mcellseg_ftF_r2`, the model in
-the before/after picture (`results/confluency_finetune_figure.md`). It is not in the console Space. This page sets
+the before/after picture (`results/confluency_finetune_figure.md`). In the console Space it reads four of that
+lab's test images only, beside the shipped reading (`demo/lab_demo.py`); its weights are downloaded at startup from
+a private model repo, not published. This page sets
 out how a lab's fine-tuned profile would be made and checked, using the procedure the mCellSeg tests followed.
 
 ## Why consider it

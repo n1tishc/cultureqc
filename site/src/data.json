@@ -1,7 +1,7 @@
 {
  "meta": {
   "rules": "rules_v0.5",
-  "schema": "0.4",
+  "schema": "0.5",
   "console_url": "https://huggingface.co/spaces/LongGrainRice/cultureqc-console",
   "repo_url": "https://github.com/n1tishc/cultureqc/tree/slice-1b-compute-cache",
   "branch": "slice-1b-compute-cache",
