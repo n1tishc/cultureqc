@@ -552,6 +552,13 @@ def on_lab_image(name):
             DEFAULT_PROFILE, lab["cell_line"])
 
 
+def fresh_image():
+    """After an upload or a demo-set image: no reading yet, and the image itself on show. Without this, a 3D
+    view opened on the previous image stayed on screen above the new one's empty results."""
+    return (None, None, gr.update(visible=False), "", gr.update(visible=False), gr.update(visible=False),
+            gr.update(visible=True))
+
+
 def switch_view(choice, original_path, overlay_path, map_view):
     """Original / Overlay show the image; 3D swaps in the confluency landscape."""
     if choice == "3D" and map_view is not None:
@@ -717,8 +724,9 @@ with gr.Blocks(
                             fn=(lambda n: lambda: on_lab_image(n))(_lab["name"]), inputs=None,
                             outputs=[view_toggle, results_html, original_state, overlay_state, image_view, setup,
                                      cell_line],
-                        ).then(fn=lambda: (None, None, gr.update(visible=False), ""), inputs=None,
-                               outputs=[map_state, reading_state, review_panel, review_out], show_progress="hidden")
+                        ).then(fn=fresh_image, inputs=None,
+                               outputs=[map_state, reading_state, review_panel, review_out, landscape_plot,
+                                        landscape_note, image_view], show_progress="hidden")
 
         with gr.Tab("Flask Timeline"):
             # Precomputed replays (scripts/export_demo_replays.py): no cache, no
@@ -770,8 +778,9 @@ with gr.Blocks(
         fn=on_upload,
         inputs=[image_view],
         outputs=[view_toggle, results_html, original_state, overlay_state, image_view, setup],
-    ).then(fn=lambda: (None, None, gr.update(visible=False), ""), inputs=None,
-           outputs=[map_state, reading_state, review_panel, review_out], show_progress="hidden")
+    ).then(fn=fresh_image, inputs=None,
+           outputs=[map_state, reading_state, review_panel, review_out, landscape_plot, landscape_note, image_view],
+           show_progress="hidden")
 
     analyze_btn.click(
         fn=start_loading, inputs=None, outputs=[analyze_btn, loading_overlay], show_progress="hidden",
