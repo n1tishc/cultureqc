@@ -271,7 +271,9 @@ export default function Timeline({ replays }) {
         <div className="tl-chart">
           <div className="chart-head">
             <span className="letter on-stage">B</span>
-            <span>Confluency per visit, 0–{Math.round(r.visits.at(-1).hours)} h</span>
+            <span>
+              Confluency per visit, 0–{Math.round(r.visits.at(-1).hours)} h{f.status === "predicted" ? ", and the forecast beyond" : ""}
+            </span>
           </div>
           <Chart r={r} sel={sel} setSel={(i) => (stop(), setSel(i))} />
           <div className="visits" role="group" aria-label="Visits; arrow keys step through them" onKeyDown={onKey}>
@@ -288,6 +290,31 @@ export default function Timeline({ replays }) {
                 {x.visit + 1}
               </button>
             ))}
+          </div>
+          <div className="key" aria-label="Key">
+            <span>
+              <i style={{ background: "var(--cell)", borderRadius: "50%" }} />
+              mean of {r.visits[0].fov.length} fields
+            </span>
+            <span>
+              <i style={{ background: "rgba(44,199,218,0.35)" }} />±1 SE noise band
+            </span>
+            <span>
+              <i style={{ border: "1.6px solid var(--reimage-l)" }} />
+              quality gate failed: re-image, left out of the trend
+            </span>
+            <span>
+              <i style={{ background: "var(--anom)", transform: "rotate(45deg) scale(0.75)" }} />
+              anomaly flag
+            </span>
+            <span>
+              <i style={{ borderTop: "1.5px dashed #9be7f0", height: 0, marginTop: 6 }} />
+              growth fit and forecast interval
+            </span>
+            <span>
+              <Icon name="info" />
+              left: cell probability at the visit, fields 1–3 boxed
+            </span>
           </div>
         </div>
       </div>
@@ -319,31 +346,6 @@ export default function Timeline({ replays }) {
           <p style={{ marginTop: 8, color: "var(--stage-ink-3)" }}>
             {r.banner}. {r.caption} {r.credit}
           </p>
-        </div>
-        <div className="key" aria-label="Key">
-          <span>
-            <i style={{ background: "var(--cell)", borderRadius: "50%" }} />
-            mean of {r.visits[0].fov.length} fields
-          </span>
-          <span>
-            <i style={{ background: "rgba(44,199,218,0.35)" }} />±1 SE noise band
-          </span>
-          <span>
-            <i style={{ border: "1.6px solid var(--reimage-l)" }} />
-            quality gate failed: re-image, left out of the trend
-          </span>
-          <span>
-            <i style={{ background: "var(--anom)", transform: "rotate(45deg) scale(0.75)" }} />
-            anomaly flag
-          </span>
-          <span>
-            <i style={{ borderTop: "1.5px dashed #9be7f0", height: 0, marginTop: 6 }} />
-            growth fit and forecast interval
-          </span>
-          <span>
-            <Icon name="info" />
-            left: cell probability at the visit, fields 1–3 boxed
-          </span>
         </div>
       </div>
     </div>

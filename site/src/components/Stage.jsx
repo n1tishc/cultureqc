@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Action, Icon, actionGloss, actionWord, short } from "./ui";
+import { Action, Icon, Linked, actionGloss, actionWord, short } from "./ui";
 
 /* The first viewport: one real frame, the layers the pipeline computed for it,
    and its stored readings. Hovering or focusing a reading lights the layer it
@@ -25,7 +25,7 @@ const SHORT = {
 /* The panel's heading. The stored labels name the anomaly bank's density
    group ("20-40% bin"), which is how the console and the records file them;
    here the normal frames are named for what they show. */
-const TITLE = {
+export const TITLE = {
   c2c12_normal_0_20: "C2C12, normal culture, sparse",
   c2c12_normal_20_40: "C2C12, normal culture, mid density",
   c2c12_normal_40_100: "C2C12, normal culture, the densest example",
@@ -245,8 +245,8 @@ export default function Stage({ examples, verify, liveParity }) {
           </div>
           <div className="frame-box">
             <div
-              className="frame"
-              style={{ aspectRatio: `${ex.width} / ${ex.height}`, width: `min(100%, calc(max(300px, 100vh - 352px) * ${ex.width / ex.height}))` }}
+              className="frame stage-frame"
+              style={{ aspectRatio: `${ex.width} / ${ex.height}`, "--ar": ex.width / ex.height }}
               {...frameAttrs}
             >
               <img src={ex.image} width={ex.width} height={ex.height} alt={`${ex.label}: phase-contrast frame${ex.sequence ? `, ${ex.sequence} frame ${ex.frame}` : ""}`} />
@@ -352,7 +352,7 @@ export default function Stage({ examples, verify, liveParity }) {
       </div>
       <div className="stage-note">
         <p>
-          Hover a reading to light the layer it came from. {ex.label}. {ex.credit}.{ex.sequence ? ` Held-out ${ex.sequence}, frame ${ex.frame}.` : ""} Precomputed with the console’s own code ({DEVICE[ex.device] || ex.device}, {ex.generated_at}). {liveParity}
+          Hover a reading to light the layer it came from. {ex.label}. {ex.credit}.{ex.sequence ? ` Held-out ${ex.sequence}, frame ${ex.frame}.` : ""} Precomputed with the console’s own code ({DEVICE[ex.device] || ex.device}, {ex.generated_at}). <Linked>{liveParity}</Linked>
         </p>
       </div>
     </div>

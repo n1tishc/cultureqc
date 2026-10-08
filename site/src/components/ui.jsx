@@ -76,10 +76,19 @@ const ACTION_GLOSS = {
 
 export const actionGloss = (a) => ACTION_GLOSS[a] || "";
 
-/* A repo path that may break only at its slashes on a narrow screen. */
-export function Path({ children }) {
-  const parts = String(children).split("/");
-  return (
+/* Source files link to the repository at the commit the page was built from
+   (Vercel's commit, or git's HEAD locally; vite.config.js), so a number's file
+   is the version that number came from. The repository is build_data.py's
+   REPO_URL; the branch is the fallback when no commit is known. */
+/* eslint-disable-next-line no-undef */
+const REF = (typeof __COMMIT__ !== "undefined" && __COMMIT__) || "slice-1b-compute-cache";
+const BLOB = `https://github.com/n1tishc/cultureqc/blob/${REF}/`;
+// A path that starts a word: "site/..." matches, "website/..." does not.
+const REPO_PATH = /(?<![\w\/.-])((?:results|docs|configs|culture|scripts|tests|demo|site|deploy|nb)\/[\w.\/-]*[\w\/])/g;
+
+function OnePath({ path }) {
+  const parts = path.split("/");
+  const code = (
     <code>
       {parts.map((p, i) => (
         <span key={i}>
@@ -93,6 +102,37 @@ export function Path({ children }) {
       ))}
     </code>
   );
+  return new RegExp(`^${REPO_PATH.source}$`).test(path) ? (
+    <a className="path" href={BLOB + path} target="_blank" rel="noreferrer">
+      {code}
+    </a>
+  ) : (
+    code
+  );
+}
+
+/* A repo path, or several joined by " · ", that may break only at its slashes on a narrow screen. */
+export function Path({ children }) {
+  const paths = String(children).split(" · ");
+  return paths.map((p, i) => (
+    <span key={i}>
+      {i ? " · " : null}
+      <OnePath path={p} />
+    </span>
+  ));
+}
+
+/* Text from the repository's own files (README, configs) with its repo paths as links. */
+export function Linked({ children }) {
+  const text = String(children);
+  const out = [];
+  let last = 0;
+  for (const m of text.matchAll(REPO_PATH)) {
+    out.push(text.slice(last, m.index), <OnePath key={m.index} path={m[0]} />);
+    last = m.index + m[0].length;
+  }
+  out.push(text.slice(last));
+  return out;
 }
 
 const VERDICT_ICON = { pass: "check", fail: "cross", mixed: "mixed", none: "none", info: "info", untested: "none" };

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://cultureqc-cvoy.vercel.app/sitemap.xml

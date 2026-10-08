@@ -1,4 +1,4 @@
-import { Fig, Icon, Path, Section, Verdict } from "./ui";
+import { Fig, Icon, Linked, Path, Section, Verdict } from "./ui";
 
 /* Every number below is looked up from data.json, which build_data.py copies
    from the README tables (checked against their sources by the test suite),
@@ -34,7 +34,7 @@ export function ErrorFigure({ data, letter = "A" }) {
       title="Error against expert masks"
       legend={
         <>
-          Mean absolute error in percentage points, n = {n} EVICAN images (real). {v1.result}. The calibration study scored the same {n} images again in a separate run: {rescored} pp at this cutoff. Source: <Src>{r.source}</Src>.
+          Mean absolute error in percentage points, n = {n} EVICAN images (real). <Linked>{v1.result}</Linked>. The calibration study scored the same {n} images again in a separate run: {rescored} pp at this cutoff. Source: <Src>{r.source}</Src>.
         </>
       }
     >
@@ -181,7 +181,8 @@ export function Detectability({ data }) {
         <>
           <p>Each fault type has a row: what was tested, on what, and what to confirm it with. The matrix’s SHA-256 is in every record, so a reading can be traced to the limits that applied when it was made.</p>
           <p className="sources">
-            {d.tested_setup} Source: <Src>configs/detectability.yaml</Src>.
+            {/* The matrix is hashed into every record, so its wording stays; only this display says "quarter-frame". */}
+            {d.tested_setup.replace("0.25-frac fields of view", "quarter-frame fields of view")} Source: <Src>configs/detectability.yaml</Src>.
           </p>
         </>
       }
@@ -206,7 +207,9 @@ export function Detectability({ data }) {
                     <Verdict k={k}>{word}</Verdict>
                     {r.detectable_here.toLowerCase() !== word.toLowerCase() ? <span className="verdict-note">{r.detectable_here}</span> : null}
                   </td>
-                  <td style={{ fontSize: 13.5, minWidth: 280 }}>{r.evidence}</td>
+                  <td style={{ fontSize: 13.5, minWidth: 280 }}>
+                    <Linked>{r.evidence}</Linked>
+                  </td>
                   <td>{r.confirm_with}</td>
                 </tr>
               );
@@ -304,7 +307,9 @@ export function Validation({ data }) {
                   <span className="vid">{x.id}</span>
                   {x.check}
                 </td>
-                <td style={{ minWidth: 300 }}>{x.result}</td>
+                <td style={{ minWidth: 300 }}>
+                  <Linked>{x.result}</Linked>
+                </td>
                 <td style={{ minWidth: 180 }}>
                   <Verdict k={x.kind}>{VERDICT_WORD[x.kind]}</Verdict>
                   {x.verdict.toLowerCase() !== VERDICT_WORD[x.kind].toLowerCase() ? <span className="verdict-note">{x.verdict}</span> : null}
@@ -324,13 +329,15 @@ export function Validation({ data }) {
         <Fig title="What changed because of it">
           <ul style={{ margin: 0, paddingLeft: 18, color: "var(--ink-2)", fontSize: 14.5, lineHeight: 1.6, display: "grid", gap: 8 }}>
             {data.decisions.map((d) => (
-              <li key={d}>{d}</li>
+              <li key={d}>
+                <Linked>{d}</Linked>
+              </li>
             ))}
           </ul>
         </Fig>
         <Fig title="What this does not prove">
           <p style={{ margin: 0, color: "var(--ink-2)", fontSize: 14.5, lineHeight: 1.6 }}>
-            {data.not_proven} Full report: <Src>docs/ARCHITECTURE_VALIDATION.md</Src>.
+            <Linked>{data.not_proven}</Linked> Full report: <Src>docs/ARCHITECTURE_VALIDATION.md</Src>.
           </p>
         </Fig>
       </div>

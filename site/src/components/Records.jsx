@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { checkCheckpoint, rewriteFrom, verifyChain } from "../lib/verify";
 import { row } from "./Sections";
+import { TITLE } from "./Stage";
 import { Icon, Path, actionWord, short } from "./ui";
 
 /* The stored records, re-hashed in this browser from the exact bytes
@@ -170,7 +171,7 @@ export default function Records({ examples, data }) {
               onClick={() => setSel(i)}
             >
               <span className="n">#{i + 1}</span>
-              <b>{e.label}</b>
+              <b>{TITLE[e.id] || e.label}</b>
               <span className="h">
                 {gone ? "—" : rehashed ? <b className="changed">{short(recs[i].record_hash, 8)}</b> : short(recs[i].record_hash, 8)}
               </span>

@@ -503,6 +503,24 @@ code,
   border-color: var(--anom);
 }
 
+/* The hero frame: on narrow screens as wide as fits the first view; beside
+   the readout rail, as large as the panel's height allows (the rail sets it). */
+.frame.stage-frame {
+  width: min(100%, calc(max(300px, 100vh - 352px) * var(--ar)));
+}
+
+@media (min-width: 1081px) {
+  .viewer .frame-box {
+    container-type: size;
+    min-height: 360px;
+    place-items: center;
+  }
+
+  .frame.stage-frame {
+    width: min(100cqw, 100cqh * var(--ar));
+  }
+}
+
 .frame-box {
   position: relative;
   flex: 1;
@@ -1423,6 +1441,10 @@ td .num {
   padding: 0 16px 14px 52px;
 }
 
+.tl-chart .key {
+  padding: 4px 16px 14px 52px;
+}
+
 .visits button {
   flex: 1;
   min-width: 0;
@@ -1460,7 +1482,7 @@ td .num {
 
 .tl-foot {
   display: grid;
-  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px 32px;
   padding: 14px 18px 16px;
   border-top: 1px solid var(--stage-rule);
@@ -1471,6 +1493,7 @@ td .num {
 
 .tl-foot p {
   margin: 0;
+  max-width: 120ch;
 }
 
 .tl-foot .held {
@@ -1505,10 +1528,12 @@ td .num {
 
 /* records */
 
+/* Nine records (two approved changes, seven readings): separate cards, five
+   then four, so no row is left with one or two. */
 .chain {
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 0;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
   position: relative;
 }
 
@@ -1520,21 +1545,12 @@ td .num {
   padding: 14px 14px 14px;
   background: var(--panel);
   border: 1px solid var(--rule);
-  margin-right: -1px;
+  border-radius: 8px;
   font: inherit;
   color: inherit;
   cursor: pointer;
   min-width: 0;
   transition: background 0.15s;
-}
-
-.link:first-child {
-  border-radius: 8px 0 0 8px;
-}
-
-.link:last-child {
-  border-radius: 0 8px 8px 0;
-  margin-right: 0;
 }
 
 .link:hover {
@@ -1565,10 +1581,10 @@ td .num {
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
-  min-height: 2.6em;
-  max-height: 2.6em;
+  min-height: 3.9em;
+  max-height: 3.9em;
 }
 
 .link .h {
@@ -1598,6 +1614,15 @@ td .num {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 16px;
   margin-top: 16px;
+}
+
+/* Beside the field glossary, the record stays in view while the glossary scrolls. */
+@media (min-width: 1081px) {
+  .rec-grid > .json {
+    position: sticky;
+    top: 72px;
+    align-self: start;
+  }
 }
 
 .json {
@@ -2138,6 +2163,21 @@ td .num {
   font-size: 12px;
 }
 
+a.path {
+  color: inherit;
+  text-decoration: none;
+}
+
+a.path code {
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, currentColor 35%, transparent);
+  text-underline-offset: 2px;
+}
+
+a.path:hover code {
+  text-decoration-color: currentColor;
+}
+
 .spec-foot {
   display: flex;
   flex-wrap: wrap;
@@ -2530,15 +2570,7 @@ td .num {
   }
 
   .chain {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 8px;
-  }
-
-  .link,
-  .link:first-child,
-  .link:last-child {
-    border-radius: 8px;
-    margin-right: 0;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .g-limits,
@@ -2702,6 +2734,32 @@ td .num {
 
   .tl-read {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Phones: a wide table keeps its first column (what the row is) in view as
+   it scrolls sideways, and the top nav fades at its edge to show it scrolls. */
+@media (max-width: 760px) {
+  .table-wrap thead tr:first-child th:first-child,
+  .table-wrap td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    min-width: 132px !important;
+    max-width: 40vw;
+    background: var(--panel);
+    box-shadow: 1px 0 0 var(--rule-2);
+  }
+
+  .table-wrap thead tr:first-child th:first-child {
+    background: #fafbfc;
+  }
+}
+
+@media (max-width: 640px) {
+  .nav {
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent);
   }
 }
 
