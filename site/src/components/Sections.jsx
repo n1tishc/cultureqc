@@ -23,6 +23,7 @@ export function ErrorFigure({ data, letter = "A" }) {
   const v1 = data.validation.find((v) => v.id === "V1");
   const [mae, n, base] = nums(r.number);
   const max = Math.ceil(Math.max(mae, base) / 5) * 5;
+  const rescored = row(data, "Confluency error, EVICAN calibration profile").number.match(/MAE ([\d.]+) →/)[1];
   const bars = [
     ["Cellpose-SAM", mae, "var(--cell-ink)"],
     ["Threshold baseline", base, "var(--rule-2)"],
@@ -33,7 +34,7 @@ export function ErrorFigure({ data, letter = "A" }) {
       title="Error against expert masks"
       legend={
         <>
-          Mean absolute error in percentage points, n = {n} EVICAN images (real). {v1.result}. Source: <Src>{r.source}</Src>.
+          Mean absolute error in percentage points, n = {n} EVICAN images (real). {v1.result}. The calibration study scored the same {n} images again in a separate run: {rescored} pp at this cutoff. Source: <Src>{r.source}</Src>.
         </>
       }
     >
@@ -265,6 +266,8 @@ const VERDICT_WORD = { pass: "Pass", fail: "Fail", mixed: "Mixed", none: "No ver
 
 export function Validation({ data }) {
   const v = data.validation;
+  const first = data.results.find((r) => r.result.startsWith("Live latency, console Space on ZeroGPU, first run"));
+  const warm = data.results.find((r) => r.result.startsWith("Live latency, console Space on ZeroGPU, second run"));
   const count = (k) => v.filter((x) => x.kind === k).length;
   const kinds = ["pass", "fail", "mixed", "none", "info"].filter((k) => count(k));
   return (
@@ -273,6 +276,7 @@ export function Validation({ data }) {
       title={`${v[0].id}–${v[v.length - 1].id}, on held-out data`}
       lede={
         <>
+          <p>{data.validation_intro}</p>
           <p>Every threshold was set on tuning sequences; every result here is on held-out data, with its verdict as scored. Below the table: what the results changed in the product, and what this evidence does not prove.</p>
           <p className="tally" aria-label="Verdicts">
             {kinds.map((k) => (
@@ -304,6 +308,11 @@ export function Validation({ data }) {
                 <td style={{ minWidth: 180 }}>
                   <Verdict k={x.kind}>{VERDICT_WORD[x.kind]}</Verdict>
                   {x.verdict.toLowerCase() !== VERDICT_WORD[x.kind].toLowerCase() ? <span className="verdict-note">{x.verdict}</span> : null}
+                  {x.id === "V9" && warm ? (
+                    <span className="verdict-note">
+                      Measured on CPU. On the GPU console a live analysis took a median {nums(first.number)[0]} s in the first run after a restart and {nums(warm.number)[0]} s in the second (see Integration).
+                    </span>
+                  ) : null}
                 </td>
               </tr>
             ))}
@@ -334,7 +343,15 @@ export function Validation({ data }) {
 export function Integration({ data }) {
   const lat = data.results.filter((r) => r.result.startsWith("Live latency"));
   const label = (r) =>
-    r.result.includes("ZeroGPU") ? "Console Space, ZeroGPU" : r.result.includes("T4") ? "Colab, Tesla T4" : r.result.includes("Mac") ? "Mac, Apple MPS" : "CPU, 2 threads (V9)";
+    r.result.includes("ZeroGPU, first run")
+      ? "Console Space, ZeroGPU, first run after a restart"
+      : r.result.includes("ZeroGPU, second run")
+        ? "Console Space, ZeroGPU, second run"
+        : r.result.includes("T4")
+          ? "Colab, Tesla T4"
+          : r.result.includes("Mac")
+            ? "Mac, Apple GPU (MPS)"
+            : "CPU, 2 threads (V9)";
   return (
     <Section
       id="integration"
@@ -426,6 +443,8 @@ export function ReleaseNotes({ data }) {
   const zg = row(data, "Live latency, console Space on ZeroGPU");
   const ceiling = data.examples.items[0].confluency.ambiguity_ceiling.toFixed(2);
   const nEvican = nums(err.number)[1];
+  const dt = data.dense_test;
+  const dn = dt ? dt.points.length : 0;
   return (
     <>
       <article className="release" id="v0-4" aria-labelledby="v0-4-h">
@@ -452,6 +471,17 @@ export function ReleaseNotes({ data }) {
               </Note>
               <Note title="Reviews and changes are their own records." src="culture/schema.json · docs/audit_mapping.md">
                 A person’s review is a new record linked to the reading’s hash, so the reading is never edited. A profile change records the profile before and after by SHA-256, its evidence and who approved it.
+              </Note>
+              {dt ? (
+                <Note title="The passage range, tested on a lab no model had seen." src={dt.sources.join(" · ")}>
+                  {dn} images from a public dataset with every cell outlined by hand, with the split, method and pass marks committed before any image was read. The shipped method read {dt.both.C.B1_mae.toFixed(2)} pp off on average and sent {dt.both.C.B4_review} of the {dt.both.C.n_60_100} images at 60% or more to a person; the same model fine-tuned on the lab’s own labelled images read {dt.both.F.B1_mae.toFixed(2)} pp off, {dt.both.within5.F} of {dn} within 5 pp. Evidence, not a product change: the fine-tuned model does not decide. <a href="/validation#dense">The full test</a>.
+                </Note>
+              ) : null}
+              <Note title="A fine-tuned reading beside the shipped one, for four test images." src="demo/lab_demo.py · configs/finetuned_models.yaml">
+                In the live console, four of that lab’s test images get a second reading from a retrain of the fine-tuned model, in its own card beside the shipped reading. It is marked not validated and decides nothing; any other image, including a changed copy of one of the four, gets none. The weights inherit Cellpose-SAM’s non-commercial terms and are not published.
+              </Note>
+              <Note title="Model weights are checked before every reading." src="culture/approvals.py · configs/approved_changes.jsonl">
+                Before a model reads an image, the SHA-256 of its weights is compared with the latest approved change record for that model, in a hash-chained approvals log. If the shipped model’s weights don’t match, there is no reading and no record; a fine-tuned model that doesn’t match gives no reading, and the record says why. The check shows the weights are the approved ones; who approved them is for the host platform to sign. Records schema {data.meta.schema} carries it (<code>model_check</code>, <code>finetuned_reading</code>); the stored example chain on the home page was written under 0.4, before the check.
               </Note>
             </ul>
           </section>
@@ -532,7 +562,7 @@ export function ReleaseNotes({ data }) {
             <h3 id="next-h">Validated, not released in v0.3</h3>
             <ul className="notes">
               <Note title="A recalibrated cell cutoff for the low reading." src={cut.source}>
-                With the cutoff recalibrated on other images, the error on the same {nEvican} images drops from {cutMae[0]} to {cutMae[1]} pp. {data.cutoff_disclosure} It moved the review trigger and the anomaly bins, so it was held. Released in v0.4, above, as the EVICAN calibration profile.
+                With the cutoff recalibrated on other images, the error on the same {nEvican} images drops from {cutMae[0]} to {cutMae[1]} pp ({cutMae[0]} pp is this study’s own run at the default cutoff; the first run, above, gave {nums(err.number)[0].toFixed(2)}). {data.cutoff_disclosure} It moved the review trigger and the anomaly bins, so it was held. Released in v0.4, above, as the EVICAN calibration profile.
               </Note>
             </ul>
           </section>

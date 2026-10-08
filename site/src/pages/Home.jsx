@@ -77,7 +77,7 @@ export default function Home({ data }) {
 
         <Section
           id="timeline"
-          title="Follow a flask from seeding to passage"
+          title="Follow a flask, visit by visit"
           lede={
             <p>
               {data.replays.length} held-out C2C12 flasks, recorded time-lapse replayed as visits of {data.replays[0].visits[0].fov.length} fields each. The quality gate drops bad images from the trend, the anomaly check flags frames, and a flagged visit holds the passage forecast for a person. {data.replays[0].target_note}
@@ -92,11 +92,11 @@ export default function Home({ data }) {
           title="Every call, on a record you can re-check"
           lede={
             <p>
-              The {ex.items.length} readings above are one hash chain. Your browser has just re-hashed each record from its stored bytes and checked every link. Flip a switch to tamper with it three ways, and see what the chain alone catches and what needs the anchored checkpoint.
+              The {ex.items.length} readings above and the {(ex.changes || []).length} approved profile changes before them are one hash chain of {ex.chain_order.length} records. Your browser has just re-hashed each record from its stored bytes and checked every link. Flip a switch to tamper with it three ways, and see what the chain alone catches and what needs the anchored checkpoint.
             </p>
           }
         >
-          <Records examples={ex} />
+          <Records examples={ex} data={data} />
         </Section>
 
         <Integration data={data} />

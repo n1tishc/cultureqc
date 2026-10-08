@@ -210,8 +210,8 @@ export function DenseTest({ data }) {
           Four of this lab’s test images have buttons in the{" "}
           <a href={data.meta.console_url} target="_blank" rel="noreferrer">live console</a>. For those four only, a retrain of the fine-tuned model scored here (the same {d.sealed.n_train} images and recipe) reads the image too, in its own card beside the shipped reading. It is marked not validated and decides nothing. Only those four exact files get it; any other image, including a changed copy of one of them, does not. Before every reading its weights are checked against an approved change record. A fine-tuned model that decided would be a model of the lab’s own, trained on {d.sealed.n_train}–{d.swapped.n_train} images with every cell outlined, approved as a change, and checked on held-out images first. The weights inherit Cellpose-SAM’s non-commercial terms and are not published.
         </Note>
-        <Note title="Why MSC still reads “Validated” above.">
-          That status covers the criteria its test images could measure; the passage-range ones (A2–A4) were not measurable on MSC or EVICAN.{" "}
+        <Note title="Why MSC reads “Validated where measurable” above.">
+          That status covers only the criteria its test images could measure; the passage-range ones (A2–A4) were not measurable on MSC or EVICAN.{" "}
           {d.msc_dense ? (
             <>
               Dense regions of the MSC images themselves read {fx(Math.abs(d.msc_dense.bias))} pp {d.msc_dense.bias < 0 ? "low" : "high"} on average at that profile’s cutoff, {d.msc_dense.over10} of {d.msc_dense.n} off by more than 10 pp, in a test that could not separate density from how the regions were picked (<Path>{d.msc_dense.source}</Path>).{" "}

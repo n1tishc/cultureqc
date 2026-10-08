@@ -19,6 +19,12 @@ const measured = (p) => {
   return `${m.filter((x) => x === "pass").length} of ${m.length} measurable criteria passed` +
     (m.length < v.length ? `; ${v.length - m.length} not measurable` : "");
 };
+// "Validated" covers only the criteria the setup's test images could measure; say so in the badge itself.
+const statusWord = (p) => {
+  const word = (STUDY[p.status] || ["none", p.status])[1];
+  const unmeasured = Object.values(p.acceptance).some((a) => a.verdict === "not measurable");
+  return p.status === "validated" && unmeasured ? "Validated where measurable" : word;
+};
 const fx = (x, d = 2) => (x === null || x === undefined ? "—" : Number(x).toFixed(d));
 const cut = (x) => (x >= 0 ? `+${x.toFixed(1)}` : `−${Math.abs(x).toFixed(1)}`);
 
@@ -142,7 +148,7 @@ export function AcceptanceTable({ data }) {
                 </td>
               ))}
               <td>
-                <Verdict k={(STUDY[p.status] || ["none"])[0]}>{(STUDY[p.status] || ["none", p.status])[1]}</Verdict>
+                <Verdict k={(STUDY[p.status] || ["none"])[0]}>{statusWord(p)}</Verdict>
                 <span className="verdict-note">{measured(p)}</span>
               </td>
             </tr>

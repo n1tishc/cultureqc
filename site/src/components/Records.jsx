@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { checkCheckpoint, rewriteFrom, verifyChain } from "../lib/verify";
-import { Icon, actionWord, short } from "./ui";
+import { row } from "./Sections";
+import { Icon, Path, actionWord, short } from "./ui";
 
 /* The stored records, re-hashed in this browser from the exact bytes
    culture/records.py hashed: any approved profile changes first, then the
@@ -11,13 +12,14 @@ import { Icon, actionWord, short } from "./ui";
    (count and head hash), which catches the two a chain alone passes. */
 
 const FIELDS = [
+  ["schema_version", "These stored records are schema 0.4. The live console writes 0.5, which adds model_check (the segmentation weights’ SHA-256, compared with the latest approved change record before the model reads) and finetuned_reading (a fine-tuned model’s reading beside the shipped one, never used to decide)."],
   ["record_type", "reading, review or change: one chain holds all three."],
   ["confluency_profile", "The imaging setup’s calibration: its id and SHA-256, cutoff and error band."],
   ["confluency_interval", "The reading ± that band, measured on held-out labelled images from the setup."],
   ["image_hash · confluency_map_hash", "SHA-256 of the image read and of Cellpose-SAM’s probability map, so the map behind the number can be checked later."],
   ["model_weights_hash · config_hashes", "SHA-256 of each model’s weights and of each config in force."],
   ["decided_by", "The rules version that chose the action."],
-  ["flask_id · lineage · imager_id · fov", "The host platform’s keys: vessel, passage history, instrument, field of view."],
+  ["flask_id · lineage · imager_id · fov", "The host platform’s keys: vessel, passage history, instrument, field of view. These examples were exported outside a host, so they carry placeholders: flask_id “demo”, cell_line “unknown”, the rest null."],
   ["review records", "A person’s decision is a new record pointing to the reading’s hash, with the reviewer, the meaning of the signature and the reason; the reading itself is never edited."],
   ["prev_record_hash · record_hash", "The chain: each record’s hash covers every field above plus the previous record’s hash."],
 ];
@@ -82,7 +84,14 @@ function Json({ obj, bad }) {
   );
 }
 
-export default function Records({ examples }) {
+export default function Records({ examples, data }) {
+  const clsReal = row(data, "QC classifier on real normal frames").number.match(/^[\d.]+%/)[0];
+  const fields = [
+    ...FIELDS.slice(0, -1),
+    ["qc_flag · qc_confidence · qc_used_in_decision",
+      `The demoted QC classifier’s call, kept for traceability and never used for the action (qc_used_in_decision: false). It does not transfer to these frames: on real normal C2C12 frames it called ${clsReal} normal, so a normal frame can carry contamination_suspected here.`],
+    FIELDS[FIELDS.length - 1],
+  ];
   const byId = useMemo(
     () => Object.fromEntries([...examples.items, ...(examples.changes || [])].map((e) => [e.id, e])),
     [examples],
@@ -203,7 +212,7 @@ export default function Records({ examples }) {
               </label>
               {i === 0 ? (
                 <p className="tamper-limit">
-                  A chain alone can’t detect a full rewrite or a deleted tail; an anchored checkpoint can — try it below. The checkpoint here (record count and head hash, <code>culture.records.checkpoint</code>) was made from the stored records when this page was built and ships with it. In deployment it is stored outside the log, in the platform’s audit trail or WORM storage (<code>docs/audit_mapping.md</code>).
+                  A chain alone can’t detect a full rewrite or a deleted tail; an anchored checkpoint can — try it below. The checkpoint here (record count and head hash, <code>culture.records.checkpoint</code>) was made from the stored records when this page was built and ships with it. In deployment it is stored outside the log, in the platform’s audit trail or WORM storage (<Path>docs/audit_mapping.md</Path>).
                 </p>
               ) : null}
             </div>
@@ -224,7 +233,7 @@ export default function Records({ examples }) {
         <Json obj={obj} bad={(mode === "edit" || mode === "rewrite") && shown === T ? "confluency_pct" : null} />
         <div>
           <dl className="fields">
-            {FIELDS.map(([k, d]) => (
+            {fields.map(([k, d]) => (
               <div key={k} style={{ display: "contents" }}>
                 <dt>{k}</dt>
                 <dd>{d}</dd>
@@ -235,7 +244,7 @@ export default function Records({ examples }) {
       </div>
 
       <div className="scope">
-        <b>Where this sits for GMP.</b> The chain catches an edited, inserted or reordered record and carries its provenance: image, map, profile, configs, weights and anomaly bank by hash; models and rules by name and version. It is designed to be written into a host platform’s Part 11 audit trail, which is also where its checkpoint belongs, and is not Part 11 compliant on its own. Identity, access control and electronic signatures belong to the platform; a review record carries the reviewer, the meaning of the signature and a reference to the platform’s signature record. Field-by-field mapping: <code>docs/audit_mapping.md</code>; the boundary: <code>docs/host_platform.md</code>.
+        <b>Where this sits for GMP.</b> The chain catches an edited, inserted or reordered record and carries its provenance: image, map, profile, configs, weights and anomaly bank by hash; models and rules by name and version. It is designed to be written into a host platform’s Part 11 audit trail, which is also where its checkpoint belongs, and is not Part 11 compliant on its own. Identity, access control and electronic signatures belong to the platform; a review record carries the reviewer, the meaning of the signature and a reference to the platform’s signature record. Field-by-field mapping: <Path>docs/audit_mapping.md</Path>; the boundary: <Path>docs/host_platform.md</Path>.
       </div>
     </>
   );

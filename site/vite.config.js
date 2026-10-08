@@ -28,8 +28,13 @@ function cleanUrls() {
   };
   return {
     name: "clean-urls",
-    configureServer: (server) => server.middlewares.use(rewrite),
-    configurePreviewServer: (server) => server.middlewares.use(rewrite),
+    // No return value: Vite runs a returned function as a post-middleware hook.
+    configureServer: (server) => {
+      server.middlewares.use(rewrite);
+    },
+    configurePreviewServer: (server) => {
+      server.middlewares.use(rewrite);
+    },
   };
 }
 

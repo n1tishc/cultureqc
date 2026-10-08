@@ -6568,10 +6568,16 @@
    "source": "results/live_latency.md"
   },
   {
-   "result": "Live latency, console Space on ZeroGPU (one Analyze as the viewer waits, with the owner's token; each example read with its setup's profile)",
-   "number": "median 3.22 s (n = 6, after a first of 6.22 s); flag and action the same as stored on 7 of 7 examples",
+   "result": "Live latency, console Space on ZeroGPU, first run after a restart (one Analyze as the viewer waits, with the owner's token; each example read with its setup's profile)",
+   "number": "median 8.32 s (n = 6, after a first of 4.90 s); flag and action the same as stored on 7 of 7 examples",
    "provenance": "real (C2C12, EVICAN)",
-   "source": "results/space_dry_run_e6c44671.md"
+   "source": "results/space_dry_run_3b935ea6.md"
+  },
+  {
+   "result": "Live latency, console Space on ZeroGPU, second run (the same, about a minute later)",
+   "number": "median 3.16 s (n = 6, after a first of 3.15 s); flag and action the same as stored on 7 of 7 examples",
+   "provenance": "real (C2C12, EVICAN)",
+   "source": "results/space_dry_run_3b935ea6_run2.md"
   },
   {
    "result": "Live latency, Mac backup (Cellpose-SAM on Apple MPS; each example read with its setup's profile, on the Mac that made the stored examples)",
@@ -8325,7 +8331,7 @@
   "Since 2026-09-28 (rules_v0.3), a flag holds a passage: an image at or above the target that the anomaly check flags goes to human review instead of passage. Continue and feed are unchanged. At the replays' 50% target this held 1 of 14 passage-eligible held-out normal frames (review 5.8% instead of 5.7%) and all 76 passage-eligible simulated contamination frames (results/review_rate.md). Those frames have bacteria 16.5× too large; at their real size the flag is at chance and the hold gives no protection (results/contamination_scale.md).",
   "SPC and the instrument-drift monitor stay in code and in the report, not in product decisions.",
   "Growth stalls are a stated limitation at the tested setup, turned into an imaging requirement for instrument integration.",
-  "The demo runs on precomputed, labelled examples and replays, with a GPU Space for the call day."
+  "The demo runs on precomputed, labelled examples and replays, with a GPU Space for live runs."
  ],
  "review_rate": [
   {

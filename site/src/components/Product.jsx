@@ -104,13 +104,15 @@ export function HowItWorks({ data }) {
           </Step>
           <Step n="2" title="Confluency" art={<MiniFrame ex={ex} prob />}>
             <p>
-              Cellpose-SAM’s cell-probability map, in cyan. <b className="num">{c.pct.toFixed(1)}%</b> of pixels sit above the cutoff of this microscope’s calibration profile
+              Cellpose-SAM’s cell-probability map, in cyan.{" "}
               {c.interval ? (
                 <>
-                  , with a 90% error band of <b className="num">{c.interval[0].toFixed(1)}–{c.interval[1].toFixed(1)}%</b> measured on held-out labelled images. If the band includes the passage target, a person decides.
+                  <b className="num">{c.pct.toFixed(1)}%</b> of pixels sit above the cutoff of this microscope’s calibration profile, with a 90% error band of <b className="num">{c.interval[0].toFixed(1)}–{c.interval[1].toFixed(1)}%</b> measured on held-out labelled images. If the band includes the passage target, a person decides.
                 </>
               ) : (
-                <>. This setup has no calibration profile, so the reading has no error band and a passage goes to a person.</>
+                <>
+                  <b className="num">{c.pct.toFixed(1)}%</b> of pixels sit above Cellpose-SAM’s default cutoff. This microscope has no labelled images, so it has no calibration profile: the reading has no error band, and a passage goes to a person.
+                </>
               )}
             </p>
           </Step>
@@ -223,12 +225,21 @@ export function Accuracy({ data }) {
 export function Specs({ data, verify }) {
   const ex = data.examples;
   const okCount = verify ? verify.filter((v) => v.ok).length : null;
+  const before = row(data, "Confluency error, Cellpose-SAM");
+  const rescored = row(data, "Confluency error, EVICAN calibration profile").number.match(/MAE ([\d.]+) →/)[1];
+  const [n33] = nums(before.number).slice(1, 2);
+  const flags = row(data, "Anomaly flag rate, held-out normal");
+  const flagPct = nums(flags.number)[0];
+  // Each row: label, results row, and an optional note that says what the number means.
   const spec = [
-    ["Confluency error against expert masks", row(data, "Confluency error, Cellpose-SAM")],
+    ["Confluency error against expert masks, at Cellpose’s default cutoff", before,
+      `Before any calibration. The calibration study scored the same ${n33} images again in a separate run and got ${rescored} pp; the row below starts from that run.`],
     ["Confluency error with each setup’s calibration", row(data, "Confluency error per imaging setup")],
     ["What the rules do with held-out C2C12 frames", row(data, "Rules rules_v0.5 on held-out normal C2C12 frames")],
-    ["Anomaly flags on healthy held-out frames", row(data, "Anomaly flag rate, held-out normal")],
-    ["One analysis on the live console (ZeroGPU)", row(data, "Live latency, console Space on ZeroGPU")],
+    ["Anomaly flags on healthy held-out frames", flags,
+      `About 1 healthy frame in ${Math.round(100 / flagPct)} is flagged. A flag changes only a passage call, which then goes to a person; continue and feed are unchanged.`],
+    ["One analysis on the live console (ZeroGPU), first run after a restart", row(data, "Live latency, console Space on ZeroGPU, first run")],
+    ["The same, second run", row(data, "Live latency, console Space on ZeroGPU, second run")],
   ];
   return (
     <section className="sec" id="specs" aria-labelledby="specs-h">
@@ -240,11 +251,12 @@ export function Specs({ data, verify }) {
           </div>
         </header>
         <div className="spec" role="table" aria-label="Measured performance">
-          {spec.map(([label, r]) => (
+          {spec.map(([label, r, note]) => (
             <div className="spec-row" role="row" key={label}>
               <div role="rowheader">{label}</div>
               <div role="cell" className="spec-v">
                 {r.number}
+                {note ? <span className="spec-note">{note}</span> : null}
               </div>
               <div role="cell" className="spec-src">
                 <Path>{r.source}</Path>

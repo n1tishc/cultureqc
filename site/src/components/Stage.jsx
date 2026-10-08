@@ -15,12 +15,23 @@ const LAYERS = [
 const SHORT = {
   c2c12_normal_0_20: "C2C12, sparse",
   c2c12_normal_20_40: "C2C12, mid",
-  c2c12_normal_40_100: "C2C12, dense",
+  c2c12_normal_40_100: "C2C12, densest",
   c2c12_contamination_real_size: "Real-size bacteria",
   c2c12_contamination_1: "Oversized bacteria",
   evican_pc3: "EVICAN PC3",
   evican_ht29: "EVICAN HT29",
 };
+
+/* The panel's heading. The stored labels name the anomaly bank's density
+   group ("20-40% bin"), which is how the console and the records file them;
+   here the normal frames are named for what they show. */
+const TITLE = {
+  c2c12_normal_0_20: "C2C12, normal culture, sparse",
+  c2c12_normal_20_40: "C2C12, normal culture, mid density",
+  c2c12_normal_40_100: "C2C12, normal culture, the densest example",
+};
+
+const DEVICE = { mps: "Apple GPU, MPS", cuda: "GPU", cpu: "CPU" };
 
 const contourCache = new Map();
 
@@ -187,15 +198,16 @@ function VerifyLine({ v, rec, total }) {
         {text}
       </span>
       <p className="hash" title={rec.record_hash}>
-        SHA-256 {short(rec.record_hash, 10)} · #{rec.index} of {total}
+        SHA-256 {short(rec.record_hash, 10)} · record {rec.index} of {total}
       </p>
     </>
   );
 }
 
 export default function Stage({ examples, verify, liveParity }) {
-  const items = examples.items;
-  const [id, setId] = useState(items[0].id);
+  // The strip follows the record chain's order; the panel opens on the first stored example.
+  const items = useMemo(() => [...examples.items].sort((x, y) => x.record.index - y.record.index), [examples]);
+  const [id, setId] = useState(examples.items[0].id);
   const [layers, setLayers] = useState({ prob: false, contour: true, band: false, anom: false });
   const [solo, setSolo] = useState(null);
   const ex = useMemo(() => items.find((e) => e.id === id), [items, id]);
@@ -251,7 +263,7 @@ export default function Stage({ examples, verify, liveParity }) {
 
         <div className="rail">
           <div className="rail-head">
-            <h2>{ex.label}</h2>
+            <h2>{TITLE[ex.id] || ex.label}</h2>
           </div>
 
           <Reading link="contour" setSolo={setSolo}>
@@ -281,7 +293,7 @@ export default function Stage({ examples, verify, liveParity }) {
               onFocus={() => setSolo("band")}
             >
               <p>
-                <b className="num">{(c.borderline_fraction * 100).toFixed(1)}%</b> of pixels sit on the cutoff’s edge (hatched): boundary ambiguity <span className="num">{c.ambiguity.toFixed(3)}</span>, recorded but no longer used to decide.
+                <b className="num">{(c.borderline_fraction * 100).toFixed(1)}%</b> of pixels sit close to the cutoff, where a small change in it would flip them: the hatched “Cutoff edge” layer.
               </p>
             </div>
           </Reading>
@@ -294,9 +306,9 @@ export default function Stage({ examples, verify, liveParity }) {
                 {a.flag ? "Flagged" : "Not flagged"}
               </span>
             </div>
-            <Gauge value={a.score} mark={a.threshold} max={anomMax} kind="anom" left={`score ${a.score.toFixed(3)} · ${a.bin}% bin`} right={`threshold ${a.threshold.toFixed(3)}`} />
+            <Gauge value={a.score} mark={a.threshold} max={anomMax} kind="anom" left={`score ${a.score.toFixed(3)}`} right={`threshold ${a.threshold.toFixed(3)}`} />
             <p>
-              Reads only the dashed {a.tile.size} px centre tile of the frame; the score is set by its {a.top.length} outlined patches.
+              Reads only the dashed {a.tile.size} px centre tile of the frame, against healthy frames at {a.bin.replace("-", "–")}% confluency; the score is set by its {a.top.length} outlined patches.
               {ex.kind === "evican" ? " The anomaly banks hold only C2C12 frames, so on other cell types the flag is uncalibrated." : null}
             </p>
           </Reading>
@@ -340,7 +352,7 @@ export default function Stage({ examples, verify, liveParity }) {
       </div>
       <div className="stage-note">
         <p>
-          Hover a reading to light the layer it came from. {ex.label}. {ex.credit}.{ex.sequence ? ` Held-out ${ex.sequence}, frame ${ex.frame}.` : ""} Precomputed with the console’s own code ({ex.device}, {ex.generated_at}). {liveParity}
+          Hover a reading to light the layer it came from. {ex.label}. {ex.credit}.{ex.sequence ? ` Held-out ${ex.sequence}, frame ${ex.frame}.` : ""} Precomputed with the console’s own code ({DEVICE[ex.device] || ex.device}, {ex.generated_at}). {liveParity}
         </p>
       </div>
     </div>

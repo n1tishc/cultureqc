@@ -8,6 +8,9 @@ import { Icon } from "./ui";
 /* eslint-disable-next-line no-undef */
 export const COMMIT = typeof __COMMIT__ !== "undefined" ? __COMMIT__ : "";
 
+/* The release the site describes; the release notes page lists what it holds. */
+export const VERSION = "v0.4";
+
 const HOME_NAV = [
   ["how", "How it works"],
   ["timeline", "Flask history"],
@@ -53,7 +56,7 @@ export function TopBar({ data, page }) {
         <a className="mark" href={home ? "#top" : "/"} aria-label="cultureQC, home">
           <Logo />
           <b>cultureQC</b>
-          <span className="ver">v0.4</span>
+          <span className="ver">{VERSION}</span>
         </a>
         <nav className="nav" aria-label="Site">
           {HOME_NAV.map(([id, label]) => (
@@ -119,7 +122,7 @@ export function Footer({ data }) {
           <a className="mark" href="/" aria-label="cultureQC, home">
             <Logo />
             <b>cultureQC</b>
-            <span className="ver">v0.4</span>
+            <span className="ver">{VERSION}</span>
           </a>
           <p>
             Every figure on this site is generated from the repository’s stored output by <code>site/assets/build_data.py</code>; the numbers come from the README tables that <code>tests/test_readme_provenance.py</code> checks against their source files.
