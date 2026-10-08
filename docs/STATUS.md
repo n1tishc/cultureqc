@@ -117,6 +117,15 @@ Local branch off `9d5d43f`; nothing pushed until the owner approves.
 Left as they are: unused helpers in `culture/` (a change there is synced into
 both Space folders) and the untracked local files.
 
+## Fine-tuned demo set in the console (branch `confluency-evidence-v2`, 2026-10-08)
+
+| Step | Commit | Result |
+|---|---|---|
+| Owner decision: show the approved fine-tuned model in the public console for four demo images only, weights in a private model repo | `63f4996`, `5a0fdcd`, `b9dce5a` | Off unless the weights download; any other image gets no fine-tuned reading; `sync_space.py --check` passes again |
+| Check run on Colab (nb/11 Part A, L4, bundle `643e557`) | — | All weights checks `match`; anomaly check `ok`, no flag, on all four; readings within 0.13 pp of the product-path records |
+| Weights uploaded by the owner to the private repo `LongGrainRice/cultureqc-finetuned` | — | Private; the Hub's SHA-256 is the approved `2d1549682c1d…` |
+| Console Space republished (owner approved; the owner ran the publish) | Space commit `3b935ea6` | Startup log: demo set on, weights downloaded and `match`, 4 of 4 images, banks verified, models loaded in 61.6 s. Dry run (`results/space_dry_run_3b935ea6.md`): 7 of 7 examples the same flag and action; the four demo files carry a fine-tuned reading with check `match`, a one-byte-changed copy carries none. The C2C12 examples took 4.9–10.2 s in that first run after the restart and 3.1–3.4 s in a second run minutes later (`results/space_dry_run_3b935ea6_run2.md`); cause not measured |
+
 ## Slices (spec §2.1), confirmed against the repo
 
 | Slice | Status | Evidence in repo | Notes |
