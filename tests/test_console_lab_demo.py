@@ -145,8 +145,16 @@ def _weights_config(monkeypatch, tmp_path):
     return target
 
 
+def _hub(monkeypatch, download):
+    """A stand-in huggingface_hub (CI does not install it); fetch_weights imports it at call time."""
+    import sys
+    import types
+    hub = types.ModuleType("huggingface_hub")
+    hub.hf_hub_download = download
+    monkeypatch.setitem(sys.modules, "huggingface_hub", hub)
+
+
 def test_fetch_weights_downloads_to_the_configured_path(monkeypatch, tmp_path):
-    import huggingface_hub
     target = _weights_config(monkeypatch, tmp_path)
     seen = []
 
@@ -156,7 +164,7 @@ def test_fetch_weights_downloads_to_the_configured_path(monkeypatch, tmp_path):
         open(os.path.join(local_dir, filename), "wb").write(b"w")
         return os.path.join(local_dir, filename)
 
-    monkeypatch.setattr(huggingface_hub, "hf_hub_download", fake)
+    _hub(monkeypatch, fake)
     path, how = lab_demo.fetch_weights("mcellseg_ftF_r2", "owner/private", token="t")
     assert path == str(target) and target.exists() and "owner/private" in how
     assert seen == [("owner/private", "mcellseg_ftF_r2", str(target.parent), "t")]
@@ -165,13 +173,12 @@ def test_fetch_weights_downloads_to_the_configured_path(monkeypatch, tmp_path):
 
 
 def test_fetch_weights_failure_turns_nothing_on(monkeypatch, tmp_path):
-    import huggingface_hub
     _weights_config(monkeypatch, tmp_path)
 
     def fail(*a, **k):
         raise OSError("401 Client Error\nsecret details")
 
-    monkeypatch.setattr(huggingface_hub, "hf_hub_download", fail)
+    _hub(monkeypatch, fail)
     path, why = lab_demo.fetch_weights("mcellseg_ftF_r2", "owner/private", token="hf_secret")
     assert path is None and "owner/private" in why and "401" in why
     assert "secret details" not in why and "hf_secret" not in why
