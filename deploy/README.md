@@ -52,11 +52,20 @@ running changes: `cultureqc-demo` keeps the raw-output page and `cultureqc-api`
 keeps serving the v0.2 site.
 
 ```bash
-python deploy/sync_space.py                     # mirrors culture/, config/, configs/, demo/, banks
+python deploy/sync_space.py                     # mirrors culture/, config/, configs/, demo/, banks, demo images
 .venv/bin/python -m pytest deploy/hf-space/test_api.py tests/test_console_zerogpu.py -q
 .venv/bin/python deploy/publish_demo_space.py   # refuses unless the banks match configs/anomaly.yaml
 .venv/bin/python scripts/space_dry_run.py --out results/space_dry_run_<space commit>.md
 ```
+
+The fine-tuned demo set (`demo/lab_demo.py`) is on by default in the Space. Its
+weights are not in the Space or this repository: they are uploaded once to the
+private model repo `LongGrainRice/cultureqc-finetuned` with
+`scripts/upload_finetuned_weights.py` (it refuses unless the file is the
+approved one and the repo is private), and the Space reads them at startup
+with the secret `CULTUREQC_HF_TOKEN`, a read-only token for that repo. Without
+them the startup log says `fine-tuned demo set OFF` and the console runs as
+before; the Space variable `CULTUREQC_FINETUNED` set to empty turns it off.
 
 **Why ZeroGPU rather than a dedicated GPU tier** (chosen 2026-09-28): it costs
 nothing beyond the PRO plan, needs no switching on before the call or back to
