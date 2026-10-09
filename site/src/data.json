@@ -6569,15 +6569,15 @@
   },
   {
    "result": "Live latency, console Space on ZeroGPU, first run after a restart (one Analyze as the viewer waits, with the owner's token; each example read with its setup's profile)",
-   "number": "median 8.32 s (n = 6, after a first of 4.90 s); flag and action the same as stored on 7 of 7 examples",
+   "number": "median 3.28 s (n = 6, after a first of 5.78 s); flag and action the same as stored on 7 of 7 examples",
    "provenance": "real (C2C12, EVICAN)",
-   "source": "results/space_dry_run_3b935ea6.md"
+   "source": "results/space_dry_run_98656277.md"
   },
   {
    "result": "Live latency, console Space on ZeroGPU, second run (the same, about a minute later)",
-   "number": "median 3.16 s (n = 6, after a first of 3.15 s); flag and action the same as stored on 7 of 7 examples",
+   "number": "median 3.15 s (n = 6, after a first of 3.07 s); flag and action the same as stored on 7 of 7 examples",
    "provenance": "real (C2C12, EVICAN)",
-   "source": "results/space_dry_run_3b935ea6_run2.md"
+   "source": "results/space_dry_run_98656277_run2.md"
   },
   {
    "result": "Live latency, Mac backup (Cellpose-SAM on Apple MPS; each example read with its setup's profile, on the Mac that made the stored examples)",

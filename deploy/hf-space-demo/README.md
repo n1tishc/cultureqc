@@ -33,9 +33,9 @@ hash-chained record.
   its readings carry no band. Each example is labelled "Precomputed example"
   with the script, device and date that made it; they open instantly and use
   no GPU. **Analyze** runs any image live, with the setup picked in the
-  console, on a GPU attached for that call only (ZeroGPU): median 8.32 s in
-  the first run after a restart and 3.16 s in the second
-  (`results/space_dry_run_3b935ea6.md`, `results/space_dry_run_3b935ea6_run2.md`).
+  console, on a GPU attached for that call only (ZeroGPU): median 3.28 s in
+  the first run after a restart and 3.15 s in the second
+  (`results/space_dry_run_98656277.md`, `results/space_dry_run_98656277_run2.md`).
 - **Fine-tuned demo set.** Four test images from one lab (mCellSeg, Alam et al.
   2026, CC BY 4.0, Zenodo record 20174259) have buttons under the examples.
   For these four only, a Cellpose-SAM model fine-tuned on 79 other images from
