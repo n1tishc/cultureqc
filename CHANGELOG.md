@@ -15,6 +15,16 @@ viewer is told. Commit hashes are on branch `slice-1b-compute-cache` unless a se
   (`not_validated`), matched by the SHA-256 of the exact file; every other image, including any upload, has
   `finetuned_reading: null` (`demo/lab_demo.py`). The weights are not in the Space; it downloads them at startup
   from a private model repo, and without them the demo set is off.
+- **What the console tells a viewer (2026-10-10).** No record field changes; `qc_rationale` is still written
+  as before.
+  - The action card gives the rule's own reason, `action_reason`, and the rules version that decided, in
+    place of the older `qc_rationale` sentence.
+  - A run that fails, including Hugging Face refusing a GPU, shows a card saying nothing was read and no
+    record was written, and the Analyze button comes back.
+  - The anomaly card says "Within the normal range" only on the C2C12 setup its limits were fitted on;
+    elsewhere it says "Not flagged".
+  - The four demo-set images get Shipped and Fine-tuned views: each model's counted pixels, with the experts'
+    outline drawn over them. The fine-tuned reading in the record is unchanged (`tests/test_approvals.py`).
 
 ## Confluency calibration profiles (from 2026-10-02, branch `confluency-calibration`)
 
