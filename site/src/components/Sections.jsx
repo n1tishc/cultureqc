@@ -66,7 +66,7 @@ export function ReviewFigure({ data, letter = "B" }) {
       title="Where rules_v0.4’s ambiguity trigger sent frames to review"
       legend={
         <>
-          Held-out C2C12 frames with boundary ambiguity above {ceiling.toFixed(2)}, by confluency, under rules_v0.4. Overall {all.pct}% of {all.n} frames ({all.sequences} sequences). The score rises with density, so review piled up in the {worst} band, where passage decisions are made. It measured density, not the reading’s error, and since rules_v0.5 it no longer decides. Source: <Src>results/review_rate.csv</Src>.
+          Held-out C2C12 frames with boundary ambiguity above {ceiling.toFixed(2)}, by confluency, under rules_v0.4: {all.pct}% of {all.n} overall ({all.sequences} sequences). The score rises with density, so review piled up in the {worst} band, where passage is decided. Source: <Src>results/review_rate.csv</Src>.
         </>
       }
     >
@@ -145,7 +145,7 @@ export function Confluency({ data }) {
       title="Confluency against expert masks"
       lede={
         <p>
-          Measured at Cellpose-SAM’s default cutoff, before any calibration: the number against expert masks, and the boundary ambiguity (the share of pixels close to the cutoff) against the number’s error, which it does not predict. It tracks density, so rules_v0.4 used it as a review trigger, sending frames above {ceiling.toFixed(2)} to a person. Since rules_v0.5 it is recorded but no longer decides; the calibration profiles above, with their measured error bands, took its place.
+          At Cellpose-SAM’s default cutoff, before any calibration. Boundary ambiguity, the share of pixels close to the cutoff, tracks density rather than the reading’s error: rules_v0.4 sent frames above {ceiling.toFixed(2)} to a person; since rules_v0.5 it is recorded but no longer decides, and the calibrated error bands above took its place.
         </p>
       }
     >
@@ -279,8 +279,9 @@ export function Validation({ data }) {
       title={`${v[0].id}–${v[v.length - 1].id}, on held-out data`}
       lede={
         <>
-          <p>{data.validation_intro}</p>
-          <p>Every threshold was set on tuning sequences; every result here is on held-out data, with its verdict as scored. Below the table: what the results changed in the product, and what this evidence does not prove.</p>
+          <p>
+            <Linked>{data.validation_intro}</Linked>
+          </p>
           <p className="tally" aria-label="Verdicts">
             {kinds.map((k) => (
               <Verdict key={k} k={k}>
@@ -375,12 +376,13 @@ export function Integration({ data }) {
           {"\n\n"}rec = <span className="f">analyze</span>(
           {"\n    "}image_path,
           {"\n    "}flask_id=<span className="s">"A12"</span>,
-          {"\n    "}cell_line=<span className="s">"C2C12"</span>,
+          {"\n    "}cell_line=<span className="s">"MSC"</span>,
+          {"\n    "}profile_id=<span className="s">"msc_phase"</span>,  <span className="c"># the imaging setup's calibration</span>
           {"\n    "}hours_since_passage=hours,
           {"\n    "}log_path=<span className="s">"records.jsonl"</span>,  <span className="c"># append-only, hash-chained</span>
           {"\n"})
-          {"\n\n"}rec[<span className="s">"confluency_pct"</span>], rec[<span className="s">"confluency_confidence"</span>]
-          {"\n"}rec[<span className="s">"anomaly_flag"</span>], rec[<span className="s">"recommended_action"</span>]
+          {"\n\n"}rec[<span className="s">"confluency_pct"</span>], rec[<span className="s">"confluency_interval"</span>]  <span className="c"># reading, 90% error band</span>
+          {"\n"}rec[<span className="s">"recommended_action"</span>], rec[<span className="s">"action_reason"</span>]
           {"\n"}rec[<span className="s">"record_hash"</span>]  <span className="c"># links to the previous record</span>
         </pre>
         <div className="table-wrap" tabIndex={0} role="region" aria-label="Where it runs and how fast">
@@ -413,12 +415,20 @@ export function Integration({ data }) {
 
 /* ── release notes ── */
 
-function Note({ title, children, src, was, prev = "v0.2" }) {
+/* One release note: what changed, in a sentence or two; the numbers behind it, when they run long, under
+   "Details". A qualifier on a number (n, "not fully blind", "simulated") stays with that number. */
+function Note({ title, children, src, was, prev = "v0.2", more }) {
   return (
     <li className="note">
       <p>
         <b>{title}</b> {children}
       </p>
+      {more ? (
+        <details className="more-details">
+          <summary>Details</summary>
+          <p>{more}</p>
+        </details>
+      ) : null}
       {was ? <p className="note-was">In {prev}: {was}</p> : null}
       {src ? (
         <span className="src">
@@ -467,11 +477,11 @@ export function ReleaseNotes({ data }) {
           <section aria-labelledby="new4-h">
             <h3 id="new4-h">New</h3>
             <ul className="notes">
-              <Note title="Confluency calibrated per imaging setup." src={prof.source}>
-                Each microscope gets a cutoff fitted on its own labelled images and a 90% error band measured on images left out of the fit, with method and pass criteria committed before scoring: {prof.number}. Live, each through a change record the repository owner approved at the start of the stored chain: {live.join(" and ")}.
+              <Note title="Confluency calibrated per imaging setup." src={prof.source} more={<>Method and pass criteria were committed before scoring: {prof.number}.</>}>
+                Each microscope gets a cutoff fitted on its own labelled images and a 90% error band measured on images left out of the fit. Live for {live.join(" and ")}, each through a change record the repository owner approved, at the start of the stored chain.
               </Note>
-              <Note title="Passage reads the error band." src="culture/rules.py">
-                A reading whose band clears the target passages; a band that includes the target goes to a person; a microscope with no calibration never passages on its reading alone. An anomaly flag still holds a passage. On held-out C2C12, which has no calibration: {v05.number}.
+              <Note title="Passage reads the error band." src="culture/rules.py" more={<>On held-out C2C12, which has no calibration: {v05.number}.</>}>
+                A reading whose band clears the target passages; a band that includes the target goes to a person; a microscope with no calibration never passages on its reading alone. An anomaly flag still holds a passage.
               </Note>
               <Note title="Re-image is an action." src={qg.source}>
                 An image that fails the quality gate calibrated for its microscope is sent back to be taken again before any reading is used. Fail rates on C2C12: {qg.number}.
@@ -480,15 +490,31 @@ export function ReleaseNotes({ data }) {
                 A person’s review is a new record linked to the reading’s hash, so the reading is never edited. A profile change records the profile before and after by SHA-256, its evidence and who approved it.
               </Note>
               {dt ? (
-                <Note title="The passage range, tested on a lab no model had seen." src={dt.sources.join(" · ")}>
-                  {dn} images from a public dataset with every cell outlined by hand, with the split, method and pass marks committed before any image was read. The shipped method read {dt.both.C.B1_mae.toFixed(2)} pp off on average and sent {dt.both.C.B4_review} of the {dt.both.C.n_60_100} images at 60% or more to a person; the same model fine-tuned on the lab’s own labelled images read {dt.both.F.B1_mae.toFixed(2)} pp off, {dt.both.within5.F} of {dn} within 5 pp. Evidence, not a product change: the fine-tuned model does not decide. <a href="/validation#dense">The full test</a>.
+                <Note
+                  title="The passage range, tested on a lab no model had seen."
+                  src={dt.sources.join(" · ")}
+                  more={<>Within 5 pp of the experts: {dt.both.within5.F} of {dn} images fine-tuned, against {dt.both.within5.C} shipped. <a href="/validation#dense">The full test</a>.</>}
+                >
+                  {dn} hand-outlined images, with split, method and pass marks committed before any image was read. The shipped method read {dt.both.C.B1_mae.toFixed(2)} pp off on average and sent {dt.both.C.B4_review} of the {dt.both.C.n_60_100} images at 60% or more to a person; fine-tuned on the lab’s own images, the same model read {dt.both.F.B1_mae.toFixed(2)} pp off. Evidence, not a product change: the fine-tuned model does not decide.
                 </Note>
               ) : null}
-              <Note title="A fine-tuned reading beside the shipped one, for four test images." src="demo/lab_demo.py · configs/finetuned_models.yaml">
-                In the live console, four of that lab’s test images get a second reading from a retrain of the fine-tuned model, in its own card beside the shipped reading. It is marked not validated and decides nothing; any other image, including a changed copy of one of the four, gets none. The weights inherit Cellpose-SAM’s non-commercial terms and are not published.
+              <Note
+                title="A fine-tuned reading beside the shipped one, for four test images."
+                src="demo/lab_demo.py · configs/finetuned_models.yaml"
+                more="Any other image, including a changed copy of one of the four, gets none. The weights inherit Cellpose-SAM’s non-commercial terms and are not published."
+              >
+                In the live console, four of that lab’s test images get a second reading from a retrain of the fine-tuned model, beside the shipped reading. It is marked not validated and decides nothing.
               </Note>
-              <Note title="Model weights are checked before every reading." src="culture/approvals.py · configs/approved_changes.jsonl">
-                Before a model reads an image, the SHA-256 of its weights is compared with the latest approved change record for that model, in a hash-chained approvals log. If the shipped model’s weights don’t match, there is no reading and no record; a fine-tuned model that doesn’t match gives no reading, and the record says why. The check shows the weights are the approved ones; who approved them is for the host platform to sign. Records schema {data.meta.schema} carries it (<code>model_check</code>, <code>finetuned_reading</code>); the stored example chain on the home page was written under {JSON.parse(data.examples.items[0].record.canonical).schema_version}, before the check.
+              <Note
+                title="Model weights are checked before every reading."
+                src="culture/approvals.py · configs/approved_changes.jsonl"
+                more={
+                  <>
+                    The approvals log is hash-chained too. A fine-tuned model that doesn’t match gives no reading, and the record says why. The check shows the weights are the approved ones; who approved them is for the host platform to sign. Records schema {data.meta.schema} carries it (<code>model_check</code>, <code>finetuned_reading</code>); the stored example chain on the records page was written under {JSON.parse(data.examples.items[0].record.canonical).schema_version}, before the check.
+                  </>
+                }
+              >
+                Before a model reads an image, the SHA-256 of its weights is compared with the latest approved change record for that model. If the shipped model’s weights don’t match, there is no reading and no record.
               </Note>
             </ul>
           </section>
@@ -496,8 +522,14 @@ export function ReleaseNotes({ data }) {
           <section aria-labelledby="changed4-h">
             <h3 id="changed4-h">Changed</h3>
             <ul className="notes">
-              <Note title="Boundary ambiguity no longer decides." src={`${amb.source} · ${rev.source}`} prev="v0.3" was={`frames above ${ceiling} went to a person: ${rev.number}.`}>
-                It tracks density, not the reading’s error: the score {amb.number}. It stays in the record.
+              <Note
+                title="Boundary ambiguity no longer decides."
+                src={`${amb.source} · ${rev.source}`}
+                prev="v0.3"
+                was={`frames above ${ceiling} went to a person: ${rev.number}.`}
+                more={<>The score {amb.number}.</>}
+              >
+                It tracks density, not the reading’s error, and stays in the record.
               </Note>
               <Note title="The EVICAN examples are read with their setup’s profile." src={cut.source} prev="v0.3" was="Cellpose’s default cutoff, with the calibrated cutoff shown beside it as validated, not yet released.">
                 {cut.number}. {data.cutoff_disclosure}
@@ -526,6 +558,11 @@ export function ReleaseNotes({ data }) {
           </p>
         </header>
         <div className="release-body">
+          <details className="release-fold">
+            <summary>
+              <span>Per-image anomaly check, quality gate, flask history and forecast, records verifiable in the browser, checks V1–V10 and the live console; every headline number re-measured on real images.</span>
+              <span className="release-fold-act">Show the notes</span>
+            </summary>
           <section aria-labelledby="new-h">
             <h3 id="new-h">New</h3>
             <ul className="notes">
@@ -582,6 +619,7 @@ export function ReleaseNotes({ data }) {
               </Note>
             </ul>
           </section>
+          </details>
         </div>
       </article>
 

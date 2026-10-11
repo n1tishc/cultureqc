@@ -15,9 +15,9 @@ function commit() {
   }
 }
 
-/* Three pages. Vercel's cleanUrls serves /validation from validation.html;
+/* Four pages. Vercel's cleanUrls serves /records from records.html;
    this does the same for `vite` and `vite preview`, so links read the same. */
-const PAGES = ["validation", "release-notes"];
+const PAGES = ["records", "validation", "release-notes"];
 const ROOT = fileURLToPath(new URL(".", import.meta.url));
 
 function cleanUrls() {

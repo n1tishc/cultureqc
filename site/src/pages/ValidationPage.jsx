@@ -2,6 +2,7 @@ import { DenseTest } from "../components/DenseTest";
 import { Profiles } from "../components/Profiles";
 import { Confluency, Detectability, Validation } from "../components/Sections";
 import { CtaBand, Footer, PageHead, TopBar } from "../components/Shell";
+import { Glance as GlanceList } from "../components/ui";
 
 /* The page's three headline results, each linking to its section: what a
    reader should know before the tables. Every number is read from data.json. */
@@ -29,20 +30,8 @@ function Glance({ data }) {
       value: `${count("pass")} pass · ${count("fail")} fail · ${v.length - count("pass") - count("fail")} other`,
       note: "Each failure changed the product or became a stated limit; the list is under the table.",
     },
-  ].filter(Boolean);
-  return (
-    <ul className="glance">
-      {items.map((it) => (
-        <li key={it.href}>
-          <a href={it.href}>
-            <span className="glance-label">{it.label}</span>
-            <span className="glance-value num">{it.value}</span>
-            <span className="glance-note">{it.note}</span>
-          </a>
-        </li>
-      ))}
-    </ul>
-  );
+  ];
+  return <GlanceList items={items} />;
 }
 
 export default function ValidationPage({ data }) {

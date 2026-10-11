@@ -123,7 +123,7 @@ export function HowItWorks({ data }) {
           </Step>
           <Step n="4" title="Action" art={<MiniActions a={ex.action} />}>
             <p>
-              {ex.rules} turns the reading, its error band, the quality gate and the flag into one action: here, {actionGloss(ex.action)}. A passage goes to a person when the band includes the target, when the microscope has no calibration, or when the anomaly check flags the frame; an image that fails the quality gate is taken again.
+              {ex.rules} turns the reading, its error band, the quality gate and the flag into one action: here, {actionGloss(ex.action)}. A person decides when the band includes the target, the microscope is uncalibrated or the frame is flagged.
             </p>
           </Step>
           <Step n="5" title="Record" art={<MiniChain examples={data.examples} ex={ex} />}>
@@ -202,10 +202,10 @@ export function Accuracy({ data }) {
         <div className="feature-text">
           <h2 id="accuracy-h">A confluency reading you can check against experts</h2>
           <p>
-            Confluency comes from Cellpose-SAM’s probability map, counted above a cutoff calibrated for each microscope on labelled images from it. On held-out images the calibrated cutoff brings the error against expert masks from {msc.shipped.mae.toFixed(2)} to <b className="num">{msc.profile.mae.toFixed(2)} pp</b> on mesenchymal stem cells ({msc.n_test} images), and from {ev.shipped.mae.toFixed(2)} to {ev.profile.mae.toFixed(2)} pp on EVICAN’s mixed microscopes ({ev.n_test} images; not fully blind, as the validation page explains).
+            Each microscope gets its own cutoff on Cellpose-SAM’s probability map, fitted on its labelled images. On held-out images that cut the error against expert masks from {msc.shipped.mae.toFixed(2)} to <b className="num">{msc.profile.mae.toFixed(2)} pp</b> for stem cells ({msc.n_test} images), and from {ev.shipped.mae.toFixed(2)} to {ev.profile.mae.toFixed(2)} pp on EVICAN ({ev.n_test} images, not fully blind).
           </p>
           <p>
-            Every reading carries the 90% error band measured on images left out of the fit: ±{msc.band_pp.toFixed(1)} pp for the stem-cell microscope, ±{ev.band_pp.toFixed(1)} pp across EVICAN’s mixed ones. A passage needs the whole band above the target. When the band includes the target, or the microscope has no calibration yet, a person decides.
+            Every reading carries its measured 90% error band (±{msc.band_pp.toFixed(1)} pp and ±{ev.band_pp.toFixed(1)} pp). A passage needs the whole band above the target; otherwise, or on an uncalibrated microscope, a person decides.
           </p>
           <a className="more" href="/validation#profiles">
             How each setup was calibrated <Icon name="passage" />

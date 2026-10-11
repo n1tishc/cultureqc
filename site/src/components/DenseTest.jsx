@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Fig, Icon, Path, Section, Verdict } from "./ui";
 
 /* The passage-range test on a dense dataset no model had seen (results/confluency_mcellseg.md, sealed,
@@ -160,11 +161,63 @@ function V({ v, children }) {
 
 function Note({ title, children }) {
   return (
-    <li className="note">
-      <p>
-        <b>{title}</b> {children}
-      </p>
+    <li className="card-note">
+      <h4>{title.replace(/\.$/, "")}</h4>
+      <p>{children}</p>
     </li>
+  );
+}
+
+/* What the two readings cover on one test image per setup (results/confluency_finetune_figure.md): the shipped
+   method's calibration profile beside the fine-tuned model, each with the experts' outline. The panels are cut from
+   the committed figure by build_data.py; the readings are the scored test's. */
+export function FineTuneFigure({ data, letter = "C" }) {
+  const f = data.finetune_figure;
+  const [i, setI] = useState(0);
+  if (!f) return null;
+  const p = f.panels[i];
+  const arms = [
+    ["C", "Shipped method", "a calibration profile per setup"],
+    ["F", "Fine-tuned", "on the lab’s own images, then calibrated"],
+  ];
+  return (
+    <Fig
+      letter={letter}
+      title="What each reading counts, on one test image per setup"
+      className="ft-fig"
+      legend={
+        <>
+          Cyan: the pixels the reading counts. Yellow: the experts’ outline. One test image per setup, the one at 60–90% closest to 75%, by a rule fixed before drawing. Not a new result: the scored fine-tuned model was not kept, so the picture is drawn with <code>{f.model}</code>, a retrain on the same {f.n_train} images, each drawn reading within {f.tol.toFixed(1)} pp of the scored one; the readings given are the scored test’s. Images: mCellSeg, CC BY 4.0. Source: <Path>{f.source}</Path>.
+        </>
+      }
+    >
+      <div className="seg-tabs" role="tablist" aria-label="Imaging setup">
+        {f.panels.map((q, k) => (
+          <button key={q.setup} type="button" role="tab" aria-selected={k === i} onClick={() => setI(k)}>
+            {q.setup}
+          </button>
+        ))}
+      </div>
+      <div className="ft-pair" role="tabpanel">
+        {arms.map(([a, title, sub]) => {
+          const off = p[a] - p.gt;
+          return (
+            <figure key={a}>
+              <img src={p[`${a}_img`]} alt={`${title} reading of a ${p.setup} test image: ${p[a].toFixed(1)}% counted, against the experts’ ${p.gt.toFixed(1)}%.`} loading="lazy" />
+              <figcaption>
+                <span className="ft-title">
+                  <b>{title}</b> {sub}
+                </span>
+                <span className="ft-nums num">
+                  {p[a].toFixed(1)}% <span>vs experts {p.gt.toFixed(1)}%</span>
+                  <em data-big={Math.abs(off) > 5 ? "" : undefined}>{sgn(off, 1)} pp</em>
+                </span>
+              </figcaption>
+            </figure>
+          );
+        })}
+      </div>
+    </Fig>
   );
 }
 
@@ -182,8 +235,9 @@ export function PassageRange({ data }) {
       lede={
         <>
           <p>
-            {n} images from a public dataset with every cell outlined by hand, published after Cellpose-SAM. The shipped method fails safe: it sent {b.C.B4_review} of the {b.C.n_60_100} images at 60% or more to a person and called no ready flask continue. Fine-tuned on the lab’s own labelled images, the same model read within 5 pp of the experts on {b.within5.F} of {n} images, against {b.within5.C}. That is evidence for a lab training its own model, not a change to the product: the fine-tuned reading is shown beside the shipped one for four of these images in the live console, and decides nothing.
+            {n} hand-outlined images from a public dataset, published after Cellpose-SAM. The shipped method fails safe: it sent {b.C.B4_review} of the {b.C.n_60_100} images at 60% or more to a person and called no ready flask continue. Fine-tuned on the lab’s own images, the same model read within 5 pp of the experts on {b.within5.F} of {n}, against {b.within5.C}.
           </p>
+          <p>That is evidence for a lab training its own model, not a product change: the fine-tuned reading decides nothing.</p>
           <p>
             <a className="more" href="/validation#dense">
               The full test, with the pass marks committed before scoring <Icon name="passage" />
@@ -213,8 +267,14 @@ export function DenseTest({ data }) {
       lede={
         <>
           <p>
-            The MSC and EVICAN profiles above could not measure the passage range: their test images held almost no flasks at 60–90%. This test can. {d.dataset}: {n} images from {d.setups} microscope setups, every cell outlined by hand, published after Cellpose-SAM and not in its training data. It compares the shipped method, a calibration profile per setup, with the same model fine-tuned on the lab’s own labelled images and then calibrated. The split, the method and the pass marks were committed before any image was read, and the sealed test was scored once. Swapping the halves was planned after that score and committed before its models were trained; what had already been seen is listed in its write-up, and it too was scored once.
+            The calibration tests above held almost no flasks at 60–90%, where passage is decided. This one does: {n} images from {d.setups} microscope setups of one lab, every cell outlined by hand, published after Cellpose-SAM. It compares the shipped method, a calibration profile per setup, with the same model fine-tuned on the lab’s own labelled images. Split, method and pass marks were committed before any image was read.
           </p>
+          <details className="more-details">
+            <summary>How the test was run</summary>
+            <p>
+              {d.dataset}. The images are not in Cellpose-SAM’s training data. Within each setup the images were split into a calibration half and a test half, spanning the same densities: the fine-tuned model was trained, and both methods calibrated, on the calibration half, and both were read on the test half. The sealed test was scored once. Swapping the halves was planned after that score and committed before its models were trained; what had already been seen is listed in its write-up, and it too was scored once.
+            </p>
+          </details>
           <p className="sources">
             <Path>{d.sources[0]}</Path> · <Path>{d.sources[1]}</Path>
           </p>
@@ -225,10 +285,13 @@ export function DenseTest({ data }) {
         <Scatter d={d} arm="C" letter="A" title="Shipped method: a calibration profile per setup" />
         <Scatter d={d} arm="F" letter="B" title="Fine-tuned on the lab’s own images, then calibrated" />
       </div>
+      <div className="figs" style={{ marginTop: 16 }}>
+        <FineTuneFigure data={data} />
+      </div>
       <h3 className="sub-h">Against the criteria committed before scoring</h3>
       <CriteriaTable d={d} />
       <h3 className="sub-h">What it shows, and what it does not</h3>
-      <ul className="notes">
+      <ul className="card-notes">
         <Note title="The shipped method fails safe, but rarely decides.">
           Over both halves it called no ready flask continue, and it sent {b.C.B4_review} of the {b.C.n_60_100} images at 60% or more to a person. Its average error at 60–90% was {fx(b.C.B2_mae)} pp.
         </Note>
@@ -240,7 +303,7 @@ export function DenseTest({ data }) {
         </Note>
         <Note title="In the live console, beside the shipped reading.">
           Four of this lab’s test images have buttons in the{" "}
-          <a href={data.meta.console_url} target="_blank" rel="noreferrer">live console</a>. For those four only, a retrain of the fine-tuned model scored here (the same {d.sealed.n_train} images and recipe) reads the image too, in its own card beside the shipped reading. It is marked not validated and decides nothing. Only those four exact files get it; any other image, including a changed copy of one of them, does not. Before every reading its weights are checked against an approved change record. A fine-tuned model that decided would be a model of the lab’s own, trained on {d.sealed.n_train}–{d.swapped.n_train} images with every cell outlined, approved as a change, and checked on held-out images first. The weights inherit Cellpose-SAM’s non-commercial terms and are not published.
+          <a href={data.meta.console_url} target="_blank" rel="noreferrer">live console</a>, where a retrain of this fine-tuned model ({d.sealed.n_train} images, same recipe) reads them beside the shipped reading. It is marked not validated, decides nothing, and only those four exact files get it; its weights are checked against an approved change record before every reading. A fine-tuned model that decided would be the lab’s own, approved as a change and checked on held-out images first. The weights inherit Cellpose-SAM’s non-commercial terms and are not published.
         </Note>
         <Note title="Why MSC reads “Validated where measurable” above.">
           That status covers only the criteria its test images could measure; the passage-range ones (A2–A4) were not measurable on MSC or EVICAN.{" "}

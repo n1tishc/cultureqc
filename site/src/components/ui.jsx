@@ -180,5 +180,22 @@ export function Fig({ letter, title, children, legend, className = "" }) {
   );
 }
 
+/* A page's headline results, each linking to its section: what a reader should know before the detail. */
+export function Glance({ items }) {
+  return (
+    <ul className="glance">
+      {items.filter(Boolean).map((it) => (
+        <li key={it.href}>
+          <a href={it.href}>
+            <span className="glance-label">{it.label}</span>
+            <span className="glance-value num">{it.value}</span>
+            <span className="glance-note">{it.note}</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export const pct = (x, d = 1) => `${Number(x).toFixed(d)}%`;
 export const short = (h, n = 6) => `${h.slice(0, n)}…${h.slice(-4)}`;

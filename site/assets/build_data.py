@@ -13,6 +13,8 @@ Nothing here is typed in by hand. Sources:
 - README.md: the V1-V10 table and the results table, whose numbers
   tests/test_readme_provenance.py checks against their source files.
 - demo/figures/contamination_scale.png: the real-size contamination figure.
+- results/confluency_finetune_figure.png (+ _curves.json): the before/after picture of the passage-range test,
+  cut into its eight panels; the readings beside them are the scored ones (results/confluency_mcellseg.csv).
 - demo/examples/cutoff_calibrated.json: the calibrated cutoff's not-fully-blind
   disclosure (scripts/export_cutoff_examples.py, from results/confluency_cutoff.md).
 
@@ -162,9 +164,9 @@ def results_rows(readme):
 
 # ── images ──
 
-def save_webp(src, dst, max_w=None, quality=84, crop=None):
+def save_webp(src, dst, max_w=None, quality=84, crop=None, mode="L"):
     from PIL import Image
-    im = Image.open(src).convert("L")
+    im = Image.open(src).convert(mode)
     if crop:
         im = im.crop(crop)
     if max_w and im.width > max_w:
@@ -472,6 +474,43 @@ def build_dense_test():
     }
 
 
+# The panels of results/confluency_finetune_figure.png, one row per setup in the order of its "chosen" list:
+# (left, top, right, bottom) of the calibration-profile panel, then the fine-tuned one, measured on that PNG.
+# The figure's own titles are set in HTML instead, from the numbers below.
+FINETUNE_PANELS = [((46, 120, 469, 543), (543, 120, 966, 543)), ((46, 601, 469, 1024), (543, 601, 966, 1024)),
+                   ((17, 1100, 498, 1486), (514, 1100, 996, 1486)), ((46, 1562, 469, 1986), (543, 1562, 966, 1986))]
+
+
+def build_finetune_figure(img_dir):
+    """What the passage-range test's two readings cover, on one test image per setup: the shipped method (a
+    calibration profile per setup) and the fine-tuned model, each against the experts' outline. Not a new result:
+    the picture is drawn with a retrain of the scored model (results/confluency_finetune_figure.md); the
+    readings given are the scored test's."""
+    png, curves = rel("results", "confluency_finetune_figure.png"), rel("results", "confluency_finetune_figure_curves.json")
+    scored_csv = rel("results", "confluency_mcellseg.csv")
+    if not all(os.path.exists(p) for p in (png, curves, scored_csv)):
+        return None
+    sys.path.insert(0, rel("scripts"))
+    import confluency_finetune_figure as ff   # the drawing tolerance, not retyped here
+    c = json.load(open(curves))
+    scored = {r["name"]: r for r in csv.DictReader(open(scored_csv))}
+    panels = []
+    for i, (ch, boxes) in enumerate(zip(c["chosen"], FINETUNE_PANELS)):
+        s = scored[ch["name"]]
+        imgs = {}
+        for arm, box in zip("CF", boxes):
+            imgs[arm] = f"{IMG_URL}/finetune_{i + 1}_{arm}.webp"
+            if img_dir:
+                save_webp(png, os.path.join(img_dir, f"finetune_{i + 1}_{arm}.webp"), crop=box, mode="RGB", quality=86)
+        # gt at full precision: 63.94997 rounded to 63.95 first would show as 64.0, not the figure's 63.9
+        panels.append({"setup": ch["setup"], "name": ch["name"], "gt": round(float(ch["gt"]), 6),
+                       "C": r3(float(s["C_reading"])), "F": r3(float(s["F_reading"])),
+                       "C_drawn": r3(ch["C_drawn"]), "F_drawn": r3(ch["F_drawn"]),
+                       "C_cut": ch["C_cut"], "F_cut": ch["F_cut"], "C_img": imgs["C"], "F_img": imgs["F"]})
+    return {"panels": panels, "model": c["run"]["run"], "n_train": c["run"]["n"], "tol": ff.TOL,
+            "source": "results/confluency_finetune_figure.md"}
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--images", action="store_true")
@@ -502,6 +541,7 @@ def main():
         "results": results_rows(readme),
         "profiles": build_profiles(),
         "dense_test": build_dense_test(),
+        "finetune_figure": build_finetune_figure(IMG_OUT if args.images else None),
         # scripts/export_cutoff_examples.py, from results/confluency_cutoff.md: why 3.78 pp is not fully blind
         "cutoff_disclosure": json.load(open(rel("demo", "examples", "cutoff_calibrated.json")))["disclosure"]["text"],
         "decisions": readme_bullets(readme, "**What changed because of it**"),

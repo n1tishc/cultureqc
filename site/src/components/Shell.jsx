@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { Icon } from "./ui";
 
 /* What every page shares: the top bar, the closing call to action and the
-   footer. The home page's sections are anchors; validation and release notes
-   are pages of their own. */
+   footer. The home page's sections are anchors; records, validation and
+   release notes are pages of their own. */
 
 /* eslint-disable-next-line no-undef */
 export const COMMIT = typeof __COMMIT__ !== "undefined" ? __COMMIT__ : "";
@@ -14,15 +14,14 @@ export const VERSION = "v0.4";
 const HOME_NAV = [
   ["how", "How it works"],
   ["timeline", "Flask history"],
-  ["records", "Records"],
-  ["integration", "Integration"],
 ];
 
 /* Home sections without a nav entry, observed so none of the links above
    stays lit while they are on screen. */
-const UNLISTED = ["top", "accuracy", "passage", "specs", "scope"];
+const UNLISTED = ["top", "accuracy", "passage", "trail", "specs", "scope"];
 
 const PAGES = [
+  ["records", "/records", "Records"],
   ["validation", "/validation", "Validation"],
   ["release-notes", "/release-notes", "Release notes"],
 ];
@@ -147,10 +146,10 @@ export function Footer({ data }) {
             <a href="/#timeline">Flask history</a>
           </p>
           <p>
-            <a href="/#records">Records</a>
+            <a href="/records">Records</a>
           </p>
           <p>
-            <a href="/#integration">Integration</a>
+            <a href="/records#integration">Integration</a>
           </p>
         </div>
         <div>

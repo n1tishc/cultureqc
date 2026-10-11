@@ -8324,6 +8324,66 @@
    "source": "results/confluency_dense_tiles.md"
   }
  },
+ "finetune_figure": {
+  "panels": [
+   {
+    "setup": "lsm_2796",
+    "name": "HEK-GFP_12000cells_40x_4czi-C_2.tif",
+    "gt": 63.949969,
+    "C": 39.988,
+    "F": 67.559,
+    "C_drawn": 39.997,
+    "F_drawn": 67.295,
+    "C_cut": -4.0,
+    "F_cut": 0.0,
+    "C_img": "img/v3/finetune_1_C.webp",
+    "F_img": "img/v3/finetune_1_F.webp"
+   },
+   {
+    "setup": "lsm_hek_1024",
+    "name": "HEK_6h_44_z1_C004Z008.tif",
+    "gt": 75.674629,
+    "C": 78.949,
+    "F": 79.355,
+    "C_drawn": 78.949,
+    "F_drawn": 79.338,
+    "C_cut": 0.0,
+    "F_cut": 0.0,
+    "C_img": "img/v3/finetune_2_C.webp",
+    "F_img": "img/v3/finetune_2_F.webp"
+   },
+   {
+    "setup": "cd7_huvec_dic",
+    "name": "HUVEC_Cellsonly_CD7_09_81-0007.tif",
+    "gt": 77.290232,
+    "C": 82.827,
+    "F": 78.496,
+    "C_drawn": 82.831,
+    "F_drawn": 78.698,
+    "C_cut": -4.0,
+    "F_cut": 0.0,
+    "C_img": "img/v3/finetune_3_C.webp",
+    "F_img": "img/v3/finetune_3_F.webp"
+   },
+   {
+    "setup": "oir_1024",
+    "name": "P2_siRNA_Hep_4_40xoir-C_3.tif",
+    "gt": 75.377655,
+    "C": 47.587,
+    "F": 79.511,
+    "C_drawn": 47.6,
+    "F_drawn": 80.517,
+    "C_cut": -4.0,
+    "F_cut": 0.0,
+    "C_img": "img/v3/finetune_4_C.webp",
+    "F_img": "img/v3/finetune_4_F.webp"
+   }
+  ],
+  "model": "mcellseg_ftF_r2",
+  "n_train": 79,
+  "tol": 2.0,
+  "source": "results/confluency_finetune_figure.md"
+ },
  "cutoff_disclosure": "Not fully blind: the cutoff idea came from error analysis of these 33 images, and a quarter-resolution sweep showing the evaluation curve was seen before the rule was written. The rule picked −3.5, which is not the evaluation-best (−3.0 gives 3.40 pp); calibration MAE is flat from −3.5 to −2.5 (6.95–7.00 pp). The 33 are all under 500,000 px, while 28 of the 65 calibration images are larger.",
  "decisions": [
   "The QC classifier is demoted: recorded and shown collapsed, not used for the action.",

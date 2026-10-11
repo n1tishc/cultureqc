@@ -1414,7 +1414,8 @@ td .num {
   flex-direction: column;
 }
 
-.tl-chart svg {
+/* The chart itself; icons in the key below it keep their own 1em size. */
+.tl-chart > svg {
   width: 100%;
   height: auto;
   display: block;
@@ -2875,4 +2876,388 @@ td.own {
   font-size: 17px;
   font-weight: 600;
   color: var(--ink);
+}
+
+/* ── v0.4 layout: the records ledger, the GMP boundary, folded detail ── */
+
+/* Home: the stored chain as a ledger, each row re-hashed in this browser. */
+.ledger {
+  background: var(--stage);
+  color: var(--stage-ink);
+  border-radius: 8px;
+  padding: 6px 0 8px;
+  min-width: 0;
+}
+
+.ledger-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 18px 10px;
+  border-bottom: 1px solid var(--stage-rule);
+  font-size: 12.5px;
+  color: var(--stage-ink-3);
+}
+
+.ledger-head span:first-child {
+  color: var(--stage-ink);
+  font-weight: 600;
+}
+
+.ledger ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ledger li {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto 108px 16px;
+  gap: 12px;
+  align-items: center;
+  padding: 9px 18px;
+  font-size: 13px;
+  border-bottom: 1px solid color-mix(in oklab, var(--stage-rule) 60%, transparent);
+}
+
+.ledger li:last-child {
+  border-bottom: none;
+}
+
+.ledger li .num {
+  color: var(--stage-ink-3);
+  font-size: 12px;
+}
+
+.ledger-what {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ledger-val {
+  color: var(--stage-ink-2);
+  font-size: 12.5px;
+}
+
+.ledger code {
+  color: var(--stage-ink-3);
+  font-size: 12px;
+}
+
+.ledger li .ico {
+  color: var(--passage-l);
+}
+
+.ledger li[data-ok="false"] .ico {
+  color: var(--review-l);
+}
+
+.ledger li[data-ok="pending"] .ico {
+  color: var(--stage-ink-3);
+}
+
+/* Records: where the records stop and the host platform starts. */
+.gmp {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.gmp-col {
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 18px 20px;
+}
+
+.gmp-col h3 {
+  margin: 0 0 12px;
+  font-size: 15.5px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.gmp-col ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+
+.gmp-col li {
+  position: relative;
+  padding-left: 16px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+
+.gmp-col li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.62em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--cell-ink);
+}
+
+/* Detail a reader can open: the method behind a result, the numbers behind a note. */
+.more-details {
+  margin-top: 10px;
+}
+
+.more-details summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  list-style: none;
+  font-size: 13.5px;
+  font-weight: 550;
+  color: var(--cell-ink);
+  user-select: none;
+}
+
+.more-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.more-details summary::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform 160ms var(--ease);
+}
+
+.more-details[open] summary::before {
+  transform: rotate(45deg) translate(-1px, -1px);
+}
+
+.more-details > p {
+  margin: 8px 0 0 !important;
+  font-size: 14px !important;
+  line-height: 1.6;
+  color: var(--ink-2);
+  max-width: 72ch;
+}
+
+.note .more-details {
+  margin-top: 6px;
+}
+
+.note .more-details summary {
+  font-size: 13px;
+}
+
+/* The passage-range test's findings, as cards. */
+.card-notes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.card-note {
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 18px 20px;
+}
+
+.card-note h4 {
+  margin: 0 0 8px;
+  font-size: 15.5px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+}
+
+.card-note p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+
+/* The before/after figure: one setup at a time. */
+.seg-tabs {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px;
+  margin-bottom: 14px;
+  background: #eef1f4;
+  border-radius: 8px;
+}
+
+.seg-tabs button {
+  font: 500 12.5px/1 var(--mono);
+  color: var(--ink-2);
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.seg-tabs button[aria-selected="true"] {
+  background: var(--panel);
+  color: var(--ink);
+  box-shadow: 0 1px 2px rgb(13 17 23 / 0.12);
+}
+
+.ft-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.ft-pair figure {
+  margin: 0;
+  min-width: 0;
+}
+
+.ft-pair img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 6px;
+  background: var(--stage);
+}
+
+.ft-pair figcaption {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 12px;
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+.ft-title b {
+  color: var(--ink);
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+.ft-nums {
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.ft-nums span {
+  color: var(--ink-3);
+  margin: 0 6px 0 2px;
+}
+
+.ft-nums em {
+  font-style: normal;
+  color: var(--passage);
+}
+
+.ft-nums em[data-big] {
+  color: var(--review);
+}
+
+/* Release notes: an earlier release, folded behind what it held. */
+.release-fold > summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 24px;
+  cursor: pointer;
+  list-style: none;
+  color: var(--ink-2);
+  max-width: 78ch;
+}
+
+.release-fold > summary::-webkit-details-marker {
+  display: none;
+}
+
+.release-fold-act {
+  font-size: 13.5px;
+  font-weight: 550;
+  color: var(--cell-ink);
+  white-space: nowrap;
+}
+
+.release-fold[open] > summary {
+  margin-bottom: 24px;
+}
+
+.release-fold[open] .release-fold-act {
+  display: none;
+}
+
+@media (max-width: 1080px) {
+  .gmp {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 760px) {
+  .card-notes,
+  .ft-pair {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ledger li {
+    grid-template-columns: 24px minmax(0, 1fr) 16px;
+    row-gap: 2px;
+  }
+
+  .ledger li .ico {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  .ledger-val {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .ledger code {
+    display: none;
+  }
+}
+
+/* Phones: the record glossary stacks each field name over its meaning. */
+@media (max-width: 760px) {
+  .fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .fields dt {
+    padding: 12px 0 2px;
+    border-bottom: none;
+    overflow-wrap: anywhere;
+  }
+
+  .fields dd {
+    padding-top: 0;
+  }
+}
+
+.int-grid {
+  align-items: start;
+}
+
+.more-details + .sources {
+  margin-top: 10px !important;
+}
+
+.card-note:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
 }

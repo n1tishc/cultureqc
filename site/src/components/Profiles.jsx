@@ -169,7 +169,7 @@ export function Profiles({ data }) {
       lede={
         <>
           <p>
-            The cutoff that turns Cellpose-SAM’s probability map into a number depends on the microscope. Each setup gets a calibration profile: a cutoff fitted on labelled images from that setup, and a 90% error band measured on images left out of the fit. Every reading names its profile, and a reading whose band includes the passage target goes to a person. Method, splits and pass criteria were committed before any image was scored.
+            The cutoff that turns Cellpose-SAM’s probability map into a number depends on the microscope. Each setup gets a calibration profile: a cutoff fitted on its own labelled images, and a 90% error band measured on images left out of the fit. Method, splits and pass criteria were committed before any image was scored.
           </p>
           <p className="sources">
             <Path>{P.source}</Path>

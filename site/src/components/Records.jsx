@@ -246,10 +246,59 @@ export default function Records({ examples, data }) {
           </dl>
         </div>
       </div>
-
-      <div className="scope">
-        <b>Where this sits for GMP.</b> The chain catches an edited, inserted or reordered record and carries its provenance: image, map, profile, configs, weights and anomaly bank by hash; models and rules by name and version. It is designed to be written into a host platform’s Part 11 audit trail, which is also where its checkpoint belongs, and is not Part 11 compliant on its own. Identity, access control and electronic signatures belong to the platform; a review record carries the reviewer, the meaning of the signature and a reference to the platform’s signature record. Field-by-field mapping: <Path>docs/audit_mapping.md</Path>; the boundary: <Path>docs/host_platform.md</Path>.
-      </div>
     </>
+  );
+}
+
+/* Where the records stop and the host platform starts: what the chain itself shows, what only the platform can
+   provide, and how a person's decision is kept, in three columns. */
+const GMP = [
+  ["What the chain shows", [
+    "An edited, inserted or reordered record breaks it.",
+    "Its provenance, by SHA-256: the image, the probability map, the calibration profile, every config, the model weights and the anomaly bank.",
+    "Models and rules by name and version.",
+    "A rewritten or truncated chain, against the anchored checkpoint kept outside the log.",
+  ]],
+  ["What the host platform provides", [
+    "Identity, access control and electronic signatures.",
+    "The Part 11 audit trail the records are written into, which is also where the checkpoint belongs.",
+    "The keys only it knows: flask, passage history, instrument and field of view.",
+  ]],
+  ["How a decision is kept", [
+    "A person’s review is a new record pointing to the reading’s hash; the reading is never edited.",
+    "It carries the reviewer, the meaning of the signature and a reference to the platform’s signature record.",
+    "A calibration change is a record too: the profile before and after by SHA-256, its evidence and who approved it.",
+  ]],
+];
+
+export function GmpBoundary() {
+  return (
+    <section className="sec" id="gmp" aria-labelledby="gmp-h">
+      <div className="wrap">
+        <header className="sec-head">
+          <h2 id="gmp-h">Where this sits for GMP</h2>
+          <div>
+            <p>The records are designed to be written into a host platform’s audit trail. They are not Part 11 compliant on their own: the platform supplies who did what, and signs it.</p>
+          </div>
+        </header>
+        <div className="gmp">
+          {GMP.map(([title, items]) => (
+            <div className="gmp-col" key={title}>
+              <h3>{title}</h3>
+              <ul>
+                {items.map((t) => (
+                  <li key={t}>{t}</li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+        <p className="spec-foot">
+          <span>
+            Field-by-field mapping: <Path>docs/audit_mapping.md</Path> · the boundary: <Path>docs/host_platform.md</Path>
+          </span>
+        </p>
+      </div>
+    </section>
   );
 }
