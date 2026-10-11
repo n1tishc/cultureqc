@@ -127,6 +127,16 @@ def test_finetuned_reading_when_the_weights_match(ft):
     assert r["status"] == "not_validated" and r["band_pp"] is None and built == [str(w)]
 
 
+def test_the_comparison_view_hook_leaves_the_reading_unchanged(ft):
+    """on_visual (the console's Shipped / Fine-tuned view) gets the pixels counted; the record's dict is the same."""
+    tmp, w, cfg, built = ft
+    plain = finetuned.read(np.zeros((10, 10), np.uint8), "m", str(cfg))
+    seen = []
+    hooked = finetuned.read(np.zeros((10, 10), np.uint8), "m", str(cfg), on_visual=seen.append)
+    assert hooked == plain and len(seen) == 1
+    assert seen[0].dtype == bool and seen[0].mean() * 100 == plain["confluency_pct"]
+
+
 def test_finetuned_refusal_loads_nothing(ft):
     tmp, w, cfg, built = ft
     w.write_bytes(b"weights v1, one byte off")

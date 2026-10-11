@@ -90,6 +90,25 @@ ACTION_META = {
     "human_review": ("Human Review", "red"),
     "reimage": ("Re-image", "amber"),
 }
+# What each action means for the flask, beside the badge (the site's ui.jsx says the same).
+ACTION_GLOSS = {
+    "passage": "ready to split the culture",
+    "feed": "change the medium, keep culturing",
+    "continue": "keep culturing; not ready to passage",
+    "human_review": "a person decides before anything happens",
+    "reimage": "take the image again",
+}
+# The image views. A fine-tuned demo image gets both models' coverage, each with the experts' outline.
+VIEWS = ["Original", "Overlay", "3D"]
+COMPARE_VIEWS = ["Original", "Shipped", "Fine-tuned", "3D"]
+EXPERTS_RGB = (250, 204, 21)
+# The counted pixels are blended toward a fixed green (the key's colour), not given a green channel of 190 as in the
+# Overlay view: on a frame brighter than 190, as the HUVEC demo image is (median 191), that tint does not show.
+COUNTED_RGB, COUNTED_ALPHA = (0, 190, 0), 0.45
+# The imaging setup the anomaly check's reference frames come from (normal C2C12, culture/anomaly.py LIVE_LIMITS). On
+# any other setup an unflagged image is "Not flagged", not "Within the normal range". The examples' cell line is a
+# placeholder ("unknown"), so the setup, not the cell line, says which images these are.
+ANOMALY_REFERENCE_SETUP = replay_timeline.SETUP_PROFILE
 STATUS_TEXT = {"validated": "validated", "failed": "failed its criteria", "in_domain_check": "in-domain check only",
                "uncalibrated": "uncalibrated"}
 
@@ -147,12 +166,13 @@ def run_analysis(original_path, cell_line, target_confluency, profile_id=None):
                       finetuned_id=lab_demo.model_id() if lab else None)
     overlay_path = os.path.join(WORK_DIR, f"overlay_{next(tempfile._get_candidate_names())}.png")
     cv2.imwrite(overlay_path, cv2.cvtColor(a.overlay, cv2.COLOR_RGB2BGR))
+    compare = compare_overlays(img, a.compare_fg, lab) if lab and a.compare_fg else None
 
     finalized = writer.append(build_record(a, original_path, cell_line))
     chain_ok, _ = verify_chain(LOG_PATH)
 
     results_html = render_results(
-        anomaly_html=render_anomaly(img, a.anomaly),
+        anomaly_html=render_anomaly(img, a.anomaly, profile_id),
         demoted=a.demoted,
         qc_calibrated=a.qc.calibrated,
         qc_flag=a.qc.flag,
@@ -165,19 +185,77 @@ def run_analysis(original_path, cell_line, target_confluency, profile_id=None):
         target_confluency=target_confluency,
         action=a.action,
         rationale=a.rationale["rationale"],
+        reason=a.reason,
         record=finalized,
         chain_ok=chain_ok,
         record_count=writer.record_count,
         finetuned=a.finetuned,
         lab=lab,
+        compared=compare is not None,
     )
 
     known = precomputed.match(original_path, EXAMPLES)   # same image as an example: same opening camera
     map_view = {"prob": a.probmap_x1000, "confluency": a.confluency.to_dict(),
                 "map_hash": finalized["confluency_map_hash"], "precomputed": False,
                 "id": known["id"] if known else None}
-    return (overlay_path, gr.update(visible=True, value="Overlay"), results_html, overlay_path, map_view,
+    if compare:
+        return (compare["Shipped"], gr.update(visible=True, choices=COMPARE_VIEWS, value="Shipped"), results_html,
+                dict(compare, Overlay=overlay_path), map_view, finalized, gr.update(visible=True))
+    return (overlay_path, gr.update(visible=True, choices=VIEWS, value="Overlay"), results_html, overlay_path, map_view,
             finalized, gr.update(visible=True))
+
+
+def compare_overlays(img, compare_fg, lab):
+    """A fine-tuned demo image: what each model counted, in the overlay's green, with the experts' outline in
+    yellow on both, so the gap between a reading and the experts' coverage is visible. Display only."""
+    edge = lab_demo.outline(lab["mask"], img.shape[:2])
+    out = {}
+    for view, key in (("Shipped", "shipped"), ("Fine-tuned", "finetuned")):
+        fg = compare_fg[key]
+        if fg.shape != img.shape[:2]:
+            fg = cv2.resize(fg.astype(np.uint8), (img.shape[1], img.shape[0]), interpolation=cv2.INTER_NEAREST) > 0
+        rgb = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
+        green = np.full_like(rgb, COUNTED_RGB)
+        rgb = np.where(fg[:, :, None], cv2.addWeighted(rgb, 1 - COUNTED_ALPHA, green, COUNTED_ALPHA, 0), rgb)
+        rgb[edge] = EXPERTS_RGB
+        path = os.path.join(WORK_DIR, f"{key}_{next(tempfile._get_candidate_names())}.png")
+        cv2.imwrite(path, cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR))
+        out[view] = path
+    return out
+
+
+def gpu_refusal(err) -> bool:
+    """Hugging Face's shared GPU turned the run away (quota or capacity), as opposed to an error in the code."""
+    text = str(err).lower()
+    return "zerogpu" in text or "gpu quota" in text or "gpu task aborted" in text or "no gpu" in text
+
+
+def analyze_or_explain(original_path, cell_line, target_confluency, profile_id=None):
+    """run_analysis, for the Analyze button. If the run fails (the shared GPU refuses it, a run outlasts its GPU
+    time, or the code raises), the results pane says so and the button comes back, instead of the error ending
+    the event chain with the button still spinning. Nothing is read and no record is written."""
+    try:
+        return run_analysis(original_path, cell_line, target_confluency, profile_id)
+    except Exception as e:  # noqa: BLE001 - every failure gets the same card and leaves the console usable
+        msg = str(e).strip() or type(e).__name__
+        if gpu_refusal(e):
+            head = "Live analysis is not available right now"
+            body = ("Hugging Face's shared GPU turned this run away. Its message: "
+                    f"<q>{html.escape(msg)}</q> Visitors who are not signed in get a small GPU allowance; signing "
+                    "in to Hugging Face raises it, and it refills over time.")
+        else:
+            head = "The analysis stopped with an error"
+            body = f"<code>{html.escape(msg)}</code> Press Analyze to try again."
+        card = f"""
+<div class="rc-stack">
+  <div class="rc-card error-card">
+    <div class="error-head">{head}</div>
+    <div class="error-body">{body}</div>
+    <div class="error-body">Nothing was read and no record was written. The stored examples under the image open
+    without a GPU, each with its reading, action and record.</div>
+  </div>
+</div>"""
+        return (gr.update(), gr.update(visible=False), card, None, None, None, gr.update(visible=False))
 
 
 def sign_review(reading, reviewer, decision, final_action, reason):
@@ -205,10 +283,13 @@ def sign_review(reading, reviewer, decision, final_action, reason):
     <pre class="audit-json">{html.escape(json.dumps(rec, indent=2, sort_keys=True))}</pre></div>"""
 
 
-def render_anomaly(img, anomaly):
+def render_anomaly(img, anomaly, setup=None):
     """The per-image anomaly card (B2): flag, score vs the bin's threshold, the
-    zoomed tile heatmap, and the known limits. A flag holds a passage (rules v0.3)."""
+    zoomed tile heatmap, and the known limits. A flag holds a passage (rules v0.3).
+    Its reference frames are normal C2C12 only, so an unflagged image from any
+    other imaging setup reads "Not flagged", not "Within the normal range"."""
     limits = "".join(f"<li>{html.escape(t)}</li>" for t in LIVE_LIMITS)
+    in_reference = setup == ANOMALY_REFERENCE_SETUP
     if anomaly.status != "ok":
         return f"""
   <div class="rc-card anomaly-card" style="animation-delay:100ms">
@@ -216,8 +297,16 @@ def render_anomaly(img, anomaly):
       <span class="anomaly-state muted">Unavailable</span></div>
     <div class="classifier-note">{html.escape(anomaly.reason or "")}</div>
   </div>"""
-    color = STATUS_COLORS["red"] if anomaly.flag else STATUS_COLORS["green"]
-    state = "Flagged for review" if anomaly.flag else "Within the normal range"
+    if anomaly.flag:
+        color, state = STATUS_COLORS["red"], "Flagged for review"
+    elif in_reference:
+        color, state = STATUS_COLORS["green"], "Within the normal range"
+    else:
+        color, state = "#9ca3af", "Not flagged"
+    scope = ("" if in_reference else
+             '<div class="anomaly-scope">Its reference frames are normal C2C12 only, so on this image the check is '
+             'uncalibrated: a flag still holds a passage for a person, but no flag is not evidence of a normal '
+             'culture.</div>')
     ratio = anomaly.score / anomaly.threshold
     tile_uri = png(cv2.cvtColor(anomaly_tile_view(img, anomaly), cv2.COLOR_RGB2BGR))
     return f"""
@@ -235,7 +324,11 @@ def render_anomaly(img, anomaly):
         centre region only. Boxes: the patches that set the score.</div>
       </div>
     </div>
-    <ul class="anomaly-limits">{limits}</ul>
+    {scope}
+    <details class="anomaly-more">
+      <summary><span class="audit-chevron"></span>What this check can't see ({len(LIVE_LIMITS)} known limits)</summary>
+      <ul class="anomaly-limits">{limits}</ul>
+    </details>
   </div>"""
 
 
@@ -264,7 +357,7 @@ def show_example(ex):
     anomaly = precomputed.anomaly_result(ex)
     qc = ex["qc"]
     return render_results(
-        anomaly_html=render_anomaly(img, anomaly),
+        anomaly_html=render_anomaly(img, anomaly, (ex["record"].get("confluency_profile") or {}).get("id")),
         demoted=ex["demoted"],
         qc_calibrated=qc["calibrated"],
         qc_flag=qc["flag"],
@@ -277,6 +370,7 @@ def show_example(ex):
         target_confluency=ex["target_confluency"],
         action=ex["action"],
         rationale=ex["rationale"],
+        reason=ex["record"].get("action_reason"),
         record=ex["record"],
         chain_ok=None,
         record_count=None,
@@ -343,16 +437,19 @@ def confluency_card(record, confluency_pct, confluency_confidence, confluency_me
 """
 
 
-def lab_card(lab, delay_ms):
+def lab_card(lab, delay_ms, compared=False):
     """The experts' coverage of a demo-set image, for comparison; neither model sees it."""
     if not lab:
         return ""
+    how = ('<div class="band-line compare-key"><span class="key-green"></span>counted as cell by the model '
+           '<span class="key-yellow"></span>the experts\' outline · switch <b>Shipped</b> and <b>Fine-tuned</b> '
+           'above the image</div>' if compared else "")
     return f"""
   <div class="rc-card lab-card" style="animation-delay:{delay_ms}ms">
     <div class="lab-line">Demo image <code>{html.escape(lab["name"])}</code> · experts' outline coverage
       <b>{lab["experts_pct"]:.1f}%</b></div>
     <div class="band-line">From the experts' own mask, shown for comparison; neither model uses it.
-      {html.escape(lab_demo.CREDIT)}</div>
+      {html.escape(lab_demo.CREDIT)}</div>{how}
   </div>
 """
 
@@ -402,6 +499,8 @@ def render_results(
     example=None,
     finetuned=None,
     lab=None,
+    reason=None,
+    compared=False,
 ):
     flag_label, flag_color_key = FLAG_META.get(qc_flag, (qc_flag.replace("_", " ").title(), "amber"))
     flag_color = STATUS_COLORS[flag_color_key]
@@ -409,6 +508,18 @@ def render_results(
 
     action_label, action_color_key = ACTION_META.get(action, (action.replace("_", " ").title(), "amber"))
     action_color = STATUS_COLORS[action_color_key]
+    # The rule's own reason (the record's action_reason). qc_rationale, the older templated sentence, stays in the
+    # record only: on a band that includes the target it read "below target ... flag for human review".
+    decided_by = (record or {}).get("decided_by")
+    action_html = f"""
+  <div class="rc-card action-card" style="animation-delay:200ms">
+    <div class="action-row">
+      <span class="action-badge" style="background:{_tint(action_color, 0.15)};color:{action_color}">{html.escape(action_label)}</span>
+      <span class="action-gloss">{html.escape(ACTION_GLOSS.get(action, ""))}</span>
+    </div>
+    <div class="action-reason">{html.escape(reason or rationale)}</div>
+    {f'<div class="action-meta">Decided by <code>{html.escape(decided_by)}</code></div>' if decided_by else ""}
+  </div>"""
 
     evidence_rows = []
     for cls_key, (_, cls_color_key) in FLAG_META.items():
@@ -448,15 +559,10 @@ def render_results(
     if demoted:
         return f"""
 <div class="rc-stack">
-{provenance_html}{lab_card(lab, 0)}
+{provenance_html}{lab_card(lab, 0, compared)}
 {confluency_card(record, confluency_pct, confluency_confidence, confluency_method, target_confluency, 0)}
 {finetuned_card(finetuned, 50)}{anomaly_html}
-
-  <div class="rc-card action-card" style="animation-delay:200ms">
-    <span class="action-badge" style="background:{_tint(action_color, 0.15)};color:{action_color}">{html.escape(action_label)}</span>
-  </div>
-
-  <div class="rc-card rationale" style="animation-delay:250ms">{html.escape(rationale)}</div>
+{action_html}
 
   <details class="rc-card audit-details classifier-details" style="animation-delay:300ms">
     <summary><span class="audit-chevron"></span>QC classifier: {html.escape(CLASSIFIER_SUMMARY)}</summary>
@@ -492,12 +598,8 @@ def render_results(
     <div class="classifier-note">{html.escape(calibration_line)}</div>
   </div>
 
-{lab_card(lab, 100)}{confluency_card(record, confluency_pct, confluency_confidence, confluency_method, target_confluency, 100)}
-{finetuned_card(finetuned, 150)}  <div class="rc-card action-card" style="animation-delay:200ms">
-    <span class="action-badge" style="background:{_tint(action_color, 0.15)};color:{action_color}">{html.escape(action_label)}</span>
-  </div>
-
-  <div class="rc-card rationale" style="animation-delay:300ms">{html.escape(rationale)}</div>
+{lab_card(lab, 100, compared)}{confluency_card(record, confluency_pct, confluency_confidence, confluency_method, target_confluency, 100)}
+{finetuned_card(finetuned, 150)}{action_html}
 
   <details class="rc-card audit-details" style="animation-delay:400ms">
     <summary><span class="audit-chevron"></span>Audit Record</summary>
@@ -540,7 +642,7 @@ def on_example(path):
         "prob": prob, "confluency": ex["confluency"], "map_hash": ex["record"].get("confluency_map_hash"),
         "precomputed": True, "id": ex["id"]}
     prof = (ex["record"].get("confluency_profile") or {}).get("id", DEFAULT_PROFILE)
-    return (overlay, gr.update(visible=True, value="Overlay"), show_example(ex), precomputed.image_path(ex),
+    return (overlay, gr.update(visible=True, choices=VIEWS, value="Overlay"), show_example(ex), precomputed.image_path(ex),
             overlay, ex["cell_line"], ex["target_confluency"], map_view, prof, None, gr.update(visible=False))
 
 
@@ -560,7 +662,7 @@ def fresh_image():
 
 
 def switch_view(choice, original_path, overlay_path, map_view):
-    """Original / Overlay show the image; 3D swaps in the confluency landscape."""
+    """Original / Overlay (or Shipped / Fine-tuned) show the image; 3D swaps in the confluency landscape."""
     if choice == "3D" and map_view is not None:
         return (gr.update(visible=False),
                 gr.update(value=confluency_3d.landscape_figure(map_view["prob"], example_id=map_view.get("id")),
@@ -568,6 +670,8 @@ def switch_view(choice, original_path, overlay_path, map_view):
                 gr.update(value=confluency_3d.landscape_note(map_view["prob"], map_view["confluency"],
                                                              map_view["map_hash"], map_view["precomputed"]),
                           visible=True))
+    if isinstance(overlay_path, dict):          # a fine-tuned demo image: one overlay per model
+        overlay_path = overlay_path.get(choice) or overlay_path.get("Overlay")
     path = original_path if choice == "Original" else (overlay_path or original_path)
     return gr.update(value=path, visible=True), gr.update(visible=False), gr.update(visible=False)
 
@@ -691,11 +795,12 @@ with gr.Blocks(
 
             with gr.Row(elem_classes="real-examples-row"):
                 gr.Markdown(
-                    "**Examples: precomputed, labelled as such; press Analyze to run one live.** "
-                    "C2C12 frames are held-out frames from the recorded time-lapse replays; the contaminated ones are "
-                    "simulated (bacteria pasted at 16.5× their real size). EVICAN: two of its 33 test images, "
-                    "read with the EVICAN calibration profile and compared with the dataset's own expert masks. "
-                    + " · ".join(sorted({part for e in EXAMPLES for part in e["credit"].split("; ")}))
+                    "**Stored examples, precomputed and labelled as such.** Press Analyze to run one live. "
+                    "C2C12: held-out frames from the recorded time-lapse replays; the contaminated ones are simulated "
+                    "(bacteria pasted at 16.5× their real size). EVICAN: two of its 33 test images, read with the "
+                    "EVICAN calibration profile.\n\n"
+                    '<span class="replay-credit">'
+                    + " · ".join(sorted({part for e in EXAMPLES for part in e["credit"].split("; ")})) + "</span>"
                 )
                 # Spaces set GRADIO_CACHE_EXAMPLES=true; caching would write the
                 # stored maps into Gradio's CSV log (over its field limit) and
@@ -716,9 +821,10 @@ with gr.Blocks(
                 with gr.Row(elem_classes="real-examples-row lab-demo-row"):
                     gr.Markdown(
                         f"**Fine-tuned demo set: {len(LAB_IMAGES)} test images from the lab the fine-tuned model "
-                        "was trained on; it never saw these images.** Press one, then Analyze. Only these images get "
-                        "the fine-tuned reading, shown beside the shipped one; it decides nothing. "
-                        + lab_demo.CREDIT)
+                        "was trained on; it never saw these images.** Press one, then Analyze: both models' coverage "
+                        "is drawn against the experts' outline. Only these images get the fine-tuned reading; it "
+                        "decides nothing.\n\n"
+                        f'<span class="replay-credit">{html.escape(lab_demo.CREDIT)}</span>')
                     for _lab in LAB_IMAGES:
                         gr.Button(_lab["label"], size="sm", elem_classes="lab-btn").click(
                             fn=(lambda n: lambda: on_lab_image(n))(_lab["name"]), inputs=None,
@@ -782,14 +888,20 @@ with gr.Blocks(
            outputs=[map_state, reading_state, review_panel, review_out, landscape_plot, landscape_note, image_view],
            show_progress="hidden")
 
-    analyze_btn.click(
+    # analyze_or_explain turns a failed run into a card, so the chain always reaches end_loading. In Gradio 6 an
+    # error skips the .then steps after it (only .failure runs), so .failure restores the button too, for errors
+    # raised outside the function (a lost connection, the queue).
+    analysis = analyze_btn.click(
         fn=start_loading, inputs=None, outputs=[analyze_btn, loading_overlay], show_progress="hidden",
     ).then(
-        fn=run_analysis,
+        fn=analyze_or_explain,
         inputs=[original_state, cell_line, target_conf, setup],
         outputs=[image_view, view_toggle, results_html, overlay_state, map_state, reading_state, review_panel],
         show_progress="hidden",
-    ).then(
+        api_name="run_analysis",          # the endpoint scripts/space_dry_run.py calls
+    )
+    analysis.failure(fn=end_loading, inputs=None, outputs=[analyze_btn, loading_overlay], show_progress="hidden")
+    analysis.then(
         fn=lambda: "", inputs=None, outputs=[review_out], show_progress="hidden",
     ).then(
         fn=end_loading, inputs=None, outputs=[analyze_btn, loading_overlay], show_progress="hidden",

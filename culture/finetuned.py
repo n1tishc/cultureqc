@@ -65,8 +65,9 @@ def preload(model_id: str, config_path: str = CONFIG_PATH):
     return c
 
 
-def read(img: np.ndarray, model_id: str, config_path: str = CONFIG_PATH) -> dict:
-    """The fine-tuned model's reading of img, or a refusal; never used in a decision."""
+def read(img: np.ndarray, model_id: str, config_path: str = CONFIG_PATH, on_visual=None) -> dict:
+    """The fine-tuned model's reading of img, or a refusal; never used in a decision. on_visual, if given, gets the
+    pixels it counted (prob > cutoff), for the console's comparison view; it is not recorded."""
     entry = load_config(config_path).get(model_id)
     if entry is None:
         raise KeyError(f"no fine-tuned model {model_id!r} in {config_path}")
@@ -79,5 +80,8 @@ def read(img: np.ndarray, model_id: str, config_path: str = CONFIG_PATH) -> dict
         return out
     model = _model(path, c.sha256)
     _, flows, _ = model.eval(img, diameter=None, channels=[0, 0], compute_masks=False)
-    out["confluency_pct"] = round(float((flows[2] > out["cutoff"]).mean() * 100), 2)
+    fg = flows[2] > out["cutoff"]
+    out["confluency_pct"] = round(float(fg.mean() * 100), 2)
+    if on_visual is not None:
+        on_visual(fg)
     return out

@@ -58,6 +58,9 @@ class Analysis:
     profile: Profile | None = None
     quality: QualityResult | None = None     # None: no gate calibrated for this setup
     finetuned: dict | None = None            # culture/finetuned.py: recorded, never decides
+    # For a fine-tuned demo image only: the pixels each model counted ({"shipped", "finetuned"}), for the
+    # console's side-by-side view. Kept in memory only.
+    compare_fg: dict | None = None
 
     @property
     def interval(self) -> list[float] | None:
@@ -116,11 +119,11 @@ def analyze_image(img: np.ndarray, image_path: str, cell_line: str, target_confl
     threshold_confluency(img)  # baseline computed for parity; not shown in this surface
     t["segmentation"] = time.perf_counter() - t0
 
-    finetuned = None
+    finetuned, ft_visual = None, {}
     if finetuned_id:                         # beside the shipped reading; left out of everything below
         from culture.finetuned import read as finetuned_read
         t0 = time.perf_counter()
-        finetuned = finetuned_read(img, finetuned_id)
+        finetuned = finetuned_read(img, finetuned_id, on_visual=lambda fg: ft_visual.update(fg=fg))
         t["finetuned"] = time.perf_counter() - t0
 
     t0 = time.perf_counter()
@@ -184,7 +187,8 @@ def analyze_image(img: np.ndarray, image_path: str, cell_line: str, target_confl
                     rationale=rationale, evidence_boxes=evidence_boxes, overlay=overlay,
                     timings_s={k: round(v, 3) for k, v in t.items()},
                     probmap_x1000=downsample_probmap(captured["prob"]), profile=profile, quality=quality,
-                    finetuned=finetuned)
+                    finetuned=finetuned,
+                    compare_fg={"shipped": captured["fg"], "finetuned": ft_visual["fg"]} if "fg" in ft_visual else None)
 
 
 def build_record(a: Analysis, image_path: str, cell_line: str, captured_at: str | None = None,

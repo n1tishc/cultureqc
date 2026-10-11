@@ -52,6 +52,21 @@ def experts_pct(mask_path: str) -> float:
     return float((m > 0).mean() * 100)
 
 
+def outline(mask_path: str, shape: tuple[int, int]) -> np.ndarray:
+    """The experts' outline of every cell in the mask, as a boolean image of the given (height, width): pixels
+    where the cell label changes, thickened so it stays visible when the image is shown scaled down."""
+    m = cv2.imread(mask_path, cv2.IMREAD_UNCHANGED)
+    if m.ndim == 3:
+        m = m[..., 0]
+    if m.shape[:2] != tuple(shape):
+        m = cv2.resize(m, (shape[1], shape[0]), interpolation=cv2.INTER_NEAREST)
+    edge = np.zeros(m.shape, bool)
+    edge[:, 1:] |= m[:, 1:] != m[:, :-1]
+    edge[1:, :] |= m[1:, :] != m[:-1, :]
+    width = max(2, round(max(shape) / 512))
+    return cv2.dilate(edge.astype(np.uint8), np.ones((width, width), np.uint8)) > 0
+
+
 def available(data: str = DATA) -> list[dict]:
     """The demo images present on disk with the expected bytes; empty when the mode is off."""
     if not model_id():
@@ -62,7 +77,7 @@ def available(data: str = DATA) -> list[dict]:
         mask = os.path.join(data, "masks", name[:-4] + "_mask.tif")
         if os.path.exists(path) and os.path.exists(mask) and hash_file(path) == sha:
             out.append({"name": name, "path": path, "sha256": sha, "cell_line": line, "label": label,
-                        "experts_pct": experts_pct(mask)})
+                        "experts_pct": experts_pct(mask), "mask": mask})
     return out
 
 
