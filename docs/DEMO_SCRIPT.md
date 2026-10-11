@@ -17,11 +17,11 @@ example or replay is on screen; say "live" only after pressing Analyze.
 ## Before the call
 
 - [ ] Space on ZeroGPU; the log shows `ZeroGPU`, `anomaly banks verified` and `models loaded`.
-- [ ] The dry run (`scripts/space_dry_run.py`) of the published Space is committed: `results/space_dry_run_98656277.md`
-      (2026-10-09, Space commit `98656277`, each example read with its setup's profile); quote its numbers, not a guess.
+- [ ] The dry run (`scripts/space_dry_run.py`) of the published Space is committed: `results/space_dry_run_712a9e54.md`
+      (2026-10-11, Space commit `712a9e54`, each example read with its setup's profile); quote its numbers, not a guess.
       Rerun it after any republish.
 - [ ] Signed in to huggingface.co in the call browser, Space opened from huggingface.co/spaces/LongGrainRice/cultureqc-console (Analyze then uses the account's GPU quota). A visitor who is not signed in gets a few live runs, then Hugging Face refuses more; the stored examples still open.
-- [ ] Space opened 10 minutes early (it sleeps after 48 h without visitors; a boot takes minutes) and one live Analyze done; in the 2026-10-09 dry run the first took 5.78 s and the rest a median 3.28 s; in the 2026-09-28 run (commit `0210c79`) one of 7 took 18.50 s.
+- [ ] Space opened 10 minutes early (it sleeps after 48 h without visitors; a boot takes minutes) and one live Analyze done; in the 2026-10-11 dry run the first took 6.83 s and the rest a median 3.27 s, and in a second run a few minutes later two of seven took 17–19 s; in the 2026-09-28 run (commit `0210c79`) one of 7 took 18.50 s.
 - [ ] Expect a small "Successfully acquired a GPU" toast (top right) on each live Analyze: that is ZeroGPU attaching
       the GPU. If asked, it is the live run on a GPU, not a precomputed result.
 - [ ] The 3D views turn on their own at the dry run. If they don't, check macOS System Settings →
@@ -165,8 +165,8 @@ person steps in on exceptions and audits the trail.
    says the map is held in memory for this view while the record keeps its
    hash. Precomputed examples are never written into this chain, and the card
    says so.
-   - On the Space (ZeroGPU) a live Analyze took a median 3.28 s in the
-     2026-10-09 dry run (`results/space_dry_run_98656277.md`), and flag and
+   - On the Space (ZeroGPU) a live Analyze took a median 3.27 s in the
+     2026-10-11 dry run (`results/space_dry_run_712a9e54.md`), and flag and
      action were the same as stored on 7 of 7 examples, each read with its
      setup's profile; readings were within 0.04 pp of the stored ones.
    - On the Mac backup (`results/live_latency_mac_mps.md`, 2026-10-04), flag
