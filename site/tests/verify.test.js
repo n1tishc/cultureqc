@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { verifyChain } from "../src/lib/verify.js";
+import { verificationMessage, verifyChain } from "../src/lib/verify.js";
 
 const data = JSON.parse(readFileSync(new URL("../src/data.json", import.meta.url)));
 // The stored chain: the approved profile changes first, then the readings.
@@ -26,4 +26,17 @@ test("changing one reading breaks that record and the link after it", async () =
   for (let i = 0; i < k; i++) assert.ok(res[i].ok, `record ${i + 1}`);
   assert.equal(res[k].hashOk, false);
   assert.equal(res[k + 1].linkOk, false);
+});
+
+test("verification copy cannot call a broken chain or mismatched checkpoint verified", async () => {
+  const results = await verifyChain(chain);
+  assert.match(verificationMessage(results, data.examples.checkpoint), /All 9 of 9/);
+  const corrupted = chain.map((record, index) => index === 2
+    ? { ...record, canonical: record.canonical.replace(/"confluency_pct":[\d.]+/, '"confluency_pct":99.0') }
+    : record);
+  const broken = await verifyChain(corrupted);
+  assert.match(verificationMessage(broken, data.examples.checkpoint), /Verification failed/);
+  assert.doesNotMatch(verificationMessage(broken, data.examples.checkpoint), /chain matches the checkpoint/);
+  assert.match(verificationMessage(results, { ...data.examples.checkpoint, head_hash: "0".repeat(64) }), /does not match/);
+  assert.match(verificationMessage(results.slice(0, -1), data.examples.checkpoint), /does not match/);
 });

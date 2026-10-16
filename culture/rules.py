@@ -76,7 +76,7 @@ class LineConfig:
 DEFAULT_CONFIG = LineConfig()
 
 AMBIGUITY_TOOLTIP = ("Share of pixels near the cell/background cutoff, as min(1, 4 × share within ±1 logit); "
-                     "rises with density; a review trigger, not a probability that the reading is right.")
+                     "rises with density; recorded for diagnosis, not a review trigger under rules_v0.5 or a probability that the reading is right.")
 
 
 def boundary_ambiguity(confluency_confidence: float) -> float:

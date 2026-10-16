@@ -1,9 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { Action, Icon, Linked, actionGloss, actionWord, short } from "./ui";
-
-/* The first viewport: one real frame, the layers the pipeline computed for it,
-   and its stored readings. Hovering or focusing a reading lights the layer it
-   was measured on; the record's hash is recomputed in this browser. */
+import { Action, Icon, Linked, short } from "./ui";
+import { DEFAULT_SCENARIO_ID, GUIDED_SCENARIOS, scenarioIdFromSearch, scenarioUrl } from "../lib/scenarios";
+import "./GuidedStage.css";
 
 const LAYERS = [
   ["prob", "Cell probability"],
@@ -35,27 +33,32 @@ const DEVICE = { mps: "Apple GPU, MPS", cuda: "GPU", cpu: "CPU" };
 
 const contourCache = new Map();
 
-function useContour(url) {
-  const [d, setD] = useState(contourCache.get(url) || null);
+function useContour(url, retry) {
+  const [result, setResult] = useState(() => ({ url, data: contourCache.get(url) || null, error: false }));
   useEffect(() => {
     let live = true;
     if (contourCache.has(url)) {
-      setD(contourCache.get(url));
+      setResult({ url, data: contourCache.get(url), error: false });
       return;
     }
-    setD(null);
+    setResult({ url, data: null, error: false });
     fetch(url)
-      .then((r) => r.json())
+      .then((response) => {
+        if (!response.ok) throw new Error("Contour unavailable");
+        return response.json();
+      })
       .then((j) => {
         contourCache.set(url, j);
-        if (live) setD(j);
+        if (live) setResult({ url, data: j, error: false });
       })
-      .catch(() => {});
+      .catch(() => {
+        if (live) setResult({ url, data: null, error: true });
+      });
     return () => {
       live = false;
     };
-  }, [url]);
-  return d;
+  }, [url, retry]);
+  return result.url === url ? result : { url, data: contourCache.get(url) || null, error: false };
 }
 
 export function AnomalyLayer({ ex, nested = false }) {
@@ -110,23 +113,6 @@ export function ScaleBar({ umPerPx, widthPx, um = 200 }) {
   );
 }
 
-function Gauge({ value, mark, max, kind, left, right }) {
-  const w = Math.max(0, Math.min(1, value / max));
-  const m = Math.max(0, Math.min(1, mark / max)) * 100;
-  return (
-    <>
-      <div className="gauge" data-kind={kind} aria-hidden="true">
-        <i style={{ transform: `scaleX(${w})` }} />
-        <u style={{ left: `calc(${m}% - 1px)` }} />
-      </div>
-      <div className="gauge-legend">
-        <span>{left}</span>
-        <span>{right}</span>
-      </div>
-    </>
-  );
-}
-
 /* The reading's 90% error band from its setup's calibration profile, drawn on the
    0–100% scale with the reading and the passage target, and which rule it meets
    (culture/rules.py, rules_v0.5). A setup with no profile has no band. */
@@ -170,31 +156,13 @@ function ErrorBand({ c, target }) {
   );
 }
 
-function Reading({ link, setSolo, children }) {
-  const on = () => link && setSolo(link);
-  const off = () => setSolo(null);
-  return (
-    <div
-      className="reading"
-      data-link={link || undefined}
-      tabIndex={link ? 0 : undefined}
-      onMouseEnter={on}
-      onMouseLeave={off}
-      onFocus={on}
-      onBlur={off}
-    >
-      {children}
-    </div>
-  );
-}
-
-function VerifyLine({ v, rec, total }) {
-  const state = v ? String(v.ok) : "pending";
-  const text = !v ? "Re-hashing in this browser…" : v.ok ? "Re-hashed in your browser: matches" : "Re-hashed in your browser: no match";
+function VerifyLine({ v, rec, total, error }) {
+  const state = error ? "false" : v ? String(v.ok) : "pending";
+  const text = error ? `Verification unavailable: ${error}` : !v ? "Re-hashing in this browser…" : v.ok ? "Re-hashed in your browser: matches" : "Re-hashed in your browser: no match";
   return (
     <>
       <span className="verified" data-ok={state}>
-        <Icon name={v && !v.ok ? "cross" : "check"} />
+        <Icon name={error || (v && !v.ok) ? "cross" : "check"} />
         {text}
       </span>
       <p className="hash" title={rec.record_hash}>
@@ -204,52 +172,65 @@ function VerifyLine({ v, rec, total }) {
   );
 }
 
-export default function Stage({ examples, verify, liveParity }) {
-  // The strip follows the record chain's order; the panel opens on the first stored example.
+export default function Stage({ examples, verify, liveParity, verifyError }) {
   const items = useMemo(() => [...examples.items].sort((x, y) => x.record.index - y.record.index), [examples]);
-  const [id, setId] = useState(examples.items[0].id);
+  const ids = useMemo(() => items.map((item) => item.id), [items]);
+  const [id, setId] = useState(() => typeof window === "undefined" ? DEFAULT_SCENARIO_ID : scenarioIdFromSearch(window.location.search, examples.items.map((item) => item.id)));
   const [layers, setLayers] = useState({ prob: false, contour: true, band: false, anom: false });
-  const [solo, setSolo] = useState(null);
-  const ex = useMemo(() => items.find((e) => e.id === id), [items, id]);
-  const contour = useContour(ex.contour);
+  const [mediaError, setMediaError] = useState(null);
+  const [mediaRetry, setMediaRetry] = useState(0);
+  const ex = useMemo(() => items.find((e) => e.id === id) || items.find((e) => e.id === DEFAULT_SCENARIO_ID) || items[0], [items, id]);
+  const contourResult = useContour(ex.contour, mediaRetry);
+  const contour = contourResult.data;
+  const scenario = GUIDED_SCENARIOS.find((entry) => entry.id === ex.id);
+  const step = GUIDED_SCENARIOS.findIndex((entry) => entry.id === ex.id);
+
+  useEffect(() => {
+    const onPopState = () => {
+      setId(scenarioIdFromSearch(window.location.search, ids));
+      setLayers({ prob: false, contour: true, band: false, anom: false });
+      setMediaError(null);
+      setMediaRetry(0);
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, [ids]);
+
+  const selectScenario = (nextId) => {
+    setLayers({ prob: false, contour: true, band: false, anom: false });
+    setMediaError(null);
+    setMediaRetry(0);
+    if (nextId === ex.id) return;
+    setId(nextId);
+    window.history.pushState(null, "", scenarioUrl(window.location.href, nextId, ids));
+  };
 
   const c = ex.confluency;
   const a = ex.anomaly;
   const v = verify ? verify[ex.record.index - 1] : null;
-  const anomMax = Math.max(a.threshold * 1.6, a.score * 1.12);
   const maskStyle = (url) => ({ WebkitMaskImage: `url(${url})`, maskImage: `url(${url})` });
   const frameAttrs = {};
   for (const [k] of LAYERS) if (layers[k]) frameAttrs[`data-${k}`] = "";
-  if (solo) frameAttrs["data-solo"] = solo;
 
   return (
-    <div className="stage" aria-label="A stored analysis, shown layer by layer">
+    <div className="stage guided-stage" aria-label="Guided walkthrough of stored decisions">
+      <div className="guided-announcement" aria-live="polite" aria-atomic="true">{scenario?.title || ex.label}. Stored recommendation: {ex.action.replaceAll("_", " ")}. Confluency {c.pct.toFixed(2)} percent.</div>
+      <nav className="guided-nav" aria-label="Decision scenarios">
+        {GUIDED_SCENARIOS.map((entry, index) => (
+          <button key={entry.id} type="button" aria-current={entry.id === ex.id ? "step" : undefined} onClick={() => selectScenario(entry.id)}>
+            <span>{String(index + 1).padStart(2, "0")}</span>{entry.title}
+          </button>
+        ))}
+      </nav>
       <div className="stage-grid">
         <div className="viewer">
-          <div className="toolbar" role="group" aria-label="Layers the pipeline computed">
-            <span className="letter on-stage">A</span>
-            <span className="toolbar-label">Layers</span>
-            {LAYERS.map(([k, label]) => (
-              <button
-                key={k}
-                type="button"
-                className="chip"
-                data-layer={k}
-                aria-pressed={layers[k]}
-                onClick={() => setLayers((s) => ({ ...s, [k]: !s[k] }))}
-              >
-                <i />
-                {label}
-              </button>
-            ))}
-          </div>
           <div className="frame-box">
             <div
               className="frame stage-frame"
               style={{ aspectRatio: `${ex.width} / ${ex.height}`, "--ar": ex.width / ex.height }}
               {...frameAttrs}
             >
-              <img src={ex.image} width={ex.width} height={ex.height} alt={`${ex.label}: phase-contrast frame${ex.sequence ? `, ${ex.sequence} frame ${ex.frame}` : ""}`} />
+              <img key={`${ex.id}-${mediaRetry}`} src={mediaRetry ? `${ex.image}${ex.image.includes("?") ? "&" : "?"}retry=${mediaRetry}` : ex.image} width={ex.width} height={ex.height} alt={`${ex.label}: phase-contrast frame${ex.sequence ? `, ${ex.sequence} frame ${ex.frame}` : ""}`} onError={() => setMediaError(ex.id)} onLoad={() => setMediaError(null)} />
               <div className="layer layer-prob" data-l="prob" style={maskStyle(ex.prob)} />
               <div className="layer layer-band" data-l="band" style={maskStyle(ex.band)} />
               <svg className="overlay layer-contour" data-l="contour" viewBox={contour ? `0 0 ${contour.w} ${contour.h}` : "0 0 1 1"} preserveAspectRatio="none" aria-hidden="true">
@@ -258,103 +239,47 @@ export default function Stage({ examples, verify, liveParity }) {
               <AnomalyLayer ex={ex} />
               <ScaleBar umPerPx={ex.um_per_px} widthPx={ex.width} />
             </div>
+            {(mediaError === ex.id || contourResult.error) && <div className="guided-media-error" role="status"><span>{mediaError === ex.id ? "Stored image" : "Contour layer"} could not load.</span><button type="button" onClick={() => { setMediaError(null); setMediaRetry((attempt) => attempt + 1); }}>Retry media</button></div>}
           </div>
         </div>
 
         <div className="rail">
           <div className="rail-head">
-            <h2>{TITLE[ex.id] || ex.label}</h2>
+            <h2>{scenario?.title || ex.label}</h2>
+            <p>{scenario?.specimen || ex.label} · stored analysis · shipped baseline</p>
           </div>
-
-          <Reading link="contour" setSolo={setSolo}>
-            <div className="reading-top">
-              <span>Confluency, above this setup’s cutoff</span>
-              <span className="src">Cellpose-SAM</span>
-            </div>
-            <div className="big-row">
-              <div className="big num">
-                {c.pct.toFixed(1)}
-                <small>%</small>
-              </div>
-              <p>
-                target <b className="num">{ex.target.toFixed(0)}%</b>
-                <br />
-                the console’s default
-              </p>
-            </div>
-            <ErrorBand c={c} target={ex.target} />
-            <div
-              className="sub"
-              data-link="band"
-              tabIndex={0}
-              title={c.ambiguity_tooltip}
-              onMouseEnter={() => setSolo("band")}
-              onMouseLeave={() => setSolo("contour")}
-              onFocus={() => setSolo("band")}
-            >
-              <p>
-                <b className="num">{(c.borderline_fraction * 100).toFixed(1)}%</b> of pixels sit close to the cutoff, where a small change in it would flip them: the hatched “Cutoff edge” layer.
-              </p>
-            </div>
-          </Reading>
-
-          <Reading link="anom" setSolo={setSolo}>
-            <div className="reading-top">
-              <span>Anomaly check · DINOv2</span>
-              <span className="flagword" data-flag={String(a.flag)}>
-                <Icon name={a.flag ? "flag" : "clear"} />
-                {a.flag ? "Flagged" : "Not flagged"}
-              </span>
-            </div>
-            <Gauge value={a.score} mark={a.threshold} max={anomMax} kind="anom" left={`score ${a.score.toFixed(3)}`} right={`threshold ${a.threshold.toFixed(3)}`} />
-            <p>
-              Reads only the dashed {a.tile.size} px centre tile of the frame, against healthy frames at {a.bin.replace("-", "–")}% confluency; the score is set by its {a.top.length} outlined patches.
-              {ex.kind === "evican" ? " The anomaly banks hold only C2C12 frames, so on other cell types the flag is uncalibrated." : null}
-            </p>
-          </Reading>
-
-          <Reading>
-            <div className="reading-top">
-              <span>Recommended action</span>
-              <span className="src">{ex.rules}</span>
-            </div>
-            <div className="action-row">
-              <Action a={ex.action} />
-              <span className="gloss">{actionGloss(ex.action)}</span>
-            </div>
-            <p>{ex.action_reason}</p>
-          </Reading>
-
-          <Reading>
-            <div className="reading-top">
-              <span>Record</span>
-              <a className="src" href="#records">
-                verify the chain <Icon name="down" />
-              </a>
-            </div>
-            <VerifyLine v={v} rec={ex.record} total={examples.chain_order.length} />
-          </Reading>
+          <div className="guided-result">
+            <div className="guided-action"><span>Stored recommendation</span><Action a={ex.action} /></div>
+            <p className="guided-reason">{ex.action_reason}</p>
+            <p className="guided-scope">{scenario?.scope || "Additional stored research example. An anomaly flag describes a score on the centre tile; it does not diagnose contamination. This reading has not validated an automated culture action."} Setup calibration estimates measurement error; it does not validate the recommended action.</p>
+          </div>
+          <div className="guided-measure">
+            <div className="guided-numbers"><strong>{c.pct.toFixed(2)}%</strong><span>confluency<br />target {ex.target.toFixed(0)}%</span></div>
+            {c.interval ? <div className="guided-band"><span>Setup-level 90% error estimate</span><strong>{c.interval[0].toFixed(2)}–{c.interval[1].toFixed(2)}%</strong><ErrorBand c={c} target={ex.target} /></div> : <p className="guided-no-band">No calibrated error band for this setup. The reading alone cannot clear an action.</p>}
+            {scenario?.note && <p className="guided-note">{scenario.note}</p>}
+          </div>
+          <div className="guided-record">
+            <VerifyLine v={v} rec={ex.record} total={examples.chain_order.length} error={verifyError} />
+            <a href={`/records?record=${encodeURIComponent(ex.id)}#chain`}>Inspect this exact record <Icon name="passage" /></a>
+          </div>
         </div>
       </div>
-
-      <div className="strip" role="group" aria-label="Stored examples">
-        {items.map((e) => (
-          <button key={e.id} type="button" aria-pressed={e.id === id} onClick={() => setId(e.id)} title={e.label}>
-            <img src={e.thumb} alt="" width="52" height="39" loading="lazy" />
-            <span style={{ minWidth: 0 }}>
-              <b>{SHORT[e.id] || e.label}</b>
-              <small>
-                {e.confluency.pct.toFixed(1)}% · {actionWord(e.action).toLowerCase()}
-              </small>
-            </span>
-          </button>
-        ))}
+      <div className="guided-controls">
+        <button type="button" onClick={() => selectScenario(GUIDED_SCENARIOS[step - 1].id)} disabled={step <= 0}>Back</button>
+        <span>{step < 0 ? "Additional example" : `${step + 1} of ${GUIDED_SCENARIOS.length}`}</span>
+        <button type="button" onClick={() => selectScenario(DEFAULT_SCENARIO_ID)}>Reset</button>
+        <button type="button" onClick={() => selectScenario(GUIDED_SCENARIOS[step < 0 ? 0 : step + 1].id)} disabled={step >= GUIDED_SCENARIOS.length - 1}>Next <Icon name="passage" /></button>
       </div>
-      <div className="stage-note">
-        <p>
-          Hover a reading to light the layer it came from. {ex.label}. {ex.credit}.{ex.sequence ? ` Held-out ${ex.sequence}, frame ${ex.frame}.` : ""} Precomputed with the console’s own code ({DEVICE[ex.device] || ex.device}, {ex.generated_at}). <Linked>{liveParity}</Linked>
-        </p>
-      </div>
+      <details className="guided-advanced"><summary>Explore analysis layers and stored details</summary>
+        <div className="toolbar" role="group" aria-label="Layers the pipeline computed">
+          {LAYERS.map(([key, label]) => <button key={key} type="button" className="chip" data-layer={key} aria-pressed={layers[key]} onClick={() => setLayers((state) => ({ ...state, [key]: !state[key] }))}><i />{label}</button>)}
+        </div>
+        <div className="guided-advanced-body">
+          <p>Layer toggles annotate the stored frame above. Cellpose-SAM uses cutoff {c.profile.cutoff}; {(c.borderline_fraction * 100).toFixed(1)}% of pixels are near it. The anomaly check reads only a {a.tile.size} px centre tile. DINOv2 score {a.score.toFixed(3)}; threshold {a.threshold.toFixed(3)}; {a.flag ? "flagged" : "not flagged"}. A flag does not identify a cause.</p>
+          <p>Profile {c.profile.id} ({c.profile.status}) · rules {ex.rules} · {ex.credit}. Generated {ex.generated_at} on {DEVICE[ex.device] || ex.device}. <Linked>{liveParity}</Linked></p>
+          <details><summary>All seven stored examples</summary><div className="guided-explorer">{items.map((item) => <button key={item.id} type="button" aria-pressed={item.id === ex.id} onClick={() => selectScenario(item.id)}><img src={item.thumb} alt="" width="52" height="39" loading="lazy" /><span>{SHORT[item.id] || item.label}<small>{item.confluency.pct.toFixed(1)}% · {item.action.replaceAll("_", " ")}</small></span></button>)}</div></details>
+        </div>
+      </details>
     </div>
   );
 }

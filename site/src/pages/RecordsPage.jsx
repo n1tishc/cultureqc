@@ -10,10 +10,11 @@ import { verifyChain } from "../lib/verify";
 export default function RecordsPage({ data }) {
   const ex = data.examples;
   const [verify, setVerify] = useState(null);
+  const [verificationError, setVerificationError] = useState(false);
 
   useEffect(() => {
     const byId = Object.fromEntries([...ex.items, ...(ex.changes || [])].map((e) => [e.id, e.record]));
-    verifyChain(ex.chain_order.map((id) => byId[id])).then(setVerify);
+    verifyChain(ex.chain_order.map((id) => byId[id])).then(setVerify).catch(() => setVerificationError(true));
   }, [ex]);
 
   const n = ex.chain_order.length;
@@ -23,14 +24,14 @@ export default function RecordsPage({ data }) {
     {
       href: "#chain",
       label: "Re-hashed in your browser",
-      value: verify ? `${ok} of ${n} verified` : "re-hashing…",
+      value: verificationError ? "Verification unavailable" : verify ? `${ok} of ${n} verified` : "re-hashing…",
       note: `Each stored record’s SHA-256, recomputed from its bytes, and its link to the one before. Checkpoint head ${short(ex.checkpoint.head_hash, 8)}.`,
     },
     {
       href: "#gmp",
-      label: "One chain, three kinds of record",
-      value: "reading · review · change",
-      note: "A review never edits the reading it is about; a calibration change records the profile before and after, its evidence and who approved it.",
+      label: "One chain, two stored record kinds",
+      value: "reading · change",
+      note: "The schema also supports review events, but this stored chain contains none. A future review would point to its reading without editing it.",
     },
     {
       href: "#integration",
@@ -51,7 +52,7 @@ export default function RecordsPage({ data }) {
           title="Records"
           lede={
             <>
-              <p>Every reading, every review and every approved change is a record in one append-only hash chain. Each record carries the hashes of what it was made from, so a reading can be traced to its image, its model, its rules and its calibration.</p>
+              <p>These stored readings and approved calibration changes form one append-only hash chain. Each record carries the hashes of what it was made from, so a reading can be traced to its image, its model, its rules and its calibration. The schema supports review events, but this chain contains none.</p>
               <Glance items={items} />
             </>
           }

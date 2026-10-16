@@ -42,6 +42,19 @@ export function checkCheckpoint(results, cp) {
   return { ok: true, status: "intact" };
 }
 
+export function verificationMessage(results, checkpoint) {
+  const matching = results.filter((result) => result.ok).length;
+  const chainMatches = matching === results.length;
+  const checkpointMatches = checkCheckpoint(results, checkpoint).ok;
+  if (chainMatches && checkpointMatches) {
+    return `All ${matching} of ${results.length} records re-hash to their stored SHA-256 and link to the one before, and the chain matches the checkpoint: ${checkpoint.count} records, head ${checkpoint.head_hash.slice(0, 8)}…`;
+  }
+  if (!chainMatches) {
+    return `Verification failed: ${results.length - matching} of ${results.length} records have a hash or link mismatch. Do not rely on this chain; inspect the failed records and their source artifacts.`;
+  }
+  return "The records link together, but the chain does not match the anchored checkpoint. It may have been rewritten or truncated; do not treat it as the verified stored chain.";
+}
+
 /* What someone with write access to the whole log can do: edit record k
    (0-based), then recompute its hash and every later prev_record_hash and
    record_hash so each link checks out again. */

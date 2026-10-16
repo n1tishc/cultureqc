@@ -12,18 +12,16 @@ export const COMMIT = typeof __COMMIT__ !== "undefined" ? __COMMIT__ : "";
 export const VERSION = "v0.4";
 
 const HOME_NAV = [
-  ["how", "How it works"],
-  ["timeline", "Flask history"],
+  ["demo", "Demo"],
+  ["evidence", "Evidence"],
 ];
 
 /* Home sections without a nav entry, observed so none of the links above
    stays lit while they are on screen. */
-const UNLISTED = ["top", "accuracy", "passage", "trail", "specs", "scope"];
+const UNLISTED = ["top", "accuracy", "passage", "trail", "specs", "scope", "pilot"];
 
 const PAGES = [
   ["records", "/records", "Records"],
-  ["validation", "/validation", "Validation"],
-  ["release-notes", "/release-notes", "Release notes"],
 ];
 
 const IDS = [...HOME_NAV.map(([id]) => id), ...UNLISTED];
@@ -63,12 +61,12 @@ export function TopBar({ data, page }) {
               {label}
             </a>
           ))}
-          <span className="nav-sep" aria-hidden="true" />
           {PAGES.map(([key, href, label]) => (
             <a key={key} href={href} aria-current={page === key ? "page" : undefined}>
               {label}
             </a>
           ))}
+          <a href={home ? "#pilot" : "/#pilot"} aria-current={home && active === "pilot" ? "true" : undefined}>Pilot</a>
         </nav>
         <a className="btn btn-primary" href={data.meta.console_url} target="_blank" rel="noreferrer">
           Live console <Icon name="external" />
@@ -96,15 +94,15 @@ export function CtaBand({ data }) {
     <section className="cta" aria-labelledby="cta-h">
       <div className="wrap cta-in">
         <div>
-          <h2 id="cta-h">Run it on your own image</h2>
-          <p>The console runs the same code as everything on this site, on any phase-contrast image you give it, and shows the reading, the anomaly check, the action and the record.</p>
+          <h2 id="cta-h">Explore now. Evaluate before acting.</h2>
+          <p>The proposed next step is an offline evaluation on one imaging setup. The live console is a research tool; uncalibrated images do not establish decision readiness. If live inference is unavailable, the labelled stored walkthrough remains here.</p>
         </div>
         <div className="cta-actions">
-          <a className="btn btn-light" href={data.meta.console_url} target="_blank" rel="noreferrer">
-            Open the live console <Icon name="external" />
+          <a className="btn btn-light" href="/#pilot">
+            Review the pilot plan <Icon name="passage" />
           </a>
-          <a className="btn btn-ghost-dark" href={data.meta.repo_url} target="_blank" rel="noreferrer">
-            Read the source <Icon name="external" />
+          <a className="btn btn-ghost-dark" href={data.meta.console_url} target="_blank" rel="noreferrer">
+            Open the live console <Icon name="external" />
           </a>
         </div>
       </div>

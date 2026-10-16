@@ -2,6 +2,12 @@
 
 <!-- impeccable:product-schema 1 -->
 
+## Current Release Guidance (2026-10-15)
+
+The public React site is now `site/src/pages/Home.jsx`, with supporting pages for evidence, records and release notes. Its five-minute VP journey starts with a qualitative v2 → v4 comparison, then three guided stored examples (EVICAN HT29 boundary review, sparse EVICAN PC3 continue, and an **oversized synthetic** C2C12 re-image stress test), exact record inspection, evidence and limits, and a proposed one-setup offline pilot. The seven stored examples remain inspectable. The Gradio console at `demo/app.py` is a separate, optional live surface; stored results must never be described as live output. See the [approved upgrade plan](reviews/2026-10-15-vp-demo-upgrade-plan.md), [five-minute script](DEMO_SCRIPT.md), and [technical backlog](reviews/2026-10-15-v4-vs-v2-agent-backlog.md).
+
+This journey presents shipped measurement and record capabilities with their limits. Setup calibration estimates measurement error; it does not validate an action on a partner's instrument. Fine-tuning remains experimental and decides nothing in the shipped workflow. The pilot asks for representative images, independent labels, an intended target and a frozen evaluation protocol before any host actuation. The sections below preserve the historical console-only v2 brief as context; its classifier/Grad-CAM contamination “money shot,” stack assumption, audience promise and visual authority do **not** govern the current site or its claims. The current site surface brief is `site/.impeccable/surfaces/site-src-pages-home-jsx.md`.
+
 ## Platform
 
 web

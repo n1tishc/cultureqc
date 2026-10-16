@@ -39,7 +39,7 @@
      "floor": 0.3,
      "ambiguity": 0.488,
      "ambiguity_ceiling": 0.7,
-     "ambiguity_tooltip": "Share of pixels near the cell/background cutoff, as min(1, 4 × share within ±1 logit); rises with density; a review trigger, not a probability that the reading is right.",
+     "ambiguity_tooltip": "Share of pixels near the cell/background cutoff, as min(1, 4 × share within ±1 logit); rises with density; recorded for diagnosis, not a review trigger under rules_v0.5 or a probability that the reading is right.",
      "profile": {
       "band_pp": null,
       "cutoff": 0.0,
@@ -424,7 +424,7 @@
      "floor": 0.3,
      "ambiguity": 0.225,
      "ambiguity_ceiling": 0.7,
-     "ambiguity_tooltip": "Share of pixels near the cell/background cutoff, as min(1, 4 × share within ±1 logit); rises with density; a review trigger, not a probability that the reading is right.",
+     "ambiguity_tooltip": "Share of pixels near the cell/background cutoff, as min(1, 4 × share within ±1 logit); rises with density; recorded for diagnosis, not a review trigger under rules_v0.5 or a probability that the reading is right.",
      "profile": {
       "band_pp": null,
       "cutoff": 0.0,
@@ -809,7 +809,7 @@
      "floor": 0.3,
      "ambiguity": 0.985,
      "ambiguity_ceiling": 0.7,
-     "ambiguity_tooltip": "Share of pixels near the cell/background cutoff, as min(1, 4 × share within ±1 logit); rises with density; a review trigger, not a probability that the reading is right.",
+     "ambiguity_tooltip": "Share of pixels near the cell/background cutoff, as min(1, 4 × share within ±1 logit); rises with density; recorded for diagnosis, not a review trigger under rules_v0.5 or a probability that the reading is right.",
      "profile": {
       "band_pp": null,
       "cutoff": 0.0,
@@ -1194,7 +1194,7 @@
      "floor": 0.3,
      "ambiguity": 0.291,
      "ambiguity_ceiling": 0.7,
-     "ambiguity_tooltip": "Share of pixels near the cell/background cutoff, as min(1, 4 × share within ±1 logit); rises with density; a review trigger, not a probability that the reading is right.",
+     "ambiguity_tooltip": "Share of pixels near the cell/background cutoff, as min(1, 4 × share within ±1 logit); rises with density; recorded for diagnosis, not a review trigger under rules_v0.5 or a probability that the reading is right.",
      "profile": {
       "band_pp": null,
       "cutoff": 0.0,
@@ -1579,7 +1579,7 @@
      "floor": 0.3,
      "ambiguity": 0.343,
      "ambiguity_ceiling": 0.7,
-     "ambiguity_tooltip": "Share of pixels near the cell/background cutoff, as min(1, 4 × share within ±1 logit); rises with density; a review trigger, not a probability that the reading is right.",
+     "ambiguity_tooltip": "Share of pixels near the cell/background cutoff, as min(1, 4 × share within ±1 logit); rises with density; recorded for diagnosis, not a review trigger under rules_v0.5 or a probability that the reading is right.",
      "profile": {
       "band_pp": null,
       "cutoff": 0.0,
@@ -1966,7 +1966,7 @@
      "floor": 0.3,
      "ambiguity": 0.035,
      "ambiguity_ceiling": 0.7,
-     "ambiguity_tooltip": "Share of pixels near the cell/background cutoff, as min(1, 4 × share within ±1 logit); rises with density; a review trigger, not a probability that the reading is right.",
+     "ambiguity_tooltip": "Share of pixels near the cell/background cutoff, as min(1, 4 × share within ±1 logit); rises with density; recorded for diagnosis, not a review trigger under rules_v0.5 or a probability that the reading is right.",
      "profile": {
       "band_pp": 29.4,
       "cutoff": -3.5,
@@ -2347,7 +2347,7 @@
      "floor": 0.3,
      "ambiguity": 0.172,
      "ambiguity_ceiling": 0.7,
-     "ambiguity_tooltip": "Share of pixels near the cell/background cutoff, as min(1, 4 × share within ±1 logit); rises with density; a review trigger, not a probability that the reading is right.",
+     "ambiguity_tooltip": "Share of pixels near the cell/background cutoff, as min(1, 4 × share within ±1 logit); rises with density; recorded for diagnosis, not a review trigger under rules_v0.5 or a probability that the reading is right.",
      "profile": {
       "band_pp": 29.4,
       "cutoff": -3.5,

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { checkCheckpoint, rewriteFrom, verifyChain } from "../lib/verify";
+import { checkCheckpoint, rewriteFrom, verificationMessage, verifyChain } from "../lib/verify";
+import { readingTargetIndex, recordIndexFromSearch, recordUrl } from "../lib/record-selection";
 import { row } from "./Sections";
 import { TITLE } from "./Stage";
 import { Icon, Path, actionWord, short } from "./ui";
@@ -13,14 +14,14 @@ import { Icon, Path, actionWord, short } from "./ui";
    (count and head hash), which catches the two a chain alone passes. */
 
 const FIELDS = [
-  ["record_type", "reading, review or change: one chain holds all three."],
+  ["record_type", "This stored chain contains seven readings and two approved changes. The schema also supports a later, separate review record."],
   ["confluency_profile", "The imaging setup’s calibration: its id and SHA-256, cutoff and error band."],
   ["confluency_interval", "The reading ± that band, measured on held-out labelled images from the setup."],
   ["image_hash · confluency_map_hash", "SHA-256 of the image read and of Cellpose-SAM’s probability map, so the map behind the number can be checked later."],
   ["model_weights_hash · config_hashes", "SHA-256 of each model’s weights and of each config in force."],
   ["decided_by", "The rules version that chose the action."],
   ["flask_id · lineage · imager_id · fov", "The host platform’s keys: vessel, passage history, instrument, field of view. These examples were exported outside a host, so they carry placeholders: flask_id “demo”, cell_line “unknown”, the rest null."],
-  ["review records", "A person’s decision is a new record pointing to the reading’s hash, with the reviewer, the meaning of the signature and the reason; the reading itself is never edited."],
+  ["review records", "A person's decision would be a new record pointing to the reading's hash; this stored demonstration chain does not contain a review event."],
   ["prev_record_hash · record_hash", "The chain: each record’s hash covers every field above plus the previous record’s hash."],
 ];
 
@@ -103,36 +104,64 @@ export default function Records({ examples, data }) {
   const chain = useMemo(() => examples.chain_order.map((id) => byId[id]), [examples, byId]);
   const cp = examples.checkpoint;
   const n = chain.length;
-  // The tamper target: the third reading (change records, if any, come first).
-  const T = chain.findIndex((e) => e.kind !== "change") + 2;
+  const fallbackTarget = chain.findIndex((e) => e.kind !== "change") + 2;
+  const [mode, setMode] = useState(null);
+  const [sel, setSel] = useState(() => recordIndexFromSearch(window.location.search, chain.map((e) => e.id), fallbackTarget));
+  const [target, setTarget] = useState(() => readingTargetIndex(sel, chain, fallbackTarget));
+  const [retry, setRetry] = useState(0);
+  const [view, setView] = useState(null);
+  const T = target;
   const MODES = [
     ["edit", `Change one number in record ${T + 1}`],
     ["rewrite", `Rewrite record ${T + 1} and every hash after it`],
     ["truncate", "Delete the last two records"],
   ];
-  const [mode, setMode] = useState(null);
-  const [sel, setSel] = useState(T);
-  const [view, setView] = useState(null);
+
+  useEffect(() => {
+    const requested = new URLSearchParams(window.location.search).get("record");
+    if (requested && !chain.some((item) => item.id === requested)) {
+      window.history.replaceState(null, "", recordUrl(window.location.href, chain[fallbackTarget].id));
+    }
+    const onPopState = () => {
+      const index = recordIndexFromSearch(window.location.search, chain.map((e) => e.id), fallbackTarget);
+      const requestedId = new URLSearchParams(window.location.search).get("record");
+      if (requestedId && !chain.some((item) => item.id === requestedId)) {
+        window.history.replaceState(null, "", recordUrl(window.location.href, chain[index].id));
+      }
+      setMode(null);
+      setSel(index);
+      setTarget(readingTargetIndex(index, chain, fallbackTarget));
+      setView(null);
+      setRetry((value) => value + 1);
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, [chain, fallbackTarget]);
 
   useEffect(() => {
     let live = true;
     (async () => {
-      const base = chain.map((e) => e.record);
-      let recs = base;
-      if (mode === "edit") recs = base.map((r, i) => (i === T ? { ...r, canonical: tamper(r.canonical) } : r));
-      if (mode === "rewrite") recs = await rewriteFrom(base, T, tamper);
-      if (mode === "truncate") recs = base.slice(0, n - 2);
-      const res = await verifyChain(recs);
-      if (live) setView({ mode, recs, res, anchor: checkCheckpoint(res, cp) });
+      try {
+        const base = chain.map((e) => e.record);
+        let recs = base;
+        if (mode === "edit") recs = base.map((r, i) => (i === T ? { ...r, canonical: tamper(r.canonical) } : r));
+        if (mode === "rewrite") recs = await rewriteFrom(base, T, tamper);
+        if (mode === "truncate") recs = base.slice(0, n - 2);
+        const res = await verifyChain(recs);
+        if (live) setView({ mode, recs, res, anchor: checkCheckpoint(res, cp) });
+      } catch (error) {
+        if (live) setView({ mode, error: error instanceof Error ? error.message : String(error) });
+      }
     })();
     return () => {
       live = false;
     };
-  }, [chain, mode, cp, n, T]);
+  }, [chain, mode, cp, n, T, retry]);
 
   const ready = view && view.mode === mode;
-  const recs = ready ? view.recs : chain.map((e) => e.record);
-  const res = ready ? view.res : null;
+  const error = ready ? view.error : null;
+  const recs = ready && view.recs ? view.recs : chain.map((e) => e.record);
+  const res = ready && view.res ? view.res : null;
   const nOk = res ? res.filter((r) => r.ok).length : null;
   const chainOk = res ? nOk === res.length : null;
   const anchorOk = res ? chainOk && view.anchor.ok : null;
@@ -142,18 +171,44 @@ export default function Records({ examples, data }) {
 
   const pick = (m) => {
     setMode(m);
-    setSel(m === "truncate" ? n - 3 : T);
+    if ((m === "edit" || m === "rewrite") && chain[sel].kind === "change") {
+      setSel(target);
+      window.history.replaceState(null, "", recordUrl(window.location.href, chain[target].id));
+    } else if (m === "truncate" && sel >= n - 2) {
+      setSel(n - 3);
+      window.history.replaceState(null, "", recordUrl(window.location.href, chain[n - 3].id));
+    } else if (mode === "truncate" && sel !== target) {
+      setSel(target);
+      window.history.replaceState(null, "", recordUrl(window.location.href, chain[target].id));
+    }
   };
 
-  let msg = "Re-hashing…";
+  const select = (index) => {
+    setMode(null);
+    setSel(index);
+    setTarget(readingTargetIndex(index, chain, fallbackTarget));
+    window.history.pushState(null, "", recordUrl(window.location.href, chain[index].id));
+  };
+
+  const reset = () => {
+    setMode(null);
+    if (mode === "truncate" && sel !== target) {
+      setSel(target);
+      window.history.replaceState(null, "", recordUrl(window.location.href, chain[target].id));
+    }
+    setView(null);
+    setRetry((value) => value + 1);
+  };
+
+  let msg = error ? `Could not verify the local demonstration copy: ${error}. Reset the demonstration and try again.` : "Re-hashing…";
   if (res && mode === "edit")
-    msg = `Confluency in record ${T + 1} raised by 10 points: ${n - nOk} of ${n} records now fail — record ${T + 1}’s own hash, and record ${T + 2}’s link to it. Records 1–${T} are untouched.`;
+    msg = `Confluency in record ${T + 1} raised by 10 points: ${n - nOk} of ${n} records now fail. Record ${T + 1}’s own hash no longer matches${T + 1 < n ? `, and record ${T + 2}’s link to it breaks` : ""}. Records 1–${T} are untouched.`;
   else if (res && mode === "rewrite")
     msg = `Record ${T + 1} raised by 10 points, then its hash and every later hash recomputed: all ${nOk} records verify, so the chain alone passes. Against the checkpoint it fails: record ${n} now hashes to ${short(res[n - 1].computed, 8)}, not the checkpoint’s head ${short(cp.head_hash, 8)}.`;
   else if (res && mode === "truncate")
     msg = `Records ${n - 1} and ${n} deleted: the ${nOk} left all verify, so the chain alone passes. Against the checkpoint it fails: ${res.length} records where it counted ${cp.count}.`;
   else if (res)
-    msg = `All ${nOk} of ${n} records re-hash to their stored SHA-256 and link to the one before, and the chain matches the checkpoint: ${cp.count} records, head ${short(cp.head_hash, 8)}.`;
+    msg = verificationMessage(res, cp);
 
   return (
     <>
@@ -171,7 +226,7 @@ export default function Records({ examples, data }) {
               data-ok={ok}
               aria-pressed={!gone && i === shown}
               disabled={gone}
-              onClick={() => setSel(i)}
+              onClick={() => select(i)}
             >
               <span className="n">#{i + 1}</span>
               <b>{TITLE[e.id] || e.label}</b>
@@ -207,6 +262,7 @@ export default function Records({ examples, data }) {
       </div>
 
       <div className="tamper">
+        <p>Demonstration only: these switches alter a temporary copy in this browser. The stored records remain unchanged. Reset restores the verified copy.</p>
         <div className="switches" role="group" aria-label="Tamper with the chain, one way at a time">
           {MODES.map(([m, label], i) => (
             <div key={m} style={{ display: "contents" }}>
@@ -221,20 +277,29 @@ export default function Records({ examples, data }) {
               ) : null}
             </div>
           ))}
+          <button type="button" className="btn btn-quiet" onClick={reset} disabled={mode === null && !error}>
+            {error && mode === null ? "Retry verification" : "Reset local demonstration"}
+          </button>
         </div>
         <div className="verdicts" aria-live="polite">
-          <span data-ok={res ? String(chainOk) : "pending"}>
-            <Icon name={res && !chainOk ? "cross" : "check"} /> Chain alone: {res ? (chainOk ? "passes" : "fails") : "…"}
+          <span data-ok={error ? "false" : res ? String(chainOk) : "pending"}>
+            <Icon name={error || (res && !chainOk) ? "cross" : "check"} /> Chain alone: {error ? "could not verify" : res ? (chainOk ? "passes" : "fails") : "…"}
           </span>
-          <span data-ok={res ? String(anchorOk) : "pending"}>
-            <Icon name={res && !anchorOk ? "cross" : "check"} /> Against the anchored checkpoint: {res ? (anchorOk ? "passes" : "fails") : "…"}
+          <span data-ok={error ? "false" : res ? String(anchorOk) : "pending"}>
+            <Icon name={error || (res && !anchorOk) ? "cross" : "check"} /> Against the anchored checkpoint: {error ? "could not verify" : res ? (anchorOk ? "passes" : "fails") : "…"}
           </span>
           <p>{msg}</p>
+          {error ? <p role="alert">Verification failed. The stored records have not changed.</p> : null}
         </div>
       </div>
 
       <div className="rec-grid">
-        <Json obj={obj} bad={(mode === "edit" || mode === "rewrite") && shown === T ? "confluency_pct" : null} />
+        <div>
+          {chain[shown].kind !== "change" ? (
+            <p><a className="more" href={`/?example=${encodeURIComponent(chain[shown].id)}#demo`}>Return to this reading <Icon name="passage" /></a></p>
+          ) : null}
+          <Json obj={obj} bad={(mode === "edit" || mode === "rewrite") && shown === T ? "confluency_pct" : null} />
+        </div>
         <div>
           <dl className="fields">
             {fields.map(([k, d]) => (

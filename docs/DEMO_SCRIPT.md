@@ -1,3 +1,26 @@
+# VP core demo (5 min)
+
+This is the opening path for a VP evaluating a bounded, offline pilot. Use the
+stored website examples throughout. Label them **stored**; a live console run
+is optional corroboration and its queue or failure must never be presented as
+one of these stored results. Keep the technical script below for questions.
+
+| Time | Screen and action | Say |
+| --- | --- | --- |
+| 0:00–0:35 | Start with the website's v2 → v4 comparison. | "v2 established the image-to-action workflow and already had hash-chained readings. v4 adds evaluation on real images, calibration by imaging setup, measured uncertainty for decision boundaries, and stronger provenance. These are not a matched v2/v4 accuracy test." |
+| 0:35–1:35 | Open [EVICAN HT29](https://cultureqc-cvoy.vercel.app/?example=evican_ht29#demo). | "This stored image reads 52.9%, with a 23.5–82.3% measured band around it and an 80% passage target. The band crosses the target, so the rules request a person. This demonstrates the uncertainty workflow. EVICAN's mixed-setup evaluation is not fully blind, and the anomaly bank is not calibrated for HT29." |
+| 1:35–2:05 | Switch to [sparse EVICAN PC3](https://cultureqc-cvoy.vercel.app/?example=evican_pc3#demo). | "The stored reading is 6.6%, band 0–36%, against the same 80% target. The stored action is continue. This is a scoped recommendation for the tested image, not a universal declaration that a culture is healthy or contamination-free." |
+| 2:05–2:35 | Switch to the [oversized-bacteria stress test](https://cultureqc-cvoy.vercel.app/?example=c2c12_contamination_1#demo). | "The action is re-image because the image-quality gate rejects this altered frame. The bacteria were pasted at 16.5 times real size. This is not evidence of realistic bacterial-contamination detection; at real size the anomaly test performed at chance on the tested setup." |
+| 2:35–3:25 | Follow the selected reading's exact record link to `/records?record=<example-id>#chain`. Check its input, profile, rules and hash. Toggle a local tamper mode, then **Reset local demonstration**. | "The browser re-hashes the stored reading and chain. This switch changes a temporary browser copy only. A rewrite or deleted tail requires the anchored checkpoint to reveal it. The chain has seven readings and two approved calibration changes; it has no human-review event." |
+| 3:25–4:10 | Show the MSC calibration result and the dense-range caveat. | "On 320 held-out MSC images, setup calibration reduced mean absolute error from 8.19 to 3.43 percentage points within this v4 evaluation. The passage decision range remains a separate limitation. The fine-tuned model is experimental and decides nothing in the shipped workflow." |
+| 4:10–5:00 | End at the pilot plan. | "The next decision is an offline evaluation on one of your imaging setups. You provide representative images, an intended target and independent labels. We freeze the protocol, measure setup error, early and missed passage, review and re-image burden, useful decided coverage and latency, then agree stop, gather-more or proceed criteria. No host actuation is proposed at this stage." |
+
+If the live console is unavailable, stay with the labelled stored examples and
+their records. Do not describe those outputs as a fresh run. For technical
+questions, use the detailed script below and its cited source files.
+
+# Technical appendix
+
 # Demo script (≈12 min)
 
 12 to 13 minutes of demo by the section times below, then questions. The
