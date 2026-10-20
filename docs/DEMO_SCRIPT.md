@@ -131,12 +131,15 @@ example or replay is on screen; say "live" only after pressing Analyze.
 
 ## Before the call
 
-- [ ] Space on ZeroGPU; the log shows `ZeroGPU`, `anomaly banks verified` and `models loaded`.
-- [ ] The dry run (`scripts/space_dry_run.py`) of the published Space is committed: `results/space_dry_run_712a9e54.md`
-      (2026-10-11, Space commit `712a9e54`, each example read with its setup's profile); quote its numbers, not a guess.
-      Rerun it after any republish.
+- [ ] Space on ZeroGPU; the log shows `Cellpose-SAM weights downloaded, match` (or `present, match`), `ZeroGPU`,
+      `anomaly banks verified` and `models loaded`.
+- [ ] The dry run (`scripts/space_dry_run.py`) of the published Space is committed: `results/space_dry_run_0fb0ffa0.md`
+      (2026-10-20, Space commit `0fb0ffa0`, `rules_v0.7`, record schema 0.8, each example read with its setup's
+      profile); quote its numbers, not a guess. Rerun it after any republish.
 - [ ] Signed in to huggingface.co in the call browser, Space opened from huggingface.co/spaces/LongGrainRice/cultureqc-console (Analyze then uses the account's GPU quota). A visitor who is not signed in gets a few live runs, then Hugging Face refuses more; the stored examples still open.
-- [ ] Space opened 10 minutes early (it sleeps after 48 h without visitors; a boot takes minutes) and one live Analyze done; in the 2026-10-11 dry run the first took 6.83 s and the rest a median 3.27 s, and in a second run a few minutes later two of seven took 17–19 s; in the 2026-09-28 run (commit `0210c79`) one of 7 took 18.50 s.
+- [ ] Space opened 10 minutes early (it sleeps after 48 h without visitors; a boot takes minutes) and one live Analyze done; in the 2026-10-20 dry run the first took 4.89 s and the rest a median 3.47 s; on 2026-10-11 two of seven runs took 17–19 s, and in the 2026-09-28 run (commit `0210c79`) one of 7 took 18.50 s.
+- [ ] A viewer's own image must be an 8-bit grayscale or RGB file (PNG, JPEG or 8-bit TIFF). A 16-bit TIFF or a
+      transparent PNG is refused with a message, by design: no per-image contrast conversion is applied.
 - [ ] Expect a small "Successfully acquired a GPU" toast (top right) on each live Analyze: that is ZeroGPU attaching
       the GPU. If asked, it is the live run on a GPU, not a precomputed result.
 - [ ] The 3D views turn on their own at the dry run. If they don't, check macOS System Settings →
@@ -235,8 +238,8 @@ person steps in on exceptions and audits the trail.
      repository owner: the first two records of the stored chain (section 3).
 6. The fine-tuned demo set (3 min). The row of four buttons under the
    examples, "Fine-tuned demo set". Press one, then **Analyze** (live; each
-   took 3.4–4.6 s in the first dry run of Space `712a9e54`, but one took
-   13.6 s: `results/space_dry_run_712a9e54.md`). Two cards appear: the shipped
+   took 3.6–4.6 s in the 2026-10-20 dry run of Space `0fb0ffa0`,
+   `results/space_dry_run_0fb0ffa0.md`; one took 13.6 s on 2026-10-11). Two cards appear: the shipped
    reading, which decides as always, and the fine-tuned card, marked "not
    validated · decides nothing", with the experts' value from the lab's own
    outlines.
@@ -258,9 +261,11 @@ person steps in on exceptions and audits the trail.
         fine-tuned 78.7%.
      2. **HEK · FumGW**: experts 74.2%; shipped 56.1% → continue;
         fine-tuned 75.4%.
-     3. **HEK · 5A**: experts 88.5%; shipped 84.3% → human review (no
-        calibration, so a reading at or above the target goes to a person);
-        fine-tuned 89.9%.
+     3. **HEK · 5A**: experts 88.5%; shipped 84.3% → human review;
+        fine-tuned 89.9%. The live reason reads "Passage timing is unknown":
+        the console is not told when the flask was last passaged, and
+        `rules_v0.7` checks that first. Without a calibration, a reading at
+        or above the target would go to a person anyway.
      4. **HEK · FumGW z2, the failing case**: experts 77.9%; shipped 83.3% →
         human review; fine-tuned 83.4%. Show it as a failure: the fine-tuned
         reading is above the target, so if it decided it would call passage
@@ -320,10 +325,13 @@ person steps in on exceptions and audits the trail.
    says the map is held in memory for this view while the record keeps its
    hash. Precomputed examples are never written into this chain, and the card
    says so.
-   - On the Space (ZeroGPU) a live Analyze took a median 3.27 s in the
-     2026-10-11 dry run (`results/space_dry_run_712a9e54.md`), and flag and
+   - On the Space (ZeroGPU) a live Analyze took a median 3.47 s in the
+     2026-10-20 dry run (`results/space_dry_run_0fb0ffa0.md`), and flag and
      action were the same as stored on 7 of 7 examples, each read with its
-     setup's profile; readings were within 0.04 pp of the stored ones.
+     setup's profile; readings were within 0.04 pp of the stored ones. Live
+     records are schema 0.8 under `rules_v0.7`; the stored examples keep
+     their original schema and rules, and the live reason text differs (for
+     HT29 it names the unknown passage timing, not the band).
    - On the Mac backup (`results/live_latency_mac_mps.md`, 2026-10-04), flag
      and action are the same as stored on 7 of 7 examples, each read with its
      setup's profile. The stored examples were made on that Mac, so this
