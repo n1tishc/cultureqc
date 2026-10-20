@@ -1,5 +1,13 @@
 # REPO_MAP
 
+> **Historical snapshot, not current implementation guidance.** The body below
+> describes the pre-upgrade tag and commit named here; its present-tense claims,
+> paths, schemas and open questions belong to that snapshot. For current work use
+> [Product](PRODUCT.md), the [README](../README.md), the
+> [release-state boundary](specs/release-state.md) and the
+> [host evaluation contract](specs/host-evaluation.md). Historical findings are
+> preserved rather than rewritten to describe later code.
+
 Slice 0 deliverable for `cultureQC_upgrade.md` (Upgrade Spec v2.1). Written
 before any upgrade code lands, at tag `v1.0-pre-upgrade` (commit `e2274dd`).
 Purpose: orient the temporal-architecture work; not a general architecture doc.

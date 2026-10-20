@@ -3,16 +3,20 @@
 gives reimage, and an uncalibrated imaging setup never passages on its own."""
 
 import pytest
+from conftest import synthetic_passage_profile
 
 from culture.profiles import UNCALIBRATED, get_profile, load_profiles
 from culture.rules import ACTIONS, LineConfig, decide
 
 CFG = LineConfig(target_confluency=80.0)
 KW = dict(confluency_confidence=0.9, qc_flag=None, qc_confidence=None, line_config=CFG,
-          hours_since_passage=48, hours_since_feed=12, anomaly_flag=False)
+          hours_since_passage=48, hours_since_feed=12, anomaly_flag=False, quality_passed=True)
 
 
 def act(pct, **kw):
+    if kw.get("band_pp") is not None:
+        profile, context = synthetic_passage_profile(kw["band_pp"])
+        kw.update(profile=profile, setup_context=context)
     return decide(confluency_pct=pct, **{**KW, **kw})
 
 
@@ -41,7 +45,7 @@ def test_uncalibrated_setup_never_passages_on_its_own():
 def test_failed_quality_gate_gives_reimage_first():
     action, reason = act(95.0, band_pp=5.0, quality_passed=False, quality_reasons=["blur_below_threshold"])
     assert action == "reimage" and "blur below threshold" in reason
-    assert act(95.0, band_pp=5.0, quality_passed=None)[0] == "passage"     # no gate for the setup
+    assert act(95.0, band_pp=5.0, quality_passed=None)[0] == "human_review"
     assert "reimage" in ACTIONS
 
 
@@ -52,7 +56,8 @@ def test_too_soon_after_passage_is_not_held_by_the_band():
 def test_uncalibrated_profile_is_always_there():
     p = get_profile(None)
     assert p.id == UNCALIBRATED and p.band_pp is None and p.interval(50.0) is None
-    assert get_profile("no-such-setup").id == UNCALIBRATED
+    with pytest.raises(ValueError, match="Unknown confluency profile"):
+        get_profile("no-such-setup")
     assert UNCALIBRATED in load_profiles()
 
 

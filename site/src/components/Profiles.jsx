@@ -37,7 +37,7 @@ export function ProfileErrorFigure({ data, letter = "A" }) {
       title="Error against expert masks, per imaging setup"
       legend={
         <>
-          Mean absolute error in percentage points on each setup’s held-out test images: grey at Cellpose’s default cutoff, ink at the cutoff calibrated on that setup’s own labelled images. Source: <Path>{P.source}</Path>.
+          Mean absolute error in percentage points: grey at Cellpose’s default cutoff, ink after calibration within the same study. MSC uses held-out populations; EVICAN is not fully blind; LIVECell is an in-domain check, not held-out model evidence. These are measurement comparisons, not release comparisons or action validation. Source: <Path>{P.source}</Path>.
         </>
       }
     >
@@ -47,7 +47,10 @@ export function ProfileErrorFigure({ data, letter = "A" }) {
             <span className="prof-name">
               {p.label}
               <span className="verdict-note">
-                n = {p.n_test} test images · {p.study.split(";")[0]}
+                n = {p.n_test} test images · {p.id === "msc_phase" ? "leave one population out" : p.id === "evican_mixed" ? "reused test set; not fully blind" : "split by field; in-domain check"}
+              </span>
+              <span className="verdict-note">
+                {p.bands.find((band) => band.band === "60-90%").n} images at 60–90% · {p.acceptance.A2.verdict === "not measurable" ? "passage-range criteria not measurable" : "see the criterion-specific verdicts below"}
               </span>
             </span>
             <div className="prof-pair">
@@ -169,8 +172,9 @@ export function Profiles({ data }) {
       lede={
         <>
           <p>
-            The cutoff that turns Cellpose-SAM’s probability map into a number depends on the microscope. Each setup gets a calibration profile: a cutoff fitted on its own labelled images, and a 90% error band measured on images left out of the fit. Method, splits and pass criteria were committed before any image was scored.
+            The cutoff that turns Cellpose-SAM’s probability map into a number depends on the imaging setup. This study fits calibration profiles and estimates their error bands on labelled images. Its method and pass criteria were committed before this study’s scoring; prior exposure and model-training overlap differ by dataset.
           </p>
+          <p>MSC leaves one population out. EVICAN combines microscopes and reuses a previously inspected test set, so it is not fully blind. LIVECell is an in-domain check because overlap with Cellpose-SAM’s training cannot be ruled out. A measured error band does not validate a culture action.</p>
           <p className="sources">
             <Path>{P.source}</Path>
           </p>
@@ -183,7 +187,7 @@ export function Profiles({ data }) {
           <TransferTable data={data} />
         </Fig>
       </div>
-      <h3 className="sub-h">Pre-registered acceptance, on held-out images</h3>
+      <h3 className="sub-h">Pre-registered criteria, with each study’s scope</h3>
       <AcceptanceTable data={data} />
     </Section>
   );

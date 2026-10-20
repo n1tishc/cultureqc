@@ -40,15 +40,12 @@ Usage (needs data/c2c12_picks/ from nb/04c_fetch_c2c12_frames.ipynb, and the
 cache for the parity columns):
     python scripts/export_demo_examples.py [--only ID ...]
 
-After a change to the rules only (culture/rules.py), re-derive the decisions
-from the stored model outputs, with no model run:
-    python scripts/export_demo_examples.py --rederive
-The action, reason, rationale, caption and the record's decision fields are
-recomputed; the records are re-chained in their original order, any approved
-profile changes first (record_id and timestamps kept, so every record_hash
-changes with decided_by); the example
-gains decision_rederived = {"at", "rules"}, shown on the precomputed card.
-Model outputs (confluency, maps, anomaly, classifier, overlay) are untouched.
+Verify snapshot-bearing examples without models or modifying their history:
+    python scripts/export_demo_examples.py --verify-replay
+The deprecated --rederive alias performs the same read-only verification.
+Legacy examples without immutable inputs cannot be replayed honestly and are
+refused, not relabeled under current rules or given fabricated timing/configs.
+Create new examples with a fresh analysis to obtain schema 0.6 provenance.
 """
 
 from __future__ import annotations
@@ -71,9 +68,7 @@ REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, REPO)
 
 from culture.cache import probmap_sha256  # noqa: E402
-from culture.rationale import generate_rationale  # noqa: E402
-from culture.rules import RULES_VERSION, LineConfig, decide  # noqa: E402
-from culture.records import SCHEMA_VERSION, RecordWriter, change_event, hash_file  # noqa: E402
+from culture.records import RecordWriter, change_event, hash_file  # noqa: E402
 from culture.profiles import UNCALIBRATED, get_profile, load_profiles  # noqa: E402
 from demo.analysis import analyze_image, build_record  # noqa: E402
 
@@ -210,53 +205,21 @@ def caption(e: dict, rec: dict) -> str:
 
 
 def rederive(date: str) -> None:
-    """Re-derive every example's decision under the current rules from its stored
-    outputs (no model run); see the module docstring."""
-    from demo.analysis import DEFAULT_HOURS_SINCE_FEED, DEFAULT_HOURS_SINCE_PASSAGE
-
+    """Compatibility name for read-only replay verification; never rewrite history."""
+    from culture.provenance import replay_decision
     with open(OUT_JSON) as f:
         doc = json.load(f)
-    writer = RecordWriter(os.path.join(tempfile.mkdtemp(prefix="cultureqc_examples_"), "records.jsonl"))
-    doc["changes"] = [writer.append(c) for c in doc.get("changes") or []]      # the chain opens with them
     for ex in doc["examples"]:
-        a, conf, qc = ex["anomaly"], ex["confluency"], ex["qc"]
-        flag = a["flag"] if a["status"] == "ok" else None
-        demoted = ex["demoted"]
-        action, reason = decide(
-            confluency_pct=conf["pct"], confluency_confidence=conf["confidence"],
-            qc_flag=None if demoted else qc["flag"], qc_confidence=None if demoted else qc["confidence"],
-            line_config=LineConfig(cell_line=ex["cell_line"], target_confluency=ex["target_confluency"]),
-            hours_since_passage=DEFAULT_HOURS_SINCE_PASSAGE, hours_since_feed=DEFAULT_HOURS_SINCE_FEED,
-            anomaly_flag=flag, band_pp=(ex["record"].get("confluency_profile") or {}).get("band_pp"),
-            quality_passed=(ex["record"].get("quality_gate") or {}).get("passed"),
-            quality_reasons=(ex["record"].get("quality_gate") or {}).get("reasons"))
-        rationale = generate_rationale(
-            qc_flag=None if demoted else qc["flag"], qc_confidence=None if demoted else qc["confidence"],
-            evidence_bbox=(qc.get("evidence_bboxes") or [None])[0], confluency_pct=conf["pct"],
-            target_confluency=ex["target_confluency"], action=action, tile_size=256, use_vlm=False,
-            anomaly_flag=flag)["rationale"]
-        old_action = ex["action"]
-        rec = dict(ex["record"], recommended_action=action, action_reason=reason, qc_rationale=rationale,
-                   decided_by=RULES_VERSION, anomaly_used_in_decision=flag is not None,
-                   schema_version=SCHEMA_VERSION)
-        changed = old_action != action or ex["record"].get("decided_by") != RULES_VERSION
-        rec = writer.append(rec)
-        ex.update(action=action, action_reason=reason, rationale=rationale, record=rec, caption=caption(ex, rec))
-        if changed or "decision_rederived" in ex:     # an example made under the current rules is not marked
-            ex["decision_rederived"] = {"at": ex.get("decision_rederived", {}).get("at", date) if not changed
-                                        else date, "rules": RULES_VERSION}
-        print(f"{ex['id']}: {old_action} -> {action}")
-    with open(OUT_JSON, "w") as f:
-        json.dump(doc, f, indent=1, sort_keys=True)
-        f.write("\n")
-    print(f"wrote {os.path.relpath(OUT_JSON, REPO)} ({len(doc['examples'])} examples, decisions under {RULES_VERSION})")
+        record = ex["record"]
+        result = replay_decision(record, record["decided_by"])
+        print(f"{ex['id']}: verified {result.action} ({result.reason_code})")
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--only", nargs="*", help="example ids to (re)run; the rest are kept from examples.json")
-    ap.add_argument("--rederive", action="store_true",
-                    help="re-derive decisions from the stored outputs under the current rules; no model run")
+    ap.add_argument("--rederive", "--verify-replay", action="store_true",
+                    help="verify recorded policy snapshots without models or rewriting history; legacy records are refused")
     ap.add_argument("--change-approved-by", metavar="NAME",
                     help="start the stored chain with one change record per validated confluency profile, "
                          "approved by NAME (only when the owner has approved putting those profiles live)")
@@ -313,7 +276,7 @@ def main():
         overlay_file = f"{e['id']}_overlay.jpg"
         cv2.imwrite(os.path.join(OUT_DIR, overlay_file), cv2.cvtColor(a.overlay, cv2.COLOR_RGB2BGR),
                     [cv2.IMWRITE_JPEG_QUALITY, 90])
-        rec = writer.append(build_record(a, dst, CELL_LINE, datetime.now(timezone.utc).isoformat()))
+        rec = writer.append(build_record(a, dst, CELL_LINE))
         probmap_file = f"{e['id']}_probmap.npz"
         np.savez_compressed(os.path.join(OUT_DIR, probmap_file), prob_x1000=a.probmap_x1000)
         assert probmap_sha256(a.probmap_x1000) == rec["confluency_map_hash"]

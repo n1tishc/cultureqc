@@ -123,7 +123,7 @@ export function HowItWorks({ data }) {
           </Step>
           <Step n="4" title="Action" art={<MiniActions a={ex.action} />}>
             <p>
-              {ex.rules} turns the reading, its error band, the quality gate and the flag into one action: here, {actionGloss(ex.action)}. A person decides when the band includes the target, the microscope is uncalibrated or the frame is flagged.
+              {ex.rules} turns the reading, any available error band, the quality gate and the flag into one recommendation: here, {actionGloss(ex.action)}. Once passage timing allows, a band crossing the target or an uncalibrated reading at the target needs review; an anomaly flag holds an otherwise eligible passage. Below-target readings can still recommend continue or feed.
             </p>
           </Step>
           <Step n="5" title="Record" art={<MiniChain examples={data.examples} ex={ex} />}>
@@ -205,7 +205,7 @@ export function Accuracy({ data }) {
             Each microscope gets its own cutoff on Cellpose-SAM’s probability map, fitted on its labelled images. On held-out images that cut the error against expert masks from {msc.shipped.mae.toFixed(2)} to <b className="num">{msc.profile.mae.toFixed(2)} pp</b> for stem cells ({msc.n_test} images), and from {ev.shipped.mae.toFixed(2)} to {ev.profile.mae.toFixed(2)} pp on EVICAN ({ev.n_test} images, not fully blind).
           </p>
           <p>
-            Every reading carries its measured 90% error band (±{msc.band_pp.toFixed(1)} pp and ±{ev.band_pp.toFixed(1)} pp). A passage needs the whole band above the target; otherwise, or on an uncalibrated microscope, a person decides.
+            Calibrated profiles provide a measured 90% error band (±{msc.band_pp.toFixed(1)} pp for MSC and ±{ev.band_pp.toFixed(1)} pp for EVICAN); uncalibrated readings have no band. After quality and timing checks, passage requires the whole band at or above the target and no anomaly flag. A band crossing the target, or an uncalibrated reading at or above it, needs review. Below-target readings can still recommend continue or feed—not universal clearance.
           </p>
           <a className="more" href="/validation#profiles">
             How each setup was calibrated <Icon name="passage" />
@@ -247,7 +247,7 @@ export function Specs({ data, verify }) {
         <header className="sec-head">
           <h2 id="specs-h">Measured on real, held-out images</h2>
           <div>
-            <p>Every figure on this site comes from the repository’s stored output, with its n and its source file. The validation page has the full set, including the checks that failed and what they changed.</p>
+            <p>Every figure on this site comes from the repository’s stored output, with its n and its source file. Explore fine-tuning results, setup calibration and detection scope, with the limitations beside each finding.</p>
           </div>
         </header>
         <div className="spec" role="table" aria-label="Measured performance">
@@ -275,10 +275,10 @@ export function Specs({ data, verify }) {
         </div>
         <p className="spec-foot">
           <a className="more" href="/validation">
-            All {data.validation.length} checks, V1–V{data.validation.length} <Icon name="passage" />
+            Explore the evidence and its limits <Icon name="passage" />
           </a>
           <span>
-            {ex.items.length} stored examples · {data.replays.length} held-out flask replays · rules {data.meta.rules.replace("rules_", "")}
+            {ex.items.length} stored examples · {data.replays.length} held-out flask replays · stored rules {ex.items[0].rules.replace("rules_", "")}
           </span>
         </p>
       </div>
@@ -328,7 +328,7 @@ export function Scope({ data }) {
                 <Icon name="check" />
                 <div>
                   <b>Confluency</b>
-                  <span>Cellpose-SAM’s reading at the cutoff calibrated for the microscope, with a measured 90% error band. When the band includes the passage target, or the microscope has no calibration, a person decides.</span>
+                  <span>Cellpose-SAM’s reading uses the setup’s calibrated cutoff and measured 90% error band where available; an uncalibrated setup uses the default cutoff with no band. Once passage timing allows, a band crossing the target or an uncalibrated reading reaching it needs review. Below-target readings can still recommend continue or feed.</span>
                 </div>
               </li>
               {gated.map((r) => {

@@ -1,5 +1,7 @@
 # VP demo and website upgrade plan
 
+> **Superseded narrative, 2026-10-16:** the owner rejected comparison-first storytelling. Use the approved [standalone product-site direction](2026-10-16-v4-standalone-product-design.md) and [implementation DAG](../specs/standalone-product-site/README.md). History below remains factual; its comparison-first page order, three-case default tour and opening script are no longer requirements. Technical safeguards and evidence limitations still apply.
+
 Date: 2026-10-15. Implementation status updated after owner approval of the complete journey, comparison first.
 
 ## Implementation status
@@ -10,7 +12,7 @@ W5 functional checks cover scenario navigation/history, exact HT29 record select
 
 Independent implementation review found a false-success verification explanation and missing screen-reader transition feedback; both received targeted fixes and regression checks. Current visual acceptance remains pending: browser screenshot requests repeatedly timed out after a browser reset, and native capture was blank. DOM/geometry evidence is not visual signoff. A timed five-minute rehearsal is also still required before the VP presentation. No live inference or deployment was performed.
 
-The specification below records the approved direction and remains the acceptance reference, not a claim that visual validation or backend correctness work is complete.
+The specification below records the previously approved direction, now superseded for narrative and information architecture. It is not a claim that visual validation or backend correctness work is complete.
 
 Companion documents: [technical review](2026-10-15-v4-vs-v2-vp-review.md), [correctness backlog](2026-10-15-v4-vs-v2-agent-backlog.md), [reproductions](2026-10-15-v4-vs-v2-evidence.md).
 

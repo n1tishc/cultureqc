@@ -84,15 +84,16 @@ def test_console_without_the_variable_never_reads_the_finetuned_model(monkeypatc
 
 @requires("gradio")
 def test_finetuned_reads_only_the_exact_demo_files(monkeypatch, lab):
+    import cv2
     images, img, tmp = lab
     from demo import app
     monkeypatch.setattr(app, "LAB_IMAGES", images)
     seen = _capture(monkeypatch, app)
     other = _image(tmp / "upload.png", 101)                   # any upload
     changed = tmp / "changed.tif"
-    b = bytearray(open(img, "rb").read())
-    b[-1] ^= 1
-    changed.write_bytes(bytes(b))                             # the demo file with one byte changed
+    changed_pixels = cv2.imread(img, cv2.IMREAD_GRAYSCALE)
+    changed_pixels[0, 0] ^= 1
+    cv2.imwrite(str(changed), changed_pixels)
     for p in (img, other, str(changed)):
         with pytest.raises(Stop):
             app.run_analysis(p, "HEK293T", 80, "uncalibrated")

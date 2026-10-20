@@ -208,17 +208,17 @@ export default function Timeline({ replays }) {
 
   return (
     <div className="stage" ref={box}>
-      <div className="tabs" role="tablist" aria-label="Replayed flasks">
+      <div className="tabs" role="group" aria-label="Replayed flasks">
         {replays.map((x) => (
           <button
             key={x.scenario}
             type="button"
-            role="tab"
             className="tab"
-            aria-selected={x.scenario === name}
+            aria-pressed={x.scenario === name}
             onClick={() => {
               stop();
               setName(x.scenario);
+              if (x.scenario !== name) setSel(x.visits.length - 1);
             }}
           >
             {TITLES[x.scenario][0]}

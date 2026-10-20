@@ -14,10 +14,14 @@ short_description: cultureQC v0.4 review console (ZeroGPU)
 
 # cultureQC v0.4 — review console
 
-One phase-contrast image in: a Cellpose-SAM confluency reading at the cutoff
-calibrated for the imaging setup, with the 90% error band measured for it, a
-per-image anomaly check, a recommended action from `rules_v0.5`, and a
-hash-chained record.
+Local source (2026-10-19): one supported microscopy image in, a confluency
+reading and setup-specific error band when available, explicit check status,
+an advisory result from `rules_v0.7`, and a schema `0.8` hash-chained record.
+All current decisions have `host_actionable: false`; no shipped profile is
+eligible to authorize passage. Calibration alone does not validate an action.
+The precomputed examples retain historical schema `0.4` / `rules_v0.5`.
+This README does not verify the deployed Space revision or authorize publishing.
+See `docs/specs/release-state.md` in the source repository for the surface map.
 
 - **v0.4 site:** https://cultureqc-cvoy.vercel.app
 - **Source:** https://github.com/n1tishc/cultureqc/tree/slice-1b-compute-cache
@@ -32,8 +36,11 @@ hash-chained record.
   band; the C2C12 microscope has no labelled images, so it has no profile and
   its readings carry no band. Each example is labelled "Precomputed example"
   with the script, device and date that made it; they open instantly and use
-  no GPU. **Analyze** runs any image live, with the setup picked in the
-  console, on a GPU attached for that call only (ZeroGPU): median 3.27 s in
+  no GPU. **Analyze** accepts supported single-frame uint8 grayscale/RGB files,
+  with the setup picked in the console; unsupported encoding is refused before
+  inference. A configured C2C12 quality gate runs; profiles without one report
+  it unavailable, not passed. On ZeroGPU, a GPU is attached for that call only.
+  Historical latency (2026-10-11, not a benchmark of current local source): median 3.27 s in
   the first run after a restart and 6.22 s in the second, where two took 17–19 s
   (`results/space_dry_run_712a9e54.md`, `results/space_dry_run_712a9e54_run2.md`).
 - **Fine-tuned demo set.** Four test images from one lab (mCellSeg, Alam et al.
@@ -49,7 +56,9 @@ hash-chained record.
 - **Calibration profiles.** One per imaging setup (`configs/confluency_profiles.yaml`):
   a cutoff fitted on labelled images from that setup and a 90% error band
   measured on images left out of the fit (`results/confluency_profiles.md`).
-  A passage needs the band to clear the target; otherwise a person decides.
+  A band clearing the target is not enough: approved decision scope, eligibility,
+  required checks and timing are separate policy gates. Shipped profiles remain
+  passage-ineligible, and every current output is advisory.
 - **Flask Timeline.** Five held-out C2C12 time-lapse recordings replayed as
   visits (two normal, three with simulated faults): 3-FOV confluency with its
   noise band, the quality gate, the anomaly flag and the passage forecast.
@@ -84,7 +93,7 @@ pip install -r requirements.txt
 python console.py              # http://127.0.0.1:7860
 ```
 
-- **Publish:** `.venv/bin/python deploy/publish_demo_space.py` from the repo
+- **Publish only after explicit owner approval:** `.venv/bin/python deploy/publish_demo_space.py` from the repo
   root. It syncs first and refuses to upload unless the anomaly banks match
   `configs/anomaly.yaml` and the four demo images are the listed files, or if
   any file over 500 MB (weights) is in the folder. Then run
@@ -109,8 +118,9 @@ python console.py              # http://127.0.0.1:7860
 
 ## The raw-output page (`app.py`)
 
-`app.py`, kept beside `console.py`, is the v0.2 raw-output page that runs,
-unchanged, on `LongGrainRice/cultureqc-demo`; the console publish doesn't
+`app.py`, kept beside `console.py`, is the legacy raw-output entry point. Local
+ingestion fixes do not establish what is running on `LongGrainRice/cultureqc-demo`;
+its remote revision has not been reverified. The console publish doesn't
 touch that Space or `LongGrainRice/cultureqc-api`. To run it here instead, set
 `app_file: app.py` **and** `sdk_version: "5.50.0"` (below).
 

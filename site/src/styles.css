@@ -1316,7 +1316,7 @@ td .num {
   background: var(--stage-2);
 }
 
-.tab[aria-selected="true"] {
+.tab[aria-pressed="true"] {
   color: var(--stage-ink);
   background: var(--stage-3);
   border-color: #3d4652;
@@ -1720,7 +1720,7 @@ td .num {
   width: 36px;
   height: 20px;
   border-radius: 999px;
-  background: var(--rule-2);
+  background: var(--ink-3);
   position: relative;
   cursor: pointer;
   margin: 0;
@@ -3109,7 +3109,7 @@ td.own {
   cursor: pointer;
 }
 
-.seg-tabs button[aria-selected="true"] {
+.seg-tabs button[aria-pressed="true"] {
   background: var(--panel);
   color: var(--ink);
   box-shadow: 0 1px 2px rgb(13 17 23 / 0.12);

@@ -19,6 +19,7 @@ import argparse
 import json
 import os
 import sys
+from datetime import datetime, timezone
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, REPO)
@@ -44,6 +45,16 @@ def _cellpose_path() -> str | None:
     return p()
 
 
+def effective_time(value):
+    try:
+        parsed = datetime.fromisoformat(value)
+        if parsed.utcoffset() is None:
+            raise ValueError("timezone required")
+        return parsed
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError("--effective-from needs an ISO timestamp with timezone") from exc
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("model", help="model id, or `check`")
@@ -52,6 +63,8 @@ def main():
     ap.add_argument("--reason")
     ap.add_argument("--evidence", nargs="+", default=[])
     ap.add_argument("--approved-by")
+    ap.add_argument("--effective-from", type=effective_time,
+                    help="timezone-aware ISO time; future approvals do not activate early")
     a = ap.parse_args()
     if a.model == "check":
         a.model = a.for_model
@@ -59,14 +72,15 @@ def main():
         return
     if not (a.weights and a.reason and a.evidence and a.approved_by):
         ap.error("approving needs --weights, --reason, --evidence and --approved-by")
-    log = approved()
+    effective = a.effective_from or datetime.now(timezone.utc)
+    log = approved(now=effective)
     if log["status"] not in ("intact", "missing_log"):
         sys.exit(f"refusing to append: the approvals log is {log['status']} ({log['reason']})")
     prev = log["items"].get(("model", a.model))
     evidence = [{"path": p, "sha256": hash_file(os.path.join(REPO, p))} for p in a.evidence]
     rec = change_event("model", None if prev is None else dict(prev["after"]),
                        {"id": a.model, "sha256": hash_file(os.path.expanduser(a.weights))},
-                       a.reason, evidence, "owner", a.approved_by)
+                       a.reason, evidence, "owner", a.approved_by, effective_from=effective.isoformat())
     out = RecordWriter(APPROVALS_PATH).append(rec)
     print(json.dumps(out, indent=1))
 

@@ -5,16 +5,20 @@ quality gate where one is calibrated for the setup, Cellpose-SAM confluency
 (one pass; the overlay mask is the same probability map at the profile's
 cutoff), the QC classifier (recorded; kept out of the action while demoted),
 the per-image anomaly check (shown for review; a flag holds a passage) and the
-action rules (rules_v0.5).
+action rules (rules_v0.7, including explicit passage eligibility and missing checks).
 
 demo/app.py runs it live; scripts/export_demo_examples.py runs it once per
 precomputed example, so the two show the same computation.
+
+Live timing defaults to unknown. DEFAULT_HOURS constants are retained only
+for replaying the historical demo assumptions, not for live decisions.
 """
 
 from __future__ import annotations
 
 import os
 import time
+from copy import deepcopy
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
@@ -22,17 +26,18 @@ import cv2
 import numpy as np
 
 from culture.anomaly import AnomalyResult, score_frame
-from culture.cache import downsample_probmap, probmap_sha256
-from culture.pipeline import config_hashes
+from culture.cache import downsample_probmap
 from culture.profiles import Profile, get_profile
 from culture.qc import QCResult, classifier_demoted, qc_classify
 from culture.quality import QualityResult, quality_gate
 from culture.rationale import generate_rationale
-from culture.records import SCHEMA_VERSION, hash_file
-from culture.rules import RULES_VERSION, LineConfig, decide
+from culture.records import SCHEMA_VERSION
+from culture.ingestion import read_image
+from culture.rules import RULES_VERSION, CheckPolicy, LineConfig
 from culture.seg import ConfluencyResult, cpsam_confluency, threshold_confluency
 from culture.visuals import outline_scored_region
 from culture.weights import weights_hashes
+from culture.provenance import capture_configs, capture_time, config_snapshot, configuration_activation, map_provenance, recorded_decision, snapshot_hashes
 
 TILE_SIZE = 256
 DEFAULT_HOURS_SINCE_PASSAGE = 48.0
@@ -61,6 +66,14 @@ class Analysis:
     # For a fine-tuned demo image only: the pixels each model counted ({"shipped", "finetuned"}), for the
     # console's side-by-side view. Kept in memory only.
     compare_fg: dict | None = None
+    passage_eligibility: dict | None = None
+    decision: dict | None = None
+    decision_inputs: dict | None = None
+    config_snapshot: list = field(default_factory=list)
+    image_hash: str | None = None
+    preprocessing: dict | None = None
+    analysis_started_at: str | None = None
+    analysis_completed_at: str | None = None
 
     @property
     def interval(self) -> list[float] | None:
@@ -103,10 +116,19 @@ def _build_overlay(img_gray, cell_mask, evidence_boxes):
     return overlay
 
 
+@capture_configs
 def analyze_image(img: np.ndarray, image_path: str, cell_line: str, target_confluency: float,
-                  profile_id: str | None = None, finetuned_id: str | None = None) -> Analysis:
+                  profile_id: str | None = None, finetuned_id: str | None = None,
+                  setup_id: str | None = None, hours_since_passage: float | None = None,
+                  hours_since_feed: float | None = None, check_policy: CheckPolicy | None = None) -> Analysis:
+    started = datetime.now(timezone.utc).isoformat()
+    source = read_image(image_path)
+    if source.pixels.dtype != img.dtype or not np.array_equal(source.pixels, img):
+        raise ValueError("image_path bytes do not match the supplied grayscale image")
+    image_hash = source.image_hash
+    img = source.pixels
     t = {}
-    profile = get_profile(profile_id)
+    profile = deepcopy(get_profile(profile_id))
     t0 = time.perf_counter()
     quality = quality_gate(img, dataset=profile.quality) if profile.quality else None
     t["quality_gate"] = time.perf_counter() - t0
@@ -149,19 +171,26 @@ def analyze_image(img: np.ndarray, image_path: str, cell_line: str, target_confl
     decision_flag = None if demoted else qc.flag
     decision_conf = None if demoted else qc.confidence
 
-    action, reason = decide(
+    setup_context = {"setup_id": setup_id, "cell_line": cell_line,
+                     "model_sha256": (conf.extra.get("model_check") or {}).get("sha256")}
+    eligibility = profile.passage_eligibility(conf.pct, target_confluency, setup_context)
+    decision, decision_inputs = recorded_decision(
         confluency_pct=conf.pct,
         confluency_confidence=conf.confidence,
         qc_flag=decision_flag,
         qc_confidence=decision_conf,
         line_config=LineConfig(cell_line=cell_line, target_confluency=target_confluency),
-        hours_since_passage=DEFAULT_HOURS_SINCE_PASSAGE,
-        hours_since_feed=DEFAULT_HOURS_SINCE_FEED,
+        hours_since_passage=hours_since_passage,
+        hours_since_feed=hours_since_feed,
         anomaly_flag=anomaly_flag,
         band_pp=profile.band_pp,
         quality_passed=quality.passed if quality else None,
         quality_reasons=quality.reasons if quality else None,
+        profile=profile,
+        setup_context=setup_context,
+        check_policy=check_policy or CheckPolicy(qc="not_applicable" if demoted else "optional"),
     )
+    action, reason = decision.action, decision.reason
 
     evidence_boxes = []
     if not demoted and qc.evidence_bboxes and qc.flag != "normal":
@@ -181,6 +210,7 @@ def analyze_image(img: np.ndarray, image_path: str, cell_line: str, target_confl
         use_vlm=False,
         image_path=image_path,
         anomaly_flag=anomaly_flag,
+        decision_reason=reason,
     )
     t["total"] = sum(t.values())
     return Analysis(confluency=conf, qc=qc, demoted=demoted, anomaly=anomaly, action=action, reason=reason,
@@ -188,6 +218,11 @@ def analyze_image(img: np.ndarray, image_path: str, cell_line: str, target_confl
                     timings_s={k: round(v, 3) for k, v in t.items()},
                     probmap_x1000=downsample_probmap(captured["prob"]), profile=profile, quality=quality,
                     finetuned=finetuned,
+                    passage_eligibility=eligibility,
+                    decision=decision.record_fields(),
+                    decision_inputs=decision_inputs, config_snapshot=config_snapshot(), image_hash=image_hash,
+                    preprocessing=source.preprocessing,
+                    analysis_started_at=started, analysis_completed_at=datetime.now(timezone.utc).isoformat(),
                     compare_fg={"shipped": captured["fg"], "finetuned": ft_visual["fg"]} if "fg" in ft_visual else None)
 
 
@@ -210,16 +245,20 @@ def build_record(a: Analysis, image_path: str, cell_line: str, captured_at: str 
         "imager_id": host.get("imager_id"),
         "fov": host.get("fov"),
         "environment": host.get("environment"),
-        "captured_at": captured_at or datetime.now(timezone.utc).isoformat(),
+        **capture_time(captured_at),
+        "analysis_started_at": a.analysis_started_at,
+        "analysis_completed_at": a.analysis_completed_at,
         "image_ref": os.path.basename(image_path),
-        "image_hash": hash_file(image_path),
+        "image_hash": a.image_hash,
+        "preprocessing": deepcopy(a.preprocessing),
         "pixel_size_um": None,
         "confluency_pct": a.confluency.pct,
         "confluency_interval": a.interval,
         "confluency_profile": a.profile.record_fields(),
+        "passage_eligibility": a.passage_eligibility,
         "confluency_confidence": a.confluency.confidence,
         "confluency_method": a.confluency.method,
-        "confluency_map_hash": probmap_sha256(a.probmap_x1000) if a.probmap_x1000 is not None else None,
+        **map_provenance(a.probmap_x1000),
         "quality_gate": None if q is None else {"passed": q.passed, "reasons": q.reasons, "thresholds": q.thresholds,
                                                  "blur": round(q.blur, 3), "mean_intensity": round(q.mean_intensity, 3),
                                                  "uniformity": round(q.uniformity, 3)},
@@ -237,6 +276,8 @@ def build_record(a: Analysis, image_path: str, cell_line: str, captured_at: str 
         "eta_to_target_hours": None,
         "recommended_action": a.action,
         "action_reason": a.reason,
+        "decision": a.decision,
+        "decision_inputs": a.decision_inputs,
         "decided_by": RULES_VERSION,
         "model_versions": {
             "seg": a.confluency.model_version,
@@ -244,8 +285,10 @@ def build_record(a: Analysis, image_path: str, cell_line: str, captured_at: str 
             "dino": a.anomaly.model_version,
             "vlm": a.rationale["method"],
         },
-        "model_weights_hash": weights_hashes(),
+        "model_weights_hash": {**weights_hashes(), "seg": (a.confluency.extra.get("model_check") or {}).get("sha256")},
         "model_check": a.confluency.extra.get("model_check"),
         "finetuned_reading": a.finetuned,
-        "config_hashes": config_hashes(),
+        "config_snapshot": deepcopy(a.config_snapshot),
+        "config_hashes": snapshot_hashes(a.config_snapshot),
+        "configuration_activation": configuration_activation(a.config_snapshot, a.decision_inputs),
     }

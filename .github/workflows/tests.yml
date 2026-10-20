@@ -8,6 +8,21 @@ on:
   workflow_dispatch:
 
 jobs:
+  host-evaluation:
+    name: Offline host contract (no model weights)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: requirements-host-eval.txt
+      - name: Install pinned contract dependencies
+        run: python -m pip install -r requirements-host-eval.txt
+      - name: Exercise advisory, refusal, missing-check and timeout outcomes
+        run: python -m pytest tests/test_host_evaluation.py -q
+
   api:
     name: API contract
     runs-on: ubuntu-latest
@@ -73,7 +88,7 @@ jobs:
         run: npm ci
 
       - name: Record chain verifies in the browser code
-        run: node --test site/tests/verify.test.js
+        run: node --test site/tests/*.test.js
 
       - name: Build
         run: npm run build
@@ -87,6 +102,6 @@ jobs:
 
       - name: Page data matches the repo output it came from
         run: |
-          pip install numpy pyyaml
+          pip install numpy pyyaml jsonschema
           python site/assets/build_data.py
           git diff --exit-code -- site/src/data.json

@@ -2,7 +2,7 @@
 cultureqc.rationale — Human-readable, evidence-referencing rationale for QC decisions.
 
 Two modes:
-    template (default): deterministic, always valid, GMP-defensible.
+    template (default): deterministic text, not independent model validation.
     vlm:                Qwen2-VL-2B zero-shot, timeboxed experiment.
 
 The template ships unless the VLM passes the quality gate (>=95% validity,
@@ -58,7 +58,7 @@ _FLAG_PHRASES = {
 _ACTION_PHRASES = {
     "passage": "proceed with passage",
     "feed": "perform media exchange",
-    "continue": "no action required; continue monitoring",
+    "continue": "continue monitoring pending host review",
     "human_review": "pause automated decisions and flag for human review",
     "reimage": "re-image this field before any decision",
 }
@@ -90,9 +90,9 @@ def template_rationale(
     """
     Deterministic two-sentence rationale built from classifier output + Grad-CAM.
 
-    Always correct because it only references values it's handed, never invents.
-    This is the more GMP-defensible design: a deterministic sentence that's
-    always right beats a VLM that's occasionally wrong.
+    Summarizes supplied observations, not independent proof of culture health.
+    Runtime callers use the rule's decision_reason to retain timing and policy
+    limitations rather than reconstructing them from confluency alone.
 
     qc_flag=None (classifier demoted, configs/qc.yaml): no sentence about
     what the classifier saw, only confluency and the action.
@@ -107,16 +107,16 @@ def template_rationale(
     if qc_flag is None:
         s1 = ""
     elif qc_flag == "normal":
-        s1 = f"{flag_phrase} in the field of view; culture appears healthy."
+        s1 = f"{flag_phrase} by this classifier; this is not a culture-health clearance."
     else:
         s1 = (
             f"{flag_phrase} in the {quadrant} "
-            f"(confidence {qc_confidence:.0%})."
+            + (f"(confidence {qc_confidence:.0%})." if qc_confidence is not None else "(confidence unavailable).")
         )
 
     # Sentence 2: confluency context + recommended action
     conf_vs_target = (
-        f"above target ({target_confluency:.0f}%)"
+        f"at or above target ({target_confluency:.0f}%)"
         if confluency_pct >= target_confluency
         else f"below target ({target_confluency:.0f}%)"
     )
@@ -277,6 +277,7 @@ def generate_rationale(
     use_vlm: bool = False,
     image_path: str | None = None,
     anomaly_flag: bool | None = None,
+    decision_reason: str | None = None,
 ) -> dict:
     """
     Generate a rationale. Returns dict with:
@@ -285,10 +286,13 @@ def generate_rationale(
         vlm_attempted: bool
         vlm_succeeded: bool
     """
+    if decision_reason is not None:
+        return {"rationale": decision_reason, "method": "template", "vlm_attempted": False,
+                "vlm_succeeded": False}
     vlm_succeeded = False
     rationale = None
 
-    if use_vlm and image_path and qc_flag is not None:
+    if use_vlm and image_path and qc_flag is not None and qc_confidence is not None:
         rationale = vlm_rationale(
             image_path=image_path,
             qc_flag=qc_flag,

@@ -7,22 +7,27 @@ cultureqc.pipeline — End-to-end analysis: image -> auditable record.
 
 from __future__ import annotations
 
-import hashlib
 import os
 import uuid
+from copy import deepcopy
+from dataclasses import replace
 from datetime import datetime, timezone
 
 from culture.seg import cpsam_confluency
 from culture.qc import qc_classify, classifier_demoted, CLASS_NAMES
 from culture.calibration import DEFAULT_CALIBRATION_PATH
-from culture.rules import decide, LineConfig, DEFAULT_CONFIG, RULES_VERSION
+from culture.rules import CheckPolicy, LineConfig, DEFAULT_CONFIG, RULES_VERSION
 from culture.records import SCHEMA_VERSION, RecordWriter, hash_file
+from culture.ingestion import read_image
 from culture.rationale import generate_rationale
+from culture.provenance import capture_configs, capture_time, config_snapshot, configuration_activation, map_provenance, recorded_decision, snapshot_hashes
 
 
 def config_hashes() -> dict:
-    """SHA-256 of each config that shaped this record; a config that isn't
-    there (e.g. a Space without configs/) is left out, not faked."""
+    """Legacy inventory helper, not provenance of a live schema 0.6 reading.
+
+    Current runtime records use consumed config snapshots instead.
+    """
     from culture.qc import QC_CONFIG_PATH
     from culture import detectability
     from culture.anomaly import ANOMALY_CONFIG_PATH
@@ -37,6 +42,7 @@ def config_hashes() -> dict:
     return {name: hash_file(p) for name, p in paths.items() if os.path.exists(p)}
 
 
+@capture_configs
 def analyze(
     image_path: str,
     flask_id: str = "unknown",
@@ -56,6 +62,9 @@ def analyze(
     fov: dict | None = None,
     environment: dict | None = None,
     finetuned_id: str | None = None,
+    setup_id: str | None = None,
+    check_policy: CheckPolicy | None = None,
+    captured_at: str | None = None,
 ) -> dict:
     """
     Full pipeline: profile + quality gate + confluency + anomaly + QC + rules
@@ -73,28 +82,33 @@ def analyze(
     recorded, never used in the decision, refused if its weights don't match.
     """
     import cv2
-    import numpy as np
 
     from culture.anomaly import score_frame
     from culture.profiles import get_profile
     from culture.quality import quality_gate
     from culture.weights import weights_hashes
 
-    img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-    if img is None:
-        raise FileNotFoundError(f"Could not read image: {image_path}")
+    started = datetime.now(timezone.utc).isoformat()
+    capture = capture_time(captured_at)
+    cfg = deepcopy(line_config) if line_config is not None else replace(DEFAULT_CONFIG, cell_line=cell_line)
+    source = read_image(image_path)
+    image_hash = source.image_hash
+    img = source.pixels
     emit = observer or (lambda event: None)
-    profile = get_profile(profile_id)
+    profile = deepcopy(get_profile(profile_id))
     quality = quality_gate(img, dataset=profile.quality) if profile.quality else None
 
     # ── Confluency, at the profile's cutoff ──
     from culture.visuals import segmentation_visuals, qc_visual
     emit({"stage": "segmentation", "status": "running"})
     visuals = {}
+    maps = {}
     def segmentation_ready(prob, mask):
-        visuals.update(segmentation_visuals(img, prob, mask))
-    conf_result = cpsam_confluency(img, method="probmap", thr=profile.cutoff, **(
-        {"on_visual": segmentation_ready} if observer or details is not None else {}))
+        from culture.cache import downsample_probmap
+        maps["stored"] = downsample_probmap(prob)
+        if observer or details is not None:
+            visuals.update(segmentation_visuals(img, prob, mask))
+    conf_result = cpsam_confluency(img, method="probmap", thr=profile.cutoff, on_visual=segmentation_ready)
     emit({"stage": "segmentation", "status": "complete", "visuals": dict(visuals),
           "confluency_pct": conf_result.pct})
 
@@ -132,9 +146,11 @@ def analyze(
         details.update(qc=qc_result, anomaly=anomaly, visuals=visuals, profile=profile, quality=quality)
     emit({"stage": "qc", "status": "complete", "visuals": dict(visuals)})
 
-    # ── Rules (rules_v0.5) ──
-    cfg = line_config or DEFAULT_CONFIG
-    action, reason = decide(
+    # ── Rules (rules_v0.7) ──
+    setup_context = {"setup_id": setup_id, "cell_line": cell_line,
+                     "model_sha256": conf_result.extra["model_check"]["sha256"]}
+    eligibility = profile.passage_eligibility(conf_result.pct, cfg.target_confluency, setup_context)
+    decision, decision_inputs = recorded_decision(
         confluency_pct=conf_result.pct,
         confluency_confidence=conf_result.confidence,
         qc_flag=None if demoted else qc_result.flag,
@@ -146,7 +162,11 @@ def analyze(
         band_pp=profile.band_pp,
         quality_passed=quality.passed if quality else None,
         quality_reasons=quality.reasons if quality else None,
+        profile=profile,
+        setup_context=setup_context,
+        check_policy=check_policy or CheckPolicy(qc="not_applicable" if demoted else "optional"),
     )
+    action, reason = decision.action, decision.reason
 
     rat = generate_rationale(
         qc_flag=None if demoted else qc_result.flag,
@@ -159,6 +179,7 @@ def analyze(
         use_vlm=False,  # set True to try VLM; falls back to template on failure
         image_path=image_path,
         anomaly_flag=anomaly.flag if anomaly.status == "ok" else None,
+        decision_reason=reason,
     )
 
     now = datetime.now(timezone.utc).isoformat()
@@ -172,13 +193,18 @@ def analyze(
         "imager_id": imager_id,
         "fov": fov,
         "environment": environment,
-        "captured_at": now,  # in a real system this comes from the imager, via the host
+        **capture,
+        "analysis_started_at": started,
+        "analysis_completed_at": now,
         "image_ref": image_ref if image_ref is not None else os.path.abspath(image_path),
-        "image_hash": hash_file(image_path),
+        "image_hash": image_hash,
+        "preprocessing": source.preprocessing,
+        **map_provenance(maps.get("stored")),
         "pixel_size_um": pixel_size_um,
         "confluency_pct": conf_result.pct,
         "confluency_interval": profile.interval(conf_result.pct),
         "confluency_profile": profile.record_fields(),
+        "passage_eligibility": eligibility,
         "confluency_confidence": conf_result.confidence,
         "confluency_method": conf_result.method,
         "quality_gate": None if quality is None else {
@@ -199,6 +225,8 @@ def analyze(
         "eta_to_target_hours": None,
         "recommended_action": action,
         "action_reason": reason,
+        "decision": decision.record_fields(),
+        "decision_inputs": decision_inputs,
         "decided_by": RULES_VERSION,
         "model_versions": {
             "seg": conf_result.model_version,
@@ -206,10 +234,12 @@ def analyze(
             "dino": anomaly.model_version,
             "vlm": rat["method"],
         },
-        "model_weights_hash": weights_hashes(),
+        "model_weights_hash": {**weights_hashes(), "seg": conf_result.extra["model_check"]["sha256"]},
         "model_check": conf_result.extra["model_check"],
         "finetuned_reading": finetuned,
-        "config_hashes": config_hashes(),
+        "config_snapshot": config_snapshot(),
+        "config_hashes": snapshot_hashes(config_snapshot()),
+        "configuration_activation": configuration_activation(config_snapshot(), decision_inputs),
     }
 
     writer = RecordWriter(log_path)

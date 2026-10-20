@@ -1,0 +1,119 @@
+{
+  "anomaly_provenance": {
+    "bank_file_sha256": "46c78ea31565c4d2d5d298729fec567b47d89485ed8234289164851cee96432a",
+    "configured_bank_array_sha256": "870ff30ce3339db29bb9dd7aae35713c154f24b7a3a0980b7b19bf559813463a",
+    "hash_method": "culture.anomaly.bank_hash: contiguous array bytes in sorted bank-key order, not NPZ file bytes",
+    "observed_bank_array_sha256": "870ff30ce3339db29bb9dd7aae35713c154f24b7a3a0980b7b19bf559813463a",
+    "score_binding": "Score parquet has no per-row bank/config identity; source pipeline describes held-out scoring against full tuning banks",
+    "scoring_scope": "Historical centre tile, not current experimental whole-frame coverage",
+    "threshold_check": "Cached held-out flags agree with frozen serialized thresholds; scores are not recomputed"
+  },
+  "artifact_sha256": {
+    "anomaly.yaml": "2776ce48025a554c2d3487c0d98433ef376ee4b9de1f5b25d48508bf82721184",
+    "baseline_rules.py": "70c94054e921bc32cbc084267e57c2d0ca7ba5597638fbc7c2250fba5a911105",
+    "inputs.json": "8fa12b9c9f43e15d6b4cc9880b1bf4e9e52acb920e91d750269d7ef3cf71a6a7",
+    "quality.yaml": "e86534e26c560eabd02f28dc79c19ab731803113b75deb53d9567e4d255f768c",
+    "split.csv": "22d9809833b60e4218150de2910b475e27ab39e32041d92383eb68f9de24840c"
+  },
+  "baseline_commit": "e2274dd6cc79afcd1291a4ffc3f7c46ab350c70b",
+  "check_policy": {
+    "anomaly": "optional",
+    "qc": "not_applicable"
+  },
+  "comparison_kind": "cached_policy_workload_replay",
+  "current_identity": "Dirty local implementation identified by source hashes, not parent commit",
+  "current_parent_commit": "01b8ead1ea09f7ebf442a9862d3113369614cdd1",
+  "current_rules": "rules_v0.7",
+  "dense_reading_min_pct": 40.0,
+  "experiment_group_count": 3,
+  "freeze_python_version": "3.14.7",
+  "inference_run": false,
+  "input_source_sha256": {
+    "cache/MANIFEST.json": "3a5266ee378d613c012c9f486bf06e2c4de57d9242f75623a3cf0fdacf57e1cb",
+    "cache/anomaly/banks.npz": "46c78ea31565c4d2d5d298729fec567b47d89485ed8234289164851cee96432a",
+    "cache/anomaly/scores.parquet": "5f5dee0ebe5356f5dc35dfc6a05a6b4db071a52e263cd3b03802ab7554114eed",
+    "cache/confluency.parquet": "b2f0c2ac747ebd291c448cda02984967400bf0e7ff0547210cc631e5fcfac857",
+    "cache/images.parquet": "48799802c4bc125fc53f3ec5f8ea72dfa4fcf1c281d42cc45b837b26f60e0ace",
+    "cache/logits.parquet": "4afa5cafdc8590717dcbf69ee715fb7ec1836395ee81a7b2dfb8717d0abb3d44",
+    "cache/quality.parquet": "30eac2b7c89d78205634209106268853ef18b7dd8dcf3274ab73401f5ce6053d",
+    "configs/anomaly.yaml": "2776ce48025a554c2d3487c0d98433ef376ee4b9de1f5b25d48508bf82721184",
+    "configs/confluency_profiles.yaml": "81ba377aba3b04c5b65532ce1d810354f5047110cbe4377648daf177ea99f248",
+    "configs/quality.yaml": "e86534e26c560eabd02f28dc79c19ab731803113b75deb53d9567e4d255f768c",
+    "results/replay_fleet_split.csv": "22d9809833b60e4218150de2910b475e27ab39e32041d92383eb68f9de24840c",
+    "scripts/eval_anomaly.py": "2b80b15931113409a7cb1fb3f1f29695f8fbc9c87578adfe321346b4f2e9c8d5"
+  },
+  "limitations": [
+    "Workload-only cached-policy replay, not end-to-end v2/v4 or fine-tuned model evidence.",
+    "Normal means unmodified source frames, not independently adjudicated healthy cultures.",
+    "No independent confluency truth: no accuracy, early-passage or ready-called-continue metrics.",
+    "The 14 sequence groups share 3 experiment groups; all 3 occur in tuning too. Not experiment-held-out.",
+    "Frames and repeated contexts are correlated; no frame-independent confidence intervals.",
+    "50% is diagnostic, not a recommended passage threshold; no cached reading reaches 80%.",
+    "No synthetic faults or growth-stall resampling; their absence does not imply detection success.",
+    "No exact historical weight authentication or per-row score-to-bank binding; raw images are not rehashed.",
+    "No observed review duration, workflow retry cost, saved time or ROI.",
+    "Current outputs are advisory and the shipped C2C12 profile cannot authorize passage."
+  ],
+  "line_config": {
+    "cell_line": "unknown",
+    "confluency_confidence_floor": 0.3,
+    "feed_interval_h": 24.0,
+    "min_hours_since_passage": 24.0,
+    "qc_review_threshold": 0.7,
+    "target_confluency": 80.0
+  },
+  "profile": {
+    "band_pp": null,
+    "cutoff": 0.0,
+    "description": "No labelled images from this setup, so no confluency calibration: the reading uses Cellpose's default cutoff and has no error band, and a reading at or above the passage target goes to a person. Its quality gate is calibrated on the tuning frames (results/quality_gate_c2c12.md).",
+    "entry": {
+      "action_eligibility": {
+        "reason": "No approved setup-specific passage decision range; measurement calibration is not action validation",
+        "status": "unsupported"
+      },
+      "band_pp": null,
+      "cutoff": 0.0,
+      "description": "No labelled images from this setup, so no confluency calibration: the reading uses Cellpose's default cutoff and has no error band, and a reading at or above the passage target goes to a person. Its quality gate is calibrated on the tuning frames (results/quality_gate_c2c12.md).",
+      "label": "C2C12 time-lapse microscope (Ker et al. 2018), 5\u00d7 phase contrast",
+      "quality": "c2c12",
+      "status": "uncalibrated",
+      "validated_scope": null
+    },
+    "id": "c2c12_ker2018",
+    "quality": "c2c12",
+    "status": "uncalibrated"
+  },
+  "protocol_version": 1,
+  "sample_count": 1228,
+  "sequence_count": 14,
+  "source_sha256": {
+    "culture/anomaly.py": "2204f60f40d61ce356443857de4f4b3db3d2d5072cdf89f564712441ffe6795f",
+    "culture/profiles.py": "161b77f5ef013cc6562c0e7075e94b8dcd356dc014af1161d718d063046e30c4",
+    "culture/provenance.py": "d97c8480ab26461b132d87b216968f7bdfdd2271a092fde62f03b739d8403e71",
+    "culture/quality.py": "e8e02f24e9bfa8b6d202ac2f014d83644e944c7d25ff4426ae9daf8a04308b23",
+    "culture/rules.py": "6e2c801df4344449142589be1a829c0811039f18b042d406fa1e440e22683660",
+    "scripts/compare_c2c12_workload.py": "f1ffddc803b175acb7d7f490e1230f73e8020c3ea00e651c4df078ef8b075d95",
+    "scripts/compare_decision_policies.py": "08afcd8ba990325667b267b946fd1fd97213e3330ee3c5ac1910c9d8910f38b2"
+  },
+  "targets_pct": [
+    80.0,
+    50.0
+  ],
+  "timing_provenance": "No actual passage/feed times; 48h/12h are explicit diagnostic assumptions",
+  "timing_scenarios": {
+    "assumed_elapsed": {
+      "hours_since_feed": 12.0,
+      "hours_since_passage": 48.0
+    },
+    "unknown": {
+      "hours_since_feed": null,
+      "hours_since_passage": null
+    }
+  },
+  "weights": {
+    "anomaly_backbone": "facebook/dinov2-small",
+    "exact_weight_sha256": null,
+    "qc_cache_version": "qc_effnetb0_v1",
+    "seg_cache_version": "cpsam_v2"
+  }
+}

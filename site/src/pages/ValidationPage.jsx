@@ -1,41 +1,44 @@
 import { DenseTest } from "../components/DenseTest";
 import { Profiles } from "../components/Profiles";
-import { Confluency, Detectability, Validation } from "../components/Sections";
+import { Confluency, Detectability } from "../components/Sections";
 import { CtaBand, Footer, PageHead, TopBar } from "../components/Shell";
-import { Glance as GlanceList } from "../components/ui";
+import { Glance as GlanceList, Path } from "../components/ui";
 
 /* The page's three headline results, each linking to its section: what a
    reader should know before the tables. Every number is read from data.json. */
 function Glance({ data }) {
-  const v = data.validation;
   const msc = data.profiles && data.profiles.items.find((p) => p.id === "msc_phase");
+  const mscDense = msc?.bands?.find((band) => band.band === "60-90%");
   const d = data.dense_test;
-  const count = (k) => v.filter((x) => x.kind === k).length;
   const items = [
-    msc && {
-      href: "#profiles",
-      label: "Confluency, calibrated per microscope",
-      value: `${msc.shipped.mae.toFixed(2)} → ${msc.profile.mae.toFixed(2)} pp`,
-      note: `Error against expert masks on ${msc.n_test} held-out stem-cell images, before and after the setup’s own cutoff.`,
-    },
     d && {
       href: "#dense",
-      label: "The passage range, on a lab no model had seen",
-      value: `${d.both.C.B1_mae.toFixed(2)} vs ${d.both.F.B1_mae.toFixed(2)} pp`,
-      note: `Shipped vs fine-tuned, ${d.points.length} images. The shipped method sends most dense flasks to a person; fine-tuning reads closer but does not decide.`,
+      label: "Fine-tuning: closer confluency readings",
+      value: `${d.both.C.B1_mae.toFixed(2)} → ${d.both.F.B1_mae.toFixed(2)} pp`,
+      note: `${Math.round((1 - d.both.F.B1_mae / d.both.C.B1_mae) * 100)}% lower mean error versus the calibrated base model on ${d.points.length} mCellSeg images. Pooled secondary analysis, one lab; not a v2 release benchmark. Not used for recommendations: decision agreement is below criterion and the swapped primary comparison did not replicate.`,
+    },
+    msc && {
+      href: "#profiles",
+      label: "MSC calibration against expert masks",
+      value: `${msc.shipped.mae.toFixed(2)} → ${msc.profile.mae.toFixed(2)} pp`,
+      note: `${msc.n_test} MSC images, leave one population out. Default versus calibrated cutoff within this study. ${mscDense ? `Only ${mscDense.n} images at 60–90%, so passage-range criteria were not measurable.` : "Dense-range sample counts are unavailable here; check the source before interpreting action readiness."}`,
     },
     {
-      href: "#checks",
-      label: `Checks ${v[0].id}–${v[v.length - 1].id} on held-out time-lapse`,
-      value: `${count("pass")} pass · ${count("fail")} fail · ${v.length - count("pass") - count("fail")} other`,
-      note: "Each failure changed the product or became a stated limit; the list is under the table.",
+      href: "/records#chain",
+      label: "An audit trail you can inspect",
+      value: `${data.examples.chain_order.length} linked records`,
+      note: "Recompute SHA-256 in your browser, alter a local reading and inspect the broken link. Demonstrates record integrity—not biological validity, signed identity or regulatory compliance.",
     },
   ];
-  return <GlanceList items={items} />;
+  return (
+    <>
+      <GlanceList items={items} />
+      <p className="sources">Sources: <Path>results/confluency_profiles.md</Path> · <Path>results/confluency_mcellseg.md</Path> · <Path>results/confluency_mcellseg_swap.md</Path>. <a href="/records#chain">Inspect the stored record chain</a>.</p>
+    </>
+  );
 }
 
 export default function ValidationPage({ data }) {
-  const v = data.validation;
   return (
     <>
       <a className="skip" href="#main">
@@ -44,26 +47,26 @@ export default function ValidationPage({ data }) {
       <TopBar data={data} page="validation" />
       <main id="main">
         <PageHead
-          title="Validation"
+          title="Better readings. Inspectable evidence."
           lede={
             <>
-              <p>How cultureQC was tested, on real images held out from every fit: confluency against expert masks, then the per-flask checks on recorded time-lapse, then what it can and cannot see. Three results first.</p>
+              <p>Start with what improved: confluency readings closer to expert masks, calibration for the imaging setup, and records your team can verify. The studies below separate measured gains from the work still needed before automated action.</p>
               <Glance data={data} />
             </>
           }
           toc={[
-            ...(data.profiles ? [["profiles", "Confluency calibrated per imaging setup"]] : []),
-            ...(data.dense_test ? [["dense", "The passage range, on a lab it had never seen"]] : []),
+            ...(data.dense_test ? [["dense", "Fine-tuning results"]] : []),
+            ...(data.profiles ? [["profiles", "Setup calibration"]] : []),
             ["confluency", "Confluency against expert masks"],
-            ["checks", `Checks ${v[0].id}–${v[v.length - 1].id}`],
-            ["detectability", "What it can and cannot see"],
+            ["detectability", "Detection scope and next improvements"],
           ]}
         />
-        <Profiles data={data} />
         <DenseTest data={data} />
+        <Profiles data={data} />
         <Confluency data={data} />
-        <Validation data={data} />
-        <Detectability data={data} />
+        <div id="checks">
+          <Detectability data={data} />
+        </div>
       </main>
       <CtaBand data={data} />
       <Footer data={data} />

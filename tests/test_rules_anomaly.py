@@ -6,10 +6,13 @@ pass a band well clear of the target."""
 
 from culture.rationale import generate_rationale
 from culture.rules import RULES_VERSION, LineConfig, decide
+from conftest import synthetic_passage_profile
 
 CFG = LineConfig(target_confluency=80.0)
+PROFILE, CONTEXT = synthetic_passage_profile(4.0)
 KW = dict(confluency_confidence=0.9, qc_flag=None, qc_confidence=None, line_config=CFG,
-          hours_since_passage=48, hours_since_feed=12, band_pp=4.0)
+          hours_since_passage=48, hours_since_feed=12, band_pp=4.0, profile=PROFILE, setup_context=CONTEXT,
+          quality_passed=True)
 
 
 def test_flag_holds_a_passage():
@@ -49,7 +52,7 @@ def test_rationale_says_why_the_passage_is_held():
 
 
 def test_version():
-    assert RULES_VERSION == "rules_v0.5"
+    assert RULES_VERSION == "rules_v0.7"
 
 
 def test_no_rule_returns_hold():
@@ -60,5 +63,5 @@ def test_no_rule_returns_hold():
                                                    (None, False, True)):
         seen.add(decide(confluency_pct=pct, confluency_confidence=conf, qc_flag=None, qc_confidence=None,
                         line_config=CFG, hours_since_passage=since_p, hours_since_feed=since_f,
-                        anomaly_flag=flag, band_pp=4.0)[0])
+                        anomaly_flag=flag, band_pp=4.0, profile=PROFILE, setup_context=CONTEXT, quality_passed=True)[0])
     assert seen == {"continue", "feed", "passage", "human_review"}  # reimage needs a failed gate

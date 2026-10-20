@@ -12,16 +12,16 @@ export const COMMIT = typeof __COMMIT__ !== "undefined" ? __COMMIT__ : "";
 export const VERSION = "v0.4";
 
 const HOME_NAV = [
-  ["demo", "Demo"],
-  ["evidence", "Evidence"],
+  ["demo", "Product"],
 ];
 
 /* Home sections without a nav entry, observed so none of the links above
    stays lit while they are on screen. */
-const UNLISTED = ["top", "accuracy", "passage", "trail", "specs", "scope", "pilot"];
+const UNLISTED = ["top", "fit", "evidence", "accuracy", "passage", "trail", "specs", "scope", "pilot"];
 
 const PAGES = [
-  ["records", "/records", "Records"],
+  ["validation", "/validation", "Evidence"],
+  ["records", "/records#integration", "Integration"],
 ];
 
 const IDS = [...HOME_NAV.map(([id]) => id), ...UNLISTED];
@@ -66,10 +66,9 @@ export function TopBar({ data, page }) {
               {label}
             </a>
           ))}
-          <a href={home ? "#pilot" : "/#pilot"} aria-current={home && active === "pilot" ? "true" : undefined}>Pilot</a>
         </nav>
-        <a className="btn btn-primary" href={data.meta.console_url} target="_blank" rel="noreferrer">
-          Live console <Icon name="external" />
+        <a className="btn btn-primary" href={home ? "#pilot" : "/#pilot"} aria-current={home && active === "pilot" ? "true" : undefined}>
+          Evaluate on your setup <Icon name="passage" />
         </a>
       </div>
     </header>
@@ -99,10 +98,10 @@ export function CtaBand({ data }) {
         </div>
         <div className="cta-actions">
           <a className="btn btn-light" href="/#pilot">
-            Review the pilot plan <Icon name="passage" />
+            Evaluate on your setup <Icon name="passage" />
           </a>
           <a className="btn btn-ghost-dark" href={data.meta.console_url} target="_blank" rel="noreferrer">
-            Open the live console <Icon name="external" />
+            Research live console <Icon name="external" />
           </a>
         </div>
       </div>
@@ -133,7 +132,9 @@ export function Footer({ data }) {
               </>
             ) : null}
             .
+            {import.meta.env.DEV ? " Local preview; this commit does not identify uncommitted changes." : null}
           </p>
+          <p>Code: MIT. Model and data terms are separate; pipeline commercial use is not cleared, pending review. The legacy API is not a v4 integration endpoint.</p>
         </div>
         <div>
           <h4>Product</h4>
@@ -165,8 +166,13 @@ export function Footer({ data }) {
         <div>
           <h4>Resources</h4>
           <p>
+            <a href={`${data.meta.repo_url.replace("/tree/", "/blob/")}/docs/specs/release-state.md`} target="_blank" rel="noreferrer">
+              Release state and component terms <Icon name="external" />
+            </a>
+          </p>
+          <p>
             <a href={data.meta.console_url} target="_blank" rel="noreferrer">
-              Live console <Icon name="external" />
+              Research live console <Icon name="external" />
             </a>
           </p>
           <p>

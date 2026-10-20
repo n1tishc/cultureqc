@@ -1,7 +1,7 @@
 {
  "meta": {
-  "rules": "rules_v0.5",
-  "schema": "0.5",
+  "rules": "rules_v0.7",
+  "schema": "0.8",
   "console_url": "https://huggingface.co/spaces/LongGrainRice/cultureqc-console",
   "repo_url": "https://github.com/n1tishc/cultureqc/tree/slice-1b-compute-cache",
   "branch": "slice-1b-compute-cache",
@@ -2777,6 +2777,22 @@
    "evican_ht29"
   ],
   "generated_by": "scripts/export_demo_examples.py",
+  "review_demo": {
+   "reading_id": "evican_ht29",
+   "illustrative": true,
+   "record": {
+    "canonical": "{\"decision\":\"accept\",\"final_action\":\"human_review\",\"flask_id\":\"demo\",\"host_signature_ref\":null,\"prev_record_hash\":\"083bf44878ab4f48e3c56298499b432fb8aef6fe960b5d1d2e11a3e4d6d885da\",\"reason\":\"Illustrative only: retain human review while setup-specific evidence is gathered. No approval or physical action.\",\"recommended_action\":\"human_review\",\"record_id\":\"illustrative-ht29-review\",\"record_type\":\"review\",\"recorded_at\":\"2026-10-19T00:00:00+00:00\",\"reviewer\":{\"id\":\"illustrative-reviewer\",\"name\":\"Illustrative reviewer (not a real person)\"},\"reviews_record_hash\":\"083bf44878ab4f48e3c56298499b432fb8aef6fe960b5d1d2e11a3e4d6d885da\",\"reviews_record_id\":\"0f98b5a9-8392-48d3-b1d8-24ec9cbe8f4e\",\"schema_version\":\"0.8\",\"signature_meaning\":\"review\",\"signed_at\":\"2026-10-19T00:00:00+00:00\"}",
+    "record_hash": "3ef5f4aa9f21841b8d6f0b773456f256bafbc2efabfb2145cbdf25b9e7c07dd3"
+   },
+   "checkpoint": {
+    "scope": "illustrative-review-extension-only",
+    "count": 10,
+    "head_hash": "3ef5f4aa9f21841b8d6f0b773456f256bafbc2efabfb2145cbdf25b9e7c07dd3",
+    "schema_version": "1",
+    "hash_alg": "sha256",
+    "created_at": "2026-10-19T00:00:00+00:00"
+   }
+  },
   "checkpoint": {
    "scope": "demo/examples/examples.json",
    "count": 9,
@@ -6438,7 +6454,7 @@
   }
  ],
  "validation_intro": "Before building product surface around the per-flask design (history, growth forecast, SPC and drift monitoring), we tested it on real time-lapse sequences with simulated visits: 24 C2C12 phase-contrast sequences (Ker et al. 2018, CC BY 4.0), about 85 h each, replayed as visits every 6 or 12 h with 1 or 3 randomly placed fields of view (FOVs) per visit. Faults were simulated on the recorded frames: contamination, growth stall, lamp dimming. Sequences were split 10 tuning / 14 held-out; every threshold was set on tuning and every result below is on held-out. Full report, with each number's script: docs/ARCHITECTURE_VALIDATION.md.",
- "not_proven": "It ran the per-flask logic end to end on real phase-contrast sequences under a tuning/held-out split, and showed where it breaks. It is not data from a production culture instrument: one cell line, one microscope, three experiments. Cadence, FOVs per visit and FOV size are assumptions. Faults are simulated, and held-out has 2 sequences per fault type. Confluency \"truth\" for C2C12 is Cellpose-SAM's own full-frame reading, which V1 found reads about 8 pp low.",
+ "not_proven": "It ran the per-flask logic end to end on real phase-contrast sequences under a tuning/held-out split, and showed where it breaks. It is not data from a production culture instrument: one cell line, one microscope, three experiments. Cadence, FOVs per visit and FOV size are assumptions. Faults are simulated, and held-out has 2 sequences per fault type. Confluency \"truth\" for C2C12 is Cellpose-SAM's own full-frame reading. This evidence set has no independent C2C12 confluency labels; V1's observed EVICAN bias does not establish a correction for C2C12.",
  "oversize_factor": "16.5",
  "results": [
   {
@@ -6464,6 +6480,18 @@
    "number": "MSC 8.19 → 3.43 pp (320 images in 3 populations, each tested with the profile fitted on the others), 90% band ±7.11 pp; EVICAN 8.36 → 3.78 pp (n = 33, not fully blind), band ±29.40 pp; LIVECell in-domain check 2.14 → 2.05 pp (n = 756)",
    "provenance": "real (MSC, EVICAN, LIVECell)",
    "source": "results/confluency_profiles.md"
+  },
+  {
+   "result": "Confluency in the passage range, sealed held-out test (mCellSeg: 90 images, 22 at 60–90%; split, method and pass marks committed before any image was read)",
+   "number": "MAE, all images: calibration profile (the shipped method) 7.80 pp, fine-tuned then calibrated 2.65 pp; at 60–90%: 9.67 vs 5.21 pp, a difference of +4.45 pp (95% interval +0.83 to +7.94). The fine-tuned model missed two of its own marks at 60–90%: MAE 5.21 against 5, and it reads +4.91 pp high. It decides nothing",
+   "provenance": "real (mCellSeg)",
+   "source": "results/confluency_mcellseg.md"
+  },
+  {
+   "result": "The same test with the halves swapped (79 images, 13 at 60–90%)",
+   "number": "Fine-tuned met all five marks (MAE 1.71 pp; 2.55 pp at 60–90%), but the difference at 60–90%, +4.84 pp (95% interval -0.80 to +12.29), includes zero: not replicated by the rule fixed beforehand",
+   "provenance": "real (mCellSeg)",
+   "source": "results/confluency_mcellseg_swap.md"
   },
   {
    "result": "FOV sampling noise, 0.25-frame field",

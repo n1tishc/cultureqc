@@ -1,5 +1,10 @@
 # Deploying cultureQC
 
+See the [release-state and evaluation boundary](../docs/specs/release-state.md)
+for local code/model/schema identities, stored versus live surfaces, the
+commercialization gate and a source-to-deployment reconciliation plan. The
+table below reflects repository documentation, not a live remote inspection.
+
 ## What runs where
 
 | What | Where | Built from | Status |
@@ -16,6 +21,43 @@ without the owner's go-ahead, and `deploy/publish_space.py` (the v0.2 API) is
 not run.
 
 ## Layout
+
+Local T09 update: new readings use schema 0.8 and require controlled ingestion
+provenance. Accept single-frame uint8 grayscale/RGB only; high-bit-depth,
+transparent, multipage and non-default-orientation inputs are refused. API
+encoding refusals return 400 before inference. Update host schema consumers and
+validate any upstream fixed export mapping; none is invented by this release.
+See `docs/specs/controlled-image-ingestion.md`. No deployment is approved.
+
+Local T08 update: audit append now uses process-safe local POSIX file locking and
+file/parent-directory synchronization, with strict corrupt-tail refusal. The API
+inference lock remains for model safety. `/tmp` is still disposable; configure
+durable host storage, stable event IDs/reconciliation and external checkpoints.
+Do not rotate/replace a live log. Network/distributed storage is not covered.
+See `docs/specs/concurrent-audit-append.md`; no deployment is approved.
+
+Local T07 update: new readings use schema 0.7 and explicitly identify configuration
+activation as host-managed, not locally enforced. Model approvals respect their
+effective timestamps. Deploy only host-approved immutable code/configuration/model
+bundles, with a synchronized clock; restart workers for activation and rollback.
+See `docs/specs/configuration-activation.md`. No approvals or deployments are
+created by this change.
+
+Local T05 update: schema 0.6 adds replayable rule inputs, consumed YAML snapshots,
+nullable host capture time and map provenance. Update closed-schema consumers
+and install the declared `jsonschema` dependency before activation. Historical
+examples stay unchanged; `--rederive` now only verifies replayable snapshots.
+See `docs/specs/decision-replay.md`. No push or deployment is approved.
+
+Local policy update: `rules_v0.7` retains the v0.6 measurement/passage-scope split
+and adds explicit missing-check/timing states, advisory-only output and finite
+record validation. Live console timing defaults to unknown, not assumed history.
+All shipped profiles remain measurement-only for automatic passage;
+hosts must update their record-schema consumer and review changed profile hashes
+before activation. Historical examples stay on their original rules and hashes.
+See `docs/specs/passage-eligibility.md` and `docs/specs/missing-checks-and-timing.md`.
+This local change does not authorize a push
+or redeployment of any frozen surface.
 
 | Path | What it is |
 |---|---|
@@ -221,9 +263,20 @@ curl -X POST https://longgrainrice-cultureqc-api.hf.space/analyze \
      -F "image=@test-data/contam_00015.png" -F "cell_line=Huh7" -F "target_confluency=80"
 ```
 
-No weights are uploaded: `culture/qc.py` pulls its checkpoint from
-`LongGrainRice/cultureqc-qc-effnetb0-v1` via `hf_hub_download`, and
-Cellpose-SAM downloads itself on first construction.
+The QC classifier still pulls its checkpoint from
+`LongGrainRice/cultureqc-qc-effnetb0-v1` via `hf_hub_download`.
+With the local T06 identity fix, provision the approved `cpsam_v2` file in
+`CELLPOSE_LOCAL_MODELS_PATH` (or `~/.cellpose/models`) before startup. The shipped
+segmentation loader refuses missing/unapproved weights instead of implicitly
+downloading them. It loads a verified private snapshot and needs approximately
+1.2 GB of additional temporary disk space per live model instance. An approved
+source replacement refuses the first affected reading; retry loads the replacement.
+
+The older cold-start timings below predate this change. Local CPU parity passes;
+see the [measured release check](../docs/reviews/2026-10-18-cellpose-release-validation.md).
+Deployment is pending target-host weight provisioning and startup/resource verification;
+the Dockerfile alone does not provision these weights. See the
+[T06 implementation handoff](../docs/reviews/2026-10-18-model-identity-fix.md).
 
 ### Tests
 

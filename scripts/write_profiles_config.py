@@ -11,6 +11,8 @@ Only a validated profile is live: its fitted cutoff and band are the ones
 used. Any other keeps them as fitted_cutoff / fitted_band_pp and reads like an
 uncalibrated setup (cutoff 0.0, no band). A setup with no scored profile
 (UNSCORED) is written as uncalibrated, with its quality gate.
+Version 2 separately marks every historical profile's passage eligibility
+unsupported. Measurement scores cannot generate scope or approval.
 
     .venv/bin/python scripts/write_profiles_config.py
 """
@@ -104,7 +106,13 @@ def build() -> dict:
         if pid not in profiles:
             profiles[pid] = {"label": LABELS.get(pid, pid), "description": u["description"], "cutoff": 0.0,
                              "band_pp": None, "status": "uncalibrated", "quality": u["quality"]}
-    return {"version": 1, "profiles": profiles}
+    for entry in profiles.values():
+        entry["validated_scope"] = None
+        entry["action_eligibility"] = {
+            "status": "unsupported",
+            "reason": "No approved setup-specific passage decision range; measurement calibration is not action validation",
+        }
+    return {"version": 2, "profiles": profiles}
 
 
 def main():

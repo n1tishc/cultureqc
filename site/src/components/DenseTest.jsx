@@ -40,7 +40,7 @@ export function Scatter({ d, arm, letter, title }) {
       title={title}
       legend={
         <>
-          {n} images, each read by models that never trained on it. Average error {fx(mae)} pp; {w5} of {n} within 5 pp of the experts (pale strip). Shaded: 60–90%. Dashed: the {T}% passage target.
+          {n} mCellSeg images pooled across the sealed and swapped tests, a secondary view; each read by models that never trained on it. Average error {fx(mae)} pp; {w5} of {n} within 5 pp of the experts (pale strip). Shaded: 60–90%. Dashed: the {T}% passage target. {arm === "F" ? "Experimental measurement, not the model driving recommendations." : "Calibrated base-model reference, not a v2 release benchmark."} Sources: <Path>{d.sources[0]}</Path> · <Path>{d.sources[1]}</Path>.
         </>
       }
     >
@@ -191,14 +191,14 @@ export function FineTuneFigure({ data, letter = "C" }) {
         </>
       }
     >
-      <div className="seg-tabs" role="tablist" aria-label="Imaging setup">
+      <div className="seg-tabs" role="group" aria-label="Imaging setup">
         {f.panels.map((q, k) => (
-          <button key={q.setup} type="button" role="tab" aria-selected={k === i} onClick={() => setI(k)}>
+          <button key={q.setup} type="button" aria-pressed={k === i} onClick={() => setI(k)}>
             {q.setup}
           </button>
         ))}
       </div>
-      <div className="ft-pair" role="tabpanel">
+      <div className="ft-pair" role="group" aria-label={`${p.setup} readings`}>
         {arms.map(([a, title, sub]) => {
           const off = p[a] - p.gt;
           return (
@@ -235,9 +235,9 @@ export function PassageRange({ data }) {
       lede={
         <>
           <p>
-            {n} hand-outlined images from a public dataset, published after Cellpose-SAM. The shipped method fails safe: it sent {b.C.B4_review} of the {b.C.n_60_100} images at 60% or more to a person and called no ready flask continue. Fine-tuned on the lab’s own images, the same model read within 5 pp of the experts on {b.within5.F} of {n}, against {b.within5.C}.
+            {n} hand-outlined mCellSeg images, pooled across the sealed and swapped tests as a secondary view. The shipped method sent {b.C.B4_review} of the {b.C.n_60_100} images at 60% or more to a person and called no ready flask continue in this sample. Fine-tuned on the lab’s own images, the same model read within 5 pp of the experts on {b.within5.F} of {n}, against {b.within5.C}.
           </p>
-          <p>That is evidence for a lab training its own model, not a product change: the fine-tuned reading decides nothing.</p>
+          <p>The fine-tuned reading decides nothing. Its pooled decision agreement fails the stated criterion, and the swapped primary comparison does not replicate. This supports further evaluation, not autonomous passage.</p>
           <p>
             <a className="more" href="/validation#dense">
               The full test, with the pass marks committed before scoring <Icon name="passage" />
@@ -263,12 +263,13 @@ export function DenseTest({ data }) {
   return (
     <Section
       id="dense"
-      title="The passage range, on a lab it had never seen"
+      title="Fine-tuning brings confluency closer to the experts"
       lede={
         <>
           <p>
-            The calibration tests above held almost no flasks at 60–90%, where passage is decided. This one does: {n} images from {d.setups} microscope setups of one lab, every cell outlined by hand, published after Cellpose-SAM. It compares the shipped method, a calibration profile per setup, with the same model fine-tuned on the lab’s own labelled images. Split, method and pass marks were committed before any image was read.
+            On {n} mCellSeg images from {d.setups} imaging setups, fine-tuning plus calibration reduces average error from {fx(b.C.B1_mae)} to {fx(b.F.B1_mae)} percentage points—{Math.round((1 - b.F.B1_mae / b.C.B1_mae) * 100)}% lower than calibration alone. {b.within5.F} of {n} readings land within 5 points of the experts, compared with {b.within5.C} for the calibrated base model.
           </p>
+          <p>This is a measurement improvement, not approval for automated passage. The pooled view is secondary: one lab, a sealed test of {d.sealed.C.n} images and a swapped test of {d.swapped.C.n}. The swapped primary comparison did not establish replication; {b.F.B4_agree} of {b.F.B4_decided} decided calls agreed with the experts, below the {d.limits.agree * 100}% criterion. Fine-tuned readings do not drive shipped recommendations.</p>
           <details className="more-details">
             <summary>How the test was run</summary>
             <p>
@@ -288,12 +289,14 @@ export function DenseTest({ data }) {
       <div className="figs" style={{ marginTop: 16 }}>
         <FineTuneFigure data={data} />
       </div>
-      <h3 className="sub-h">Against the criteria committed before scoring</h3>
-      <CriteriaTable d={d} />
-      <h3 className="sub-h">What it shows, and what it does not</h3>
+      <details className="more-details">
+        <summary>Full criteria and split-by-split results</summary>
+        <CriteriaTable d={d} />
+      </details>
+      <h3 className="sub-h">Measured gains and next improvements</h3>
       <ul className="card-notes">
-        <Note title="The shipped method fails safe, but rarely decides.">
-          Over both halves it called no ready flask continue, and it sent {b.C.B4_review} of the {b.C.n_60_100} images at 60% or more to a person. Its average error at 60–90% was {fx(b.C.B2_mae)} pp.
+        <Note title="The shipped method defers most dense images in this test.">
+          Over both halves it called no ready flask continue, and it sent {b.C.B4_review} of the {b.C.n_60_100} images at 60% or more to a person. Its average error at 60–90% was {fx(b.C.B2_mae)} pp. This sample does not establish safe behavior on a partner’s instrument.
         </Note>
         <Note title="Fine-tuning reads closer, in both halves.">
           Average error {fx(b.F.B1_mae)} pp against {fx(b.C.B1_mae)} on all {n} images; {b.within5.F} read within 5 pp of the experts, against {b.within5.C}. In the sealed test the comparison fixed in advance held. With the halves swapped the difference was about the same size ({sgn(d.swapped.contrast.diff)} pp), but its interval includes zero, so by its own rule it is not a replication.
@@ -305,14 +308,14 @@ export function DenseTest({ data }) {
           Four of this lab’s test images have buttons in the{" "}
           <a href={data.meta.console_url} target="_blank" rel="noreferrer">live console</a>, where a retrain of this fine-tuned model ({d.sealed.n_train} images, same recipe) reads them beside the shipped reading. It is marked not validated, decides nothing, and only those four exact files get it; its weights are checked against an approved change record before every reading. A fine-tuned model that decided would be the lab’s own, approved as a change and checked on held-out images first. The weights inherit Cellpose-SAM’s non-commercial terms and are not published.
         </Note>
-        <Note title="Why MSC reads “Validated where measurable” above.">
+        <Note title="Why the MSC study reads “Validated where measurable”.">
           That status covers only the criteria its test images could measure; the passage-range ones (A2–A4) were not measurable on MSC or EVICAN.{" "}
           {d.msc_dense ? (
             <>
               Dense regions of the MSC images themselves read {fx(Math.abs(d.msc_dense.bias))} pp {d.msc_dense.bias < 0 ? "low" : "high"} on average at that profile’s cutoff, {d.msc_dense.over10} of {d.msc_dense.n} off by more than 10 pp, in a test that could not separate density from how the regions were picked (<Path>{d.msc_dense.source}</Path>).{" "}
             </>
           ) : null}
-          This is the first held-out measurement of the passage range on whole images, and its limits are its own: {d.scope}, and {b.C.n_ge_T} images at or above {d.limits.target}%.
+          This test measures the passage range on whole images outside the named training datasets, with its own limits: {d.scope}, and {b.C.n_ge_T} images at or above {d.limits.target}%.
         </Note>
       </ul>
     </Section>

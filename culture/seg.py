@@ -15,8 +15,10 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import sys
-from dataclasses import asdict, dataclass
+import tempfile
+from dataclasses import asdict, dataclass, replace
 from typing import Literal
 
 import cv2
@@ -89,18 +91,51 @@ def threshold_confluency(img: np.ndarray) -> ConfluencyResult:
 _cp_model = None
 
 
+@dataclass(frozen=True)
+class _ModelIdentity:
+    source: str
+    sha256: str
+    snapshot: tempfile.TemporaryDirectory
+
+
 def _new_model(pretrained_model: str | None = None):
     import torch
     from cellpose import models
-    kw = {} if pretrained_model is None else {"pretrained_model": pretrained_model}
+    from culture.approvals import require
+
+    snapshot = None
+    identity = None
+    if pretrained_model is None:
+        source = os.path.join(str(models.MODEL_DIR), "cpsam_v2")
+        require("model", "cpsam_v2", source)
+        snapshot = tempfile.TemporaryDirectory(prefix="cultureqc-cpsam-")
+        try:
+            pretrained_model = os.path.join(snapshot.name, "cpsam_v2")
+            shutil.copyfile(source, pretrained_model)
+            os.chmod(pretrained_model, 0o400)
+            verified = require("model", "cpsam_v2", pretrained_model)
+            identity = _ModelIdentity(source, verified.sha256, snapshot)
+        except BaseException:
+            snapshot.cleanup()
+            raise
+    kw = {"pretrained_model": pretrained_model}
     # Device selection, not analysis logic: the deployment target is a CPU-only
     # container, where a hard gpu=True asks cellpose for a device that is not
     # there. Segmentation behaviour and the reported confluency are unchanged.
     # CULTUREQC_DEVICE=mps opts in to Apple's GPU (the call-day Mac backup,
     # deploy/README.md); the default stays CUDA-if-present, else CPU.
-    if os.environ.get("CULTUREQC_DEVICE") == "mps" and torch.backends.mps.is_available():
-        return models.CellposeModel(gpu=True, device=torch.device("mps"), **kw)
-    return models.CellposeModel(gpu=torch.cuda.is_available(), **kw)
+    try:
+        if os.environ.get("CULTUREQC_DEVICE") == "mps" and torch.backends.mps.is_available():
+            model = models.CellposeModel(gpu=True, device=torch.device("mps"), **kw)
+        else:
+            model = models.CellposeModel(gpu=torch.cuda.is_available(), **kw)
+        if identity is not None:
+            model._cultureqc_identity = identity
+        return model
+    except BaseException:
+        if snapshot is not None:
+            snapshot.cleanup()
+        raise
 
 
 def _get_model():
@@ -111,7 +146,10 @@ def _get_model():
 
 
 def weights_path(model) -> str | None:
-    """The weights file a loaded CellposeModel was built from."""
+    """Source path checked for activation; shipped inference uses a private snapshot."""
+    identity = getattr(model, "_cultureqc_identity", None)
+    if identity is not None:
+        return identity.source
     path = getattr(model, "pretrained_model", None)
     if isinstance(path, (list, tuple)):                      # cellpose>=4 may give per-stage paths
         path = path[0] if path else None
@@ -142,17 +180,27 @@ def cpsam_confluency(
         Fraction of pixels within ±band of the cutoff. Many borderline
         pixels → low confidence.
 
-    Before the model reads the image, its weights are checked against the
-    latest approved change record for cpsam_v2 (culture/approvals.py); a
-    mismatch raises approvals.NotApproved and nothing is read.
+    Before the model reads the image, its source weights and loaded snapshot
+    identity must match the latest approved change record for cpsam_v2.
+    Replacement refuses this reading and clears the singleton; the next call
+    loads a fresh approved snapshot. No image is evaluated on refusal.
     """
     from culture.approvals import NotApproved, require
     global _cp_model
     model = _get_model()
     try:
         model_check = require("model", "cpsam_v2", weights_path(model))
+        identity = getattr(model, "_cultureqc_identity", None)
+        if identity is None:
+            raise NotApproved(replace(
+                model_check, status="mismatch", sha256=None,
+                reason="loaded model has no verified snapshot identity; reload required"))
+        if identity.sha256 != model_check.sha256:
+            raise NotApproved(replace(
+                model_check, status="mismatch", sha256=identity.sha256,
+                reason="loaded weights differ from the approved source; retry to load the approved replacement"))
     except NotApproved:
-        _cp_model = None             # never keep a model whose file failed the check: the next call rebuilds it
+        _cp_model = None
         raise
     masks, flows, styles = model.eval(img, diameter=None, channels=[0, 0])
 

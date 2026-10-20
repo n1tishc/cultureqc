@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Records, { GmpBoundary } from "../components/Records";
+import ReviewExample from "../components/ReviewExample";
 import { Integration } from "../components/Sections";
 import { CtaBand, Footer, PageHead, TopBar } from "../components/Shell";
 import { Glance, Section, short } from "../components/ui";
@@ -31,13 +32,13 @@ export default function RecordsPage({ data }) {
       href: "#gmp",
       label: "One chain, two stored record kinds",
       value: "reading · change",
-      note: "The schema also supports review events, but this stored chain contains none. A future review would point to its reading without editing it.",
+      note: "The historical chain contains no review. A separate, explicitly illustrative extension below shows a review linked to its unchanged reading.",
     },
     {
       href: "#integration",
       label: "Written by one call per image",
       value: "analyze()",
-      note: `The live console writes schema ${data.meta.schema}, which adds the model-weights check run before every reading; the stored chain here is ${stored}.`,
+      note: `Local source at this site build: schema ${data.meta.schema}, ${data.meta.rules}. Historical readings here: schema ${stored}. Remote console revision is not verified by this page.`,
     },
   ];
 
@@ -52,12 +53,14 @@ export default function RecordsPage({ data }) {
           title="Records"
           lede={
             <>
-              <p>These stored readings and approved calibration changes form one append-only hash chain. Each record carries the hashes of what it was made from, so a reading can be traced to its image, its model, its rules and its calibration. The schema supports review events, but this chain contains none.</p>
+              <p>These stored readings and approved calibration changes form one append-only hash chain. Each record carries the hashes of what it was made from, so a reading can be traced to its image, its model, its rules and its calibration. Follow HT29 into a separate illustrative review without changing that reading.</p>
+              <p>A matching hash establishes consistency with the stored bytes and checkpoint. It does not establish biological correctness, validate an action or provide regulatory compliance.</p>
               <Glance items={items} />
             </>
           }
           toc={[
             ["chain", "The chain, re-checked here"],
+            ["review-example", "Illustrative review"],
             ["gmp", "Where this sits for GMP"],
             ["integration", "Integration"],
           ]}
@@ -73,6 +76,7 @@ export default function RecordsPage({ data }) {
         >
           <Records examples={ex} data={data} />
         </Section>
+        <ReviewExample examples={ex} />
         <GmpBoundary />
         <Integration data={data} />
       </main>

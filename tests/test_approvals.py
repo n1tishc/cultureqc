@@ -196,6 +196,7 @@ def test_a_model_loaded_from_failed_weights_is_not_kept(setup, monkeypatch):
 
         def __init__(self):
             self.bytes = shipped.read_bytes()
+            self._cultureqc_identity = seg._ModelIdentity(str(shipped), hash_file(str(shipped)), None)
             built.append(self)
 
         def eval(self, img, **kw):

@@ -27,6 +27,7 @@ from __future__ import annotations
 import hashlib
 import math
 import os
+from zipfile import BadZipFile
 
 import numpy as np
 
@@ -68,7 +69,10 @@ def nn_distance(q: np.ndarray, bank: np.ndarray, chunk: int = 8192) -> np.ndarra
     import torch
 
     out = np.empty(len(q), dtype=np.float32)
-    b = torch.from_numpy(np.ascontiguousarray(bank)).T
+    bank_data = np.ascontiguousarray(bank)
+    if not bank_data.flags.writeable:
+        bank_data = bank_data.copy()
+    b = torch.from_numpy(bank_data).T
     with torch.no_grad():
         for s in range(0, len(q), chunk):
             sim = torch.from_numpy(np.ascontiguousarray(q[s:s + chunk])) @ b
@@ -185,13 +189,9 @@ class AnomalyResult:
 
 def load_anomaly_config(path: str | None = None) -> dict | None:
     """configs/anomaly.yaml, or a site calibration's (CULTUREQC_ANOMALY_CONFIG)."""
-    import yaml
-
+    from culture.provenance import load_yaml
     path = path or _os.environ.get("CULTUREQC_ANOMALY_CONFIG", ANOMALY_CONFIG_PATH)
-    if not _os.path.exists(path):
-        return None
-    with open(path) as f:
-        return yaml.safe_load(f)
+    return load_yaml(path, optional=True)
 
 
 _banks_cache: dict = {}
@@ -199,19 +199,34 @@ _banks_cache: dict = {}
 
 def load_banks(cfg: dict, path: str | None = None) -> tuple[dict | None, str | None]:
     """(banks, None) if the file's hash matches cfg['bank']['sha256'], else
-    (None, reason). Cached per path."""
+    (None, reason). Cache binds expected hash to the observed file identity."""
     path = path or _os.environ.get("CULTUREQC_ANOMALY_BANKS", DEFAULT_BANKS_PATH)
-    if path in _banks_cache:
-        return _banks_cache[path]
-    if not _os.path.exists(path):
-        out = (None, f"anomaly banks not found ({_os.path.basename(path)})")
-    else:
-        z = np.load(path)
-        banks = {k: z[k] for k in z.files}
-        h = bank_hash([banks[k] for k in sorted(banks)])
-        out = (banks, None) if h == cfg["bank"]["sha256"] else (None, "anomaly banks do not match configs/anomaly.yaml")
-    _banks_cache[path] = out
-    return out
+    def identity(stat):
+        return stat.st_dev, stat.st_ino, stat.st_size, stat.st_mtime_ns, stat.st_ctime_ns
+
+    try:
+        with open(path, "rb") as stream:
+            signature = identity(_os.fstat(stream.fileno()))
+            key = (_os.path.realpath(path), cfg["bank"]["sha256"], signature)
+            cached = _banks_cache.get(key)
+            if cached is not None:
+                return dict(cached), None
+            with np.load(stream, allow_pickle=False) as archive:
+                banks = {name: archive[name] for name in archive.files}
+            if identity(_os.fstat(stream.fileno())) != signature:
+                return None, "anomaly banks changed during loading; retry with an immutable deployment"
+        digest = bank_hash([banks[name] for name in sorted(banks)])
+        if digest != cfg["bank"]["sha256"]:
+            return None, "anomaly banks do not match configs/anomaly.yaml"
+    except FileNotFoundError:
+        return None, f"anomaly banks not found ({_os.path.basename(path)})"
+    except (OSError, ValueError, TypeError, EOFError, BadZipFile) as exc:
+        return None, f"anomaly banks unavailable: {exc}"
+    for bank in banks.values():
+        bank.setflags(write=False)
+    _banks_cache.clear()
+    _banks_cache[key] = banks
+    return dict(banks), None
 
 
 def score_patches(patches: np.ndarray, confluency_pct: float, cfg: dict, banks: dict) -> AnomalyResult:

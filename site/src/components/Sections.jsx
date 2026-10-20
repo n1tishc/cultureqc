@@ -176,10 +176,12 @@ export function Detectability({ data }) {
   return (
     <Section
       id="detectability"
-      title="What it can and cannot see"
+      title="Detection scope and next improvements"
       lede={
         <>
-          <p>Each fault type has a row: what was tested, on what, and what to confirm it with. The matrix’s SHA-256 is in every record, so a reading can be traced to the limits that applied when it was made.</p>
+          <p><strong>Working checks:</strong> the image-quality gate catches the tested blur, exposure and uneven-illumination defects. In held-out C2C12 replay it also rejects 12.1% of normal frames, so tuning on the target instrument is still needed. <Src>results/quality_gate_c2c12.md</Src>.</p>
+          <p><strong>Further improvements:</strong> realistic-scale simulated bacterial contamination was not detected in this setup, and the temporal monitor flagged 0 of 2 simulated growth stalls. Neither an unflagged image nor a confluency reading clears a culture of contamination. <Src>results/contamination_scale.md</Src> · <Src>results/spc_summary.md</Src>.</p>
+          <p>Keep biological confirmation separate from image QC. The full detection matrix and supporting experiments remain available below; its SHA-256 is recorded with each analysis.</p>
           <p className="sources">
             {/* The matrix is hashed into every record, so its wording stays; only this display says "quarter-frame". */}
             {d.tested_setup.replace("0.25-frac fields of view", "quarter-frame fields of view")} Source: <Src>configs/detectability.yaml</Src>.
@@ -187,6 +189,9 @@ export function Detectability({ data }) {
         </>
       }
     >
+      <details className="more-details">
+        <summary>Full detection scope and supporting experiments</summary>
+        <p>The original architecture-test protocols and outcomes remain in <Src>docs/ARCHITECTURE_VALIDATION.md</Src>. They are historical experiments, not a current product scorecard.</p>
       <div className="table-wrap" tabIndex={0} role="region" aria-label="Detectability matrix">
         <table>
           <thead>
@@ -259,6 +264,7 @@ export function Detectability({ data }) {
           </p>
         </Fig>
       </div>
+      </details>
     </Section>
   );
 }
@@ -276,11 +282,11 @@ export function Validation({ data }) {
   return (
     <Section
       id="checks"
-      title={`${v[0].id}–${v[v.length - 1].id}, on held-out data`}
+      title={`${v[0].id}–${v[v.length - 1].id}: the architecture tests`}
       lede={
         <>
           <p>
-            <Linked>{data.validation_intro}</Linked>
+            Recorded C2C12 sequences were split into tuning and held-out groups, then replayed with simulated visits and faults. The table also includes a separate EVICAN mask comparison, synthetic classifier tiles and a CPU latency test. Each verdict applies to its stated test; it is not evidence of production operation. Protocols, sample counts and source reports: <Src>docs/ARCHITECTURE_VALIDATION.md</Src>.
           </p>
           <p className="tally" aria-label="Verdicts">
             {kinds.map((k) => (
@@ -356,20 +362,36 @@ export function Integration({ data }) {
       : r.result.includes("ZeroGPU, second run")
         ? "Console Space, ZeroGPU, second run"
         : r.result.includes("T4")
-          ? "Colab, Tesla T4"
+          ? "Colab, Tesla T4; before calibration profiles"
           : r.result.includes("Mac")
             ? "Mac, Apple GPU (MPS)"
-            : "CPU, 2 threads (V9)";
+            : "CPU, 2 threads; tiled LIVECell fixture (V9)";
+  const timingProtocol = (result) =>
+    result.includes("ZeroGPU")
+      ? null
+      : result.includes("T4") || result.includes("Mac")
+        ? "Median across 5 distinct C2C12 example images after one untimed warm-up pass; models resident, model loading excluded."
+        : "Median of 2 timed runs per input after warm-up; models resident, model loading excluded.";
   return (
     <Section
       id="integration"
-      title="One call per image, one line per record"
+      title="An image and context in. A record for the host out."
       lede={
-        <p>
-          <code>analyze()</code> reads the image, runs Cellpose-SAM, the anomaly check and the rules, and appends the record to an append-only, hash-chained log. The quality gate, flask history and passage forecast run per visit on top of it.
-        </p>
+        <>
+          <p>The current integration surface is the Python function <code>culture.pipeline.analyze()</code>. It reads an image, applies the selected profile’s quality gate when available, computes confluency and anomaly evidence, applies the rules, and appends a reading to a local hash-chained log.</p>
+          <p>This is a designed host boundary, not a deployed platform integration or a hosted API contract. The caller owns capture, scheduling, identity and signatures, durable audit retention, and every physical action.</p>
+        </>
       }
     >
+      <dl className="fields">
+        <dt>You supply</dt>
+        <dd>An image path, vessel and imaging identifiers, the matching calibration profile, and timing or policy inputs. The example uses the repository’s MSC profile; it is not a profile for a new partner microscope.</dd>
+        <dt>You receive</dt>
+        <dd>A confluency reading and available error band, a recommendation with its reason, any re-image request, provenance hashes and the appended record’s hash. A recommendation is for host review; it does not actuate equipment.</dd>
+        <dt>The host retains</dt>
+        <dd>The images and related artifacts, a checkpoint outside the log, authenticated review and approval records, and responsibility for system validation. A local JSONL file is not a complete durable audit service.</dd>
+      </dl>
+      <p>Example Python call, with <code>image_path</code> and <code>hours</code> supplied by the caller and the configured models available:</p>
       <div className="int-grid">
         <pre className="code" tabIndex={0} aria-label="Python example">
           <span className="k">from</span> culture.pipeline <span className="k">import</span> <span className="f">analyze</span>
@@ -378,11 +400,13 @@ export function Integration({ data }) {
           {"\n    "}flask_id=<span className="s">"A12"</span>,
           {"\n    "}cell_line=<span className="s">"MSC"</span>,
           {"\n    "}profile_id=<span className="s">"msc_phase"</span>,  <span className="c"># the imaging setup's calibration</span>
+          {"\n    "}imager_id=<span className="s">"imager-1"</span>,
           {"\n    "}hours_since_passage=hours,
           {"\n    "}log_path=<span className="s">"records.jsonl"</span>,  <span className="c"># append-only, hash-chained</span>
           {"\n"})
           {"\n\n"}rec[<span className="s">"confluency_pct"</span>], rec[<span className="s">"confluency_interval"</span>]  <span className="c"># reading, 90% error band</span>
           {"\n"}rec[<span className="s">"recommended_action"</span>], rec[<span className="s">"action_reason"</span>]
+          {"\n"}rec[<span className="s">"recovery_request"</span>]
           {"\n"}rec[<span className="s">"record_hash"</span>]  <span className="c"># links to the previous record</span>
         </pre>
         <div className="table-wrap" tabIndex={0} role="region" aria-label="Where it runs and how fast">
@@ -390,7 +414,7 @@ export function Integration({ data }) {
             <thead>
               <tr>
                 <th scope="col">Where it runs</th>
-                <th scope="col">Per frame</th>
+                <th scope="col">Observed time and sample count</th>
               </tr>
             </thead>
             <tbody>
@@ -399,6 +423,7 @@ export function Integration({ data }) {
                   <td>{label(r)}</td>
                   <td>
                     {r.number}
+                    {timingProtocol(r.result) && <span className="verdict-note">{timingProtocol(r.result)}</span>}
                     <span className="verdict-note">
                       <Src>{r.source}</Src>
                     </span>
@@ -409,6 +434,9 @@ export function Integration({ data }) {
           </table>
         </div>
       </div>
+      <p>These timings describe the cited runs and hardware, not a service guarantee or a matched performance comparison. The ZeroGPU runs used the owner’s token; queueing and latency can differ for another user.</p>
+      <p><code>analyze()</code> returns a single-image record; its growth-trend and passage-forecast fields are currently empty. Flask replays are a separate demonstration. The caller must also handle analysis exceptions, which can occur before a record is written.</p>
+      <p>Implementation: <Src>culture/pipeline.py</Src> · host responsibilities: <Src>docs/host_platform.md</Src> · <a href="/#pilot">offline evaluation and commercial-use gates</a>.</p>
     </Section>
   );
 }
@@ -468,9 +496,9 @@ export function ReleaseNotes({ data }) {
         <header className="release-head">
           <h2 id="v0-4-h">v0.4</h2>
           <p>
-            Rules <code>{data.meta.rules}</code>
+            Local source at this site build: <code>{data.meta.rules}</code>
             <br />
-            Records schema <code>{data.meta.schema}</code>
+            Records schema <code>{data.meta.schema}</code>; remote release unverified
           </p>
         </header>
         <div className="release-body">
@@ -510,11 +538,11 @@ export function ReleaseNotes({ data }) {
                 src="culture/approvals.py · configs/approved_changes.jsonl"
                 more={
                   <>
-                    The approvals log is hash-chained too. A fine-tuned model that doesn’t match gives no reading, and the record says why. The check shows the weights are the approved ones; who approved them is for the host platform to sign. Records schema {data.meta.schema} carries it (<code>model_check</code>, <code>finetuned_reading</code>); the stored example chain on the records page was written under {JSON.parse(data.examples.items[0].record.canonical).schema_version}, before the check.
+                    The approvals log is hash-chained too. A weight mismatch gives no reading, and the record says why. For the shipped segmentation model and fine-tuned model, the local check compares weights with the latest effective model approval appended by inference time; a future-dated approval does not authorize them. This check does not authenticate who approved them; the host platform owns identity and signatures. Profile and rules activation is also host-managed: local copies are recorded, not locally enforced or authenticated. Records schema {data.meta.schema} carries the model check (<code>model_check</code>, <code>finetuned_reading</code>); the stored example chain on the records page was written under {JSON.parse(data.examples.items[0].record.canonical).schema_version}, before the check.
                   </>
                 }
               >
-                Before a model reads an image, the SHA-256 of its weights is compared with the latest approved change record for that model. If the shipped model’s weights don’t match, there is no reading and no record.
+                Before either checked segmentation model reads an image, its weights are compared with the latest effective approval for that model at inference time. A future-dated approval does not authorize a weight change. If the shipped model’s weights don’t match, there is no reading and no record.
               </Note>
             </ul>
           </section>

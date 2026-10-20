@@ -214,7 +214,9 @@ the weights are marked not cleared for commercial use pending review.
   reviewed by a senior cell biologist; 100 more unlabelled.
 - **License:** **CC BY 4.0**; attribution wherever its images or derived numbers
   appear. Used for evaluation and for fine-tuning measurements only; images and
-  masks are **not redistributed** (`data/sources/mcellseg/`, gitignored).
+  masks are **not redistributed** in this repository (`data/sources/mcellseg/`,
+  gitignored). The console Space carries four test images and their masks for
+  the fine-tuned demo set (`demo/lab_demo.py`), credited on its card.
 - **Training overlap:** published after Cellpose-SAM and not one of its 18
   training datasets (above).
 - **Use:** the sealed test `results/confluency_mcellseg.md` and its swapped

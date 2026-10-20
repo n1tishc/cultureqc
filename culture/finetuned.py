@@ -30,8 +30,8 @@ _models: dict[str, object] = {}       # weights SHA-256 -> loaded model
 
 
 def load_config(path: str = CONFIG_PATH) -> dict:
-    with open(path) as f:
-        return (yaml.safe_load(f) or {}).get("models") or {}
+    from culture.provenance import load_yaml
+    return (load_yaml(path) or {}).get("models") or {}
 
 
 def weights_file(entry: dict) -> str:

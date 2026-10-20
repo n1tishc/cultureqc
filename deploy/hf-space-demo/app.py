@@ -19,7 +19,6 @@ from __future__ import annotations
 
 import base64
 import os
-import tempfile
 import threading
 import time
 
@@ -31,15 +30,11 @@ import gradio as gr
 
 from culture.pipeline import analyze
 from culture.rules import LineConfig
+from culture.ingestion import read_image
+from demo.uploads import image_upload_path
 
 LOG_PATH = os.environ.get("CULTUREQC_LOG", "/tmp/events_boot.jsonl")
 
-# Same reason hf-space/api.py serialises analysis: RecordWriter reads the log's
-# tail hash in __init__, so two concurrent writers can both read the same tail
-# and corrupt the chain, and the Cellpose/QC singletons carry mutable Grad-CAM
-# hook state that is not documented as safe for concurrent forward passes. The
-# lock lives in this process regardless of which worker ZeroGPU attaches a GPU
-# to for the call itself.
 _pipeline_lock = threading.Lock()
 
 
@@ -116,16 +111,14 @@ def _run_analysis(image_path: str, cell_line: str, target_confluency: float):
     return record, details.get("visuals", {})
 
 
-def infer(image: np.ndarray | None, cell_line: str, target_confluency: float):
-    if image is None:
+def infer(image, cell_line: str, target_confluency: float):
+    path = image_upload_path(image)
+    if path is None:
         raise gr.Error("Upload a brightfield image first.")
-    gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY) if image.ndim == 3 else image
-    with tempfile.TemporaryDirectory() as td:
-        path = os.path.join(td, "upload.png")
-        cv2.imwrite(path, gray)
-        t0 = time.time()
-        record, visuals = _run_analysis(path, cell_line, target_confluency)
-        elapsed = time.time() - t0
+    gray = read_image(path).pixels
+    t0 = time.time()
+    record, visuals = _run_analysis(path, cell_line, target_confluency)
+    elapsed = time.time() - t0
 
     # A demoted classifier (configs/qc.yaml; record["qc_used_in_decision"] is
     # False) is not a verdict: lead with confluency and the action instead.
@@ -158,7 +151,7 @@ with gr.Blocks(title="cultureQC — raw model demo") as demo:
     )
     with gr.Row():
         with gr.Column():
-            image_in = gr.Image(label="Brightfield image", type="numpy")
+            image_in = gr.Image(label="Brightfield image", type="filepath", image_mode=None)
             cell_line_in = gr.Textbox(label="Cell line", value="Huh7")
             target_in = gr.Slider(label="Target confluency %", minimum=10, maximum=100, value=80, step=1)
             run_btn = gr.Button("Analyse", variant="primary")
@@ -176,6 +169,7 @@ with gr.Blocks(title="cultureQC — raw model demo") as demo:
         infer,
         inputs=[image_in, cell_line_in, target_in],
         outputs=[raw_out, mask_out, heatmap_out, verdict_out, detail_out, record_out],
+        preprocess=False,
     )
 
 _warm()

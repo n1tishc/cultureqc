@@ -21,7 +21,7 @@ const FIELDS = [
   ["model_weights_hash · config_hashes", "SHA-256 of each model’s weights and of each config in force."],
   ["decided_by", "The rules version that chose the action."],
   ["flask_id · lineage · imager_id · fov", "The host platform’s keys: vessel, passage history, instrument, field of view. These examples were exported outside a host, so they carry placeholders: flask_id “demo”, cell_line “unknown”, the rest null."],
-  ["review records", "A person's decision would be a new record pointing to the reading's hash; this stored demonstration chain does not contain a review event."],
+  ["review records", "A person's decision is a new record pointing to the reading's hash. The original chain contains none; the separate illustrative review below extends a copy, not the source log."],
   ["prev_record_hash · record_hash", "The chain: each record’s hash covers every field above plus the previous record’s hash."],
 ];
 
@@ -36,7 +36,8 @@ function Json({ obj, bad }) {
     const hit = el && el.querySelector(".bad");
     if (hit) {
       const top = hit.getBoundingClientRect().top - el.getBoundingClientRect().top + el.scrollTop;
-      el.scrollTo({ top: Math.max(0, top - el.clientHeight / 2), behavior: "smooth" });
+      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      el.scrollTo({ top: Math.max(0, top - el.clientHeight / 2), behavior: reduceMotion ? "auto" : "smooth" });
     }
   }, [bad]);
   const text = JSON.stringify(obj, null, 2);
@@ -89,9 +90,7 @@ export default function Records({ examples, data }) {
   const clsReal = row(data, "QC classifier on real normal frames").number.match(/^[\d.]+%/)[0];
   const stored = JSON.parse(examples.items[0].record.canonical).schema_version;
   const fields = [
-    ["schema_version", stored === data.meta.schema
-      ? `Schema ${stored}, the version the live console writes.`
-      : `These stored records are schema ${stored}. The live console writes ${data.meta.schema}, which adds model_check (the segmentation weights’ SHA-256, compared with the latest approved change record before the model reads) and finetuned_reading (a fine-tuned model’s reading beside the shipped one, never used to decide).`],
+    ["schema_version", `These historical readings are schema ${stored}. Local source at this site build is schema ${data.meta.schema}: model checks, replay inputs, host-managed activation and controlled image provenance. Historical records are not upgraded or replay-certified by this display; the remote console revision is unverified.`],
     ...FIELDS.slice(0, -1),
     ["qc_flag · qc_confidence · qc_used_in_decision",
       `The demoted QC classifier’s call, kept for traceability and never used for the action (qc_used_in_decision: false). It does not transfer to these frames: on real normal C2C12 frames it called ${clsReal} normal, so a normal frame can carry contamination_suspected here.`],
@@ -298,6 +297,7 @@ export default function Records({ examples, data }) {
           {chain[shown].kind !== "change" ? (
             <p><a className="more" href={`/?example=${encodeURIComponent(chain[shown].id)}#demo`}>Return to this reading <Icon name="passage" /></a></p>
           ) : null}
+          {chain[shown].id === examples.review_demo.reading_id ? <p><a className="more" href="#review-example">Follow this exception into an illustrative review</a></p> : null}
           <Json obj={obj} bad={(mode === "edit" || mode === "rewrite") && shown === T ? "confluency_pct" : null} />
         </div>
         <div>
@@ -329,8 +329,8 @@ const GMP = [
     "The Part 11 audit trail the records are written into, which is also where the checkpoint belongs.",
     "The keys only it knows: flask, passage history, instrument and field of view.",
   ]],
-  ["How a decision is kept", [
-    "A person’s review is a new record pointing to the reading’s hash; the reading is never edited.",
+  ["Supported review and change records", [
+    "The schema supports a person’s review as a new record pointing to the reading’s hash; this stored chain contains no review event.",
     "It carries the reviewer, the meaning of the signature and a reference to the platform’s signature record.",
     "A calibration change is a record too: the profile before and after by SHA-256, its evidence and who approved it.",
   ]],
@@ -343,7 +343,7 @@ export function GmpBoundary() {
         <header className="sec-head">
           <h2 id="gmp-h">Where this sits for GMP</h2>
           <div>
-            <p>The records are designed to be written into a host platform’s audit trail. They are not Part 11 compliant on their own: the platform supplies who did what, and signs it.</p>
+            <p>The records are designed to be written into a host platform’s audit trail. Integrity checks do not establish biological validity or Part 11 compliance. The host must supply authenticated identity, signatures, durable retention and validation of the whole system; no host integration is demonstrated here.</p>
           </div>
         </header>
         <div className="gmp">

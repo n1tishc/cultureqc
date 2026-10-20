@@ -156,6 +156,34 @@ def test_rejects_empty_file(client):
     assert r.status_code == 415 or r.status_code == 400
 
 
+@pytest.mark.parametrize("maximum", [4095, 65535])
+def test_rejects_high_bit_depth_before_pipeline(client, monkeypatch, maximum):
+    from PIL import Image
+    body = io.BytesIO()
+    Image.fromarray(np.full((16, 16), maximum, np.uint16)).save(body, format="TIFF")
+    calls = []
+    monkeypatch.setattr(sys.modules["culture.pipeline"], "analyze", lambda *args, **kwargs: calls.append(True))
+    response = post(client, name="frame.tif", data=body.getvalue())
+    assert response.status_code == 400
+    assert "uint8" in response.json()["detail"]
+    assert not calls
+
+
+def test_rejects_multipage_upload(client):
+    from PIL import Image
+    body = io.BytesIO()
+    first = Image.fromarray(np.zeros((16, 16), np.uint8))
+    second = Image.fromarray(np.full((16, 16), 255, np.uint8))
+    first.save(body, format="TIFF", save_all=True, append_images=[second])
+    response = post(client, name="stack.tif", data=body.getvalue())
+    assert response.status_code == 400 and "frame" in response.json()["detail"]
+
+
+def test_rejects_corrupt_encoded_image(client):
+    response = post(client, data=b"not a real png")
+    assert response.status_code == 400 and "decode" in response.json()["detail"]
+
+
 def test_rejects_oversize_file(client, monkeypatch):
     monkeypatch.setattr(api, "MAX_BYTES", 128)
     r = post(client, data=png_bytes())

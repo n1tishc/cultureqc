@@ -1,6 +1,12 @@
 # cultureQC: everything done on the upgrade branch
 
-As of 2026-10-04. Branch `slice-1b-compute-cache` (`git log main..HEAD` for
+**Historical summary:** the dates and state below are preserved, not a current release claim.
+For the October 19 local implementation, start at [STATUS](STATUS.md),
+[PRODUCT](PRODUCT.md), and the [release-state map](specs/release-state.md).
+
+As of 2026-10-04; §11 updated 2026-10-15. The work from 2026-10-05 on (the
+passage-range tests and the fine-tuned demo set) is logged in `docs/STATUS.md`
+and `docs/FINE_TUNING.md`, not yet here. Branch `slice-1b-compute-cache` (`git log main..HEAD` for
 the full list). Nothing is merged to `main`: the owner decided on 2026-10-01
 not to merge before the call, so the v0.2 site stays up beside this branch's
 site (v0.3, then v0.4 from 2026-10-04). The detailed, row-by-row log is `docs/STATUS.md`; this file is
@@ -175,8 +181,9 @@ slow for a live demo, so the demo needs a GPU (section 8).
 - **GMP scope** (in the demo script): tamper-evident with provenance, not
   Part 11 compliant on its own; `decided_by`, `reviewed_by`,
   `review_outcome` are there for the platform layer (`docs/audit_mapping.md`).
-- **Demo script:** `docs/DEMO_SCRIPT.md`, about 12 minutes, confluency QC first,
-  then the audit record.
+- **Demo script:** `docs/DEMO_SCRIPT.md`, about 15 minutes since the fine-tuned
+  demo set was added to section 2 (2026-10-15; about 12 before), confluency QC
+  first, then the audit record.
 
 ## 8. Where the console runs
 
@@ -249,9 +256,12 @@ page-data generator must not import anything heavier (`tests/test_replay_notes.p
 | Done 2026-09-29 | v0.3 Vercel project created (production branch `slice-1b-compute-cache`): https://cultureqc-cvoy.vercel.app, set in `site/index.html` | owner |
 | Done 2026-10-01–02 | Dry run: `scripts/space_dry_run.py` after each republish (7 of 7 each time) | |
 | Done 2026-10-04 | Calibration profiles live (owner approval): console Space `e6c44671` dry run 7 of 7; site v0.4 pushed (`9d5d43f`), CI green | owner |
+| Done 2026-10-08 | Fine-tuned demo set in the console (owner decision): Space `3b935ea6`, weights in a private model repo; site pushed (`21005a6`, CI fix `f539039`) | owner |
+| Done 2026-10-08 – 11 | Console Space republished as `98656277`, then `712a9e54`: dry runs 7 of 7 each (`results/space_dry_run_712a9e54.md`); site `2cd691a`, CI green | |
+| Next Space publish | Carries the Space card's new text, written in `2cd691a` | owner |
 | Before the call | Open both 3D views in the call browser; open the v0.4 site (https://cultureqc-cvoy.vercel.app) at 1280×720 | owner |
-| Mon Oct 5 | Rehearsal with `docs/DEMO_SCRIPT.md` | |
-| Tue Oct 6, 3 PM PDT | Call: open the Space 10 min early, signed in; Mac backup running | |
+| Before the call | Rehearsal with `docs/DEMO_SCRIPT.md` | |
+| Wed Oct 21 | Call (moved from Tue Oct 6 to Oct 13 on 2026-10-05, then to Oct 21 on 2026-10-07): open the Space 10 min early, signed in; Mac backup running | |
 | After | Merge to `main` only on the owner's word (not before the call, 2026-10-01) | owner |
 
 ## 12. Cutoff study, audit mapping, and the pre-freeze pass (Sep 30 – Oct 1)

@@ -11,7 +11,7 @@ This is the GMP audit-trail pattern mapped to 21 CFR Part 11 §11.10(e):
 computer-generated, time-stamped, model-versioned records
 (docs/audit_mapping.md).
 
-Three record types share one chain (schema 0.5, culture/schema.json):
+Three record types share one chain (schema 0.8, culture/schema.json):
   reading  one analysed image: the numbers, the profile, the action, the reason
   review   a person's decision on a reading, linked to that reading's hash;
            the reading itself is never edited, so a review cannot change what
@@ -52,21 +52,24 @@ import hashlib
 import hmac
 import json
 import os
+import stat
 import sys
 import uuid
+from contextlib import contextmanager
+from copy import deepcopy
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 
 
 GENESIS_HASH = "0" * 64
-SCHEMA_VERSION = "0.5"  # culture/schema.json; stamped by culture/pipeline.py and demo/analysis.py
+SCHEMA_VERSION = "0.8"
 RECORD_TYPES = ("reading", "review", "change")
 SIGNATURE_MEANINGS = ("review", "approval", "rejection")
 
 
 def _canonical_json(record: dict) -> str:
     """Deterministic JSON: sorted keys, compact separators, no trailing whitespace."""
-    return json.dumps(record, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
+    return json.dumps(record, sort_keys=True, separators=(",", ":"), ensure_ascii=True, allow_nan=False)
 
 
 def _sha256(data: str) -> str:
@@ -82,35 +85,42 @@ def hash_file(path: str) -> str:
     return h.hexdigest()
 
 
+@contextmanager
+def _locked_log(log_path, *, write=False):
+    if os.name != "posix":
+        raise RuntimeError("Audit log locking requires a POSIX local filesystem")
+    import fcntl
+
+    with open(log_path, "a+b" if write else "rb") as stream:
+        if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):
+            raise ValueError("Audit log must be a regular file")
+        fcntl.flock(stream.fileno(), fcntl.LOCK_EX if write else fcntl.LOCK_SH)
+        try:
+            yield stream
+        finally:
+            fcntl.flock(stream.fileno(), fcntl.LOCK_UN)
+
+
+def _sync_directory(log_path):
+    descriptor = os.open(os.path.dirname(os.path.abspath(log_path)), os.O_RDONLY | os.O_DIRECTORY)
+    try:
+        os.fsync(descriptor)
+    finally:
+        os.close(descriptor)
+
+
 class RecordWriter:
     """
     Append-only, hash-chained JSONL writer.
 
     Each call to append() adds record_id, analysed_at, prev_record_hash,
     and record_hash, then writes one JSON line. The file is opened in
-    append mode — never overwritten.
+    append mode — never overwritten. Cooperating local POSIX writers lock the
+    log across verification, finalization, append and fsync. No tail is cached.
     """
 
     def __init__(self, log_path: str):
-        self.log_path = log_path
-        self._prev_hash = self._read_last_hash()
-
-    def _read_last_hash(self) -> str:
-        """Read the hash of the last record in the log, or GENESIS_HASH if empty/new."""
-        if not os.path.exists(self.log_path):
-            return GENESIS_HASH
-        last_hash = GENESIS_HASH
-        with open(self.log_path, "r") as f:
-            for line in f:
-                line = line.strip()
-                if not line:
-                    continue
-                try:
-                    rec = json.loads(line)
-                    last_hash = rec.get("record_hash", GENESIS_HASH)
-                except json.JSONDecodeError:
-                    pass
-        return last_hash
+        self.log_path = os.path.abspath(os.fspath(log_path))
 
     def append(self, record: dict) -> dict:
         """
@@ -121,9 +131,20 @@ class RecordWriter:
           - prev_record_hash
           - record_hash
 
-        Returns the finalized record.
+        Returns after file and parent directory fsync. An error after writing
+        has an uncertain outcome; callers must reconcile before retrying.
         """
-        record = dict(record)  # don't mutate the caller's dict
+        record = self._prepare(record)
+        with _locked_log(self.log_path, write=True) as stream:
+            stream.seek(0)
+            result = _verify_stream(stream)
+            if result.status not in ("intact", "empty_chain"):
+                raise ValueError(f"Refusing append to {result.status} audit log: {result.reason}")
+            return self._append_locked(stream, record, result.head_hash or GENESIS_HASH)
+
+    @staticmethod
+    def _prepare(record):
+        record = deepcopy(record)
 
         if "record_id" not in record or not record["record_id"]:
             record["record_id"] = str(uuid.uuid4())
@@ -132,7 +153,7 @@ class RecordWriter:
         if stamp not in record or not record[stamp]:
             record[stamp] = datetime.now(timezone.utc).isoformat()
 
-        record["prev_record_hash"] = self._prev_hash
+        record["prev_record_hash"] = GENESIS_HASH
 
         # Remove record_hash if present (will be recomputed)
         record.pop("record_hash", None)
@@ -142,19 +163,48 @@ class RecordWriter:
         record_hash = _sha256(canonical)
         record["record_hash"] = record_hash
 
-        # Append to log
-        with open(self.log_path, "a") as f:
-            f.write(json.dumps(record, sort_keys=True) + "\n")
+        if record.get("schema_version") in ("0.6", "0.7", "0.8"):
+            import jsonschema
+            with open(os.path.join(os.path.dirname(__file__), "schema.json")) as schema_file:
+                schema = json.load(schema_file)
+            jsonschema.validate(record, schema, format_checker=jsonschema.FormatChecker())
+            if record.get("record_type") == "reading":
+                from culture.provenance import configuration_activation, replay_decision, snapshot_hashes
+                replay_decision(record, record["decided_by"])
+                if record["schema_version"] in ("0.7", "0.8") and record["configuration_activation"] != configuration_activation(
+                        record["config_snapshot"], record["decision_inputs"]):
+                    raise ValueError("Configuration activation identity mismatch")
+                if record["schema_version"] == "0.8":
+                    from culture.ingestion import validate_preprocessing
+                    validate_preprocessing(record)
+                if snapshot_hashes(record["config_snapshot"]) != record["config_hashes"]:
+                    raise ValueError("Config snapshot does not match config hashes")
+                for entry in record["config_snapshot"]:
+                    if entry["text"] is not None and hashlib.sha256(entry["text"].encode()).hexdigest() != entry["sha256"]:
+                        raise ValueError("Config content hash mismatch")
+        return record
 
-        self._prev_hash = record_hash
+    def _append_locked(self, stream, record, previous_hash):
+        record["prev_record_hash"] = previous_hash
+        record.pop("record_hash", None)
+        record["record_hash"] = _sha256(_canonical_json(record))
+        payload = (json.dumps(record, sort_keys=True, allow_nan=False) + "\n").encode("utf-8")
+        stream.seek(0, os.SEEK_END)
+        if os.write(stream.fileno(), payload) != len(payload):
+            raise OSError("Incomplete audit append; preserve log and reconcile before retrying")
+        stream.flush()
+        os.fsync(stream.fileno())
+        _sync_directory(self.log_path)
         return record
 
     @property
     def record_count(self) -> int:
-        if not os.path.exists(self.log_path):
+        result = verify_chain(self.log_path)
+        if result.status in ("missing_log", "empty_chain"):
             return 0
-        with open(self.log_path, "r") as f:
-            return sum(1 for line in f if line.strip())
+        if not result.ok:
+            raise ValueError(f"Cannot count {result.status} audit log: {result.reason}")
+        return result.n_records
 
 
 
@@ -317,48 +367,61 @@ def verify_chain(log_path: str, checkpoint: dict | None = None,
     checkpoint["head_hash"] is `rewritten`; records appended after the
     checkpoint are allowed. A missing or empty log never counts as intact.
 
+    Cooperating readers take a shared lock, so a checkpoint never reads an
+    in-flight append. A nonempty final line must be newline-terminated.
     Returns a ChainResult; `ok, bad_line = verify_chain(path)` still works.
     """
-    def result(status, n=0, head=None, bad=None, line=None, reason=""):
-        return ChainResult(status == "intact", status, n, head, bad, reason, line)
-
     if checkpoint is not None:
         why = _check_checkpoint(checkpoint, key)
         if why:
-            return result("checkpoint_invalid", reason=why)
+            return ChainResult(False, "checkpoint_invalid", 0, None, None, why, None)
+    try:
+        with _locked_log(log_path) as stream:
+            return _verify_stream(stream, checkpoint)
+    except FileNotFoundError:
+        return ChainResult(False, "missing_log", 0, None, None, f"no log at {log_path}", None)
 
-    if not os.path.exists(log_path):
-        return result("missing_log", reason=f"no log at {log_path}")
+
+def _verify_stream(stream, checkpoint=None):
+    def result(status, n=0, head=None, bad=None, line=None, reason=""):
+        return ChainResult(status == "intact", status, n, head, bad, reason, line)
 
     prev_hash = GENESIS_HASH
     hashes: list[str] = []
 
-    with open(log_path, "r") as f:
-        for line_num, line in enumerate(f, start=1):
-            line = line.strip()
-            if not line:
-                continue
-            idx = len(hashes)
-
-            try:
-                record = json.loads(line)
-            except json.JSONDecodeError:
-                return result("broken", idx, prev_hash, idx, line_num, f"record {idx} is not valid JSON")
-
-            # Check prev_record_hash links to the previous record
-            if record.get("prev_record_hash") != prev_hash:
-                return result("broken", idx, prev_hash, idx, line_num,
-                              f"record {idx}'s prev_record_hash doesn't match record {idx - 1}'s hash"
-                              if idx else "record 0 doesn't link to the genesis hash")
-
-            # Recompute the record's own hash
-            stored_hash = record.pop("record_hash", None)
-            if stored_hash != _sha256(_canonical_json(record)):
-                return result("broken", idx, prev_hash, idx, line_num,
-                              f"record {idx}'s contents don't hash to its record_hash")
-
-            hashes.append(stored_hash)
-            prev_hash = stored_hash
+    for line_num, raw in enumerate(stream, start=1):
+        idx = len(hashes)
+        try:
+            line = raw.decode("utf-8").strip()
+        except UnicodeDecodeError:
+            return result("broken", idx, prev_hash, idx, line_num, f"record {idx} is not UTF-8")
+        if not line:
+            if not raw.endswith(b"\n"):
+                return result("broken", idx, prev_hash, idx, line_num, "unterminated final line")
+            continue
+        try:
+            record = json.loads(line)
+        except json.JSONDecodeError:
+            return result("broken", idx, prev_hash, idx, line_num, f"record {idx} is not valid JSON")
+        if not isinstance(record, dict):
+            return result("broken", idx, prev_hash, idx, line_num, f"record {idx} is not an object")
+        if record.get("prev_record_hash") != prev_hash:
+            return result("broken", idx, prev_hash, idx, line_num,
+                          f"record {idx}'s prev_record_hash doesn't match record {idx - 1}'s hash"
+                          if idx else "record 0 doesn't link to the genesis hash")
+        stored_hash = record.pop("record_hash", None)
+        try:
+            computed_hash = _sha256(_canonical_json(record))
+        except ValueError:
+            return result("broken", idx, prev_hash, idx, line_num,
+                          f"record {idx} contains a nonfinite number")
+        if stored_hash != computed_hash:
+            return result("broken", idx, prev_hash, idx, line_num,
+                          f"record {idx}'s contents don't hash to its record_hash")
+        if not raw.endswith(b"\n"):
+            return result("broken", idx, prev_hash, idx, line_num, "unterminated final record")
+        hashes.append(stored_hash)
+        prev_hash = stored_hash
 
     n = len(hashes)
     head = hashes[-1] if hashes else None

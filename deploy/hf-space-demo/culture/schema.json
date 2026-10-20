@@ -1,6 +1,33 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "cultureQC Record",
+  "definitions": {
+    "checkState": {
+      "type": "object",
+      "required": ["requirement", "status"],
+      "properties": {
+        "requirement": {"enum": ["required", "optional", "not_applicable"]},
+        "status": {"enum": ["passed", "failed", "unavailable", "not_applicable"]}
+      },
+      "if": {"properties": {"requirement": {"const": "not_applicable"}}},
+      "then": {"properties": {"status": {"const": "not_applicable"}}},
+      "else": {"properties": {"status": {"enum": ["passed", "failed", "unavailable"]}}},
+      "additionalProperties": false
+    },
+    "timingState": {
+      "type": "object",
+      "required": ["hours", "interval_h", "status"],
+      "properties": {
+        "hours": {"type": ["number", "null"], "minimum": 0},
+        "interval_h": {"type": "number", "minimum": 0},
+        "status": {"enum": ["unknown", "held", "elapsed"]}
+      },
+      "if": {"properties": {"hours": {"type": "null"}}},
+      "then": {"properties": {"status": {"const": "unknown"}}},
+      "else": {"properties": {"status": {"enum": ["held", "elapsed"]}}},
+      "additionalProperties": false
+    }
+  },
   "description": "One chain, three record types: a reading per analysed image, a review per person's decision on a reading (linked by hash; the reading is never edited), and a change per change-controlled update. Numbers come from models; the rules decide; people review.",
   "oneOf": [
     {
@@ -44,9 +71,12 @@
           "type": "string",
           "enum": [
             "0.4",
-            "0.5"
+            "0.5",
+            "0.6",
+            "0.7",
+            "0.8"
           ],
-          "description": "0.4: three record types in one chain (reading, review, change); a reading names its confluency profile and error band; reviews are separate records; host-platform keys (lineage, imager, field of view, environment); reimage action; weights hashed. 0.5: a reading records the run-time check of the shipped model's weights against the approvals log (model_check) and, when asked for, a fine-tuned model's reading that decides nothing (finetuned_reading)."
+          "description": "0.4: reading/review/change records. 0.5: model check. 0.6: replay inputs and consumed configuration. 0.7: explicit host-managed activation. 0.8: controlled decoding and original-byte/decoded-pixel provenance."
         },
         "record_hash": {
           "type": "string",
@@ -67,8 +97,67 @@
           "description": "Protocol step that took the image, from the host platform"
         },
         "captured_at": {
-          "type": "string",
+          "type": ["string", "null"],
           "format": "date-time"
+        },
+        "capture_time_source": {"enum": ["host", "unknown"]},
+        "analysis_started_at": {"type": "string", "format": "date-time"},
+        "analysis_completed_at": {"type": "string", "format": "date-time"},
+        "map_provenance": {
+          "type": "object",
+          "required": ["status", "representation"],
+          "properties": {
+            "status": {"enum": ["captured", "unavailable"]},
+            "representation": {"const": "culture.cache.downsample_probmap/x1000-int16-v1"}
+          },
+          "additionalProperties": false
+        },
+        "decision_inputs": {
+          "type": "object",
+          "required": ["policy", "sha256", "values"],
+          "properties": {
+            "policy": {"const": "rules_v0.7"},
+            "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+            "values": {
+              "type": "object",
+              "required": ["confluency_pct", "confluency_confidence", "qc_flag", "qc_confidence", "line_config", "hours_since_passage", "hours_since_feed", "anomaly_flag", "band_pp", "quality_passed", "quality_reasons", "profile", "setup_context", "check_policy"],
+              "properties": {
+                "confluency_pct": {"type": "number", "minimum": 0, "maximum": 100},
+                "confluency_confidence": {"type": "number", "minimum": 0, "maximum": 1},
+                "qc_flag": {"enum": [null, "normal", "contamination_suspected", "detachment", "image_quality"]},
+                "qc_confidence": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+                "line_config": {"type": "object", "required": ["cell_line", "target_confluency", "min_hours_since_passage", "feed_interval_h", "qc_review_threshold", "confluency_confidence_floor"]},
+                "hours_since_passage": {"type": ["number", "null"], "minimum": 0},
+                "hours_since_feed": {"type": ["number", "null"], "minimum": 0},
+                "anomaly_flag": {"type": ["boolean", "null"]},
+                "band_pp": {"type": ["number", "null"], "minimum": 0, "maximum": 100},
+                "quality_passed": {"type": ["boolean", "null"]},
+                "quality_reasons": {"type": ["array", "null"], "items": {"type": "string"}},
+                "profile": {"type": "object", "required": ["id", "cutoff", "band_pp", "status", "description", "quality", "entry"]},
+                "setup_context": {"type": "object", "required": ["setup_id", "cell_line", "model_sha256"]},
+                "check_policy": {"type": "object", "required": ["qc", "anomaly"], "additionalProperties": {"enum": ["required", "optional", "not_applicable"]}}
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "config_snapshot": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["source_path", "status", "sha256", "text"],
+            "properties": {
+              "source_path": {"type": "string", "minLength": 1},
+              "status": {"enum": ["read", "missing"]},
+              "sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"},
+              "text": {"type": ["string", "null"]}
+            },
+            "if": {"properties": {"status": {"const": "read"}}},
+            "then": {"properties": {"text": {"type": "string"}, "sha256": {"type": "string"}}},
+            "else": {"properties": {"text": {"type": "null"}, "sha256": {"type": "null"}}},
+            "additionalProperties": false
+          }
         },
         "analysed_at": {
           "type": "string",
@@ -285,12 +374,44 @@
           },
           "description": "SHA-256 of each model's weights file, keyed like model_versions; null where the file was not found"
         },
+        "preprocessing": {
+          "type": "object",
+          "required": ["policy", "source_format", "source_mode", "source_dtype", "source_shape", "source_sha256", "frame_count", "orientation", "transform", "decoder_version", "output_dtype", "output_shape", "output_sha256", "sha256"],
+          "properties": {
+            "policy": {"const": "uint8-single-frame-v1"},
+            "source_format": {"enum": ["PNG", "JPEG", "TIFF", "BMP", "WEBP"]},
+            "source_mode": {"enum": ["L", "RGB"]},
+            "source_dtype": {"const": "uint8"},
+            "source_shape": {"type": "array", "minItems": 2, "maxItems": 3, "items": {"type": "integer", "minimum": 1, "maximum": 8192}},
+            "source_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+            "frame_count": {"const": 1},
+            "orientation": {"const": 1},
+            "transform": {"enum": ["identity", "opencv-grayscale"]},
+            "decoder_version": {"type": "string", "minLength": 1},
+            "output_dtype": {"const": "uint8"},
+            "output_shape": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": "integer", "minimum": 1, "maximum": 8192}},
+            "output_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+            "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+          },
+          "additionalProperties": false
+        },
+        "configuration_activation": {
+          "type": "object",
+          "required": ["mode", "local_enforcement", "host_approval_ref", "configuration_sha256"],
+          "properties": {
+            "mode": {"const": "host_managed"},
+            "local_enforcement": {"const": false},
+            "host_approval_ref": {"type": "null"},
+            "configuration_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+          },
+          "additionalProperties": false
+        },
         "config_hashes": {
           "type": "object",
           "additionalProperties": {
             "type": "string"
           },
-          "description": "SHA-256 of each config file that shaped this record, keyed by file name"
+          "description": "Schema 0.6: consumed YAML snapshots keyed by effective source path, not an after-inference file inventory. Model approvals are identified by model_check.approvals_head. Earlier schemas used file names."
         },
         "record_type": {
           "const": "reading"
@@ -359,6 +480,49 @@
           ],
           "description": "Snapshot supplied by the host platform at capture (e.g. temperature, CO2); stored as given, not used by cultureQC"
         },
+        "decision": {
+          "type": "object",
+          "required": ["reason_code", "mode", "host_actionable", "checks", "timing", "warnings"],
+          "properties": {
+            "reason_code": {"enum": ["qc_flagged", "quality_failed", "qc_incomplete", "passage_time_unknown", "measurement_uncalibrated", "anomaly_flagged", "passage_scope_unsupported", "required_check_unavailable", "passage_candidate", "target_within_error_band", "feed_due", "passage_interval_hold", "monitor_advisory"]},
+            "mode": {"const": "advisory"},
+            "host_actionable": {"const": false},
+            "checks": {
+              "type": "object",
+              "required": ["quality", "qc", "anomaly"],
+              "properties": {
+                "quality": {"allOf": [{"$ref": "#/definitions/checkState"}, {"properties": {"requirement": {"const": "required"}}}]},
+                "qc": {"$ref": "#/definitions/checkState"},
+                "anomaly": {"$ref": "#/definitions/checkState"}
+              },
+              "additionalProperties": false
+            },
+            "timing": {
+              "type": "object",
+              "required": ["passage", "feed"],
+              "properties": {"passage": {"$ref": "#/definitions/timingState"}, "feed": {"$ref": "#/definitions/timingState"}},
+              "additionalProperties": false
+            },
+            "warnings": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+          },
+          "additionalProperties": false,
+          "description": "rules_v0.7 advisory policy evaluation; no recommended action is a host execution authorization."
+        },
+        "passage_eligibility": {
+          "type": "object",
+          "required": ["eligible", "reason", "setup_id", "cell_line", "model_sha256", "reading_pct", "target_pct"],
+          "properties": {
+            "eligible": {"type": "boolean"},
+            "reason": {"type": "string", "minLength": 1},
+            "setup_id": {"type": ["string", "null"]},
+            "cell_line": {"type": ["string", "null"]},
+            "model_sha256": {"type": ["string", "null"]},
+            "reading_pct": {"type": "number", "minimum": 0, "maximum": 100},
+            "target_pct": {"type": "number", "minimum": 0, "maximum": 100}
+          },
+          "additionalProperties": false,
+          "description": "rules_v0.6 evaluated passage scope; eligibility is not itself a passage command. Historical rules_v0.5 records lack this field."
+        },
         "confluency_profile": {
           "type": "object",
           "required": [
@@ -391,10 +555,33 @@
                 "number",
                 "null"
               ]
+            },
+            "measurement_calibrated": {"type": "boolean"},
+            "validated_scope": {
+              "type": ["object", "null"],
+              "required": ["setup_id", "cell_line", "model_sha256", "reading_range_pct", "target_range_pct"],
+              "properties": {
+                "setup_id": {"type": "string", "minLength": 1},
+                "cell_line": {"type": "string", "minLength": 1},
+                "model_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+                "reading_range_pct": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": "number", "minimum": 0, "maximum": 100}},
+                "target_range_pct": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": "number", "minimum": 0, "maximum": 100}}
+              },
+              "additionalProperties": false
+            },
+            "action_eligibility": {
+              "type": "object",
+              "required": ["status", "reason"],
+              "properties": {
+                "status": {"enum": ["eligible", "unsupported"]},
+                "reason": {"type": "string", "minLength": 1},
+                "approval_ref": {"type": "string", "minLength": 1}
+              },
+              "additionalProperties": false
             }
           },
           "additionalProperties": false,
-          "description": "configs/confluency_profiles.yaml entry the reading used (culture/profiles.py)"
+          "description": "Measurement calibration is distinct from validated decision scope and passage eligibility. Legacy status validated refers only to measurement criteria."
         },
         "confluency_interval": {
           "type": [
@@ -617,10 +804,42 @@
         }
       },
       "additionalProperties": false,
+      "allOf": [{
+        "if": {"properties": {"decided_by": {"enum": ["rules_v0.6", "rules_v0.7"]}}, "required": ["decided_by"]},
+        "then": {
+          "required": ["passage_eligibility"],
+          "properties": {"confluency_profile": {"required": ["measurement_calibrated", "validated_scope", "action_eligibility"]}}
+        }
+      }, {
+        "if": {"properties": {"decided_by": {"const": "rules_v0.7"}}, "required": ["decided_by"]},
+        "then": {"required": ["decision"]}
+      }, {
+        "if": {"properties": {"schema_version": {"const": "0.8"}}},
+        "then": {"required": ["preprocessing"]}
+      }, {
+        "if": {"properties": {"schema_version": {"enum": ["0.7", "0.8"]}}},
+        "then": {"required": ["configuration_activation"]}
+      }, {
+        "if": {"properties": {"schema_version": {"enum": ["0.6", "0.7", "0.8"]}}},
+        "then": {
+          "required": ["decision_inputs", "decision", "passage_eligibility", "config_snapshot", "config_hashes", "capture_time_source", "analysis_started_at", "analysis_completed_at", "map_provenance", "confluency_map_hash"],
+          "properties": {"decided_by": {"const": "rules_v0.7"}},
+          "allOf": [{
+            "if": {"properties": {"capture_time_source": {"const": "unknown"}}},
+            "then": {"properties": {"captured_at": {"type": "null"}}},
+            "else": {"properties": {"captured_at": {"type": "string"}}}
+          }, {
+            "if": {"properties": {"map_provenance": {"properties": {"status": {"const": "captured"}}}}},
+            "then": {"properties": {"confluency_map_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}},
+            "else": {"properties": {"confluency_map_hash": {"type": "null"}}}
+          }]
+        },
+        "else": {"properties": {"captured_at": {"type": "string"}}}
+      }],
       "if": {
         "properties": {
           "schema_version": {
-            "const": "0.5"
+            "enum": ["0.5", "0.6", "0.7", "0.8"]
           }
         }
       },
@@ -664,7 +883,10 @@
           "type": "string",
           "enum": [
             "0.4",
-            "0.5"
+            "0.5",
+            "0.6",
+            "0.7",
+            "0.8"
           ]
         },
         "recorded_at": {
@@ -785,7 +1007,10 @@
           "type": "string",
           "enum": [
             "0.4",
-            "0.5"
+            "0.5",
+            "0.6",
+            "0.7",
+            "0.8"
           ]
         },
         "recorded_at": {

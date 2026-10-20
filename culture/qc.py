@@ -43,10 +43,8 @@ DEMOTED_LABEL = ("Trained on synthetic tiles; known not to transfer to this imag
 # ---------------------------------------------------------------------------
 
 def load_qc_config(path: str = QC_CONFIG_PATH) -> dict:
-    import yaml
-
-    with open(path) as f:
-        return yaml.safe_load(f)
+    from culture.provenance import load_yaml
+    return load_yaml(path)
 
 
 def rescale_factor(cfg: dict, multiplier: float | None = None, force: bool = False) -> float | None:
@@ -132,8 +130,12 @@ _calibration_loaded = False
 
 
 def _get_calibration():
-    """configs/calibration.yaml, loaded once (None if absent)."""
+    """Request-captured calibration; legacy callers retain the process cache."""
     global _calibration, _calibration_loaded
+    from culture.provenance import capturing_configs
+    if capturing_configs():
+        from culture.calibration import load_calibration
+        return load_calibration()
     if not _calibration_loaded:
         from culture.calibration import load_calibration
         _calibration, _calibration_loaded = load_calibration(), True

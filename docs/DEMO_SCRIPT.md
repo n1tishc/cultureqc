@@ -1,29 +1,120 @@
-# VP core demo (5 min)
+# VP core demo (5-minute target)
 
-This is the opening path for a VP evaluating a bounded, offline pilot. Use the
-stored website examples throughout. Label them **stored**; a live console run
-is optional corroboration and its queue or failure must never be presented as
-one of these stored results. Keep the technical script below for questions.
+This is the standalone product walkthrough for a VP considering a one-setup
+offline evaluation. Use the **stored website analyses**, not the live console.
+The timings below are a proposed run of show, **not a passed rehearsal**.
+I1–I4 and scoped V1/V2 checks are complete locally. Human screen-reader and
+real 200% zoom checks, plus the timed V3 rehearsal, remain pending.
+Nothing in this script establishes production readiness.
 
-| Time | Screen and action | Say |
+## Start and reset
+
+Use [the local homepage](http://127.0.0.1:5173/) with no example query. The
+expected opening is **Read the culture. Understand the next step.**, followed
+by the actual image/result workspace. Do not assume the public deployment
+contains these uncommitted changes.
+
+For a clean restart, navigate to `http://127.0.0.1:5173/` and reload the page.
+The default is **Measure coverage**, C2C12 mid density, with Segmentation
+selected. Within the workspace, **Reset** also restores this example and its
+contour-only view, even when it is already selected. A selection may add
+`?example=c2c12_normal_20_40#demo`; that is expected.
+
+If the server is not running, start it from the repository root with
+`npm --prefix site run dev -- --host 127.0.0.1 --port 5173 --strictPort`.
+Use the existing server if that port is already serving this project; do not
+start a second instance or stop an unrelated process.
+
+## Preflight before presenting
+
+- [ ] Confirm the local homepage and direct refreshes of `/records` and
+      `/validation` work. Verify the new opening and **Evaluate on your setup**
+      CTA rather than relying on a public-site bookmark.
+- [ ] Open both primary examples below. Confirm the microscopy image loads
+      and **Raw image** / **Segmentation** visibly remove/restore the cyan
+      contour. These controls annotate a stored analysis; they do not run a model.
+      Asset paths relative to the site root:
+      `img/v3/ex/c2c12_normal_20_40.webp`,
+      `img/v3/ex/c2c12_normal_20_40_contour.json`,
+      `img/v3/ex/evican_ht29.webp`,
+      `img/v3/ex/evican_ht29_contour.json`.
+- [ ] Check the fixture outputs: coverage **39.41%**, **CONTINUE**, no calibrated
+      error band; HT29 **52.91%**, band **23.51–82.31%**, target **80%**,
+      human-review recommendation. Keep each example's visible scope in view.
+- [ ] **Inspect this exact record** must select coverage record **4** at
+      `/records?record=c2c12_normal_20_40#chain`, or HT29 record **9** at
+      `/records?record=evican_ht29#chain`. Wait for verification to finish;
+      confirm both chain and checkpoint pass, not just that JSON is visible.
+- [ ] From the HT29 record, **Return to this reading** must open
+      `/?example=evican_ht29#demo`. Exercise browser Back/Forward between the
+      two analysis selections and check image, result and record link agree.
+      Reset before the audience joins.
+- [ ] Confirm `/records#integration`, `/#evidence`, `/validation#profiles`
+      and `/#pilot` resolve. Have the local source
+      [calibration protocol](../results/confluency_profiles.md) and
+      [host boundary](host_platform.md) available if source links are offline.
+- [ ] Label the run **stored research demonstration**. No live inference,
+      physical action, contamination clearance or compliant host integration
+      is being demonstrated. The separate live console is optional Q&A only.
+- [ ] Check the presenting viewport and text size manually. Earlier functional
+      checks passed, but automated screenshot capture timed out; visual signoff
+      is still pending. Start a fresh timer for the later V3 rehearsal.
+
+## Core click sequence
+
+Routes below are relative to `http://127.0.0.1:5173`.
+
+| Time | Screen, action and expected output | Short spoken prompt |
 | --- | --- | --- |
-| 0:00–0:35 | Start with the website's v2 → v4 comparison. | "v2 established the image-to-action workflow and already had hash-chained readings. v4 adds evaluation on real images, calibration by imaging setup, measured uncertainty for decision boundaries, and stronger provenance. These are not a matched v2/v4 accuracy test." |
-| 0:35–1:35 | Open [EVICAN HT29](https://cultureqc-cvoy.vercel.app/?example=evican_ht29#demo). | "This stored image reads 52.9%, with a 23.5–82.3% measured band around it and an 80% passage target. The band crosses the target, so the rules request a person. This demonstrates the uncertainty workflow. EVICAN's mixed-setup evaluation is not fully blind, and the anomaly bank is not calibrated for HT29." |
-| 1:35–2:05 | Switch to [sparse EVICAN PC3](https://cultureqc-cvoy.vercel.app/?example=evican_pc3#demo). | "The stored reading is 6.6%, band 0–36%, against the same 80% target. The stored action is continue. This is a scoped recommendation for the tested image, not a universal declaration that a culture is healthy or contamination-free." |
-| 2:05–2:35 | Switch to the [oversized-bacteria stress test](https://cultureqc-cvoy.vercel.app/?example=c2c12_contamination_1#demo). | "The action is re-image because the image-quality gate rejects this altered frame. The bacteria were pasted at 16.5 times real size. This is not evidence of realistic bacterial-contamination detection; at real size the anomaly test performed at chance on the tested setup." |
-| 2:35–3:25 | Follow the selected reading's exact record link to `/records?record=<example-id>#chain`. Check its input, profile, rules and hash. Toggle a local tamper mode, then **Reset local demonstration**. | "The browser re-hashes the stored reading and chain. This switch changes a temporary browser copy only. A rewrite or deleted tail requires the anchored checkpoint to reveal it. The chain has seven readings and two approved calibration changes; it has no human-review event." |
-| 3:25–4:10 | Show the MSC calibration result and the dense-range caveat. | "On 320 held-out MSC images, setup calibration reduced mean absolute error from 8.19 to 3.43 percentage points within this v4 evaluation. The passage decision range remains a separate limitation. The fine-tuned model is experimental and decides nothing in the shipped workflow." |
-| 4:10–5:00 | End at the pilot plan. | "The next decision is an offline evaluation on one of your imaging setups. You provide representative images, an intended target and independent labels. We freeze the protocol, measure setup error, early and missed passage, review and re-image burden, useful decided coverage and latency, then agree stop, gather-more or proceed criteria. No host actuation is proposed at this stage." |
+| 0:00–0:40 | Open `/` with no query. Point to the real image, adjacent measurement, recommendation and record link; click **Explore an analysis** to reach `/#demo`. | “cultureQC turns a microscopy image into a measurement, a rule-based recommendation and a record your team can inspect. These are stored results, not a live run.” |
+| 0:40–1:40 | Stay on **Measure coverage**, or click **Reset**. Switch **Raw image**, then **Segmentation**. Expect **39.41%**, **CONTINUE**, and the visible absent-band notice. | “The cyan contour shows what was counted. This reading has no calibrated error band. Continue is the stored rule result—not a health finding, contamination clearance or validated instruction to act.” |
+| 1:40–2:30 | Click **Understand a review boundary**. URL becomes `/?example=evican_ht29#demo`. Point to **52.91%**, **23.51–82.31%**, target **80%**, and human review. | “The band crosses the target, so the rules ask a person. This is mixed-setup EVICAN calibration, not fully blind, and the C2C12 anomaly bank is not calibrated for HT29. The band estimates measurement error; it does not validate an action.” |
+| 2:30–3:15 | Click **Inspect this exact record**. At `/records?record=evican_ht29#chain`, confirm record **9** is selected. Show verification, then **Follow this exception into an illustrative review**. Do not run tamper modes in the core path. | “This is the exact result. A review adds a new record pointing to it; it never edits the reading. This separate example uses a fictional reviewer, not a real approval or signature. Hash verification checks integrity, not biological validity or compliance.” |
+| 3:15–4:10 | Click top-nav **Integration** to `/records#integration`; point to supplied inputs, returned outputs and host responsibility. Then open `/#evidence` for the one MSC finding. | “The current interface is a Python call, not a deployed partner service. Your host owns capture, scheduling, identity, signatures, retention and action. On 320 MSC images, leave-one-population-out calibration gave 3.43 pp error versus 8.19 at the default cutoff. Only four images were dense; passage-range criteria were unmeasurable.” |
+| 4:10–5:00 | Click **Evaluate on your setup** to `/#pilot`. Show inputs, proposed readout and **Define the gate before starting**. | “The next decision is an offline evaluation on one setup: representative images, independent labels and an intended target. Before scoring, freeze the protocol and decision gate. Measure error, review and re-image burden, useful decision coverage and latency. Agree stop, gather-more or proceed—not actuation.” |
 
-If the live console is unavailable, stay with the labelled stored examples and
-their records. Do not describe those outputs as a fresh run. For technical
-questions, use the detailed script below and its cited source files.
+Recovery return path from Records: **Return to this reading** →
+`/?example=evican_ht29#demo`; then **Reset** if restarting the whole story.
+Use the header CTA for evaluation, not **Research live console**.
+
+## If the core path breaks
+
+| Failure | Honest recovery |
+| --- | --- |
+| Image or contour unavailable | Keep the selected identity; use **Retry media**. If only the contour fails, show **Raw image** and explicitly say the segmentation visual is unavailable. If the image fails, skip the visual demonstration and identify the remaining numbers as stored outputs. Do not silently substitute another sample. |
+| Unexpected/invalid example URL | Acknowledge the unavailable-example notice; use **Open coverage example**, then **Reset**, or navigate to the exact starting URL and reload. Check the intended ID before continuing. |
+| Verification pending, failed or no match | Do not claim success. On Records use **Retry verification**, or **Reset local demonstration** after tampering; reload if needed. If failure persists, say integrity could not be checked in this session and skip that claim. On the homepage, reload to retry. |
+| Website unavailable | Restore the local server or pause the interactive demo. Discuss the checked-in protocol and intended evaluation as documents; do not imply an unavailable visual, fresh analysis or verification was shown. |
+| External source/live console unavailable | Use the checked-in source documents. Keep the core path on the labelled stored website analyses. A stored result is never a successful fallback inference run. |
+| Time runs short | Skip optional Q&A, not the limitations or evaluation gate. Record the overrun; do not mark the five-minute rehearsal passed. |
+
+## Optional Q&A only
+
+- On Records, the three tamper switches change a temporary browser copy.
+  A simple edit breaks a hash; a full rewrite or deleted tail can pass the
+  chain-alone check but fail the anchored checkpoint. Use **Reset local
+  demonstration** and confirm original verification returns before leaving.
+- **More examples** retains all seven stored analyses. Synthetic stress
+  examples are labelled and are not evidence of realistic contamination
+  detection; they are not the centerpiece of the core walkthrough.
+- The fine-tuned model is experimental and decides nothing. The pooled
+  mCellSeg view is secondary, and the swapped primary comparison did not
+  replicate; use `/validation#dense` with its qualifications.
+- The **Research live console** is a separate surface. If used, identify a
+  fresh run explicitly and disclose failure or queueing as such. Host shadow
+  use must follow the [local host-evaluation contract](specs/host-evaluation.md)
+  and [release boundary](specs/release-state.md). Target-host validation,
+  commercial clearance and production integration remain separate gates.
+- The preserved technical appendix below is a longer console-specific
+  reference, not the current five-minute website sequence or a passed live
+  preflight. Check its historical service assumptions and source results
+  before using them in Q&A.
 
 # Technical appendix
 
-# Demo script (≈12 min)
+# Demo script (≈15 min)
 
-12 to 13 minutes of demo by the section times below, then questions. The
+15 to 16 minutes of demo by the section times below, then questions. The
 audience named two things that matter most, and the order follows them:
 **confluency QC** first, then the **GMP-traceable audit record**. Everything
 else supports those two.
@@ -31,10 +122,11 @@ else supports those two.
 Every number below is shown on screen by the console and comes from a stored
 result: the example numbers from `demo/examples/examples.json`, the replay
 numbers from `demo/replays/*.json`, and the rest from the `results/` files
-cited in the README. One exception, marked where it comes: in section 2, step 5,
-the calibration results are on the site's Validation page, not in the console;
-they come from `results/confluency_profiles.md` and
-`results/confluency_cutoff.md`. Say "precomputed" whenever a precomputed
+cited in the README. Two exceptions, marked where they come: in section 2,
+step 5, the calibration results, and in step 6, the sealed-test results, are
+on the site's Validation page, not in the console; they come from
+`results/confluency_profiles.md`, `results/confluency_cutoff.md`,
+`results/confluency_mcellseg.md` and `results/confluency_mcellseg_swap.md`. Say "precomputed" whenever a precomputed
 example or replay is on screen; say "live" only after pressing Analyze.
 
 ## Before the call
@@ -63,7 +155,7 @@ shown for review, a recommended action from fixed rules, and a hash-chained
 record. It is built for an instrument to call on every image it captures; a
 person steps in on exceptions and audits the trail.
 
-## 2. Confluency QC (4 min), Analyze tab
+## 2. Confluency QC (7 min), Analyze tab
 
 1. Click **C2C12 normal, 20-40% bin** (precomputed). Cellpose-SAM reads
    39.4%; the rules say continue (keep culturing). Point at the confluency
@@ -141,6 +233,46 @@ person steps in on exceptions and audits the trail.
      (median of 20 draws).
    - Each profile went live through a **change record** approved by the
      repository owner: the first two records of the stored chain (section 3).
+6. The fine-tuned demo set (3 min). The row of four buttons under the
+   examples, "Fine-tuned demo set". Press one, then **Analyze** (live; each
+   took 3.4–4.6 s in the first dry run of Space `712a9e54`, but one took
+   13.6 s: `results/space_dry_run_712a9e54.md`). Two cards appear: the shipped
+   reading, which decides as always, and the fine-tuned card, marked "not
+   validated · decides nothing", with the experts' value from the lab's own
+   outlines.
+   - Say what it is first: the same Cellpose-SAM model, fine-tuned on 79
+     labelled images from one public lab (mCellSeg). These four are test
+     images from that lab it never trained on. Its reading sits beside the
+     shipped one; the shipped reading and the rules still decide.
+   - The console's model, `mcellseg_ftF_r2`, is a retrain of the model scored
+     in the sealed test (same recipe, same 79 images; that one was not kept).
+     On the 90 test images the two read a mean absolute 0.23 pp apart, at most
+     1.52 pp (`results/confluency_finetune_figure.md`).
+   - The image opens on the **Shipped** view: green is what the shipped model
+     counted, yellow the experts' outline of every cell. Switch to
+     **Fine-tuned** to show the other model on the same outline.
+   - Running order, target 80%; this lab's microscopes have no calibration
+     profile. Readings from the dry run above, experts' values from
+     `results/confluency_mcellseg.csv`:
+     1. **HUVEC · CD7_09**: experts 77.3%; shipped 43.5% → continue;
+        fine-tuned 78.7%.
+     2. **HEK · FumGW**: experts 74.2%; shipped 56.1% → continue;
+        fine-tuned 75.4%.
+     3. **HEK · 5A**: experts 88.5%; shipped 84.3% → human review (no
+        calibration, so a reading at or above the target goes to a person);
+        fine-tuned 89.9%.
+     4. **HEK · FumGW z2, the failing case**: experts 77.9%; shipped 83.3% →
+        human review; fine-tuned 83.4%. Show it as a failure: the fine-tuned
+        reading is above the target, so if it decided it would call passage
+        early. On dense images it reads high: +4.91 pp at 60–90% in the sealed
+        test, missing its own ±3 pp mark.
+   - Where it stands (on the site's Validation page, not in the console;
+     `results/confluency_mcellseg.md`, `results/confluency_mcellseg_swap.md`):
+     on the 90 sealed test images, MAE 2.65 pp fine-tuned against 7.80 pp
+     for the calibration profile. With the halves swapped, the gain was not
+     replicated by the rule fixed beforehand. One lab, two cell lines. The
+     weights inherit Cellpose-SAM's non-commercial terms and are not
+     published.
 
 ## 3. The audit record (2 min)
 
@@ -312,5 +444,9 @@ That is estimated, never replayed, and needs confirming on their data.
   full frame is minutes (V9), so don't press Analyze on CPU.
 - **3D view is blank:** WebGL is off in that browser; use the 2D overlay and
   the curve, and describe the 3D view from the note text.
+- **The fine-tuned demo-set buttons are missing:** the Space did not get the
+  weights at startup, so the demo set is off. Skip section 2, step 6, and show
+  the before/after figure on the site's Validation page (`/validation#dense`)
+  instead; say it is a stored figure, not a live reading.
 - **Asked for an accuracy number not on screen:** point to the README's
   provenance table; don't quote from memory.

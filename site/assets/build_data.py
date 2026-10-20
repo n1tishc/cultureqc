@@ -274,6 +274,31 @@ def example_checkpoint(records):
     return cp
 
 
+def build_review_demo(records, reading):
+    import tempfile
+    from culture.records import RecordWriter, checkpoint, review_event, verify_chain
+
+    stamp = "2026-10-19T00:00:00+00:00"
+    event = review_event(
+        reading, "illustrative-reviewer", "Illustrative reviewer (not a real person)",
+        "review", "accept", "human_review",
+        reason="Illustrative only: retain human review while setup-specific evidence is gathered. No approval or physical action.",
+        signed_at=stamp,
+    )
+    event.update(record_id="illustrative-ht29-review", recorded_at=stamp)
+    with tempfile.TemporaryDirectory() as directory:
+        log = os.path.join(directory, "illustrative-extension.jsonl")
+        with open(log, "w") as stream:
+            stream.writelines(json.dumps(record, sort_keys=True) + "\n" for record in records)
+        event = RecordWriter(log).append(event)
+        anchor = checkpoint(log, scope="illustrative-review-extension-only")
+        anchor["created_at"] = stamp
+        assert verify_chain(log, checkpoint=anchor).ok
+    return {"reading_id": "evican_ht29", "illustrative": True,
+            "record": {"canonical": canonical(event), "record_hash": event["record_hash"]},
+            "checkpoint": anchor}
+
+
 def build_examples(img_dir):
     src = json.load(open(rel("demo", "examples", "examples.json")))
     by_id = {e["id"]: e for e in src["examples"]}
@@ -330,7 +355,9 @@ def build_examples(img_dir):
             "record": {"index": chain_order.index(ident) + 1, "canonical": canon,
                        "record_hash": rec["record_hash"], "prev_record_hash": rec["prev_record_hash"]},
         })
+    records = changes + [example["record"] for example in src["examples"]]
     return {"items": out, "changes": change_items, "chain_order": chain_order, "generated_by": src["generated_by"],
+            "review_demo": build_review_demo(records, by_id["evican_ht29"]["record"]),
             "checkpoint": example_checkpoint(changes + [e["record"] for e in src["examples"]])}
 
 

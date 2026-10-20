@@ -19,3 +19,16 @@ def requires(*modules):
 def require_module(name):
     """Module-level skip for a test file that imports `name` at the top."""
     return pytest.importorskip(name, reason=f"needs {name} (not installed in CI)")
+
+
+def synthetic_passage_profile(band_pp=5.0):
+    """Rule-only fixture. These invented approvals are not scientific evidence."""
+    from culture.profiles import Profile
+
+    context = {"setup_id": "synthetic-setup-v1", "cell_line": "synthetic-line", "model_sha256": "a" * 64}
+    entry = {"cutoff": 0.0, "band_pp": band_pp, "status": "validated",
+             "acceptance": {name: "pass" for name in ("A1", "A2", "A3", "A4", "A5")},
+             "validated_scope": {**context, "reading_range_pct": [0, 100], "target_range_pct": [80, 80]},
+             "action_eligibility": {"status": "eligible", "reason": "Synthetic rule fixture only",
+                                    "approval_ref": "synthetic-not-biological-validation"}}
+    return Profile("synthetic", 0.0, band_pp, "validated", "Synthetic fixture", entry=entry), context

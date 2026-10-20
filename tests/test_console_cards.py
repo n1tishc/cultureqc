@@ -83,9 +83,22 @@ def test_the_stored_examples_show_their_records_reason(app):
     ex = next(e for e in precomputed.load() if e["id"] == "evican_ht29")
     out = app.show_example(ex)
     assert "within its error band (±29.4 pp)" in out.split("audit-json")[0]
+    assert "Historical policy replay" in out and "Not current authorization" in out
     assert "Not flagged" in out                                # EVICAN is not the anomaly check's setup
     c2c12 = app.show_example(next(e for e in precomputed.load() if e["id"] == "c2c12_normal_40_100"))
     assert "Within the normal range" in c2c12 and "anomaly-scope" not in c2c12
+
+
+def test_measurement_card_separates_calibration_and_action_approval(app):
+    from culture.profiles import get_profile
+
+    profile = get_profile("msc_phase")
+    record = {"confluency_profile": profile.record_fields(), "confluency_interval": profile.interval(90),
+              "passage_eligibility": profile.passage_eligibility(90, 80)}
+    card = app.confluency_card(record, 90, .9, "probmap", 80, 0)
+    assert "measurement calibrated" in card
+    assert "automatic passage is not supported" in card
+    assert "90.0" in card and "7.1 pp" in card
 
 
 def test_anomaly_card_off_its_reference_line(app):

@@ -84,10 +84,11 @@ def test_classifier_calibrated_and_demoted(record):
     assert record["qc_used_in_decision"] is False
     assert record["qc_evidence_bbox"] is None                     # no Grad-CAM while demoted
     assert "QC flag" not in record["action_reason"]
-    assert record["qc_rationale"].startswith("Confluency ")
-    assert set(record["config_hashes"]) == {"qc.yaml", "calibration.yaml", "detectability.yaml", "anomaly.yaml",
-                                            "confluency_profiles.yaml", "quality.yaml", "approved_changes.jsonl",
-                                            "finetuned_models.yaml"}
+    assert record["qc_rationale"] == record["action_reason"]
+    assert {os.path.basename(path) for path in record["config_hashes"]} == {
+        "qc.yaml", "calibration.yaml", "anomaly.yaml", "confluency_profiles.yaml"}
+    assert record["captured_at"] is None and record["capture_time_source"] == "unknown"
+    assert record["map_provenance"]["status"] == "captured"
 
 
 def test_shipped_weights_checked_against_the_approvals_log(record):
@@ -104,12 +105,12 @@ def test_anomaly_recorded_and_an_input_to_the_rules(record):
     # the rules (it holds a passage) whenever the check ran.
     assert record["anomaly_status"] in {"ok", "unavailable"}
     assert record["anomaly_used_in_decision"] is (record["anomaly_status"] == "ok")
-    assert record["decided_by"] == RULES_VERSION == "rules_v0.5"
+    assert record["decided_by"] == RULES_VERSION == "rules_v0.7"
     if record["anomaly_status"] == "ok":
         assert record["anomaly_flag"] == (record["anomaly_score"] > record["anomaly_threshold"])
         assert record["model_versions"]["dino"] == "facebook/dinov2-small"
-    # the rationale mentions the anomaly check exactly when it flagged the image
-    assert ("anomaly check flagged" in record["qc_rationale"]) is bool(record["anomaly_flag"])
+    assert record["decision"]["checks"]["anomaly"]["status"] == (
+        "unavailable" if record["anomaly_status"] != "ok" else "failed" if record["anomaly_flag"] else "passed")
 
 
 def test_reading_names_its_profile_and_hashes_the_weights(record):

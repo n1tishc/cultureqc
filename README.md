@@ -2,10 +2,15 @@
 
 **One brightfield image in. Confluency, an anomaly check, a recommended action, and a record you can verify.**
 
-[v0.4 site](https://cultureqc-cvoy.vercel.app) · [Review console](https://huggingface.co/spaces/LongGrainRice/cultureqc-console) · [v0.2 site (superseded — its headline numbers were synthetic)](https://cultureqc.vercel.app) · [v0.2 API](https://longgrainrice-cultureqc-api.hf.space/docs) (still runs v0.2: `schema_version` 0.2)
+[v0.4 site](https://cultureqc-cvoy.vercel.app) · [Review console](https://huggingface.co/spaces/LongGrainRice/cultureqc-console) · [v0.2 site (superseded — its headline numbers were synthetic)](https://cultureqc.vercel.app) · [Legacy v0.2 API](https://longgrainrice-cultureqc-api.hf.space/docs) (local API source returns schema `0.2`; remote revision and schema not freshly verified)
 
 [![tests](https://github.com/n1tishc/cultureqc/actions/workflows/tests.yml/badge.svg?branch=slice-1b-compute-cache)](https://github.com/n1tishc/cultureqc/actions/workflows/tests.yml?query=branch%3Aslice-1b-compute-cache)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
+**Code licence: MIT.** This covers repository code, not all models, weights,
+datasets or derived artifacts. The pipeline as built is **not cleared for
+commercial use pending review**; see the [component terms and status](#licences-and-commercial-use)
+and [release-state boundary](docs/specs/release-state.md).
 
 cultureQC reads a phase-contrast image of a cell culture and returns a
 confluency estimate, a per-image anomaly check, a recommended action and a
@@ -13,15 +18,24 @@ hash-chained audit record, from a single call. A QC classifier also runs, but
 it is **demoted**: recorded, not used for the action (see
 [Known limits](#known-limits)).
 
+The current local library emits schema `0.8` with `rules_v0.7`. Its decisions
+are advisory (`host_actionable: false`); no returned action authorizes a host
+operation. All shipped calibration profiles lack automatic-passage approval.
+The site's seven stored readings remain historical schema `0.4` /
+`rules_v0.5`, with their original measurements and hashes. See the
+[offline host evaluation contract](docs/specs/host-evaluation.md) and
+[release-state boundary](docs/specs/release-state.md) for local versus deployed
+identity and the host's responsibilities.
+
 ```python
 from culture.pipeline import analyze
 
 record = analyze("field.tif", flask_id="F-01", cell_line="Huh7")
 record["confluency_pct"]            # 13.45
 record["anomaly_flag"]              # True / False: shown for review; a flag holds a passage
-record["anomaly_used_in_decision"]  # True whenever the check ran (rules_v0.3)
+record["anomaly_used_in_decision"]
 record["qc_used_in_decision"]       # False while the classifier is demoted
-record["recommended_action"]        # "passage" / "feed" / "continue" / "human_review"
+record["recommended_action"]        # "passage" / "feed" / "continue" / "human_review" / "reimage"
 record["record_hash"]               # sha256 over the canonical JSON, linked to the previous record
 ```
 
@@ -64,8 +78,9 @@ real phase-contrast sequences under a tuning/held-out split, and showed where
 it breaks. It is not data from a production culture instrument: one cell line,
 one microscope, three experiments. Cadence, FOVs per visit and FOV size are assumptions. Faults
 are simulated, and held-out has 2 sequences per fault type. Confluency "truth"
-for C2C12 is Cellpose-SAM's own full-frame reading, which V1 found reads about
-8 pp low.
+for C2C12 is Cellpose-SAM's own full-frame reading. This evidence set has no
+independent C2C12 confluency labels; V1's observed EVICAN bias does not establish
+a correction for C2C12.
 
 **What changed because of it** (owner decisions, 2026-09-26):
 
@@ -101,6 +116,8 @@ checks that every number in the "Number" column appears in its source file.
 | Confluency error, v0.2 headline (superseded) | 2.3 pp vs ~31 pp for thresholding, measured on synthetic tiles | synthetic | `results/v02_headline.md` |
 | Confluency error, EVICAN calibration profile (`evican_mixed`, live since `rules_v0.5`; not fully blind, see Known limits) | MAE 8.36 → 3.78 pp on the same 33, cutoff −3.5 picked on the other 65 eval2019 images; off by more than 10 pp: 13 → 3 | real (EVICAN) | `results/confluency_cutoff.md` |
 | Confluency error per imaging setup, calibration profiles (pre-registered, held-out images) | MSC 8.19 → 3.43 pp (320 images in 3 populations, each tested with the profile fitted on the others), 90% band ±7.11 pp; EVICAN 8.36 → 3.78 pp (n = 33, not fully blind), band ±29.40 pp; LIVECell in-domain check 2.14 → 2.05 pp (n = 756) | real (MSC, EVICAN, LIVECell) | `results/confluency_profiles.md` |
+| Confluency in the passage range, sealed held-out test (mCellSeg: 90 images, 22 at 60–90%; split, method and pass marks committed before any image was read) | MAE, all images: calibration profile (the shipped method) 7.80 pp, fine-tuned then calibrated 2.65 pp; at 60–90%: 9.67 vs 5.21 pp, a difference of +4.45 pp (95% interval +0.83 to +7.94). The fine-tuned model missed two of its own marks at 60–90%: MAE 5.21 against 5, and it reads +4.91 pp high. It decides nothing | real (mCellSeg) | `results/confluency_mcellseg.md` |
+| The same test with the halves swapped (79 images, 13 at 60–90%) | Fine-tuned met all five marks (MAE 1.71 pp; 2.55 pp at 60–90%), but the difference at 60–90%, +4.84 pp (95% interval -0.80 to +12.29), includes zero: not replicated by the rule fixed beforehand | real (mCellSeg) | `results/confluency_mcellseg_swap.md` |
 | FOV sampling noise, 0.25-frame field | σ_fov = 2.828 + 0.2072 × confluency | real (C2C12) | `results/growth_signal_summary.md` |
 | Growth step ÷ FOV noise (V2) | 0.35 / 0.65 at 1 FOV; 0.61 / 1.12 at 3 FOVs (6 h / 12 h) | real, simulated visits | `results/growth_signal_summary.md` |
 | Passage forecast, 6 h visits, 3 FOVs (V3) | median absolute error 9.0 h; 90% interval covered 4/5 (n = 5 sequences, 50% target) | real, simulated visits | `results/growth_backtest.md` |
@@ -140,9 +157,9 @@ drove, and the proof cannot drift apart.
 |---|---|
 | **Confluency** | Cellpose-SAM (`cpsam_v2`) probability map, counted above the cutoff of the imaging setup's calibration profile (`configs/confluency_profiles.yaml`), with the profile's 90% error band recorded as `confluency_interval`. At Cellpose's default cutoff it is 8.35 pp mean absolute error on real held-out EVICAN images, reading low (V1); with the EVICAN profile, 3.78 pp (not fully blind, [below](#known-limits)). A setup with no profile is read at the default cutoff, with no band. A threshold baseline is computed alongside for comparison. The record also keeps the **boundary ambiguity**, the share of pixels near the cutoff (min(1, 4 × share within ±1 logit); stored as 1 − it in `confidence`). It does not predict the reading's error ([below](#known-limits)), and since `rules_v0.5` it no longer decides. |
 | **Anomaly check** | DINOv2-small patch distances on the 256 px centre tile against banks of normal C2C12 patches, one per confluency bin; flag = score above the bin's 5%-FPR threshold, with a patch heatmap (`culture/anomaly.py`, `configs/anomaly.yaml`). Shown for review; a flag turns `passage` into `human_review` (continue and feed unchanged). Uncalibrated outside the tested imaging setup; see [Site calibration](#site-calibration). |
-| **Action** | Deterministic rules (`rules_v0.5`) over confluency and its error band, timing, the quality gate and the anomaly flag (plus the QC flag only when the classifier is not demoted): `passage`, `feed`, `continue`, `human_review`, `reimage`. No model decides this. A passage needs the reading's 90% band to clear the target; a band that includes the target, or a reading at the target from a setup with no calibration profile, goes to a person; an image that fails its setup's quality gate returns `reimage` ([CHANGELOG](CHANGELOG.md)). |
+| **Action** | Deterministic advisory rules (`rules_v0.7`) over confluency and its error band, timing, quality and anomaly checks, and explicit decision scope: `passage`, `feed`, `continue`, `human_review`, `reimage`. A passage candidate requires a band clearing the target, approved matching setup/model/cell-line and decision range, elapsed passage timing and available required checks. All shipped profiles lack that approval. Unknown timing and unavailable checks remain explicit; a failed quality gate returns `reimage`. Every output has `host_actionable: false`; even a passage candidate is not a host command. Historical stored readings use `rules_v0.5` ([policy contract](docs/specs/host-evaluation.md)). |
 | **QC classifier (demoted)** | EfficientNet-B0 over the centred 256 px tile: `normal`, `contamination_suspected`, `detachment`, `image_quality`. Trained on synthetic tiles only; accuracy 0.9801 on synthetic test tiles, but 5.0% of real held-out C2C12 normal frames are called normal. Temperature-scaled (`configs/calibration.yaml`). Recorded and shown collapsed; not used for the action, and no Grad-CAM evidence is drawn while demoted (`configs/qc.yaml`). |
-| **Record** | Appended to a hash-chained JSONL log (`culture/records.py`; schema in `culture/schema.json`: a 49-field reading, and reviews and profile changes as their own record types), with the model versions and the SHA-256 of every config it used. The console's records also carry `confluency_map_hash`, the SHA-256 of the Cellpose-SAM map the confluency was counted from (1/4 resolution, int16), so the 3D view below can be checked against the record. Every record carries the SHA-256 of the one before it. Editing a record breaks its own hash or, if that hash is recomputed, the next link. Rewriting every later record, or deleting the newest ones, is caught only against an anchored checkpoint: the record count and head hash, stored outside the log ([audit mapping](docs/audit_mapping.md#the-chain)). |
+| **Record** | Appended to a hash-chained JSONL log (`culture/records.py`; current schema `0.8` in `culture/schema.json`, with readings, reviews and profile changes as separate record types), with model and consumed-configuration provenance. Historical stored readings retain schema `0.4`. The console's records also carry `confluency_map_hash`, the SHA-256 of the Cellpose-SAM map the confluency was counted from (1/4 resolution, int16), so the 3D view below can be checked against the record. Every record carries the SHA-256 of the one before it. Editing a record breaks its own hash or, if that hash is recomputed, the next link. Rewriting every later record, or deleting the newest ones, is caught only against an anchored checkpoint: the record count and head hash, stored outside the log ([audit mapping](docs/audit_mapping.md#the-chain)). Integrity checks do not establish scientific validity, reviewer identity, signatures or compliance. |
 
 ```bash
 python -m culture.records verify events.jsonl                  # the chain alone
@@ -212,6 +229,22 @@ criterion their test images could measure; neither set has test images in the
 60–90% band, so accuracy there is still untested. The C2C12 microscope of the
 examples and replays has no labelled images, so it stays uncalibrated.
 
+The passage range was then tested on its own, on a dense dataset published
+after Cellpose-SAM: mCellSeg (CC BY 4.0), hand-outlined HEK-293T and HUVEC
+images from one lab. Split, method and pass marks were committed before any
+image was read, and the test was scored once. With a calibration profile, the
+shipped method read 9.67 pp off at 60–90% and sent 17 of the 22 images at
+60–100% to a person. A model fine-tuned on that lab's other images read
+5.21 pp off, but it reads high on dense images and missed two of its own
+marks. With the two halves swapped, the gain was not replicated by the rule
+fixed beforehand ([`results/confluency_mcellseg.md`](results/confluency_mcellseg.md),
+[`results/confluency_mcellseg_swap.md`](results/confluency_mcellseg_swap.md),
+and the site's [validation page](https://cultureqc-cvoy.vercel.app/validation#dense)).
+The fine-tuned model is evidence for a lab training its own model, not a
+product change: in the console it reads four of that lab's test images beside
+the shipped reading, marked not validated, and decides nothing
+([`docs/FINE_TUNING.md`](docs/FINE_TUNING.md)).
+
 ## Measurement noise
 
 Moving the field of view on the same flask changes the confluency reading even
@@ -270,9 +303,11 @@ never replayed**.
 - **Analyze**: upload an image, or pick one of the precomputed examples (real
   C2C12 frames: normal, a simulated-contamination stress test with bacteria
   16.5× too large, and a frame with the bacteria at real size; and two EVICAN
-  images). Examples come from `scripts/export_demo_examples.py`, which runs
-  each image once through the same code as the Analyze button
-  (`demo/analysis.py`) and stores the outputs in `demo/examples/`. They show
+  images). Examples come from `scripts/export_demo_examples.py`, which uses
+  the Analyze path (`demo/analysis.py`) and stores outputs in `demo/examples/`.
+  The committed examples preserve their original schema `0.4` / `rules_v0.5`
+  runs; live analysis now uses the local schema `0.8` / `rules_v0.7` contract
+  and can return a different advisory outcome. Stored examples show
   instantly with no model loaded and are labelled as precomputed. Pressing
   Analyze runs the image live. The **3D** view draws the Cellpose-SAM
   cell-probability map as a surface: height is the map's logit, not cell
@@ -280,6 +315,17 @@ never replayed**.
   plane are counted as cell, and the borderline band around it is what sets
   the boundary ambiguity. The view recomputes the map's SHA-256 and shows whether it
   matches the record's `confluency_map_hash` (`demo/confluency_3d.py`).
+  Under the examples, the **Fine-tuned demo set** buttons load four mCellSeg
+  test images. Each gets the shipped reading, which decides as always, and a
+  second reading from a fine-tuned model (`mcellseg_ftF_r2`, a retrain of the
+  model scored in the passage-range test below, within 1.52 pp of it on its 90
+  test images: `results/confluency_finetune_figure.md`), marked not validated
+  and deciding nothing, with the experts' value from the lab's own outlines. The
+  **Shipped** and **Fine-tuned** views draw each model's counted pixels under
+  the experts' outline. Any other image, a changed copy of one of the four
+  included, gets no fine-tuned reading. The Space downloads the weights at
+  startup from a private model repo, and without them the demo set is off
+  (`demo/lab_demo.py`, `docs/FINE_TUNING.md`).
 - **Flask Timeline**: the five precomputed replays above, as a curve or in
   **3D space × time**: one layer per visit, showing where the frame's map
   counts cell, with the 3 FOV crops the visit's number came from. The maps
@@ -383,22 +429,28 @@ images, and a quarter-resolution sweep showing the evaluation curve was seen
 before the rule was written. The rule picked −3.5, which is not the
 evaluation-best (−3.0 gives 3.40 pp); calibration MAE is flat from −3.5 to −2.5
 (6.95–7.00 pp). The 33 are all under 500,000 px, while 28 of the 65
-calibration images are larger. Since `rules_v0.5` (owner approval, 2026-10-04)
-it is live as the `evican_mixed` profile, with a 90% error band of ±29.4 pp
+calibration images are larger. Introduced with `rules_v0.5` (owner approval,
+2026-10-04), the `evican_mixed` profile has a 90% error band of ±29.4 pp
 (`results/confluency_profiles.md`): several calibration images are read far off
-(one at 2% against 65%), so at an 80% target any EVICAN reading of 50.6% or
-more goes to a person. What it moved has been handled: the boundary-ambiguity
+(one at 2% against 65%). Under that historical policy, at an 80% target the
+band sends readings of 50.6% or more to a person when passage timing permits.
+The current policy also requires approved scope and available required checks;
+this profile lacks automatic-passage approval. The boundary-ambiguity
 trigger no longer decides, and the anomaly check still picks its density bin
 from the reading at the default cutoff, which its banks were calibrated on.
 
 **The passage band is unvalidated.** C2C12 "50%" is 50% as Cellpose-SAM reads
-it, about 8 pp below true coverage (V1), and no held-out sequence reaches
-60–80%. The forecast interval also leaves out model-selection uncertainty: the
+it; independent labels are unavailable here, so its error against true coverage
+is unknown. EVICAN's V1 bias is not a C2C12 correction. No held-out sequence
+reaches 60–80%. The forecast interval also leaves out model-selection uncertainty: the
 bootstrap refits only the AIC-chosen model, which understates the interval when
 logistic and Gompertz are close.
 
-**The Analyze tab runs no quality gate.** The gate (and REIMAGE) runs in the
-replays only, so a dimmed or blurred single image is not flagged there.
+**Quality gates are setup-specific.** Local Analyze (`demo/analysis.py`) and
+the library run the configured C2C12 gate for `c2c12_ker2018`; a failed gate
+returns `reimage`. Other shipped profiles have no configured quality gate and
+record it as unavailable, not passed. Under `rules_v0.7`, image quality is a
+required passage check; an unavailable gate cannot support a passage candidate.
 
 **Analysis is slow on CPU.** Cellpose-SAM is almost all of it: 230 s for a
 704×520 image and 689 s for a 1392×1040 C2C12 frame on an Apple M2 Pro limited
@@ -481,9 +533,11 @@ cd site && npm install && npm run dev   # http://localhost:5173
 (`tests/test_claims.py`), the provenance check on this README, replay and
 example invariants, and one real-pipeline smoke test
 (`tests/test_smoke_pipeline.py`). Tests that need the local compute cache or the
-fetched C2C12 frames skip without them. One check (`test_record_matches_schema`)
-is a documented `xfail`: `culture/schema.json`'s `confluency_method` enum and
-its missing `record_hash` property don't match what the pipeline writes.
+fetched C2C12 frames skip without them. No test is marked as an expected
+failure: the schema `xfail` was removed when `culture/schema.json` was aligned
+with what the pipeline writes (`ea63b3f`). CI runs without model weights or the
+compute cache; its last run on this branch (`38181662562`, 2026-10-11) passed
+274 Python tests with 37 skipped, and 28 API tests.
 
 The API tests cover readiness, input validation, the response contract, the
 evidence-box arithmetic, CORS, and that concurrent uploads cannot break the hash
@@ -501,13 +555,16 @@ The v0.2 site and its API Space are left as they are. See
 
 ### The frontend
 
-React 18 on Vite, in `site/`: three pages (home, `/validation`,
-`/release-notes`) that show the pipeline's stored output for real frames. Each
+React 18 on Vite, in `site/`: home, `/validation`, `/records` and
+`/release-notes` show the pipeline's stored output for real frames. Each
 example with the layers Cellpose-SAM and the anomaly check computed, its
 reading, error band and action; the five flask replays; the detectability
-matrix; V1–V10; the stored chain's nine records (two approved profile changes,
-then seven readings), re-hashed in the browser; and release notes from v0.2 to
-v0.4. Live analysis is a link to the console
+matrix; V1–V10; and release notes from v0.2 to v0.4. The original nine-record
+chain (two profile-change records, then seven readings) remains unchanged and
+is re-hashed in the browser. A separate illustrative extension adds one schema
+`0.8` review event linked to the stored HT29 reading. Its fabricated reviewer
+identity is explicitly illustrative, not a real approval or signature;
+`final_action: human_review` authorizes no actuation. Live analysis is a link to the console
 Space. Every number comes from `site/src/data.json`, which
 `site/assets/build_data.py` generates from the repo's output; `site/README.md`
 has the layout.
@@ -536,6 +593,8 @@ left uncalibrated (`rules_v0.5`, 2026-10-04).
 - **EVICAN:** *Bioinformatics* 36(12):3863–3870 (2020), CC BY 4.0. Real-image confluency validation (V1) and two examples.
 - **LIVECell:** Edlund et al., *Nature Methods* 18:1038–1045 (2021), CC BY-NC 4.0. Backgrounds of the synthetic classifier tiles.
 - **DeepBacs** *E. coli* brightfield images ([Zenodo 5550935](https://zenodo.org/records/5550935)): the pasted contamination sprites.
+- **mCellSeg:** Alam, Jackson, Lord & Meijering, *Computer Methods and Programs in Biomedicine* (2026), data [doi:10.5281/zenodo.20174259](https://doi.org/10.5281/zenodo.20174259), CC BY 4.0. The passage-range test, the fine-tuned model and the console's four demo-set images.
+- **MSC phase contrast:** Solopov et al., *Int J Mol Sci* 26(5):2338 (2025), doi:10.3390/ijms26052338; data on Kaggle (`maximsolopov/msu-smooth-1-20`), CC BY-NC-SA 4.0. The `msc_phase` calibration profile.
 - **Models:** Cellpose-SAM (`cpsam`), DINOv2-small (`facebook/dinov2-small`), EfficientNet-B0 via `timm`.
 
 ## Licences and commercial use
@@ -558,6 +617,9 @@ verbatim, and `field: value` is the source's own metadata.
 | DeepBacs *E. coli* brightfield: the contamination sprites | CC BY 4.0 | Yes, with attribution | [Zenodo record 5550935](https://zenodo.org/records/5550935) ("DeepBacs – Escherichia coli bright field segmentation dataset") `license: cc-by-4.0` |
 | EVICAN: V1 validation, two examples, `test-data/evican_*.jpg` | CC BY 4.0 | Yes, with attribution | Dataverse API for `doi:10.17617/3.AJBV1S`: `"license":{"name":"CC BY 4.0"}` (`docs/DATASETS.md`) |
 | C2C12 time-lapse: replays, anomaly banks, examples | CC BY 4.0 | Yes, with attribution | [OSF project `ysaq2`](https://osf.io/ysaq2/) licence: "CC-By Attribution 4.0 International" |
+| mCellSeg images: the passage-range test, the fine-tuned model's training images, the console's four demo-set images | CC BY 4.0 | Yes, with attribution | `docs/DATASETS.md` (Zenodo doi:10.5281/zenodo.20174259) |
+| MSC phase-contrast images: the `msc_phase` calibration profile's cutoff and band were fitted on them | CC BY-NC-SA 4.0 (the Kaggle copy) | **Not cleared for commercial use pending review**; the images are not redistributed | `docs/DATASETS.md` (Kaggle `maximsolopov/msu-smooth-1-20`) |
+| Fine-tuned Cellpose-SAM weights (`mcellseg_ftF_r2`): the console's demo set only, deciding nothing | Fine-tuned from the Cellpose-SAM weights above, so they inherit those terms | **Not cleared for commercial use pending review**; not published (private model repo) | As the Cellpose-SAM weights row; `docs/FINE_TUNING.md`, `configs/finetuned_models.yaml` |
 
 **The pipeline as built is not cleared for commercial use pending review.**
 Every confluency reading comes from the Cellpose-SAM weights, and the demoted

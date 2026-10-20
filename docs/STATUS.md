@@ -1,5 +1,30 @@
 # cultureQC — upgrade status
 
+## Current local handoff (2026-10-20)
+
+Use [current product guidance](PRODUCT.md), the [technical backlog](reviews/2026-10-15-v4-vs-v2-agent-backlog.md),
+and the [release-state map](specs/release-state.md) for present behavior.
+T03–T12 are implemented locally; [T12 verification and remaining gates](reviews/2026-10-20-proof-journey-and-current-guidance.md)
+record the proof-journey checks. After the approved browser update,
+[fresh desktop/mobile review captures and chain-link scrolling checks](reviews/2026-10-20-proof-visual-acceptance.md)
+pass; the pointer regression no longer uses an explicit-scroll workaround.
+Local runtime: schema `0.8`, `rules_v0.7`, advisory outputs with `host_actionable: false`.
+Historical website readings remain schema `0.4` / `rules_v0.5`; an illustrative review extends a separate copy only.
+The owner authorized a push to `slice-1b-compute-cache` and its v4 website
+deployment on 2026-10-20. This does not authorize merging to `main`, publishing
+the console/API Spaces, or closing human/scientific gates. Remote state must
+still be verified against the published commit.
+Human screen-reader/real 200% zoom checks and V3 timed rehearsal remain pending;
+[T02's first cached-policy replay](reviews/2026-10-20-matched-policy-replay.md) is
+implemented locally on 33 reused EVICAN images, not an end-to-end model benchmark.
+The [C2C12 workload-only companion](reviews/2026-10-20-c2c12-workload-replay.md)
+also runs locally on 1,228 frames, preserving 14 sequence / 3 experiment groups.
+T02 remains partial: independent target-range, detector and pilot evidence and
+authenticated model provenance remain separate work. Human acceptance is the
+next local gate before V3, deliberately pending by request; it does not authorize
+new model computation or publishing.
+The chronological log below preserves dated evidence and approvals, not current operating instructions.
+
 Governing spec for Phase A: `cultureQC_upgrade_spec.md` (v3.1). Checked against
 the repo on branch `slice-1b-compute-cache`, starting from `e86ce93`, on
 2026-09-25; updated 2026-09-26 after `nb/03` and the A2 fleet, and from
@@ -54,11 +79,10 @@ in three jobs:
   `site/src/data.json` regenerated from the repo with no diff.
 - **Python tests:** `pytest tests` **without** torch, cellpose, gradio or the
   compute cache. Tests that need one skip with a stated reason
-  (`tests/conftest.py`). On a clean clone: 177 passed, 21 skipped: 7 test
-  files need torch or gradio at import (smoke pipeline, live calibration,
-  console ZeroGPU, segmentation device, replays, replay maps, 3D views),
-  7 more tests need torch or gradio inside, and 7 need the compute cache or
-  downloaded data.
+  (`tests/conftest.py`). Last run on this branch (`38181662562`, 2026-10-11,
+  at `2cd691a`): Python 274 passed, 37 skipped; API contract 28 passed. (When
+  this section was first written, in the pre-freeze pass: 177 passed, 21
+  skipped.)
 
 So CI does **not** run the model: the smoke pipeline, cache parity, live
 calibration and the console run only locally, where the full suite was
@@ -97,9 +121,10 @@ any new image was scored. Details: `CHANGELOG.md`.
 | Fast-forwarded into `slice-1b-compute-cache` and pushed (owner approved) | `100b535` | Site redeployed as v0.4; checked in a browser at 1440 and 390 px: 9 of 9 records verify, the tamper switches are caught, HT29 shows its band and Human Review, no page errors |
 | CI fix (owner approved the push) | `9d5d43f` | The site job failed on `100b535`: `site/assets/build_data.py` imported `demo/replay_timeline.py`, which needs matplotlib, and that job installs only numpy and pyyaml. The script keeps its own copy of the replays' setup; `tests/test_replay_notes.py` keeps the two equal. All three CI jobs green |
 
-Still open: the console Space's own README still quotes the 2026-09-29
-latency, labelled as measured before the profiles; it is refreshed on the
-next publish.
+The console Space's own README (its card) was refreshed by later publishes;
+as of 2026-10-15 it cites the dry runs of `98656277`. The text citing
+`712a9e54`'s runs is in `deploy/hf-space-demo/README.md` and reaches the Space
+with its next publish.
 
 ## Repository cleanup (branch `repo-cleanup`, 2026-10-04)
 
@@ -125,6 +150,8 @@ both Space folders) and the untracked local files.
 | Check run on Colab (nb/11 Part A, L4, bundle `643e557`) | — | All weights checks `match`; anomaly check `ok`, no flag, on all four; readings within 0.13 pp of the product-path records |
 | Weights uploaded by the owner to the private repo `LongGrainRice/cultureqc-finetuned` | — | Private; the Hub's SHA-256 is the approved `2d1549682c1d…` |
 | Console Space republished (owner approved; the owner ran the publish) | Space commit `3b935ea6` | Startup log: demo set on, weights downloaded and `match`, 4 of 4 images, banks verified, models loaded in 61.6 s. Dry run (`results/space_dry_run_3b935ea6.md`): 7 of 7 examples the same flag and action; the four demo files carry a fine-tuned reading with check `match`, a one-byte-changed copy carries none. The C2C12 examples took 4.9–10.2 s in that first run after the restart and 3.1–3.4 s in a second run minutes later (`results/space_dry_run_3b935ea6_run2.md`); cause not measured |
+| Console Space republished with the layout fix and the 3D reset, 2026-10-08 | Space commit `98656277`; docs `eacf92d`, `59bd48f` | Two dry runs (`results/space_dry_run_98656277.md`, `_run2`): 7 of 7 examples the same flag and action in both; the four demo files carry a fine-tuned reading with check `match`, the changed copy none. Median 3.28 s in the first run after the restart, 3.15 s in the second |
+| Console Space republished with the error card, the rule's reason and the Shipped / Fine-tuned views, 2026-10-11 | Space commit `712a9e54`; docs `2cd691a` (CI green) | Two dry runs (`results/space_dry_run_712a9e54.md`, `_run2`): 7 of 7 the same flag and action in both; demo set as above. Median 3.27 s in the first run after the restart, 6.22 s in the second (two runs at 17.09 and 19.41 s). The Space card's new text reaches the Space with its next publish |
 
 ## Slices (spec §2.1), confirmed against the repo
 
@@ -182,9 +209,15 @@ Tests: `pytest tests` → 112 passed, 1 xfailed (2026-09-26, after A7).
 
 ## Schedule
 
-The spec's target review date (Sat Sep 26) **can't be met**. Phase A's timebox
-is "2 working days after `nb/03` completes"; `nb/03` output reached the Mac
-on 2026-09-26. The date that actually binds is the **code freeze on Sun Oct 4**.
+Phase A's target review date (Sat Sep 26) was not met: its timebox is "2
+working days after `nb/03` completes", and `nb/03` output reached the Mac on
+2026-09-26. Spec v3.3 then moved the code freeze from Sun Oct 4 to **Fri Oct 2**,
+for a call on Tue Oct 6; the pre-freeze pass ended at that freeze.
+
+The call has since moved twice: to Oct 13 (owner, 2026-10-05), then to
+**Wed Oct 21** (2026-10-07). Work after the freeze (the calibration profiles,
+the passage-range tests, the fine-tuned demo set) went in one owner-approved
+step at a time, each logged in its section above. Updated 2026-10-15.
 
 ## Drift and gaps found (spec vs repo)
 

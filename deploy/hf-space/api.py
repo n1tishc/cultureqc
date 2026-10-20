@@ -55,14 +55,6 @@ LOG_PATH = os.environ.get("CULTUREQC_LOG", "/tmp/events_boot.jsonl")
 
 _state = {"models_loaded": False, "error": None, "loaded_at": None, "boot": time.time()}
 
-# One analysis at a time. Two reasons, and either alone would be enough:
-#
-#   The chain. culture.pipeline.analyze() constructs a RecordWriter per call, and
-#   RecordWriter reads the log's tail hash in __init__. Two concurrent calls both
-#   read the same tail and both write it as prev_record_hash, which silently
-#   breaks the chain for every record after them — the page's own Verify would
-#   report the log we produced as tampered. The frontend sends three at a time.
-#
 #   The models. Cellpose-SAM and the classifier are process-wide singletons and
 #   are not documented as safe for concurrent inference.
 #
@@ -74,8 +66,8 @@ _pipeline_lock = threading.Lock()
 def _warm() -> None:
     """Load both models once, on a worker thread, at startup.
 
-    Cellpose-SAM downloads its weights on first construction and the QC
-    classifier pulls its checkpoint from the Hub, so this is also what makes the
+    Cellpose-SAM requires preprovisioned approved weights; the QC classifier
+    pulls its checkpoint from the Hub, so this is also what makes the
     first real request fast. A failure here is recorded rather than raised: the
     Space stays up and /health reports why, which is far easier to debug than a
     container that will not boot.
@@ -331,9 +323,11 @@ def _run(body: bytes, name: str, cell_line: str, target_confluency: float,
             import cv2
             cfg = LineConfig(cell_line=cell_line, target_confluency=target_confluency)
 
-            img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
-            if img is None:
-                raise HTTPException(400, "could not decode that image")
+            from culture.ingestion import decode_image
+            try:
+                img = decode_image(body).pixels
+            except ValueError as exc:
+                raise HTTPException(400, str(exc)) from exc
             h, w = img.shape[:2]
 
             # Center-tile fallback for alternate pipeline adapters. The standard

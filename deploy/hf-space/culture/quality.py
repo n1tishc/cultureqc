@@ -46,6 +46,9 @@ _thresholds_path = None
 
 
 def _load_thresholds(config_path: str = _DEFAULT_CONFIG_PATH) -> dict:
+    from culture.provenance import capturing_configs, load_yaml
+    if capturing_configs():
+        return load_yaml(config_path)
     global _thresholds, _thresholds_path
     if _thresholds is None or _thresholds_path != config_path:
         if not os.path.exists(config_path):

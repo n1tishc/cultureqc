@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Action, Icon, Linked, short } from "./ui";
-import { DEFAULT_SCENARIO_ID, GUIDED_SCENARIOS, scenarioIdFromSearch, scenarioUrl } from "../lib/scenarios";
+import { DEFAULT_SCENARIO_ID, EXAMPLE_CONTEXT, GUIDED_SCENARIOS, initialLayers, layersForView, layerView, scenarioSelectionFromSearch, scenarioUrl } from "../lib/scenarios";
 import "./GuidedStage.css";
 
 const LAYERS = [
@@ -33,6 +33,36 @@ const DEVICE = { mps: "Apple GPU, MPS", cuda: "GPU", cpu: "CPU" };
 
 const contourCache = new Map();
 
+function mediaUrl(url, retry) {
+  return retry ? `${url}${url.includes("?") ? "&" : "?"}retry=${retry}` : url;
+}
+
+function useImageAsset(url, retry, enabled = true) {
+  const source = mediaUrl(url, retry);
+  const [result, setResult] = useState(null);
+  useEffect(() => {
+    if (!enabled) return undefined;
+    let active = true;
+    const asset = new Image();
+    setResult({ source, status: "loading" });
+    const finish = (status) => {
+      clearTimeout(timeout);
+      if (active) setResult({ source, status });
+    };
+    const timeout = setTimeout(() => finish("error"), 15000);
+    asset.onload = () => finish("ready");
+    asset.onerror = () => finish("error");
+    asset.src = source;
+    return () => {
+      active = false;
+      clearTimeout(timeout);
+      asset.onload = null;
+      asset.onerror = null;
+    };
+  }, [source, enabled]);
+  return { source, status: !enabled ? "disabled" : result?.source === source ? result.status : "loading" };
+}
+
 function useContour(url, retry) {
   const [result, setResult] = useState(() => ({ url, data: contourCache.get(url) || null, error: false }));
   useEffect(() => {
@@ -42,20 +72,26 @@ function useContour(url, retry) {
       return;
     }
     setResult({ url, data: null, error: false });
-    fetch(url)
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
+    fetch(mediaUrl(url, retry), { signal: controller.signal })
       .then((response) => {
         if (!response.ok) throw new Error("Contour unavailable");
         return response.json();
       })
       .then((j) => {
+        if (typeof j.d !== "string" || !(j.w > 0) || !(j.h > 0)) throw new Error("Invalid contour");
         contourCache.set(url, j);
         if (live) setResult({ url, data: j, error: false });
       })
       .catch(() => {
         if (live) setResult({ url, data: null, error: true });
-      });
+      })
+      .finally(() => clearTimeout(timeout));
     return () => {
       live = false;
+      clearTimeout(timeout);
+      controller.abort();
     };
   }, [url, retry]);
   return result.url === url ? result : { url, data: contourCache.get(url) || null, error: false };
@@ -106,8 +142,8 @@ export function ScaleBar({ umPerPx, widthPx, um = 200 }) {
   if (!umPerPx) return null;
   const w = (um / umPerPx / widthPx) * 100;
   return (
-    <div className="scalebar" style={{ width: `${w}%` }} aria-hidden="true">
-      <b />
+    <div className="scalebar" style={{ width: `${w}%` }} role="img" aria-label={`Scale bar: ${um} micrometres`}>
+      <b aria-hidden="true" />
       <span>{um} µm</span>
     </div>
   );
@@ -161,7 +197,7 @@ function VerifyLine({ v, rec, total, error }) {
   const text = error ? `Verification unavailable: ${error}` : !v ? "Re-hashing in this browser…" : v.ok ? "Re-hashed in your browser: matches" : "Re-hashed in your browser: no match";
   return (
     <>
-      <span className="verified" data-ok={state}>
+      <span className="verified" data-ok={state} role="status" aria-atomic="true">
         <Icon name={error || (v && !v.ok) ? "cross" : "check"} />
         {text}
       </span>
@@ -175,34 +211,35 @@ function VerifyLine({ v, rec, total, error }) {
 export default function Stage({ examples, verify, liveParity, verifyError }) {
   const items = useMemo(() => [...examples.items].sort((x, y) => x.record.index - y.record.index), [examples]);
   const ids = useMemo(() => items.map((item) => item.id), [items]);
-  const [id, setId] = useState(() => typeof window === "undefined" ? DEFAULT_SCENARIO_ID : scenarioIdFromSearch(window.location.search, examples.items.map((item) => item.id)));
-  const [layers, setLayers] = useState({ prob: false, contour: true, band: false, anom: false });
-  const [mediaError, setMediaError] = useState(null);
+  const [selection, setSelection] = useState(() => scenarioSelectionFromSearch(typeof window === "undefined" ? "" : window.location.search, ids));
+  const [layers, setLayers] = useState(initialLayers);
   const [mediaRetry, setMediaRetry] = useState(0);
-  const ex = useMemo(() => items.find((e) => e.id === id) || items.find((e) => e.id === DEFAULT_SCENARIO_ID) || items[0], [items, id]);
+  const ex = useMemo(() => items.find((item) => item.id === selection.id) || items.find((item) => item.id === DEFAULT_SCENARIO_ID) || items[0], [items, selection.id]);
+  const imageAsset = useImageAsset(ex.image, mediaRetry);
+  const probabilityAsset = useImageAsset(ex.prob, mediaRetry, layers.prob);
+  const bandAsset = useImageAsset(ex.band, mediaRetry, layers.band);
   const contourResult = useContour(ex.contour, mediaRetry);
   const contour = contourResult.data;
-  const scenario = GUIDED_SCENARIOS.find((entry) => entry.id === ex.id);
-  const step = GUIDED_SCENARIOS.findIndex((entry) => entry.id === ex.id);
+  const scenario = EXAMPLE_CONTEXT[ex.id];
+  const view = layerView(layers);
 
   useEffect(() => {
     const onPopState = () => {
-      setId(scenarioIdFromSearch(window.location.search, ids));
-      setLayers({ prob: false, contour: true, band: false, anom: false });
-      setMediaError(null);
-      setMediaRetry(0);
+      setSelection(scenarioSelectionFromSearch(window.location.search, ids));
+      setLayers(initialLayers());
+      setMediaRetry((attempt) => attempt + 1);
     };
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
   }, [ids]);
 
   const selectScenario = (nextId) => {
-    setLayers({ prob: false, contour: true, band: false, anom: false });
-    setMediaError(null);
-    setMediaRetry(0);
-    if (nextId === ex.id) return;
-    setId(nextId);
-    window.history.pushState(null, "", scenarioUrl(window.location.href, nextId, ids));
+    setLayers(initialLayers());
+    setMediaRetry((attempt) => attempt + 1);
+    setSelection({ id: nextId, invalid: false });
+    if (nextId !== ex.id || selection.invalid) {
+      window.history.pushState(null, "", scenarioUrl(window.location.href, nextId, ids));
+    }
   };
 
   const c = ex.confluency;
@@ -210,18 +247,23 @@ export default function Stage({ examples, verify, liveParity, verifyError }) {
   const v = verify ? verify[ex.record.index - 1] : null;
   const maskStyle = (url) => ({ WebkitMaskImage: `url(${url})`, maskImage: `url(${url})` });
   const frameAttrs = {};
-  for (const [k] of LAYERS) if (layers[k]) frameAttrs[`data-${k}`] = "";
+  const assets = [
+    ["Stored image", imageAsset.status],
+    ["Cell probability layer", probabilityAsset.status],
+    ["Cutoff edge layer", bandAsset.status],
+    ["Cutoff contour", !layers.contour ? "disabled" : contourResult.error ? "error" : contour ? "ready" : "loading"],
+  ];
+  const failedAssets = assets.filter(([, status]) => status === "error").map(([label]) => label);
+  const loadingAssets = assets.filter(([, status]) => status === "loading").map(([label]) => label);
+  const availableLayers = { prob: probabilityAsset.status === "ready", band: bandAsset.status === "ready", contour: !!contour, anom: true };
+  for (const [key] of LAYERS) {
+    if (imageAsset.status === "ready" && layers[key] && availableLayers[key]) frameAttrs[`data-${key}`] = "";
+  }
 
   return (
-    <div className="stage guided-stage" aria-label="Guided walkthrough of stored decisions">
+    <div className="stage guided-stage" aria-label="Explore a stored analysis">
       <div className="guided-announcement" aria-live="polite" aria-atomic="true">{scenario?.title || ex.label}. Stored recommendation: {ex.action.replaceAll("_", " ")}. Confluency {c.pct.toFixed(2)} percent.</div>
-      <nav className="guided-nav" aria-label="Decision scenarios">
-        {GUIDED_SCENARIOS.map((entry, index) => (
-          <button key={entry.id} type="button" aria-current={entry.id === ex.id ? "step" : undefined} onClick={() => selectScenario(entry.id)}>
-            <span>{String(index + 1).padStart(2, "0")}</span>{entry.title}
-          </button>
-        ))}
-      </nav>
+      {selection.invalid && <p className="guided-selection-notice" role="status">That example is unavailable. Showing the coverage example instead. <button type="button" onClick={() => selectScenario(DEFAULT_SCENARIO_ID)}>Open coverage example</button></p>}
       <div className="stage-grid">
         <div className="viewer">
           <div className="frame-box">
@@ -230,33 +272,40 @@ export default function Stage({ examples, verify, liveParity, verifyError }) {
               style={{ aspectRatio: `${ex.width} / ${ex.height}`, "--ar": ex.width / ex.height }}
               {...frameAttrs}
             >
-              <img key={`${ex.id}-${mediaRetry}`} src={mediaRetry ? `${ex.image}${ex.image.includes("?") ? "&" : "?"}retry=${mediaRetry}` : ex.image} width={ex.width} height={ex.height} alt={`${ex.label}: phase-contrast frame${ex.sequence ? `, ${ex.sequence} frame ${ex.frame}` : ""}`} onError={() => setMediaError(ex.id)} onLoad={() => setMediaError(null)} />
-              <div className="layer layer-prob" data-l="prob" style={maskStyle(ex.prob)} />
-              <div className="layer layer-band" data-l="band" style={maskStyle(ex.band)} />
+              <img key={imageAsset.source} src={imageAsset.source} width={ex.width} height={ex.height} alt={`${ex.label}: phase-contrast frame${ex.sequence ? `, ${ex.sequence} frame ${ex.frame}` : ""}`} />
+              <div className="layer layer-prob" data-l="prob" style={maskStyle(probabilityAsset.source)} />
+              <div className="layer layer-band" data-l="band" style={maskStyle(bandAsset.source)} />
               <svg className="overlay layer-contour" data-l="contour" viewBox={contour ? `0 0 ${contour.w} ${contour.h}` : "0 0 1 1"} preserveAspectRatio="none" aria-hidden="true">
                 {contour ? <path d={contour.d} /> : null}
               </svg>
               <AnomalyLayer ex={ex} />
               <ScaleBar umPerPx={ex.um_per_px} widthPx={ex.width} />
             </div>
-            {(mediaError === ex.id || contourResult.error) && <div className="guided-media-error" role="status"><span>{mediaError === ex.id ? "Stored image" : "Contour layer"} could not load.</span><button type="button" onClick={() => { setMediaError(null); setMediaRetry((attempt) => attempt + 1); }}>Retry media</button></div>}
+            {failedAssets.length > 0 && <div className="guided-media-error" role="status"><span>Could not load: {failedAssets.join(", ")}. The selected stored result is unchanged.</span><button type="button" onClick={() => setMediaRetry((attempt) => attempt + 1)}>Retry media</button></div>}
+            {loadingAssets.length > 0 && <p className="guided-media-status" role="status">Loading stored media: {loadingAssets.join(", ")}…</p>}
+          </div>
+          <div className="guided-view-controls">
+            <div role="group" aria-label="Image view">
+              <button type="button" aria-pressed={view === "raw"} onClick={() => setLayers(layersForView("raw"))}>Raw image</button>
+              <button type="button" aria-pressed={view === "segmentation"} onClick={() => setLayers(layersForView("segmentation"))}>Segmentation</button>
+            </div>
+            <p aria-live="polite">{view === "custom" ? "Custom layers" : view === "raw" ? "Raw image · no overlays" : "Segmentation · cyan computed cutoff contour"}{view !== "raw" && failedAssets.length > 0 ? " · media unavailable" : ""}</p>
           </div>
         </div>
 
         <div className="rail">
           <div className="rail-head">
             <h2>{scenario?.title || ex.label}</h2>
-            <p>{scenario?.specimen || ex.label} · stored analysis · shipped baseline</p>
+            <p>{scenario?.specimen || ex.label} · Research demo · stored analysis</p>
+          </div>
+          <div className="guided-measure">
+            <div className="guided-numbers"><strong>{c.pct.toFixed(2)}%</strong><span>confluency<br />target {ex.target.toFixed(0)}%</span></div>
+            {c.interval ? <div className="guided-band"><span>Setup-level 90% error estimate</span><strong>{c.interval[0].toFixed(2)}–{c.interval[1].toFixed(2)}%</strong><ErrorBand c={c} target={ex.target} /></div> : <p className="guided-no-band">No calibrated error band for this example. The reading alone cannot clear an action.</p>}
           </div>
           <div className="guided-result">
             <div className="guided-action"><span>Stored recommendation</span><Action a={ex.action} /></div>
             <p className="guided-reason">{ex.action_reason}</p>
             <p className="guided-scope">{scenario?.scope || "Additional stored research example. An anomaly flag describes a score on the centre tile; it does not diagnose contamination. This reading has not validated an automated culture action."} Setup calibration estimates measurement error; it does not validate the recommended action.</p>
-          </div>
-          <div className="guided-measure">
-            <div className="guided-numbers"><strong>{c.pct.toFixed(2)}%</strong><span>confluency<br />target {ex.target.toFixed(0)}%</span></div>
-            {c.interval ? <div className="guided-band"><span>Setup-level 90% error estimate</span><strong>{c.interval[0].toFixed(2)}–{c.interval[1].toFixed(2)}%</strong><ErrorBand c={c} target={ex.target} /></div> : <p className="guided-no-band">No calibrated error band for this setup. The reading alone cannot clear an action.</p>}
-            {scenario?.note && <p className="guided-note">{scenario.note}</p>}
           </div>
           <div className="guided-record">
             <VerifyLine v={v} rec={ex.record} total={examples.chain_order.length} error={verifyError} />
@@ -264,20 +313,24 @@ export default function Stage({ examples, verify, liveParity, verifyError }) {
           </div>
         </div>
       </div>
+      <nav className="guided-nav" aria-label="Analysis tasks">
+        {GUIDED_SCENARIOS.map((entry) => (
+          <button key={entry.id} type="button" aria-pressed={entry.id === ex.id} onClick={() => selectScenario(entry.id)}>{entry.title}</button>
+        ))}
+      </nav>
       <div className="guided-controls">
-        <button type="button" onClick={() => selectScenario(GUIDED_SCENARIOS[step - 1].id)} disabled={step <= 0}>Back</button>
-        <span>{step < 0 ? "Additional example" : `${step + 1} of ${GUIDED_SCENARIOS.length}`}</span>
+        <span>{GUIDED_SCENARIOS.some((entry) => entry.id === ex.id) ? "Explore either task" : "Additional stored example"}</span>
         <button type="button" onClick={() => selectScenario(DEFAULT_SCENARIO_ID)}>Reset</button>
-        <button type="button" onClick={() => selectScenario(GUIDED_SCENARIOS[step < 0 ? 0 : step + 1].id)} disabled={step >= GUIDED_SCENARIOS.length - 1}>Next <Icon name="passage" /></button>
       </div>
+      <details className="guided-advanced guided-more"><summary>More examples <span>All {items.length} stored analyses</span></summary><div className="guided-explorer">{items.map((item) => <button key={item.id} type="button" aria-pressed={item.id === ex.id} onClick={() => selectScenario(item.id)}><img src={item.thumb} alt="" width="52" height="39" loading="lazy" /><span>{SHORT[item.id] || item.label}<small>{item.confluency.pct.toFixed(1)}% · {item.action.replaceAll("_", " ")}{item.id.includes("contamination") ? " · synthetic" : ""}</small></span></button>)}</div></details>
       <details className="guided-advanced"><summary>Explore analysis layers and stored details</summary>
         <div className="toolbar" role="group" aria-label="Layers the pipeline computed">
           {LAYERS.map(([key, label]) => <button key={key} type="button" className="chip" data-layer={key} aria-pressed={layers[key]} onClick={() => setLayers((state) => ({ ...state, [key]: !state[key] }))}><i />{label}</button>)}
         </div>
         <div className="guided-advanced-body">
+          {scenario?.note && <p>{scenario.note}</p>}
           <p>Layer toggles annotate the stored frame above. Cellpose-SAM uses cutoff {c.profile.cutoff}; {(c.borderline_fraction * 100).toFixed(1)}% of pixels are near it. The anomaly check reads only a {a.tile.size} px centre tile. DINOv2 score {a.score.toFixed(3)}; threshold {a.threshold.toFixed(3)}; {a.flag ? "flagged" : "not flagged"}. A flag does not identify a cause.</p>
           <p>Profile {c.profile.id} ({c.profile.status}) · rules {ex.rules} · {ex.credit}. Generated {ex.generated_at} on {DEVICE[ex.device] || ex.device}. <Linked>{liveParity}</Linked></p>
-          <details><summary>All seven stored examples</summary><div className="guided-explorer">{items.map((item) => <button key={item.id} type="button" aria-pressed={item.id === ex.id} onClick={() => selectScenario(item.id)}><img src={item.thumb} alt="" width="52" height="39" loading="lazy" /><span>{SHORT[item.id] || item.label}<small>{item.confluency.pct.toFixed(1)}% · {item.action.replaceAll("_", " ")}</small></span></button>)}</div></details>
         </div>
       </details>
     </div>

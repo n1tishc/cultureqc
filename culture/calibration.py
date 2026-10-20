@@ -91,10 +91,8 @@ def classwise_ece(probs: np.ndarray, labels: np.ndarray, n_bins: int = N_BINS) -
 
 
 def load_calibration(path: str = DEFAULT_CALIBRATION_PATH) -> dict | None:
-    if not os.path.exists(path):
-        return None
-    with open(path) as f:
-        return yaml.safe_load(f)
+    from culture.provenance import load_yaml
+    return load_yaml(path, optional=True)
 
 
 def calibration_config_hash(path: str = DEFAULT_CALIBRATION_PATH) -> str:

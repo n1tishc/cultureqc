@@ -13,6 +13,7 @@ examples (demo/examples/, scripts/export_demo_examples.py).
 import json
 import math
 import os
+from dataclasses import replace
 
 import numpy as np
 import pytest
@@ -57,7 +58,7 @@ def test_example_is_self_consistent(ex):
     rec = ex["record"]
     assert rec["confluency_pct"] == ex["confluency"]["pct"]
     assert rec["anomaly_used_in_decision"] is (ex["anomaly"]["status"] == "ok")
-    assert rec["decided_by"] == RULES_VERSION
+    assert rec["decided_by"] == "rules_v0.5"
     assert rec["qc_used_in_decision"] is (not ex["demoted"])
     assert rec["recommended_action"] == ex["action"]
     a = ex["anomaly"]
@@ -65,12 +66,17 @@ def test_example_is_self_consistent(ex):
         assert a["flag"] == (a["score"] > a["threshold"]) == rec["anomaly_flag"]
     # read with the setup's current profile, and binned for the anomaly check at cutoff 0.0
     prof = get_profile(ex["profile_id"])
-    assert prof.id == ex["profile_id"] and rec["confluency_profile"] == prof.record_fields()
+    legacy_entry = {key: value for key, value in prof.entry.items()
+                    if key not in {"validated_scope", "action_eligibility"}}
+    legacy_profile = replace(prof, entry=legacy_entry)
+    assert prof.id == ex["profile_id"]
+    assert rec["confluency_profile"] == {key: value for key, value in legacy_profile.record_fields().items()
+                                         if key in {"id", "sha256", "status", "cutoff", "band_pp"}}
     assert rec["confluency_interval"] == prof.interval(rec["confluency_pct"])
     assert rec["anomaly_bin_confluency_pct"] == ex["confluency"]["extra"]["pct_default_cutoff"]
     if prof.cutoff == 0.0:
         assert ex["confluency"]["pct"] == pytest.approx(ex["confluency"]["extra"]["pct_default_cutoff"], abs=1e-6)
-    # the action follows from the stored numbers alone (classifier demoted)
+    # These historical examples also keep the same action under the stricter current policy.
     assert ex["demoted"]
     gate = rec.get("quality_gate") or {}
     action, _ = decide(confluency_pct=ex["confluency"]["pct"], confluency_confidence=ex["confluency"]["confidence"],
@@ -107,8 +113,12 @@ def test_stored_chain_starts_with_the_approved_profile_changes():
     for pid in validated:
         c, prof = after[pid], get_profile(pid)
         assert c["record_type"] == "change" and c["subject"] == "confluency_profile"
-        assert c["before"] == {"id": UNCALIBRATED, "sha256": get_profile(UNCALIBRATED).sha256}
-        assert c["after"] == {"id": pid, "sha256": prof.sha256}
+        def legacy_hash(profile):
+            entry = {key: value for key, value in profile.entry.items()
+                     if key not in {"validated_scope", "action_eligibility"}}
+            return replace(profile, entry=entry).sha256
+        assert c["before"] == {"id": UNCALIBRATED, "sha256": legacy_hash(get_profile(UNCALIBRATED))}
+        assert c["after"] == {"id": pid, "sha256": legacy_hash(prof)}
     # one chain: the changes first, then the examples
     chain = changes + [e["record"] for e in EXAMPLES]
     assert chain[0]["prev_record_hash"] == GENESIS_HASH

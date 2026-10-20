@@ -1,0 +1,1736 @@
+{
+  "comparison_kind": "cached_policy_replay",
+  "limitations": [
+    "Not an end-to-end v2/v4 benchmark or a fine-tuning comparison.",
+    "Classifier demotion and policy/calibration changes are sequential ablations, not causal attribution.",
+    "Quality and anomaly checks are unavailable on these images, not assumed to pass.",
+    "No target-reaching ground truth at 80%; zero early passage cannot establish passage safety.",
+    "50% is a diagnostic scenario, not a recommended culture passage threshold.",
+    "No review-time measurement, workload saving, pilot approval or host action is established.",
+    "v2's missing synthetic headline artifacts are not reconstructed.",
+    "C2C12 cached readings are not independent truth and are outside this first bundle."
+  ],
+  "manifest_sha256": "adc59c35573be38c688b826a89bdcf2fce7edaf8c9666b67426aea11b6653c7c",
+  "measurement": {
+    "pct_configured": {
+      "bias_pp": 1.6316363636363638,
+      "mae_pp": 3.780121212121212,
+      "n": 33
+    },
+    "pct_cut0": {
+      "bias_pp": -8.326545454545455,
+      "mae_pp": 8.35660606060606,
+      "n": 33
+    }
+  },
+  "metric_boundary": "Threshold agreement only. A mask is not an independent adjudication of feeding, health, passage timing or action eligibility. Correct continue coverage is not automation coverage.",
+  "sequential_transitions": [
+    {
+      "actions": {
+        "continue -> continue": 1,
+        "human_review -> continue": 30,
+        "human_review -> human_review": 2
+      },
+      "after": "baseline_classifier_demoted",
+      "before": "baseline",
+      "target_pct": 80.0,
+      "timing_scenario": "assumed_elapsed"
+    },
+    {
+      "actions": {
+        "continue -> continue": 31,
+        "human_review -> continue": 2
+      },
+      "after": "current_uncalibrated",
+      "before": "baseline_classifier_demoted",
+      "target_pct": 80.0,
+      "timing_scenario": "assumed_elapsed"
+    },
+    {
+      "actions": {
+        "continue -> continue": 31,
+        "continue -> human_review": 2
+      },
+      "after": "current_configured",
+      "before": "current_uncalibrated",
+      "target_pct": 80.0,
+      "timing_scenario": "assumed_elapsed"
+    },
+    {
+      "actions": {
+        "continue -> continue": 1,
+        "human_review -> continue": 30,
+        "human_review -> human_review": 2
+      },
+      "after": "baseline_classifier_demoted",
+      "before": "baseline",
+      "target_pct": 80.0,
+      "timing_scenario": "unknown"
+    },
+    {
+      "actions": {
+        "continue -> continue": 31,
+        "human_review -> continue": 2
+      },
+      "after": "current_uncalibrated",
+      "before": "baseline_classifier_demoted",
+      "target_pct": 80.0,
+      "timing_scenario": "unknown"
+    },
+    {
+      "actions": {
+        "continue -> continue": 31,
+        "continue -> human_review": 2
+      },
+      "after": "current_configured",
+      "before": "current_uncalibrated",
+      "target_pct": 80.0,
+      "timing_scenario": "unknown"
+    },
+    {
+      "actions": {
+        "continue -> continue": 1,
+        "human_review -> continue": 29,
+        "human_review -> human_review": 2,
+        "human_review -> passage": 1
+      },
+      "after": "baseline_classifier_demoted",
+      "before": "baseline",
+      "target_pct": 50.0,
+      "timing_scenario": "assumed_elapsed"
+    },
+    {
+      "actions": {
+        "continue -> continue": 30,
+        "human_review -> continue": 2,
+        "passage -> human_review": 1
+      },
+      "after": "current_uncalibrated",
+      "before": "baseline_classifier_demoted",
+      "target_pct": 50.0,
+      "timing_scenario": "assumed_elapsed"
+    },
+    {
+      "actions": {
+        "continue -> continue": 22,
+        "continue -> human_review": 10,
+        "human_review -> human_review": 1
+      },
+      "after": "current_configured",
+      "before": "current_uncalibrated",
+      "target_pct": 50.0,
+      "timing_scenario": "assumed_elapsed"
+    },
+    {
+      "actions": {
+        "continue -> continue": 1,
+        "human_review -> continue": 29,
+        "human_review -> human_review": 2,
+        "human_review -> passage": 1
+      },
+      "after": "baseline_classifier_demoted",
+      "before": "baseline",
+      "target_pct": 50.0,
+      "timing_scenario": "unknown"
+    },
+    {
+      "actions": {
+        "continue -> continue": 30,
+        "human_review -> continue": 2,
+        "passage -> human_review": 1
+      },
+      "after": "current_uncalibrated",
+      "before": "baseline_classifier_demoted",
+      "target_pct": 50.0,
+      "timing_scenario": "unknown"
+    },
+    {
+      "actions": {
+        "continue -> continue": 22,
+        "continue -> human_review": 10,
+        "human_review -> human_review": 1
+      },
+      "after": "current_configured",
+      "before": "current_uncalibrated",
+      "target_pct": 50.0,
+      "timing_scenario": "unknown"
+    }
+  ],
+  "summaries": [
+    {
+      "actions": {
+        "continue": 1,
+        "feed": 0,
+        "human_review": 32,
+        "passage": 0,
+        "reimage": 0
+      },
+      "early_passage": 0,
+      "independent_biological_units": null,
+      "n_at_or_above_target": 0,
+      "n_images": 33,
+      "passage_evidence": "insufficient_no_target_reaching_cases",
+      "ready_called_continue": 0,
+      "reimage_fraction": 0.0,
+      "review_fraction": 0.9696969696969697,
+      "subset": "all",
+      "target_pct": 80.0,
+      "threshold_accuracy_among_decided": 1.0,
+      "threshold_action_confusion": {
+        "at_or_above_target": {},
+        "below_target": {
+          "continue": 1,
+          "human_review": 32
+        }
+      },
+      "threshold_correct_decided_coverage": 0.030303030303030304,
+      "threshold_correct_decided_n": 1,
+      "threshold_decided_n": 1,
+      "timing_scenario": "assumed_elapsed",
+      "uncertainty_interval": null,
+      "variant": "baseline"
+    },
+    {
+      "actions": {
+        "continue": 31,
+        "feed": 0,
+        "human_review": 2,
+        "passage": 0,
+        "reimage": 0
+      },
+      "early_passage": 0,
+      "independent_biological_units": null,
+      "n_at_or_above_target": 0,
+      "n_images": 33,
+      "passage_evidence": "insufficient_no_target_reaching_cases",
+      "ready_called_continue": 0,
+      "reimage_fraction": 0.0,
+      "review_fraction": 0.06060606060606061,
+      "subset": "all",
+      "target_pct": 80.0,
+      "threshold_accuracy_among_decided": 1.0,
+      "threshold_action_confusion": {
+        "at_or_above_target": {},
+        "below_target": {
+          "continue": 31,
+          "human_review": 2
+        }
+      },
+      "threshold_correct_decided_coverage": 0.9393939393939394,
+      "threshold_correct_decided_n": 31,
+      "threshold_decided_n": 31,
+      "timing_scenario": "assumed_elapsed",
+      "uncertainty_interval": null,
+      "variant": "baseline_classifier_demoted"
+    },
+    {
+      "actions": {
+        "continue": 33,
+        "feed": 0,
+        "human_review": 0,
+        "passage": 0,
+        "reimage": 0
+      },
+      "early_passage": 0,
+      "independent_biological_units": null,
+      "n_at_or_above_target": 0,
+      "n_images": 33,
+      "passage_evidence": "insufficient_no_target_reaching_cases",
+      "ready_called_continue": 0,
+      "reimage_fraction": 0.0,
+      "review_fraction": 0.0,
+      "subset": "all",
+      "target_pct": 80.0,
+      "threshold_accuracy_among_decided": 1.0,
+      "threshold_action_confusion": {
+        "at_or_above_target": {},
+        "below_target": {
+          "continue": 33
+        }
+      },
+      "threshold_correct_decided_coverage": 1.0,
+      "threshold_correct_decided_n": 33,
+      "threshold_decided_n": 33,
+      "timing_scenario": "assumed_elapsed",
+      "uncertainty_interval": null,
+      "variant": "current_uncalibrated"
+    },
+    {
+      "actions": {
+        "continue": 31,
+        "feed": 0,
+        "human_review": 2,
+        "passage": 0,
+        "reimage": 0
+      },
+      "early_passage": 0,
+      "independent_biological_units": null,
+      "n_at_or_above_target": 0,
+      "n_images": 33,
+      "passage_evidence": "insufficient_no_target_reaching_cases",
+      "ready_called_continue": 0,
+      "reimage_fraction": 0.0,
+      "review_fraction": 0.06060606060606061,
+      "subset": "all",
+      "target_pct": 80.0,
+      "threshold_accuracy_among_decided": 1.0,
+      "threshold_action_confusion": {
+        "at_or_above_target": {},
+        "below_target": {
+          "continue": 31,
+          "human_review": 2
+        }
+      },
+      "threshold_correct_decided_coverage": 0.9393939393939394,
+      "threshold_correct_decided_n": 31,
+      "threshold_decided_n": 31,
+      "timing_scenario": "assumed_elapsed",
+      "uncertainty_interval": null,
+      "variant": "current_configured"
+    },
+    {
+      "actions": {
+        "continue": 0,
+        "feed": 0,
+        "human_review": 3,
+        "passage": 0,
+        "reimage": 0
+      },
+      "early_passage": 0,
+      "independent_biological_units": null,
+      "n_at_or_above_target": 0,
+      "n_images": 3,
+      "passage_evidence": "insufficient_no_target_reaching_cases",
+      "ready_called_continue": 0,
+      "reimage_fraction": 0.0,
+      "review_fraction": 1.0,
+      "subset": "dense_gt_ge_40",
+      "target_pct": 80.0,
+      "threshold_accuracy_among_decided": null,
+      "threshold_action_confusion": {
+        "at_or_above_target": {},
+        "below_target": {
+          "human_review": 3
+        }
+      },
+      "threshold_correct_decided_coverage": 0.0,
+      "threshold_correct_decided_n": 0,
+      "threshold_decided_n": 0,
+      "timing_scenario": "assumed_elapsed",
+      "uncertainty_interval": null,
+      "variant": "baseline"
+    },
+    {
+      "actions": {
+        "continue": 2,
+        "feed": 0,
+        "human_review": 1,
+        "passage": 0,
+        "reimage": 0
+      },
+      "early_passage": 0,
+      "independent_biological_units": null,
+      "n_at_or_above_target": 0,
+      "n_images": 3,
+      "passage_evidence": "insufficient_no_target_reaching_cases",
+      "ready_called_continue": 0,
+      "reimage_fraction": 0.0,
+      "review_fraction": 0.3333333333333333,
+      "subset": "dense_gt_ge_40",
+      "target_pct": 80.0,
+      "threshold_accuracy_among_decided": 1.0,
+      "threshold_action_confusion": {
+        "at_or_above_target": {},
+        "below_target": {
+          "continue": 2,
+          "human_review": 1
+        }
+      },
+      "threshold_correct_decided_coverage": 0.6666666666666666,
+      "threshold_correct_decided_n": 2,
+      "threshold_decided_n": 2,
+      "timing_scenario": "assumed_elapsed",
+      "uncertainty_interval": null,
+      "variant": "baseline_classifier_demoted"
+    },
+    {
+      "actions": {
+        "continue": 3,
+        "feed": 0,
+        "human_review": 0,
+        "passage": 0,
+        "reimage": 0
+      },
+      "early_passage": 0,
+      "independent_biological_units": null,
+      "n_at_or_above_target": 0,
+      "n_images": 3,
+      "passage_evidence": "insufficient_no_target_reaching_cases",
+      "ready_called_continue": 0,
+      "reimage_fraction": 0.0,
+      "review_fraction": 0.0,
+      "subset": "dense_gt_ge_40",
+      "target_pct": 80.0,
+      "threshold_accuracy_among_decided": 1.0,
+      "threshold_action_confusion": {
+        "at_or_above_target": {},
+        "below_target": {
+          "continue": 3
+        }
+      },
+      "threshold_correct_decided_coverage": 1.0,
+      "threshold_correct_decided_n": 3,
+      "threshold_decided_n": 3,
+      "timing_scenario": "assumed_elapsed",
+      "uncertainty_interval": null,
+      "variant": "current_uncalibrated"
+    },
+    {
+      "actions": {
+        "continue": 1,
+        "feed": 0,
+        "human_review": 2,
+        "passage": 0,
+        "reimage": 0
+      },
+      "early_passage": 0,
+      "independent_biological_units": null,
+      "n_at_or_above_target": 0,
+      "n_images": 3,
+      "passage_evidence": "insufficient_no_target_reaching_cases",
+      "ready_called_continue": 0,
+      "reimage_fraction": 0.0,
+      "review_fraction": 0.6666666666666666,
+      "subset": "dense_gt_ge_40",
+      "target_pct": 80.0,
+      "threshold_accuracy_among_decided": 1.0,
+      "threshold_action_confusion": {
+        "at_or_above_target": {},
+        "below_target": {
+          "continue": 1,
+          "human_review": 2
+        }
+      },
+      "threshold_correct_decided_coverage": 0.3333333333333333,
+      "threshold_correct_decided_n": 1,
+      "threshold_decided_n": 1,
+      "timing_scenario": "assumed_elapsed",
+      "uncertainty_interval": null,
+      "variant": "current_configured"
+    },
+    {
+      "actions": {
+        "continue": 0,
+        "feed": 0,
+        "human_review": 0,
+        "passage": 0,
+        "reimage": 0
+      },
+      "early_passage": 0,
+      "independent_biological_units": null,
+      "n_at_or_above_target": 0,
+      "n_images": 0,
+      "passage_evidence": "insufficient_no_target_reaching_cases",
+      "ready_called_continue": 0,
+      "reimage_fraction": null,
+      "review_fraction": null,
+      "subset": "near_target_plus_minus_10",
+      "target_pct": 80.0,
+      "threshold_accuracy_among_decided": null,
+      "threshold_action_confusion": {
+        "at_or_above_target": {},
+        "below_target": {}
+      },
+      "threshold_correct_decided_coverage": null,
+      "threshold_correct_decided_n": 0,
+      "threshold_decided_n": 0,
+      "timing_scenario": "assumed_elapsed",
+      "uncertainty_interval": null,
+      "variant": "baseline"
+    },
+    {
+      "actions": {
+        "continue": 0,
+        "feed": 0,
+        "human_review": 0,
+        "passage": 0,
+        "reimage": 0
+      },
+      "early_passage": 0,
+      "independent_biological_units": null,
+      "n_at_or_above_target": 0,
+      "n_images": 0,
+      "passage_evidence": "insufficient_no_target_reaching_cases",
+      "ready_called_continue": 0,
+      "reimage_fraction": null,
+      "review_fraction": null,
+      "subset": "near_target_plus_minus_10",
+      "target_pct": 80.0,
+      "threshold_accuracy_among_decided": null,
+      "threshold_action_confusion": {
+        "at_or_above_target": {},
+        "below_target": {}
+      },
+      "threshold_correct_decided_coverage": null,
+      "threshold_correct_decided_n": 0,
+      "threshold_decided_n": 0,
+      "timing_scenario": "assumed_elapsed",
+      "uncertainty_interval": null,
+      "variant": "baseline_classifier_demoted"
+    },
+    {
+      "actions": {
+        "continue": 0,
+        "feed": 0,
+        "human_review": 0,
+        "passage": 0,
+        "reimage": 0
+      },
+      "early_passage": 0,
+      "independent_biological_units": null,
+      "n_at_or_above_target": 0,
+      "n_images": 0,
+      "passage_evidence": "insufficient_no_target_reaching_cases",
+      "ready_called_continue": 0,
+      "reimage_fraction": null,
+      "review_fraction": null,
+      "subset": "near_target_plus_minus_10",
+      "target_pct": 80.0,
+      "threshold_accuracy_among_decided": null,
+      "threshold_action_confusion": {
+        "at_or_above_target": {},
+        "below_target": {}
+      },
+      "threshold_correct_decided_coverage": null,
+      "threshold_correct_decided_n": 0,
+      "threshold_decided_n": 0,
+      "timing_scenario": "assumed_elapsed",
+      "uncertainty_interval": null,
+      "variant": "current_uncalibrated"
+    },
+    {
+      "actions": {
+        "continue": 0,
+        "feed": 0,
+        "human_review": 0,
+        "passage": 0,
+        "reimage": 0
+      },
+      "early_passage": 0,
+      "independent_biological_units": null,
+      "n_at_or_above_target": 0,
+      "n_images": 0,
+      "passage_evidence": "insufficient_no_target_reaching_cases",
+      "ready_called_continue": 0,
+      "reimage_fraction": null,
+      "review_fraction": null,
+      "subset": "near_target_plus_minus_10",
+      "target_pct": 80.0,
+      "threshold_accuracy_among_decided": null,
+      "threshold_action_confusion": {
+        "at_or_above_target": {},
+        "below_target": {}
+      },
+      "threshold_correct_decided_coverage": null,
+      "threshold_correct_decided_n": 0,
+      "threshold_decided_n": 0,
+      "timing_scenario": "assumed_elapsed",
+      "uncertainty_interval": null,
+      "variant": "current_configured"
+    },
+    {
+      "actions": {
+        "continue": 1,
+        "feed": 0,
+        "human_review": 32,
+        "passage": 0,
+        "reimage": 0
+      },
+      "early_passage": 0,
+      "independent_biological_units": null,
+      "n_at_or_above_target": 0,
+      "n_images": 33,
+      "passage_evidence": "insufficient_no_target_reaching_cases",
+      "ready_called_continue": 0,
+      "reimage_fraction": 0.0,
+      "review_fraction": 0.9696969696969697,
+      "subset": "all",
+      "target_pct": 80.0,
+      "threshold_accuracy_among_decided": 1.0,
+      "threshold_action_confusion": {
+        "at_or_above_target": {},
+        "below_target": {
+          "continue": 1,
+          "human_review": 32
+        }
+      },
+      "threshold_correct_decided_coverage": 0.030303030303030304,
+      "threshold_correct_decided_n": 1,
+      "threshold_decided_n": 1,
+      "timing_scenario": "unknown",
+      "uncertainty_interval": null,
+      "variant": "baseline"
+    },
+    {
+      "actions": {
+        "continue": 31,
+        "feed": 0,
+        "human_review": 2,
+        "passage": 0,
+        "reimage": 0
+      },
+      "early_passage": 0,
+      "independent_biological_units": null,
+      "n_at_or_above_target": 0,
+      "n_images": 33,
+      "passage_evidence": "insufficient_no_target_reaching_cases",
+      "ready_called_continue": 0,
+      "reimage_fraction": 0.0,
+      "review_fraction": 0.06060606060606061,
+      "subset": "all",
+      "target_pct": 80.0,
+      "threshold_accuracy_among_decided": 1.0,
+      "threshold_action_confusion": {
+        "at_or_above_target": {},
+        "below_target": {
+          "continue": 31,
+          "human_review": 2
+        }
+      },
+      "threshold_correct_decided_coverage": 0.9393939393939394,
+      "threshold_correct_decided_n": 31,
+      "threshold_decided_n": 31,
+      "timing_scenario": "unknown",
+      "uncertainty_interval": null,
+      "variant": "baseline_classifier_demoted"
+    },
+    {
+      "actions": {
+        "continue": 33,
+        "feed": 0,
+        "human_review": 0,
+        "passage": 0,
+        "reimage": 0
+      },
+      "early_passage": 0,
+      "independent_biological_units": null,
+      "n_at_or_above_target": 0,
+      "n_images": 33,
+      "passage_evidence": "insufficient_no_target_reaching_cases",
+      "ready_called_continue": 0,
+      "reimage_fraction": 0.0,
+      "review_fraction": 0.0,
+      "subset": "all",
+      "target_pct": 80.0,
+      "threshold_accuracy_among_decided": 1.0,
+      "threshold_action_confusion": {
+        "at_or_above_target": {},
+        "below_target": {
+          "continue": 33
+        }
+      },
+      "threshold_correct_decided_coverage": 1.0,
+      "threshold_correct_decided_n": 33,
+      "threshold_decided_n": 33,
+      "timing_scenario": "unknown",
+      "uncertainty_interval": null,
+      "variant": "current_uncalibrated"
+    },
+    {
+      "actions": {
+        "continue": 31,
+        "feed": 0,
+        "human_review": 2,
+        "passage": 0,
+        "reimage": 0
+      },
+      "early_passage": 0,
+      "independent_biological_units": null,
+      "n_at_or_above_target": 0,
+      "n_images": 33,
+      "passage_evidence": "insufficient_no_target_reaching_cases",
+      "ready_called_continue": 0,
+      "reimage_fraction": 0.0,
+      "review_fraction": 0.06060606060606061,
+      "subset": "all",
+      "target_pct": 80.0,
+      "threshold_accuracy_among_decided": 1.0,
+      "threshold_action_confusion": {
+        "at_or_above_target": {},
+        "below_target": {
+          "continue": 31,
+          "human_review": 2
+        }
+      },
+      "threshold_correct_decided_coverage": 0.9393939393939394,
+      "threshold_correct_decided_n": 31,
+      "threshold_decided_n": 31,
+      "timing_scenario": "unknown",
+      "uncertainty_interval": null,
+      "variant": "current_configured"
+    },
+    {
+      "actions": {
+        "continue": 0,
+        "feed": 0,
+        "human_review": 3,
+        "passage": 0,
+        "reimage": 0
+      },
+      "early_passage": 0,
+      "independent_biological_units": null,
+      "n_at_or_above_target": 0,
+      "n_images": 3,
+      "passage_evidence": "insufficient_no_target_reaching_cases",
+      "ready_called_continue": 0,
+      "reimage_fraction": 0.0,
+      "review_fraction": 1.0,
+      "subset": "dense_gt_ge_40",
+      "target_pct": 80.0,
+      "threshold_accuracy_among_decided": null,
+      "threshold_action_confusion": {
+        "at_or_above_target": {},
+        "below_target": {
+          "human_review": 3
+        }
+      },
+      "threshold_correct_decided_coverage": 0.0,
+      "threshold_correct_decided_n": 0,
+      "threshold_decided_n": 0,
+      "timing_scenario": "unknown",
+      "uncertainty_interval": null,
+      "variant": "baseline"
+    },
+    {
+      "actions": {
+        "continue": 2,
+        "feed": 0,
+        "human_review": 1,
+        "passage": 0,
+        "reimage": 0
+      },
+      "early_passage": 0,
+      "independent_biological_units": null,
+      "n_at_or_above_target": 0,
+      "n_images": 3,
+      "passage_evidence": "insufficient_no_target_reaching_cases",
+      "ready_called_continue": 0,
+      "reimage_fraction": 0.0,
+      "review_fraction": 0.3333333333333333,
+      "subset": "dense_gt_ge_40",
+      "target_pct": 80.0,
+      "threshold_accuracy_among_decided": 1.0,
+      "threshold_action_confusion": {
+        "at_or_above_target": {},
+        "below_target": {
+          "continue": 2,
+          "human_review": 1
+        }
+      },
+      "threshold_correct_decided_coverage": 0.6666666666666666,
+      "threshold_correct_decided_n": 2,
+      "threshold_decided_n": 2,
+      "timing_scenario": "unknown",
+      "uncertainty_interval": null,
+      "variant": "baseline_classifier_demoted"
+    },
+    {
+      "actions": {
+        "continue": 3,
+        "feed": 0,
+        "human_review": 0,
+        "passage": 0,
+        "reimage": 0
+      },
+      "early_passage": 0,
+      "independent_biological_units": null,
+      "n_at_or_above_target": 0,
+      "n_images": 3,
+      "passage_evidence": "insufficient_no_target_reaching_cases",
+      "ready_called_continue": 0,
+      "reimage_fraction": 0.0,
+      "review_fraction": 0.0,
+      "subset": "dense_gt_ge_40",
+      "target_pct": 80.0,
+      "threshold_accuracy_among_decided": 1.0,
+      "threshold_action_confusion": {
+        "at_or_above_target": {},
+        "below_target": {
+          "continue": 3
+        }
+      },
+      "threshold_correct_decided_coverage": 1.0,
+      "threshold_correct_decided_n": 3,
+      "threshold_decided_n": 3,
+      "timing_scenario": "unknown",
+      "uncertainty_interval": null,
+      "variant": "current_uncalibrated"
+    },
+    {
+      "actions": {
+        "continue": 1,
+        "feed": 0,
+        "human_review": 2,
+        "passage": 0,
+        "reimage": 0
+      },
+      "early_passage": 0,
+      "independent_biological_units": null,
+      "n_at_or_above_target": 0,
+      "n_images": 3,
+      "passage_evidence": "insufficient_no_target_reaching_cases",
+      "ready_called_continue": 0,
+      "reimage_fraction": 0.0,
+      "review_fraction": 0.6666666666666666,
+      "subset": "dense_gt_ge_40",
+      "target_pct": 80.0,
+      "threshold_accuracy_among_decided": 1.0,
+      "threshold_action_confusion": {
+        "at_or_above_target": {},
+        "below_target": {
+          "continue": 1,
+          "human_review": 2
+        }
+      },
+      "threshold_correct_decided_coverage": 0.3333333333333333,
+      "threshold_correct_decided_n": 1,
+      "threshold_decided_n": 1,
+      "timing_scenario": "unknown",
+      "uncertainty_interval": null,
+      "variant": "current_configured"
+    },
+    {
+      "actions": {
+        "continue": 0,
+        "feed": 0,
+        "human_review": 0,
+        "passage": 0,
+        "reimage": 0
+      },
+      "early_passage": 0,
+      "independent_biological_units": null,
+      "n_at_or_above_target": 0,
+      "n_images": 0,
+      "passage_evidence": "insufficient_no_target_reaching_cases",
+      "ready_called_continue": 0,
+      "reimage_fraction": null,
+      "review_fraction": null,
+      "subset": "near_target_plus_minus_10",
+      "target_pct": 80.0,
+      "threshold_accuracy_among_decided": null,
+      "threshold_action_confusion": {
+        "at_or_above_target": {},
+        "below_target": {}
+      },
+      "threshold_correct_decided_coverage": null,
+      "threshold_correct_decided_n": 0,
+      "threshold_decided_n": 0,
+      "timing_scenario": "unknown",
+      "uncertainty_interval": null,
+      "variant": "baseline"
+    },
+    {
+      "actions": {
+        "continue": 0,
+        "feed": 0,
+        "human_review": 0,
+        "passage": 0,
+        "reimage": 0
+      },
+      "early_passage": 0,
+      "independent_biological_units": null,
+      "n_at_or_above_target": 0,
+      "n_images": 0,
+      "passage_evidence": "insufficient_no_target_reaching_cases",
+      "ready_called_continue": 0,
+      "reimage_fraction": null,
+      "review_fraction": null,
+      "subset": "near_target_plus_minus_10",
+      "target_pct": 80.0,
+      "threshold_accuracy_among_decided": null,
+      "threshold_action_confusion": {
+        "at_or_above_target": {},
+        "below_target": {}
+      },
+      "threshold_correct_decided_coverage": null,
+      "threshold_correct_decided_n": 0,
+      "threshold_decided_n": 0,
+      "timing_scenario": "unknown",
+      "uncertainty_interval": null,
+      "variant": "baseline_classifier_demoted"
+    },
+    {
+      "actions": {
+        "continue": 0,
+        "feed": 0,
+        "human_review": 0,
+        "passage": 0,
+        "reimage": 0
+      },
+      "early_passage": 0,
+      "independent_biological_units": null,
+      "n_at_or_above_target": 0,
+      "n_images": 0,
+      "passage_evidence": "insufficient_no_target_reaching_cases",
+      "ready_called_continue": 0,
+      "reimage_fraction": null,
+      "review_fraction": null,
+      "subset": "near_target_plus_minus_10",
+      "target_pct": 80.0,
+      "threshold_accuracy_among_decided": null,
+      "threshold_action_confusion": {
+        "at_or_above_target": {},
+        "below_target": {}
+      },
+      "threshold_correct_decided_coverage": null,
+      "threshold_correct_decided_n": 0,
+      "threshold_decided_n": 0,
+      "timing_scenario": "unknown",
+      "uncertainty_interval": null,
+      "variant": "current_uncalibrated"
+    },
+    {
+      "actions": {
+        "continue": 0,
+        "feed": 0,
+        "human_review": 0,
+        "passage": 0,
+        "reimage": 0
+      },
+      "early_passage": 0,
+      "independent_biological_units": null,
+      "n_at_or_above_target": 0,
+      "n_images": 0,
+      "passage_evidence": "insufficient_no_target_reaching_cases",
+      "ready_called_continue": 0,
+      "reimage_fraction": null,
+      "review_fraction": null,
+      "subset": "near_target_plus_minus_10",
+      "target_pct": 80.0,
+      "threshold_accuracy_among_decided": null,
+      "threshold_action_confusion": {
+        "at_or_above_target": {},
+        "below_target": {}
+      },
+      "threshold_correct_decided_coverage": null,
+      "threshold_correct_decided_n": 0,
+      "threshold_decided_n": 0,
+      "timing_scenario": "unknown",
+      "uncertainty_interval": null,
+      "variant": "current_configured"
+    },
+    {
+      "actions": {
+        "continue": 1,
+        "feed": 0,
+        "human_review": 32,
+        "passage": 0,
+        "reimage": 0
+      },
+      "early_passage": 0,
+      "independent_biological_units": null,
+      "n_at_or_above_target": 3,
+      "n_images": 33,
+      "passage_evidence": "descriptive_only_not_action_validation",
+      "ready_called_continue": 0,
+      "reimage_fraction": 0.0,
+      "review_fraction": 0.9696969696969697,
+      "subset": "all",
+      "target_pct": 50.0,
+      "threshold_accuracy_among_decided": 1.0,
+      "threshold_action_confusion": {
+        "at_or_above_target": {
+          "human_review": 3
+        },
+        "below_target": {
+          "continue": 1,
+          "human_review": 29
+        }
+      },
+      "threshold_correct_decided_coverage": 0.030303030303030304,
+      "threshold_correct_decided_n": 1,
+      "threshold_decided_n": 1,
+      "timing_scenario": "assumed_elapsed",
+      "uncertainty_interval": null,
+      "variant": "baseline"
+    },
+    {
+      "actions": {
+        "continue": 30,
+        "feed": 0,
+        "human_review": 2,
+        "passage": 1,
+        "reimage": 0
+      },
+      "early_passage": 0,
+      "independent_biological_units": null,
+      "n_at_or_above_target": 3,
+      "n_images": 33,
+      "passage_evidence": "descriptive_only_not_action_validation",
+      "ready_called_continue": 1,
+      "reimage_fraction": 0.0,
+      "review_fraction": 0.06060606060606061,
+      "subset": "all",
+      "target_pct": 50.0,
+      "threshold_accuracy_among_decided": 0.967741935483871,
+      "threshold_action_confusion": {
+        "at_or_above_target": {
+          "continue": 1,
+          "human_review": 1,
+          "passage": 1
+        },
+        "below_target": {
+          "continue": 29,
+          "human_review": 1
+        }
+      },
+      "threshold_correct_decided_coverage": 0.9090909090909091,
+      "threshold_correct_decided_n": 30,
+      "threshold_decided_n": 31,
+      "timing_scenario": "assumed_elapsed",
+      "uncertainty_interval": null,
+      "variant": "baseline_classifier_demoted"
+    },
+    {
+      "actions": {
+        "continue": 32,
+        "feed": 0,
+        "human_review": 1,
+        "passage": 0,
+        "reimage": 0
+      },
+      "early_passage": 0,
+      "independent_biological_units": null,
+      "n_at_or_above_target": 3,
+      "n_images": 33,
+      "passage_evidence": "descriptive_only_not_action_validation",
+      "ready_called_continue": 2,
+      "reimage_fraction": 0.0,
+      "review_fraction": 0.030303030303030304,
+      "subset": "all",
+      "target_pct": 50.0,
+      "threshold_accuracy_among_decided": 0.9375,
+      "threshold_action_confusion": {
+        "at_or_above_target": {
+          "continue": 2,
+          "human_review": 1
+        },
+        "below_target": {
+          "continue": 30
+        }
+      },
+      "threshold_correct_decided_coverage": 0.9090909090909091,
+      "threshold_correct_decided_n": 30,
+      "threshold_decided_n": 32,
+      "timing_scenario": "assumed_elapsed",
+      "uncertainty_interval": null,
+      "variant": "current_uncalibrated"
+    },
+    {
+      "actions": {
+        "continue": 22,
+        "feed": 0,
+        "human_review": 11,
+        "passage": 0,
+        "reimage": 0
+      },
+      "early_passage": 0,
+      "independent_biological_units": null,
+      "n_at_or_above_target": 3,
+      "n_images": 33,
+      "passage_evidence": "descriptive_only_not_action_validation",
+      "ready_called_continue": 0,
+      "reimage_fraction": 0.0,
+      "review_fraction": 0.3333333333333333,
+      "subset": "all",
+      "target_pct": 50.0,
+      "threshold_accuracy_among_decided": 1.0,
+      "threshold_action_confusion": {
+        "at_or_above_target": {
+          "human_review": 3
+        },
+        "below_target": {
+          "continue": 22,
+          "human_review": 8
+        }
+      },
+      "threshold_correct_decided_coverage": 0.6666666666666666,
+      "threshold_correct_decided_n": 22,
+      "threshold_decided_n": 22,
+      "timing_scenario": "assumed_elapsed",
+      "uncertainty_interval": null,
+      "variant": "current_configured"
+    },
+    {
+      "actions": {
+        "continue": 0,
+        "feed": 0,
+        "human_review": 3,
+        "passage": 0,
+        "reimage": 0
+      },
+      "early_passage": 0,
+      "independent_biological_units": null,
+      "n_at_or_above_target": 3,
+      "n_images": 3,
+      "passage_evidence": "descriptive_only_not_action_validation",
+      "ready_called_continue": 0,
+      "reimage_fraction": 0.0,
+      "review_fraction": 1.0,
+      "subset": "dense_gt_ge_40",
+      "target_pct": 50.0,
+      "threshold_accuracy_among_decided": null,
+      "threshold_action_confusion": {
+        "at_or_above_target": {
+          "human_review": 3
+        },
+        "below_target": {}
+      },
+      "threshold_correct_decided_coverage": 0.0,
+      "threshold_correct_decided_n": 0,
+      "threshold_decided_n": 0,
+      "timing_scenario": "assumed_elapsed",
+      "uncertainty_interval": null,
+      "variant": "baseline"
+    },
+    {
+      "actions": {
+        "continue": 1,
+        "feed": 0,
+        "human_review": 1,
+        "passage": 1,
+        "reimage": 0
+      },
+      "early_passage": 0,
+      "independent_biological_units": null,
+      "n_at_or_above_target": 3,
+      "n_images": 3,
+      "passage_evidence": "descriptive_only_not_action_validation",
+      "ready_called_continue": 1,
+      "reimage_fraction": 0.0,
+      "review_fraction": 0.3333333333333333,
+      "subset": "dense_gt_ge_40",
+      "target_pct": 50.0,
+      "threshold_accuracy_among_decided": 0.5,
+      "threshold_action_confusion": {
+        "at_or_above_target": {
+          "continue": 1,
+          "human_review": 1,
+          "passage": 1
+        },
+        "below_target": {}
+      },
+      "threshold_correct_decided_coverage": 0.3333333333333333,
+      "threshold_correct_decided_n": 1,
+      "threshold_decided_n": 2,
+      "timing_scenario": "assumed_elapsed",
+      "uncertainty_interval": null,
+      "variant": "baseline_classifier_demoted"
+    },
+    {
+      "actions": {
+        "continue": 2,
+        "feed": 0,
+        "human_review": 1,
+        "passage": 0,
+        "reimage": 0
+      },
+      "early_passage": 0,
+      "independent_biological_units": null,
+      "n_at_or_above_target": 3,
+      "n_images": 3,
+      "passage_evidence": "descriptive_only_not_action_validation",
+      "ready_called_continue": 2,
+      "reimage_fraction": 0.0,
+      "review_fraction": 0.3333333333333333,
+      "subset": "dense_gt_ge_40",
+      "target_pct": 50.0,
+      "threshold_accuracy_among_decided": 0.0,
+      "threshold_action_confusion": {
+        "at_or_above_target": {
+          "continue": 2,
+          "human_review": 1
+        },
+        "below_target": {}
+      },
+      "threshold_correct_decided_coverage": 0.0,
+      "threshold_correct_decided_n": 0,
+      "threshold_decided_n": 2,
+      "timing_scenario": "assumed_elapsed",
+      "uncertainty_interval": null,
+      "variant": "current_uncalibrated"
+    },
+    {
+      "actions": {
+        "continue": 0,
+        "feed": 0,
+        "human_review": 3,
+        "passage": 0,
+        "reimage": 0
+      },
+      "early_passage": 0,
+      "independent_biological_units": null,
+      "n_at_or_above_target": 3,
+      "n_images": 3,
+      "passage_evidence": "descriptive_only_not_action_validation",
+      "ready_called_continue": 0,
+      "reimage_fraction": 0.0,
+      "review_fraction": 1.0,
+      "subset": "dense_gt_ge_40",
+      "target_pct": 50.0,
+      "threshold_accuracy_among_decided": null,
+      "threshold_action_confusion": {
+        "at_or_above_target": {
+          "human_review": 3
+        },
+        "below_target": {}
+      },
+      "threshold_correct_decided_coverage": 0.0,
+      "threshold_correct_decided_n": 0,
+      "threshold_decided_n": 0,
+      "timing_scenario": "assumed_elapsed",
+      "uncertainty_interval": null,
+      "variant": "current_configured"
+    },
+    {
+      "actions": {
+        "continue": 0,
+        "feed": 0,
+        "human_review": 3,
+        "passage": 0,
+        "reimage": 0
+      },
+      "early_passage": 0,
+      "independent_biological_units": null,
+      "n_at_or_above_target": 3,
+      "n_images": 3,
+      "passage_evidence": "descriptive_only_not_action_validation",
+      "ready_called_continue": 0,
+      "reimage_fraction": 0.0,
+      "review_fraction": 1.0,
+      "subset": "near_target_plus_minus_10",
+      "target_pct": 50.0,
+      "threshold_accuracy_among_decided": null,
+      "threshold_action_confusion": {
+        "at_or_above_target": {
+          "human_review": 3
+        },
+        "below_target": {}
+      },
+      "threshold_correct_decided_coverage": 0.0,
+      "threshold_correct_decided_n": 0,
+      "threshold_decided_n": 0,
+      "timing_scenario": "assumed_elapsed",
+      "uncertainty_interval": null,
+      "variant": "baseline"
+    },
+    {
+      "actions": {
+        "continue": 1,
+        "feed": 0,
+        "human_review": 1,
+        "passage": 1,
+        "reimage": 0
+      },
+      "early_passage": 0,
+      "independent_biological_units": null,
+      "n_at_or_above_target": 3,
+      "n_images": 3,
+      "passage_evidence": "descriptive_only_not_action_validation",
+      "ready_called_continue": 1,
+      "reimage_fraction": 0.0,
+      "review_fraction": 0.3333333333333333,
+      "subset": "near_target_plus_minus_10",
+      "target_pct": 50.0,
+      "threshold_accuracy_among_decided": 0.5,
+      "threshold_action_confusion": {
+        "at_or_above_target": {
+          "continue": 1,
+          "human_review": 1,
+          "passage": 1
+        },
+        "below_target": {}
+      },
+      "threshold_correct_decided_coverage": 0.3333333333333333,
+      "threshold_correct_decided_n": 1,
+      "threshold_decided_n": 2,
+      "timing_scenario": "assumed_elapsed",
+      "uncertainty_interval": null,
+      "variant": "baseline_classifier_demoted"
+    },
+    {
+      "actions": {
+        "continue": 2,
+        "feed": 0,
+        "human_review": 1,
+        "passage": 0,
+        "reimage": 0
+      },
+      "early_passage": 0,
+      "independent_biological_units": null,
+      "n_at_or_above_target": 3,
+      "n_images": 3,
+      "passage_evidence": "descriptive_only_not_action_validation",
+      "ready_called_continue": 2,
+      "reimage_fraction": 0.0,
+      "review_fraction": 0.3333333333333333,
+      "subset": "near_target_plus_minus_10",
+      "target_pct": 50.0,
+      "threshold_accuracy_among_decided": 0.0,
+      "threshold_action_confusion": {
+        "at_or_above_target": {
+          "continue": 2,
+          "human_review": 1
+        },
+        "below_target": {}
+      },
+      "threshold_correct_decided_coverage": 0.0,
+      "threshold_correct_decided_n": 0,
+      "threshold_decided_n": 2,
+      "timing_scenario": "assumed_elapsed",
+      "uncertainty_interval": null,
+      "variant": "current_uncalibrated"
+    },
+    {
+      "actions": {
+        "continue": 0,
+        "feed": 0,
+        "human_review": 3,
+        "passage": 0,
+        "reimage": 0
+      },
+      "early_passage": 0,
+      "independent_biological_units": null,
+      "n_at_or_above_target": 3,
+      "n_images": 3,
+      "passage_evidence": "descriptive_only_not_action_validation",
+      "ready_called_continue": 0,
+      "reimage_fraction": 0.0,
+      "review_fraction": 1.0,
+      "subset": "near_target_plus_minus_10",
+      "target_pct": 50.0,
+      "threshold_accuracy_among_decided": null,
+      "threshold_action_confusion": {
+        "at_or_above_target": {
+          "human_review": 3
+        },
+        "below_target": {}
+      },
+      "threshold_correct_decided_coverage": 0.0,
+      "threshold_correct_decided_n": 0,
+      "threshold_decided_n": 0,
+      "timing_scenario": "assumed_elapsed",
+      "uncertainty_interval": null,
+      "variant": "current_configured"
+    },
+    {
+      "actions": {
+        "continue": 1,
+        "feed": 0,
+        "human_review": 32,
+        "passage": 0,
+        "reimage": 0
+      },
+      "early_passage": 0,
+      "independent_biological_units": null,
+      "n_at_or_above_target": 3,
+      "n_images": 33,
+      "passage_evidence": "descriptive_only_not_action_validation",
+      "ready_called_continue": 0,
+      "reimage_fraction": 0.0,
+      "review_fraction": 0.9696969696969697,
+      "subset": "all",
+      "target_pct": 50.0,
+      "threshold_accuracy_among_decided": 1.0,
+      "threshold_action_confusion": {
+        "at_or_above_target": {
+          "human_review": 3
+        },
+        "below_target": {
+          "continue": 1,
+          "human_review": 29
+        }
+      },
+      "threshold_correct_decided_coverage": 0.030303030303030304,
+      "threshold_correct_decided_n": 1,
+      "threshold_decided_n": 1,
+      "timing_scenario": "unknown",
+      "uncertainty_interval": null,
+      "variant": "baseline"
+    },
+    {
+      "actions": {
+        "continue": 30,
+        "feed": 0,
+        "human_review": 2,
+        "passage": 1,
+        "reimage": 0
+      },
+      "early_passage": 0,
+      "independent_biological_units": null,
+      "n_at_or_above_target": 3,
+      "n_images": 33,
+      "passage_evidence": "descriptive_only_not_action_validation",
+      "ready_called_continue": 1,
+      "reimage_fraction": 0.0,
+      "review_fraction": 0.06060606060606061,
+      "subset": "all",
+      "target_pct": 50.0,
+      "threshold_accuracy_among_decided": 0.967741935483871,
+      "threshold_action_confusion": {
+        "at_or_above_target": {
+          "continue": 1,
+          "human_review": 1,
+          "passage": 1
+        },
+        "below_target": {
+          "continue": 29,
+          "human_review": 1
+        }
+      },
+      "threshold_correct_decided_coverage": 0.9090909090909091,
+      "threshold_correct_decided_n": 30,
+      "threshold_decided_n": 31,
+      "timing_scenario": "unknown",
+      "uncertainty_interval": null,
+      "variant": "baseline_classifier_demoted"
+    },
+    {
+      "actions": {
+        "continue": 32,
+        "feed": 0,
+        "human_review": 1,
+        "passage": 0,
+        "reimage": 0
+      },
+      "early_passage": 0,
+      "independent_biological_units": null,
+      "n_at_or_above_target": 3,
+      "n_images": 33,
+      "passage_evidence": "descriptive_only_not_action_validation",
+      "ready_called_continue": 2,
+      "reimage_fraction": 0.0,
+      "review_fraction": 0.030303030303030304,
+      "subset": "all",
+      "target_pct": 50.0,
+      "threshold_accuracy_among_decided": 0.9375,
+      "threshold_action_confusion": {
+        "at_or_above_target": {
+          "continue": 2,
+          "human_review": 1
+        },
+        "below_target": {
+          "continue": 30
+        }
+      },
+      "threshold_correct_decided_coverage": 0.9090909090909091,
+      "threshold_correct_decided_n": 30,
+      "threshold_decided_n": 32,
+      "timing_scenario": "unknown",
+      "uncertainty_interval": null,
+      "variant": "current_uncalibrated"
+    },
+    {
+      "actions": {
+        "continue": 22,
+        "feed": 0,
+        "human_review": 11,
+        "passage": 0,
+        "reimage": 0
+      },
+      "early_passage": 0,
+      "independent_biological_units": null,
+      "n_at_or_above_target": 3,
+      "n_images": 33,
+      "passage_evidence": "descriptive_only_not_action_validation",
+      "ready_called_continue": 0,
+      "reimage_fraction": 0.0,
+      "review_fraction": 0.3333333333333333,
+      "subset": "all",
+      "target_pct": 50.0,
+      "threshold_accuracy_among_decided": 1.0,
+      "threshold_action_confusion": {
+        "at_or_above_target": {
+          "human_review": 3
+        },
+        "below_target": {
+          "continue": 22,
+          "human_review": 8
+        }
+      },
+      "threshold_correct_decided_coverage": 0.6666666666666666,
+      "threshold_correct_decided_n": 22,
+      "threshold_decided_n": 22,
+      "timing_scenario": "unknown",
+      "uncertainty_interval": null,
+      "variant": "current_configured"
+    },
+    {
+      "actions": {
+        "continue": 0,
+        "feed": 0,
+        "human_review": 3,
+        "passage": 0,
+        "reimage": 0
+      },
+      "early_passage": 0,
+      "independent_biological_units": null,
+      "n_at_or_above_target": 3,
+      "n_images": 3,
+      "passage_evidence": "descriptive_only_not_action_validation",
+      "ready_called_continue": 0,
+      "reimage_fraction": 0.0,
+      "review_fraction": 1.0,
+      "subset": "dense_gt_ge_40",
+      "target_pct": 50.0,
+      "threshold_accuracy_among_decided": null,
+      "threshold_action_confusion": {
+        "at_or_above_target": {
+          "human_review": 3
+        },
+        "below_target": {}
+      },
+      "threshold_correct_decided_coverage": 0.0,
+      "threshold_correct_decided_n": 0,
+      "threshold_decided_n": 0,
+      "timing_scenario": "unknown",
+      "uncertainty_interval": null,
+      "variant": "baseline"
+    },
+    {
+      "actions": {
+        "continue": 1,
+        "feed": 0,
+        "human_review": 1,
+        "passage": 1,
+        "reimage": 0
+      },
+      "early_passage": 0,
+      "independent_biological_units": null,
+      "n_at_or_above_target": 3,
+      "n_images": 3,
+      "passage_evidence": "descriptive_only_not_action_validation",
+      "ready_called_continue": 1,
+      "reimage_fraction": 0.0,
+      "review_fraction": 0.3333333333333333,
+      "subset": "dense_gt_ge_40",
+      "target_pct": 50.0,
+      "threshold_accuracy_among_decided": 0.5,
+      "threshold_action_confusion": {
+        "at_or_above_target": {
+          "continue": 1,
+          "human_review": 1,
+          "passage": 1
+        },
+        "below_target": {}
+      },
+      "threshold_correct_decided_coverage": 0.3333333333333333,
+      "threshold_correct_decided_n": 1,
+      "threshold_decided_n": 2,
+      "timing_scenario": "unknown",
+      "uncertainty_interval": null,
+      "variant": "baseline_classifier_demoted"
+    },
+    {
+      "actions": {
+        "continue": 2,
+        "feed": 0,
+        "human_review": 1,
+        "passage": 0,
+        "reimage": 0
+      },
+      "early_passage": 0,
+      "independent_biological_units": null,
+      "n_at_or_above_target": 3,
+      "n_images": 3,
+      "passage_evidence": "descriptive_only_not_action_validation",
+      "ready_called_continue": 2,
+      "reimage_fraction": 0.0,
+      "review_fraction": 0.3333333333333333,
+      "subset": "dense_gt_ge_40",
+      "target_pct": 50.0,
+      "threshold_accuracy_among_decided": 0.0,
+      "threshold_action_confusion": {
+        "at_or_above_target": {
+          "continue": 2,
+          "human_review": 1
+        },
+        "below_target": {}
+      },
+      "threshold_correct_decided_coverage": 0.0,
+      "threshold_correct_decided_n": 0,
+      "threshold_decided_n": 2,
+      "timing_scenario": "unknown",
+      "uncertainty_interval": null,
+      "variant": "current_uncalibrated"
+    },
+    {
+      "actions": {
+        "continue": 0,
+        "feed": 0,
+        "human_review": 3,
+        "passage": 0,
+        "reimage": 0
+      },
+      "early_passage": 0,
+      "independent_biological_units": null,
+      "n_at_or_above_target": 3,
+      "n_images": 3,
+      "passage_evidence": "descriptive_only_not_action_validation",
+      "ready_called_continue": 0,
+      "reimage_fraction": 0.0,
+      "review_fraction": 1.0,
+      "subset": "dense_gt_ge_40",
+      "target_pct": 50.0,
+      "threshold_accuracy_among_decided": null,
+      "threshold_action_confusion": {
+        "at_or_above_target": {
+          "human_review": 3
+        },
+        "below_target": {}
+      },
+      "threshold_correct_decided_coverage": 0.0,
+      "threshold_correct_decided_n": 0,
+      "threshold_decided_n": 0,
+      "timing_scenario": "unknown",
+      "uncertainty_interval": null,
+      "variant": "current_configured"
+    },
+    {
+      "actions": {
+        "continue": 0,
+        "feed": 0,
+        "human_review": 3,
+        "passage": 0,
+        "reimage": 0
+      },
+      "early_passage": 0,
+      "independent_biological_units": null,
+      "n_at_or_above_target": 3,
+      "n_images": 3,
+      "passage_evidence": "descriptive_only_not_action_validation",
+      "ready_called_continue": 0,
+      "reimage_fraction": 0.0,
+      "review_fraction": 1.0,
+      "subset": "near_target_plus_minus_10",
+      "target_pct": 50.0,
+      "threshold_accuracy_among_decided": null,
+      "threshold_action_confusion": {
+        "at_or_above_target": {
+          "human_review": 3
+        },
+        "below_target": {}
+      },
+      "threshold_correct_decided_coverage": 0.0,
+      "threshold_correct_decided_n": 0,
+      "threshold_decided_n": 0,
+      "timing_scenario": "unknown",
+      "uncertainty_interval": null,
+      "variant": "baseline"
+    },
+    {
+      "actions": {
+        "continue": 1,
+        "feed": 0,
+        "human_review": 1,
+        "passage": 1,
+        "reimage": 0
+      },
+      "early_passage": 0,
+      "independent_biological_units": null,
+      "n_at_or_above_target": 3,
+      "n_images": 3,
+      "passage_evidence": "descriptive_only_not_action_validation",
+      "ready_called_continue": 1,
+      "reimage_fraction": 0.0,
+      "review_fraction": 0.3333333333333333,
+      "subset": "near_target_plus_minus_10",
+      "target_pct": 50.0,
+      "threshold_accuracy_among_decided": 0.5,
+      "threshold_action_confusion": {
+        "at_or_above_target": {
+          "continue": 1,
+          "human_review": 1,
+          "passage": 1
+        },
+        "below_target": {}
+      },
+      "threshold_correct_decided_coverage": 0.3333333333333333,
+      "threshold_correct_decided_n": 1,
+      "threshold_decided_n": 2,
+      "timing_scenario": "unknown",
+      "uncertainty_interval": null,
+      "variant": "baseline_classifier_demoted"
+    },
+    {
+      "actions": {
+        "continue": 2,
+        "feed": 0,
+        "human_review": 1,
+        "passage": 0,
+        "reimage": 0
+      },
+      "early_passage": 0,
+      "independent_biological_units": null,
+      "n_at_or_above_target": 3,
+      "n_images": 3,
+      "passage_evidence": "descriptive_only_not_action_validation",
+      "ready_called_continue": 2,
+      "reimage_fraction": 0.0,
+      "review_fraction": 0.3333333333333333,
+      "subset": "near_target_plus_minus_10",
+      "target_pct": 50.0,
+      "threshold_accuracy_among_decided": 0.0,
+      "threshold_action_confusion": {
+        "at_or_above_target": {
+          "continue": 2,
+          "human_review": 1
+        },
+        "below_target": {}
+      },
+      "threshold_correct_decided_coverage": 0.0,
+      "threshold_correct_decided_n": 0,
+      "threshold_decided_n": 2,
+      "timing_scenario": "unknown",
+      "uncertainty_interval": null,
+      "variant": "current_uncalibrated"
+    },
+    {
+      "actions": {
+        "continue": 0,
+        "feed": 0,
+        "human_review": 3,
+        "passage": 0,
+        "reimage": 0
+      },
+      "early_passage": 0,
+      "independent_biological_units": null,
+      "n_at_or_above_target": 3,
+      "n_images": 3,
+      "passage_evidence": "descriptive_only_not_action_validation",
+      "ready_called_continue": 0,
+      "reimage_fraction": 0.0,
+      "review_fraction": 1.0,
+      "subset": "near_target_plus_minus_10",
+      "target_pct": 50.0,
+      "threshold_accuracy_among_decided": null,
+      "threshold_action_confusion": {
+        "at_or_above_target": {
+          "human_review": 3
+        },
+        "below_target": {}
+      },
+      "threshold_correct_decided_coverage": 0.0,
+      "threshold_correct_decided_n": 0,
+      "threshold_decided_n": 0,
+      "timing_scenario": "unknown",
+      "uncertainty_interval": null,
+      "variant": "current_configured"
+    }
+  ],
+  "uncertainty": {
+    "confidence_interval": null,
+    "reason": "Biological independent-unit IDs unavailable; reused selected images do not support population inference",
+    "rounding": "CSV readings rounded to 0.01 pp, truth to 0.001 pp; equality uses these stored values"
+  }
+}

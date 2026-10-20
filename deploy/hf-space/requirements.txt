@@ -20,6 +20,7 @@ opencv-python-headless>=4.8
 Pillow>=10.0
 numpy>=1.26
 PyYAML>=6.0
+jsonschema>=4.17
 
 # Deliberately absent: transformers. culture/rationale.py imports it only inside
 # vlm_rationale(), and culture/pipeline.py calls generate_rationale(use_vlm=False)

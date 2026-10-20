@@ -3,22 +3,23 @@ cultureqc.weights — SHA-256 of each model's weights file, for model_weights_ha
 
 Keyed like the record's model_versions (seg, dino, qc). A file that isn't on
 this machine gives null, never a guessed hash. Each file is hashed once per
-process (the Cellpose-SAM file is about 1.2 GB) and re-hashed if its size or
-modification time changes.
+process (the Cellpose-SAM file is about 1.2 GB) and re-hashed if its filesystem
+identity, size, or nanosecond modification/change time changes. These are file
+inventory hashes; reading records take the segmentation hash from model_check.
 """
 
 from __future__ import annotations
 
 import os
 
-_memo: dict[tuple[str, int, float], str] = {}
+_memo: dict[tuple[str, int, int, int, int, int], str] = {}
 
 
 def _sha(path: str | None) -> str | None:
     if not path or not os.path.exists(path):
         return None
     st = os.stat(path)
-    key = (os.path.realpath(path), st.st_size, st.st_mtime)
+    key = (os.path.realpath(path), st.st_dev, st.st_ino, st.st_size, st.st_mtime_ns, st.st_ctime_ns)
     if key not in _memo:
         from culture.records import hash_file
         _memo[key] = hash_file(path)

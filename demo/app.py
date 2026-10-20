@@ -30,6 +30,8 @@ from culture.anomaly import LIVE_LIMITS
 from culture.visuals import anomaly_tile_view, png
 from demo import confluency_3d, lab_demo, precomputed, replay_3d, replay_timeline, viz3d
 from demo.analysis import analyze_image, build_record
+from culture.ingestion import read_image
+from demo.uploads import image_upload_path
 from demo.theme import CultureQCTheme
 
 WORK_DIR = tempfile.mkdtemp(prefix="cultureqc_demo_")
@@ -109,7 +111,7 @@ COUNTED_RGB, COUNTED_ALPHA = (0, 190, 0), 0.45
 # any other setup an unflagged image is "Not flagged", not "Within the normal range". The examples' cell line is a
 # placeholder ("unknown"), so the setup, not the cell line, says which images these are.
 ANOMALY_REFERENCE_SETUP = replay_timeline.SETUP_PROFILE
-STATUS_TEXT = {"validated": "validated", "failed": "failed its criteria", "in_domain_check": "in-domain check only",
+STATUS_TEXT = {"validated": "measurement calibrated", "failed": "failed its criteria", "in_domain_check": "in-domain check only",
                "uncalibrated": "uncalibrated"}
 
 ICONS = {
@@ -155,10 +157,7 @@ def run_analysis(original_path, cell_line, target_confluency, profile_id=None):
         empty = '<div class="rc-empty">Upload an image to begin analysis.</div>'
         return gr.update(), gr.update(visible=False), empty, None, None, None, gr.update(visible=False)
 
-    img = cv2.imread(original_path, cv2.IMREAD_GRAYSCALE)
-    if img is None:
-        err = '<div class="rc-empty">Could not read that image file.</div>'
-        return gr.update(), gr.update(visible=False), err, None, None, None, gr.update(visible=False)
+    img = read_image(original_path).pixels
 
     target_confluency = float(target_confluency or 80.0)
     lab = lab_demo.match(original_path, LAB_IMAGES)        # the fine-tuned model reads the demo set only
@@ -393,7 +392,10 @@ def confluency_card(record, confluency_pct, confluency_confidence, confluency_me
            f'{boundary_ambiguity(confluency_confidence):.2f}: recorded; since rules_v0.5 it no longer decides '
            f'(it tracks density, not error)</span>')
     if prof:
-        label = get_profile(prof["id"]).entry.get("label", prof["id"])
+        try:
+            label = get_profile(prof["id"]).entry.get("label", prof["id"])
+        except ValueError:
+            label = prof["id"]
         status = STATUS_TEXT.get(prof["status"], prof["status"])
         if interval:
             lo, hi = interval
@@ -409,6 +411,14 @@ def confluency_card(record, confluency_pct, confluency_confidence, confluency_me
                          f'profile, so a reading at or above the target goes to a person. Profile '
                          f'<code>{html.escape(prof["id"])}</code>, cutoff {prof["cutoff"]:+.1f}'.replace("cutoff -", "cutoff −")
                          + amb + '</div>')
+    eligibility = (record or {}).get("passage_eligibility")
+    if eligibility is None:
+        eligibility_text = "Historical policy replay; passage eligibility was not evaluated. Not current authorization."
+    elif eligibility["eligible"]:
+        eligibility_text = "Validated decision range matched; passage still depends on the remaining checks."
+    else:
+        eligibility_text = "Measurement only; automatic passage is not supported for this request. " + eligibility["reason"]
+    band_line += f'<div class="band-line">{html.escape(eligibility_text)}</div>'
     q = (record or {}).get("quality_gate", "absent")
     if q == "absent":
         gate_line = ""
@@ -549,9 +559,16 @@ def render_results(
     if example is None:
         audit_meta = f"Chain {'intact' if chain_ok else 'BROKEN'} &middot; record #{record_count}"
         provenance_html = ""
+        activation_note = (
+            '<div class="classifier-note">Local weight checks cover the shipped Cellpose-SAM and fine-tuned '
+            'segmentation models, using the latest effective model approval appended by inference; a future-dated '
+            'approval does not authorize a change. Profile and rules activation is host-managed: local copies are '
+            'recorded, not enforced or authenticated here. The host platform owns identity and signatures.</div>'
+        )
     else:
         audit_meta = ("Precomputed record, stored with the example; not part of this session's chain")
         provenance_html = render_provenance(example)
+        activation_note = ""
     calibration_line = ("Probabilities temperature-scaled on synthetic validation tiles (V8); "
                         "calibration on real images not measured." if qc_calibrated
                         else "Probabilities not temperature-scaled.")
@@ -559,7 +576,7 @@ def render_results(
     if demoted:
         return f"""
 <div class="rc-stack">
-{provenance_html}{lab_card(lab, 0, compared)}
+{provenance_html}{activation_note}{lab_card(lab, 0, compared)}
 {confluency_card(record, confluency_pct, confluency_confidence, confluency_method, target_confluency, 0)}
 {finetuned_card(finetuned, 50)}{anomaly_html}
 {action_html}
@@ -583,6 +600,7 @@ def render_results(
     return f"""
 <div class="rc-stack">
 {provenance_html}
+{activation_note}
   <div class="rc-card status-card" style="animation-delay:0ms;background:{_tint(flag_color, 0.08)};border-color:{_tint(flag_color, 0.28)}">
     <div class="status-row">
       <span class="status-icon" style="color:{flag_color}">{icon}</span>
@@ -615,6 +633,7 @@ def render_results(
 def on_upload(path):
     """The last output resets the setup picker: a new image is `uncalibrated` until the
     viewer picks the setup that took it, never read with the previous example's profile."""
+    path = image_upload_path(path)
     if not path:
         return gr.update(visible=False), "", None, None, gr.update(), DEFAULT_PROFILE
 
@@ -622,11 +641,13 @@ def on_upload(path):
     # are real microscopy TIFFs — re-encode a browser-safe preview copy so the
     # upload doesn't show a broken-image glyph. The original file (not this
     # copy) is still what gets analyzed and hashed into the audit record.
-    preview_path = path
-    raw = cv2.imread(path, cv2.IMREAD_UNCHANGED)
-    if raw is not None:
-        preview_path = os.path.join(WORK_DIR, f"preview_{next(tempfile._get_candidate_names())}.png")
-        cv2.imwrite(preview_path, raw)
+    try:
+        raw = read_image(path).pixels
+    except (ValueError, OSError) as exc:
+        error = f'<div class="rc-empty">{html.escape(str(exc))}</div>'
+        return gr.update(visible=False), error, None, None, None, DEFAULT_PROFILE
+    preview_path = os.path.join(WORK_DIR, f"preview_{next(tempfile._get_candidate_names())}.png")
+    cv2.imwrite(preview_path, raw)
 
     return gr.update(visible=False), "", path, None, preview_path, DEFAULT_PROFILE
 
@@ -768,7 +789,7 @@ with gr.Blocks(
                     )
                     loading_overlay = gr.HTML('<div class="image-loading-overlay"></div>', visible=False)
                     image_view = gr.Image(
-                        type="filepath", show_label=False, container=False, elem_classes="hero-image",
+                        type="filepath", image_mode=None, show_label=False, container=False, elem_classes="hero-image",
                         sources=["upload"], buttons=[], height="100%",
                     )
                     landscape_plot = gr.Plot(visible=False, show_label=False, container=False,
@@ -884,6 +905,7 @@ with gr.Blocks(
         fn=on_upload,
         inputs=[image_view],
         outputs=[view_toggle, results_html, original_state, overlay_state, image_view, setup],
+        preprocess=False,
     ).then(fn=fresh_image, inputs=None,
            outputs=[map_state, reading_state, review_panel, review_out, landscape_plot, landscape_note, image_view],
            show_progress="hidden")

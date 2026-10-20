@@ -1,5 +1,7 @@
 # v4 versus v2: executable agent backlog
 
+> **Narrative correction, 2026-10-16:** v4 must stand alone as a product. The approved [standalone design](2026-10-16-v4-standalone-product-design.md) and [implementation DAG](../specs/standalone-product-site/README.md) replace comparison-first T01 requirements. T02 is internal validation work, not a homepage prerequisite. Correctness tickets remain in force.
+
 Parent: [VP review](2026-10-15-v4-vs-v2-vp-review.md). Reproductions: [evidence](2026-10-15-v4-vs-v2-evidence.md). Reviewed state: `2cd691a` plus existing local edits, 2026-10-15.
 
 **These are proposed upgrades, not claims that fixes have landed.** P1 means a correctness/evidence gap to close before the corresponding capability is relied upon; P2 means a presentation or reproducibility improvement. No finding is labelled a current production incident. “Before meeting” work can be small even when its strategic impact is high.
@@ -19,7 +21,7 @@ Parent: [VP review](2026-10-15-v4-vs-v2-vp-review.md). Reproductions: [evidence]
 
 | Ticket | Priority | Workstream | Dependency | Completion proves |
 |---|---|---|---|---|
-| T01 | P1 | VP proposition and short demo | None | The upgrade and concrete evaluation request are understandable |
+| T01 | P1 | Standalone product proposition and short demo | Design approved; execute standalone DAG | Product value and evaluation request are understandable without v2 context |
 | T02 | P1 | Matched v2/v4 decision comparison | Frozen policy from T03/T04; T05 for reproducible records | Version differences measured on a common protocol |
 | T03 | P1 | Calibration scope versus action eligibility | Coordinate with T04/T05/T07 | A fitted band alone cannot authorize unsupported passage |
 | T04 | P1 | Unknown inputs, absent checks, reasons | T03 policy agreement | Invalid/unsupported conditions have explicit outcomes |
@@ -34,25 +36,39 @@ Parent: [VP review](2026-10-15-v4-vs-v2-vp-review.md). Reproductions: [evidence]
 
 Suggested ownership: one agent owns T03/T04 policy and coordinates the T05/T07 record contract; separate agents can own model lifecycle, log persistence, and narrative/evidence work. This is a division of work for later execution, not a requirement to spawn all agents immediately.
 
-## T01 — Make the v4 upgrade and VP request explicit
+## T01 — Make the standalone product and VP request explicit
 
-**Problem:** the site offers exploration (“Run it on your own image”) while the actual opportunity is a setup-specific calibration evaluation. The returning VP must infer how v4 differs from the originally presented v2.
+**Problem (updated 2026-10-16):** the implemented comparison-first journey makes release history the product story. The owner wants cultureQC to demonstrate independent value, with an understandable path to a setup-specific evaluation.
 
 **Evidence:** `site/src/pages/Home.jsx:98`, `site/src/components/Shell.jsx:94`, `site/src/components/Sections.jsx:467`, `docs/DEMO_SCRIPT.md:1`. The current script is 15–16 minutes before questions.
 
-**Implement:** add a concise three-row v2/v4 comparison and a pilot card. Lead with measurement evidence, decision limits and traceability. Separate shipped capability, experimental fine-tuning and unresolved capability. Provide a five-minute core demo, retaining the existing material as drill-down. Put a compact action/reason/verification summary before detailed layer mechanics; use a calibrated boundary example without manufacturing an automatic-passage success.
+**Implementation specification:** follow the [standalone DAG and task packets](../specs/standalone-product-site/README.md), which replace the coarse S1–S4 handoff. Lead with microscopy and understandable analysis; demonstrate measurement, a review boundary and exact records. Keep comparisons in release notes and technical evaluation, not the homepage or core presentation. Retain the evaluation proposal and distinguish shipped, experimental and unresolved capabilities.
 
 **Acceptance:**
 
-- A reviewer can identify what changed, which evidence supports it, what remains unproved and exactly what the VP is being asked to sponsor from one screen/short document.
-- Comparison explicitly states that v2's 2.3 pp was synthetic and cannot be compared directly with real-data v4 numbers.
+- A reviewer can identify the product's job, output and reason, host responsibility and next evaluation without knowing v2 existed.
+- No homepage release comparison or incompatible cross-version accuracy chart; historical comparisons retain their protocol limitations.
 - Fine-tuning is labelled experimental and not used for decisions; the failed dense-range criterion and replication limitation remain accessible alongside the gain.
 - The pilot card states setup/data responsibilities, non-actuating evaluation, output deliverables and criteria fixed before scoring; no invented ROI, schedule or sufficient sample size.
 - A timed walkthrough fits the proposed five-minute core. Scientific sources remain available without dominating the first view.
 
 **Do not:** claim competitor capabilities are absent without evidence, or revive the synthetic contamination demonstration as the main proof.
 
-## T02 — Produce the comparison the upgrade pitch currently lacks
+## T02 — Produce a matched comparison for internal validation
+
+**Implementation status (2026-10-20):** first bounded EVICAN cached-policy replay
+implemented locally: 33 expert-mask images, exact archived v2 rules, current
+source/input hashes, four sequential variants, explicit timing assumptions and
+unavailable checks. Every paired output and all/dense/near-target denominators
+are reproducible without inference or the compute cache. The
+[C2C12 workload-only companion](2026-10-20-c2c12-workload-replay.md) now also freezes
+1,228 held-out frames, reports separate review/reimage burden and preserves
+14 sequence / 3 experiment groups without treating model readings as truth.
+**T02 remains partial**: independent target-range evidence, authenticated weight
+provenance and any justified end-to-end reconstruction remain outstanding.
+See [protocol](../specs/matched-policy-comparison.md)
+and [results/handoff](2026-10-20-matched-policy-replay.md). This is not an end-to-end
+model comparison, a fine-tuning claim or a website change.
 
 **Problem:** `results/v02_vs_v03_flags.md` compares detector behavior, not the full v2 versus v4 decision policy. Lower false-review rates alone do not show useful automation. The current review-rate and confluency studies do not supply a complete same-input end-to-end version comparison.
 
@@ -73,6 +89,15 @@ Suggested ownership: one agent owns T03/T04 policy and coordinates the T05/T07 r
 
 ## T03 — Separate calibration validity from permission to recommend passage
 
+**Implementation status (2026-10-18):** implemented locally as rules_v0.6. Existing
+measurement values are retained; all shipped profiles explicitly lack passage
+approval. Setup/model/cell-line and reading/target scope checks, profile validation,
+record fields, console messaging and migration guidance are covered by regression
+tests. Synthetic eligible fixtures are not biological evidence. See
+`docs/specs/passage-eligibility.md` and
+`docs/reviews/2026-10-18-passage-eligibility-fix.md`. Host activation remains pending;
+missing-check semantics and timing honesty remain T04, not solved by this gate.
+
 **Problem:** a profile can be `validated` with A2/A3/A4 “not measurable,” yet its band can authorize passage. Current MSC configuration reproduces this at 90%/80%.
 
 **Start in:** `scripts/write_profiles_config.py:68`, `configs/confluency_profiles.yaml:64`, `culture/profiles.py:74`, `culture/rules.py:183`, `tests/test_rules_band.py`, `tests/test_profiles_config.py`.
@@ -92,6 +117,13 @@ Suggested ownership: one agent owns T03/T04 policy and coordinates the T05/T07 r
 
 ## T04 — Make missing information and failure behavior explicit
 
+**Update, 2026-10-18:** implemented locally in `rules_v0.7`: explicit required/
+optional/not-applicable checks, unknown timing, factual interval holds, finite
+input/record safeguards and advisory-only output. See the
+[policy contract](../specs/missing-checks-and-timing.md) and
+[implementation report](2026-10-18-missing-checks-and-timing-fix.md).
+No new detector thresholds, operational approval, push or deployment.
+
 **Problem:** `None` quality/anomaly checks can permit passage; absent passage timing passes the timing gate; NaN reads as continue; a recent-passage hold generates a mathematically false reason. Uncalibrated low readings can miss readiness.
 
 **Start in:** `culture/rules.py:153`, `culture/pipeline.py:135`, `culture/rationale.py`, `tests/test_rules_band.py`, `tests/test_rules_anomaly.py`, `docs/host_platform.md`.
@@ -108,6 +140,17 @@ Suggested ownership: one agent owns T03/T04 policy and coordinates the T05/T07 r
 - Tests cover boundaries/equality, combined failure precedence, absent versus failed checks, and parity between console and library.
 
 ## T05 — Make every decision reconstructible from its record
+
+**Update, 2026-10-18:** implemented locally with schema 0.6 input/config snapshots,
+pure named-policy replay, nullable host capture time and shared map provenance.
+The exporter replay command is now read-only and refuses legacy missing-input
+records. See [the contract](../specs/decision-replay.md) and
+[validation report](2026-10-18-decision-replay-fix.md). No push/deployment.
+
+**T04 handoff (resolved by read-only verification):** migrate/test `scripts/export_demo_examples.py --rederive`:
+its legacy tuple-only rewrite omits the new structured eligibility/decision
+contract. Do not regenerate historical examples as current-policy evidence
+before this replay/migration work is complete.
 
 **Problem:** consumed target/timing/line configuration is absent from structured records, image capture time is fabricated at analysis time, and the library lacks the console's map provenance.
 
@@ -126,6 +169,13 @@ Suggested ownership: one agent owns T03/T04 policy and coordinates the T05/T07 r
 
 ## T06 — Bind approval to the loaded model, not only its current file
 
+**Update, 2026-10-18:** implemented locally with private verified snapshots,
+replacement refusal/reload and per-inference record hashes. Fixture lifecycle
+and record regressions are covered. [Real-Cellpose local CPU parity](2026-10-18-cellpose-release-validation.md)
+now passes; target-host provisioning/capacity validation remains a deployment gate.
+See [implementation and limits](2026-10-18-model-identity-fix.md).
+This does not close T03–T05 or T07–T09. Nothing pushed or deployed.
+
 **Problem:** the shipped Cellpose singleton survives an approved file replacement. `require()` checks the replacement file while inference runs the previously loaded weights.
 
 **Start in:** `culture/seg.py:103`, `culture/seg.py:149`, `culture/weights.py`, `tests/test_approvals.py:168`. `culture/finetuned.py` already keys its cache by hash; assess reuse of that principle without a broad refactor.
@@ -141,6 +191,15 @@ Suggested ownership: one agent owns T03/T04 policy and coordinates the T05/T07 r
 - The model instance, `model_check`, `model_weights_hash` and emitted runtime version agree.
 
 ## T07 — Turn change records into a well-defined activation contract
+
+**Implementation status (2026-10-19):** local implementation uses the explicitly
+host-managed configuration option, not a new local release approval authority.
+Schema 0.7 records that distinction and the consumed configuration identity.
+Model checks now respect effective time and verify/select from one log snapshot;
+anomaly bank replacements cannot reuse a mismatched cached identity. Host
+approval, atomic deployment and authentication remain external responsibilities.
+See [contract](../specs/configuration-activation.md) and
+[validation report](2026-10-19-activation-controls.md). Nothing pushed or deployed.
 
 **Problem:** model approvals ignore effective time; profiles/configs are recorded but explicitly not checked against approvals. Profiles are cached forever by path, while config files are hashed afresh. Recording and enforcing a change are different capabilities.
 
@@ -159,6 +218,15 @@ Suggested ownership: one agent owns T03/T04 policy and coordinates the T05/T07 r
 
 ## T08 — Keep the audit chain intact under ordinary concurrent use
 
+**Implementation status (2026-10-19):** implemented locally for cooperating
+threads/processes on a regular local POSIX log. The writer locks full-chain
+verification, finalization, append and file/directory synchronization; no cached
+predecessor remains. Corrupt/torn tails are refused without altering history.
+Verification/checkpoint readers share the lock. Host storage, external anchors,
+idempotency and authorized recovery remain required. See
+[contract](../specs/concurrent-audit-append.md) and
+[validation report](2026-10-19-concurrent-audit-append.md). Nothing pushed.
+
 **Problem:** two `RecordWriter` instances can cache the same predecessor then append conflicting links. `deploy/hf-space/api.py` documents this and uses a local lock; direct library users and separate workers are not protected by that lock.
 
 **Start in:** `culture/records.py:93`, `culture/records.py:115`, `tests/test_records_chain.py`, host integration boundary.
@@ -175,6 +243,13 @@ Suggested ownership: one agent owns T03/T04 policy and coordinates the T05/T07 r
 
 ## T09 — Define and record the image decoding contract
 
+**Implementation status (2026-10-19):** implemented locally with a shared,
+single-frame uint8 decoder. High-bit-depth inputs are refused, not guessed or
+auto-scaled. Schema 0.8 binds original bytes, the decoding policy and output pixels;
+console, API and library refuse unsupported input before inference. Historical
+records remain unchanged. See [contract](../specs/controlled-image-ingestion.md)
+and [validation report](2026-10-19-controlled-image-ingestion.md). Nothing pushed.
+
 **Problem:** raw 12-bit-in-16-bit TIFF input silently becomes near-black under the current OpenCV read flag. Dataset-specific offline preparation does not protect incoming host images.
 
 **Start in:** `culture/pipeline.py:83`, console upload handling in `demo/app.py`, `scripts/fetch_c2c12.py`, `culture/schema.json`, `docs/host_platform.md`.
@@ -190,6 +265,17 @@ Suggested ownership: one agent owns T03/T04 policy and coordinates the T05/T07 r
 - A changed file between decode and hashing cannot produce a record whose image hash names different bytes from those analyzed.
 
 ## T10 — Write the actual partner pilot protocol
+
+**Specification status (2026-10-19):** the proposed
+[one-setup pilot protocol](../specs/partner-pilot.md) and
+[approval worksheet](../specs/partner-pilot-approvals.md) are written. They cover
+confluency/audit-first scope, the existing partner workflow, separate calibration
+and fine-tuning arms, independent units, proposed confidence-bound gates,
+coverage/safety denominators, sample-size signoff, access/retention and run
+artifacts. See the [handoff](2026-10-19-partner-pilot-protocol.md).
+This completes the proposed-specification deliverable, **not partner approval,
+E0 readiness or a scientific evaluation**. Actual setup, owners, counts, budgets
+and signed acceptance remain pending. No data scored or thresholds changed.
 
 **Problem:** the repo has substantial experiments but no compact, decision-ready target-instrument plan tying annotation, benefit and integration effort to a go/no-go outcome.
 
@@ -209,6 +295,15 @@ Suggested ownership: one agent owns T03/T04 policy and coordinates the T05/T07 r
 
 ## T11 — Make evaluation, deployment and commercial boundaries legible
 
+**Local implementation delivered (2026-10-19):** [release-state map](../specs/release-state.md),
+[host evaluation contract and commands](../specs/host-evaluation.md),
+`scripts/host_evaluation.py`, pinned lightweight dependencies and a dedicated CI
+job. The site now states Code: MIT, stored execution and unresolved pipeline
+commercial status outside disclosures. See the
+[T11 handoff](2026-10-19-release-boundary-and-host-evaluation.md).
+This does not approve the pilot, clear rights, verify remote deployment or publish
+anything; source/deployment reconciliation remains owner-controlled.
+
 **Problem:** a MIT hero label overgeneralizes the repo licence; the current public API is v2; a v4 console, stored artifacts, current schemas and a research branch coexist. This is disclosed in places but too easy to misunderstand.
 
 **Start in:** `site/src/pages/Home.jsx:117`, `site/src/components/Shell.jsx`, `deploy/README.md:5`, `README.md:574`, `.github/workflows/tests.yml`, deployment manifests.
@@ -227,6 +322,15 @@ Suggested ownership: one agent owns T03/T04 policy and coordinates the T05/T07 r
 
 ## T12 — Fix the proof journey and stale agent guidance
 
+**Implementation status (2026-10-20):** implemented locally. Exact-record and legacy
+navigation, a separately labelled illustrative review extension, and current agent
+guidance are in place. 119 targeted Python tests, 15 Node tests, build, deployment-copy
+parity and desktop/mobile keyboard journey checks pass. Subsequent
+[post-update visual acceptance](2026-10-20-proof-visual-acceptance.md) adds inspected
+desktop/mobile review captures and passes the chain-link scrolling retest without
+the earlier workaround. Human AT/200% zoom verification remains pending. See the
+[T12 handoff](2026-10-20-proof-journey-and-current-guidance.md).
+
 **Problem:** the core record link is broken; the interactive site chain lacks an example review; current context files contain obsolete v2 product instructions and contradictory limitations.
 
 **Start in:** `site/src/components/Stage.jsx:331`, `site/src/pages/Home.jsx:75`, `site/src/components/Records.jsx`, `site/assets/build_data.py`, `docs/PRODUCT.md:11`, `README.md:429`, `docs/REPO_MAP.md`, site surface brief.
@@ -240,7 +344,7 @@ Suggested ownership: one agent owns T03/T04 policy and coordinates the T05/T07 r
 - README no longer says Analyze has no quality gate: C2C12's configured gate runs in `demo/analysis.py:112`; other profiles without gates remain explicitly different.
 - Remove stale claims that no React/FastAPI code exists or that demoted Grad-CAM contamination boxes are the current product's main proof.
 - Do not transfer EVICAN's observed bias to C2C12 as an established correction; C2C12 lacks independent confluency labels in this evidence set.
-- Show current schema 0.5 versus historical stored 0.4 deliberately; update a new stored demo only through the artifact-generation path, without rewriting historical source logs.
+- Show current local schema 0.8 / rules_v0.7 versus historical stored 0.4 / rules_v0.5 deliberately; update a new stored demo only through the artifact-generation path, without rewriting historical source logs.
 - Desktop/mobile browser pass verifies action visibility, comparison discovery and review-chain navigation. Token advisories are secondary; do not rebrand the site.
 - Reconcile the orphaned site surface brief (`site/src/App.jsx` no longer exists) when updating agent context; do not let future agents follow a nonexistent target.
 
