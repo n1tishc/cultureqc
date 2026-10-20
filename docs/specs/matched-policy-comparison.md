@@ -6,6 +6,16 @@ inference reconstruction are not delivered by these replays.
 This is internal validation, not a comparison-first product presentation.
 No model inference, threshold tuning, source-history rewrite or release is required.
 
+## Reference runtime
+
+Exact report reproduction is checked on **CPython 3.14.7**, the
+`freeze_python_version` recorded in both manifests. The Python CI job uses that
+runtime. Python 3.11 reproduced the paired decisions but differed in the last
+floating-point digits of aggregate means; cross-version byte identity is not
+guaranteed. Do not rewrite frozen reports, relax scientific thresholds or treat
+these serialization differences as changed model performance. The API contract
+retains its separate Python 3.11 job.
+
 ## Implemented cohort and protocol
 
 `results/policy_comparison_evican/` freezes the 33 EVICAN eval2019 images in the

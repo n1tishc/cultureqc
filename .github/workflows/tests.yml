@@ -51,14 +51,14 @@ jobs:
         run: python deploy/sync_space.py --check
 
   python:
-    name: Python tests (no model weights, no cache)
+    name: Python tests (reference replay runtime, no weights/cache)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.14.7"
           cache: pip
 
       # No torch, cellpose or gradio, and no compute cache: tests that need one
