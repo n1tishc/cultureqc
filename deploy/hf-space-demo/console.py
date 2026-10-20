@@ -69,9 +69,36 @@ def finetuned_setup() -> None:
           + f", {n} of {len(lab_demo.IMAGES)} demo images present", flush=True)
 
 
+# Cellpose's own model repo, at the revision whose cpsam_v2 has the approved SHA-256
+# (configs/approved_changes.jsonl), checked 2026-10-20.
+CPSAM_REPO = "mouseland/cellpose-sam"
+CPSAM_REVISION = "7c61431b5fbb078f3296754bd15d9f51b320f837"
+
+
+def segmentation_weights() -> None:
+    """culture/seg.py loads Cellpose-SAM only from an approved cpsam_v2 file already
+    on disk; it no longer downloads one, and a fresh Space has none. Fetch it here,
+    only if it is missing (the Mac and Colab backups already have it), to the path
+    seg.py reads. The approvals check compares its SHA-256 before any reading."""
+    from cellpose import models
+    from culture.approvals import check
+
+    t0 = time.perf_counter()
+    path, how = os.path.join(str(models.MODEL_DIR), "cpsam_v2"), "present"
+    if not os.path.exists(path):
+        from huggingface_hub import hf_hub_download
+
+        path = hf_hub_download(CPSAM_REPO, "cpsam_v2", revision=CPSAM_REVISION, local_dir=str(models.MODEL_DIR))
+        how = "downloaded"
+    c = check("model", "cpsam_v2", path)
+    print(f"cultureQC console: Cellpose-SAM weights {how}, {c.status} ({time.perf_counter() - t0:.1f} s)"
+          + ("" if c.ok else f" ({c.reason}; every reading will be refused)"), flush=True)
+
+
 def startup_report() -> None:
     import torch
 
+    segmentation_weights()
     finetuned_setup()
 
     if zerogpu.ZERO_GPU:
@@ -102,12 +129,20 @@ def startup_report() -> None:
         zerogpu.load_models()
         print(f"cultureQC console: models loaded in {time.perf_counter() - t0:.1f} s", flush=True)
     elif (cuda or mps) and warmup:
+        import tempfile
+
+        import cv2
         import numpy as np
 
         from demo.analysis import analyze_image
 
+        # analyze_image re-reads the file at image_path and refuses anything that is
+        # not that same image, so the warm-up frame is written out as a real PNG.
+        warm = np.full((512, 512), 128, np.uint8)
+        warm_path = os.path.join(tempfile.mkdtemp(prefix="cultureqc_warmup_"), "warmup.png")
+        cv2.imwrite(warm_path, warm)
         t0 = time.perf_counter()
-        analyze_image(np.full((512, 512), 128, np.uint8), os.path.join(ROOT, "console.py"), "unknown", 80.0)
+        analyze_image(warm, warm_path, "unknown", 80.0)
         from demo import lab_demo
 
         if lab_demo.model_id():
