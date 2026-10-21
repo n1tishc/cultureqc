@@ -5,10 +5,10 @@ import data from "../src/data.json" with { type: "json" };
 
 const allIds = data.examples.items.map((item) => item.id);
 
-test("two independent analysis tasks start with the coverage example", () => {
-  assert.deepEqual(GUIDED_SCENARIOS.map((scenario) => scenario.id), ["c2c12_normal_20_40", "evican_ht29"]);
-  assert.equal(DEFAULT_SCENARIO_ID, "c2c12_normal_20_40");
-  assert.equal(scenarioIdFromSearch("?example=evican_ht29"), "evican_ht29");
+test("two independent analysis tasks start with the review-boundary example", () => {
+  assert.deepEqual(GUIDED_SCENARIOS.map((scenario) => scenario.id), ["evican_ht29", "c2c12_normal_20_40"]);
+  assert.equal(DEFAULT_SCENARIO_ID, "evican_ht29");
+  assert.equal(scenarioIdFromSearch("?example=c2c12_normal_20_40"), "c2c12_normal_20_40");
   assert.equal(scenarioIdFromSearch("?example=unknown"), DEFAULT_SCENARIO_ID);
   assert.equal(scenarioIdFromSearch(""), DEFAULT_SCENARIO_ID);
   assert.equal(allIds.length, 7);
@@ -52,7 +52,7 @@ test("raw clears every overlay; segmentation and reset restore contour only", ()
 });
 
 test("primary examples retain stored measurements, reasons and record identity", () => {
-  const coverage = data.examples.items.find((item) => item.id === DEFAULT_SCENARIO_ID);
+  const coverage = data.examples.items.find((item) => item.id === "c2c12_normal_20_40");
   const boundary = data.examples.items.find((item) => item.id === "evican_ht29");
   assert.equal(coverage.confluency.pct.toFixed(2), "39.41");
   assert.equal(coverage.confluency.interval, null);

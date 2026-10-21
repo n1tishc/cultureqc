@@ -13,21 +13,21 @@ function Glance({ data }) {
   const items = [
     d && {
       href: "#dense",
-      label: "Fine-tuning: closer confluency readings",
-      value: `${d.both.C.B1_mae.toFixed(2)} → ${d.both.F.B1_mae.toFixed(2)} pp`,
-      note: `${Math.round((1 - d.both.F.B1_mae / d.both.C.B1_mae) * 100)}% lower mean error versus the calibrated base model on ${d.points.length} mCellSeg images. Pooled secondary analysis, one lab; not a v2 release benchmark. Not used for recommendations: decision agreement is below criterion and the swapped primary comparison did not replicate.`,
+      label: "Readings within 5 points of the experts",
+      value: `${d.both.within5.F} of ${d.both.F.n}`,
+      note: `After fine-tuning on one lab’s labelled images, across ${d.setups} imaging setups, each image unseen in training; ${d.both.within5.C} with calibration alone. Experimental: it decides nothing yet, because decision agreement fell short of its criterion and the swapped comparison did not replicate.`,
     },
     msc && {
       href: "#profiles",
-      label: "MSC calibration against expert masks",
-      value: `${msc.shipped.mae.toFixed(2)} → ${msc.profile.mae.toFixed(2)} pp`,
-      note: `${msc.n_test} MSC images, leave one population out. Default versus calibrated cutoff within this study. ${mscDense ? `Only ${mscDense.n} images at 60–90%, so passage-range criteria were not measurable.` : "Dense-range sample counts are unavailable here; check the source before interpreting action readiness."}`,
+      label: "Average distance from expert outlines, calibrated",
+      value: `${msc.profile.mae.toFixed(1)} points`,
+      note: `${msc.n_test} human MSC images, against ${msc.shipped.mae.toFixed(1)} points at the default setting; each population tested with calibration fitted on the others. ${mscDense ? `Only ${mscDense.n} were in the 60–90% passage range, so accuracy there is not yet measured.` : "Dense-range sample counts are unavailable here; check the source before interpreting action readiness."}`,
     },
     {
       href: "/records#chain",
       label: "An audit trail you can inspect",
       value: `${data.examples.chain_order.length} linked records`,
-      note: "Recompute SHA-256 in your browser, alter a local reading and inspect the broken link. Demonstrates record integrity—not biological validity, signed identity or regulatory compliance.",
+      note: "Recompute every SHA-256 in your browser, alter a reading and watch the chain fail. Proves integrity, not biological validity, signed identity or compliance.",
     },
   ];
   return (

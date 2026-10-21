@@ -4,7 +4,7 @@ const task = await taskSpace(ownsTask ? "cultureQC media-reset regression" : reg
 console.log({ spaceId: task.spaceId });
 const page = task.page("p1");
 const origin = "http://127.0.0.1:5173";
-const blocked = ["*c2c12_normal_20_40.webp*", "*c2c12_normal_20_40_contour.json*"];
+const blocked = ["*evican_ht29.webp*", "*evican_ht29_contour.json*"];
 
 async function reading() {
   return page.evaluate(() => ({
@@ -31,7 +31,7 @@ async function activate(name) {
 
 await page.cdp("Network.enable");
 try {
-  for (const recovery of ["Reset", "Measure coverage", "Retry media"]) {
+  for (const recovery of ["Reset", "Understand a review boundary", "Retry media"]) {
     await page.cdp("Network.setBlockedURLs", { urls: blocked });
     await page.goto(`${origin}/?campaign=${encodeURIComponent(recovery)}`);
     await page.waitForSelector('.guided-media-error:has-text("Stored image, Cutoff contour")', { timeout: 10000 });
@@ -39,8 +39,8 @@ try {
     assert.match(error, /Stored image/);
     assert.match(error, /Cutoff contour/);
     const failed = await reading();
-    assert.equal(failed.value, "39.41%");
-    assert.equal(failed.record, "/records?record=c2c12_normal_20_40#chain");
+    assert.equal(failed.value, "52.91%");
+    assert.equal(failed.record, "/records?record=evican_ht29#chain");
     await page.cdp("Network.setBlockedURLs", { urls: [] });
     await activate(recovery);
     await ready();
@@ -58,19 +58,19 @@ try {
   await activate("Reset");
   await ready();
   assert.deepEqual((await reading()).layers, ["data-contour"]);
-  await activate("Understand a review boundary");
-  await ready();
-  assert.equal((await reading()).value, "52.91%");
-  await activate("Reset");
+  await activate("Measure coverage");
   await ready();
   assert.equal((await reading()).value, "39.41%");
+  await activate("Reset");
+  await ready();
+  assert.equal((await reading()).value, "52.91%");
   assert.equal((await reading()).campaign, "Retry media");
   await page.evaluate(() => history.back());
-  await page.waitForSelector('.guided-numbers strong:text-is("52.91%")', { timeout: 10000 });
-  await ready();
-  assert.equal((await reading()).record, "/records?record=evican_ht29#chain");
-  await page.evaluate(() => history.forward());
   await page.waitForSelector('.guided-numbers strong:text-is("39.41%")', { timeout: 10000 });
+  await ready();
+  assert.equal((await reading()).record, "/records?record=c2c12_normal_20_40#chain");
+  await page.evaluate(() => history.forward());
+  await page.waitForSelector('.guided-numbers strong:text-is("52.91%")', { timeout: 10000 });
   await ready();
   console.log("PASS: normal reset, sample switch, query preservation and history");
 } finally {

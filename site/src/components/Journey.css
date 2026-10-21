@@ -29,8 +29,11 @@
   text-wrap: balance;
 }
 .vp-section-head p { margin: 0; color: var(--ink-2); max-width: 65ch; }
+/* A measured number inside a display headline: the mono cut's full-width decimal point reads as "3 . 4" at
+   this size, so it keeps the heading's face with tabular figures. */
+.num-display { font-variant-numeric: tabular-nums; }
 .workflow-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 40px; }
-.workflow-steps h2 { font-size: 24px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 10px; }
+.workflow-steps h3 { font-size: 22px; font-weight: 600; line-height: 1.25; letter-spacing: -0.02em; margin: 0 0 10px; }
 .workflow-steps p { color: var(--ink-2); margin: 0; }
 .host-flow {
   display: grid;
@@ -48,7 +51,9 @@
 .pilot-responsibilities h3,
 .pilot-boundary h3 { margin: 0 0 8px; font-size: 18px; font-weight: 600; line-height: 1.35; }
 .host-flow p { margin: 0; color: var(--ink-2); }
+.evidence-layout { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px 64px; }
 .calibration-proof { max-width: 75ch; }
+.calibration-proof > p:first-of-type strong { color: var(--ink); }
 .calibration-proof p,
 .pilot-boundary p { margin: 0 0 16px; color: var(--ink-2); max-width: 70ch; }
 .calibration-proof .sources { margin: 12px 0 0; }
@@ -80,6 +85,7 @@
   .vp-intro,
   .vp-section-head,
   .workflow-steps,
+  .evidence-layout,
   .host-flow,
   .pilot-responsibilities { grid-template-columns: minmax(0, 1fr); gap: 20px; }
   .host-flow { gap: 0; }

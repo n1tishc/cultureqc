@@ -8,12 +8,12 @@ export function ProductIntro({ data }) {
         <div className="vp-intro">
           <h1 id="top-h">Read the culture.<br />Understand the next step.</h1>
           <div>
-            <p>cultureQC turns a microscopy image into a confluency measurement, a rule-based recommendation and a traceable record for your team to review.</p>
+            <p>Passage decisions often rest on a glance down the microscope. cultureQC turns that image into a measured confluency, a recommendation with its reason, and a record anyone can verify.</p>
             <div className="vp-actions">
               <a className="btn btn-primary" href="#demo">Explore an analysis <Icon name="down" /></a>
               <a className="more" href="/records#integration">See how it fits <Icon name="passage" /></a>
             </div>
-            <p className="sources">Stored analysis walkthrough · Code: MIT.<br />Pipeline commercial use is not cleared, pending review. <a href={`${data.meta.repo_url.replace("/tree/", "/blob/")}/README.md#licences-and-commercial-use`} target="_blank" rel="noreferrer">Component terms and status <Icon name="external" /></a></p>
+            <p className="sources">Stored analyses of public microscopy datasets, each record re-hashed in your browser.</p>
           </div>
         </div>
       </div>
@@ -21,13 +21,34 @@ export function ProductIntro({ data }) {
   );
 }
 
-export function Workflow() {
+/* Why it matters, then what each part of the analysis gives a lab. The problem statement is cited; the numbers are
+   read from data.json (results/confluency_profiles.md). */
+export function Workflow({ data }) {
+  const msc = data.profiles?.items.find((item) => item.id === "msc_phase");
+  const mid = msc?.bands.find((band) => band.band === "40-60%");
   return (
-    <section className="sec product-workflow" aria-label="From image to review">
-      <div className="wrap workflow-steps">
-        <div><h2>Measure</h2><p>Inspect the segmented area against the original image. Read coverage with a setup-specific error band when available.</p></div>
-        <div><h2>Understand</h2><p>See the stored rule result, its reason and its limits. A recommendation supports review; it is not an instruction to actuate.</p></div>
-        <div><h2>Trace</h2><p>Follow the reading to its inputs, configuration and record. <a href="/records">Inspect provenance and check record integrity.</a></p></div>
+    <section className="sec product-workflow" aria-labelledby="why-h">
+      <div className="wrap">
+        <header className="vp-section-head">
+          <h2 id="why-h">From a glance to a decision<br />you can defend.</h2>
+          <p>Phase contrast is how most labs inspect adherent cultures, and quantifying what it shows by hand is time-consuming and error-prone (<a href="https://doi.org/10.1002/bit.25115" target="_blank" rel="noreferrer">Jaccard et al., 2014</a>). A glance also leaves no record of how the call was made.</p>
+        </header>
+        <div className="workflow-steps">
+          <div>
+            <h3>Measured, not eyeballed</h3>
+            {mid?.mae0 != null ? (
+              <p>Every pixel is classified, then calibrated to the microscope. On <span className="num">{mid.n}</span> human MSC images at 40–60% confluency, the default reading ran <span className="num">{Math.abs(mid.bias0).toFixed(1)}</span> points low; calibrated, it averaged <span className="num">{mid.mae.toFixed(1)}</span> points from the experts.</p>
+            ) : <p>Every pixel is classified, then calibrated to the microscope that took the image.</p>}
+          </div>
+          <div>
+            <h3>Knows when it can’t tell</h3>
+            <p>Each microscope’s measured error travels with the reading. When that band straddles the target, as on HT29 above, the call goes to a person, with the reason written down.</p>
+          </div>
+          <div>
+            <h3>Provable afterwards</h3>
+            <p>Every reading is hash-chained to its image, model, rules and calibration. Change one number and the chain breaks. <a href="/records#chain">Try it on the stored records.</a></p>
+          </div>
+        </div>
       </div>
     </section>
   );
@@ -57,7 +78,7 @@ export function RecordHandoff() {
     <section className="record-handoff" id="trail" aria-labelledby="trail-h">
       <div className="wrap">
         <h2 id="trail-h">Check the record, not just the explanation.</h2>
-        <p>Trace readings and calibration changes, then follow a separately labelled illustrative review. The historical chain is unchanged. Hash verification checks integrity, not scientific validity or compliance.</p>
+        <p>Every stored reading and calibration change sits in one hash chain, re-checked in your browser. Alter a number and watch it fail, or follow HT29 into an illustrative review that adds a record without touching the reading. The hashes prove integrity; the evaluation below is what tests the science.</p>
         <a className="more" href="/records#chain">Verify the chain and try the tamper controls <Icon name="passage" /></a>
       </div>
     </section>
@@ -67,25 +88,37 @@ export function RecordHandoff() {
 export function Evidence({ data }) {
   const profile = data.profiles?.items.find((item) => item.id === "msc_phase");
   const dense = profile?.bands.find((band) => band.band === "60-90%");
+  const d = data.dense_test;
   return (
     <section className="sec vp-evidence" id="evidence" aria-labelledby="evidence-h">
       <div className="wrap">
         <header className="vp-section-head">
-          <h2 id="evidence-h">Calibration earns its place<br />through measurement.</h2>
-          <p>One scoped finding—not a universal accuracy promise. Action eligibility on your instrument still needs evaluation.</p>
+          {profile ? (
+            <h2 id="evidence-h">Within <span className="num-display">{profile.profile.mae.toFixed(1)}</span> points<br />of the experts.</h2>
+          ) : <h2 id="evidence-h">Measured against<br />expert outlines.</h2>}
+          <p>Scored against cells outlined by hand, on images held out from calibration. Your microscope gets the same test in the evaluation below, before anything acts on a reading.</p>
         </header>
         <div className="evidence-layout">
           <div className="calibration-proof">
-            <h3>Human MSCs · leave-one-population-out evaluation</h3>
+            <h3>Calibration · human MSCs</h3>
             {profile ? (
               <>
-                <p>Across <span className="num">{profile.n_test}</span> images, mean absolute error against expert masks was <strong className="num">{profile.profile.mae.toFixed(2)} pp</strong> with setup calibration, versus <span className="num">{profile.shipped.mae.toFixed(2)} pp</span> at the default cutoff. Each population was tested with calibration fitted on the other two.</p>
-                <p className="evidence-limit"><strong>The limit:</strong> only <span className="num">{dense?.n ?? "a few"}</span> test images at 60–90% confluency. Dense-range passage criteria were unmeasurable. Calibration does not establish autonomous passage or contamination clearance.</p>
+                <p>Across <span className="num">{profile.n_test}</span> images, readings averaged <strong className="num">{profile.profile.mae.toFixed(2)}</strong> points from the experts’ outlines, against <span className="num">{profile.shipped.mae.toFixed(2)}</span> at the default setting. Each of three cell populations was tested with calibration fitted on the other two.</p>
+                <p className="evidence-limit"><strong>The limit:</strong> only <span className="num">{dense?.n ?? "a few"}</span> of these images were in the 60–90% passage range, so accuracy there is not yet measured.</p>
               </>
             ) : <p>Calibration summary unavailable. Consult the full evaluation before interpreting a reading.</p>}
             <a className="more" href="/validation#profiles">Read the protocol and results <Icon name="passage" /></a>
             <p className="sources"><Path>results/confluency_profiles.md</Path></p>
           </div>
+          {d ? (
+            <div className="calibration-proof">
+              <h3>Fine-tuning · one lab, <span className="num">{d.setups}</span> imaging setups</h3>
+              <p><strong className="num">{d.both.within5.F} of {d.both.F.n}</strong> readings landed within 5 points of the experts after fine-tuning on the lab’s own labelled images, each tested on an image the model never saw. Calibration alone: <span className="num">{d.both.within5.C}</span>.</p>
+              <p className="evidence-limit"><strong>The limit:</strong> experimental, and it decides nothing yet. Its decision agreement near the target fell short of a criterion set in advance, and the swapped-halves repeat of the primary comparison did not replicate.</p>
+              <a className="more" href="/validation#dense">See the fine-tuning results <Icon name="passage" /></a>
+              <p className="sources"><Path>results/confluency_mcellseg.md</Path> · <Path>results/confluency_mcellseg_swap.md</Path></p>
+            </div>
+          ) : null}
         </div>
       </div>
     </section>

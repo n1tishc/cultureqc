@@ -15,10 +15,11 @@ by the actual image/result workspace. Do not assume the public deployment
 contains these uncommitted changes.
 
 For a clean restart, navigate to `http://127.0.0.1:5173/` and reload the page.
-The default is **Measure coverage**, C2C12 mid density, with Segmentation
-selected. Within the workspace, **Reset** also restores this example and its
-contour-only view, even when it is already selected. A selection may add
-`?example=c2c12_normal_20_40#demo`; that is expected.
+The default is **Understand a review boundary**, EVICAN HT29, with Segmentation
+selected (changed from Measure coverage on 2026-10-20, owner direction). Within
+the workspace, **Reset** also restores this example and its contour-only view,
+even when it is already selected. A selection may add
+`?example=evican_ht29#demo`; that is expected.
 
 If the server is not running, start it from the repository root with
 `npm --prefix site run dev -- --host 127.0.0.1 --port 5173 --strictPort`.
@@ -66,11 +67,11 @@ Routes below are relative to `http://127.0.0.1:5173`.
 
 | Time | Screen, action and expected output | Short spoken prompt |
 | --- | --- | --- |
-| 0:00–0:40 | Open `/` with no query. Point to the real image, adjacent measurement, recommendation and record link; click **Explore an analysis** to reach `/#demo`. | “cultureQC turns a microscopy image into a measurement, a rule-based recommendation and a record your team can inspect. These are stored results, not a live run.” |
-| 0:40–1:40 | Stay on **Measure coverage**, or click **Reset**. Switch **Raw image**, then **Segmentation**. Expect **39.41%**, **CONTINUE**, and the visible absent-band notice. | “The cyan contour shows what was counted. This reading has no calibrated error band. Continue is the stored rule result—not a health finding, contamination clearance or validated instruction to act.” |
-| 1:40–2:30 | Click **Understand a review boundary**. URL becomes `/?example=evican_ht29#demo`. Point to **52.91%**, **23.51–82.31%**, target **80%**, and human review. | “The band crosses the target, so the rules ask a person. This is mixed-setup EVICAN calibration, not fully blind, and the C2C12 anomaly bank is not calibrated for HT29. The band estimates measurement error; it does not validate an action.” |
-| 2:30–3:15 | Click **Inspect this exact record**. At `/records?record=evican_ht29#chain`, confirm record **9** is selected. Show verification, then **Follow this exception into an illustrative review**. Do not run tamper modes in the core path. | “This is the exact result. A review adds a new record pointing to it; it never edits the reading. This separate example uses a fictional reviewer, not a real approval or signature. Hash verification checks integrity, not biological validity or compliance.” |
-| 3:15–4:10 | Click top-nav **Integration** to `/records#integration`; point to supplied inputs, returned outputs and host responsibility. Then open `/#evidence` for the one MSC finding. | “The current interface is a Python call, not a deployed partner service. Your host owns capture, scheduling, identity, signatures, retention and action. On 320 MSC images, leave-one-population-out calibration gave 3.43 pp error versus 8.19 at the default cutoff. Only four images were dense; passage-range criteria were unmeasurable.” |
+| 0:00–0:40 | Open `/` with no query. HT29 is on screen: point to the real image, the measurement, the band crossing the target, the recommendation and the record link; click **Explore an analysis** to reach `/#demo`. | “Passage decisions often rest on a glance down the microscope. cultureQC turns the image into a measurement, a recommendation with its reason and a record your team can inspect. These are stored results, not a live run.” |
+| 0:40–1:40 | Stay on **Understand a review boundary**, or click **Reset**. Point to **52.91%**, **23.51–82.31%**, target **80%**, and human review. | “The band crosses the target, so the rules ask a person: it knows when it can’t tell. The band comes from EVICAN’s own calibration, mixed setups and not fully blind, and the anomaly check is calibrated on C2C12, not HT29. The band estimates measurement error; it does not validate an action.” |
+| 1:40–2:30 | Click **Measure coverage**. URL becomes `/?example=c2c12_normal_20_40#demo`. Switch **Raw image**, then **Segmentation**. Expect **39.41%**, **CONTINUE**, and the visible absent-band notice. | “The cyan contour shows what was counted. This microscope has no calibrated error band yet. Continue is the stored rule result—not a health finding, contamination clearance or validated instruction to act.” |
+| 2:30–3:15 | Click **Understand a review boundary**, then **Inspect this exact record**. At `/records?record=evican_ht29#chain`, confirm record **9** is selected. Show verification, then **Follow this exception into an illustrative review**. Do not run tamper modes in the core path. | “This is the exact result. A review adds a new record pointing to it; it never edits the reading. This separate example uses a fictional reviewer, not a real approval or signature. Hash verification checks integrity, not biological validity or compliance.” |
+| 3:15–4:10 | Click top-nav **Integration** to `/records#integration`; point to supplied inputs, returned outputs and host responsibility. Then open `/#evidence` for the one MSC finding. | “The current interface is a Python call, not a deployed partner service. Your host owns capture, scheduling, identity, signatures, retention and action. On 320 MSC images, calibrated readings averaged 3.4 points from the experts’ outlines, against 8.2 at the default setting. Only four images were in the passage range, so accuracy there is not yet measured. Fine-tuning on one lab’s images put 153 of 169 readings within 5 points; it is experimental and decides nothing.” |
 | 4:10–5:00 | Click **Evaluate on your setup** to `/#pilot`. Show inputs, proposed readout and **Define the gate before starting**. | “The next decision is an offline evaluation on one setup: representative images, independent labels and an intended target. Before scoring, freeze the protocol and decision gate. Measure error, review and re-image burden, useful decision coverage and latency. Agree stop, gather-more or proceed—not actuation.” |
 
 Recovery return path from Records: **Return to this reading** →
@@ -82,7 +83,7 @@ Use the header CTA for evaluation, not **Research live console**.
 | Failure | Honest recovery |
 | --- | --- |
 | Image or contour unavailable | Keep the selected identity; use **Retry media**. If only the contour fails, show **Raw image** and explicitly say the segmentation visual is unavailable. If the image fails, skip the visual demonstration and identify the remaining numbers as stored outputs. Do not silently substitute another sample. |
-| Unexpected/invalid example URL | Acknowledge the unavailable-example notice; use **Open coverage example**, then **Reset**, or navigate to the exact starting URL and reload. Check the intended ID before continuing. |
+| Unexpected/invalid example URL | Acknowledge the unavailable-example notice; use **Open the review-boundary example**, then **Reset**, or navigate to the exact starting URL and reload. Check the intended ID before continuing. |
 | Verification pending, failed or no match | Do not claim success. On Records use **Retry verification**, or **Reset local demonstration** after tampering; reload if needed. If failure persists, say integrity could not be checked in this session and skip that claim. On the homepage, reload to retry. |
 | Website unavailable | Restore the local server or pause the interactive demo. Discuss the checked-in protocol and intended evaluation as documents; do not imply an unavailable visual, fresh analysis or verification was shown. |
 | External source/live console unavailable | Use the checked-in source documents. Keep the core path on the labelled stored website analyses. A stored result is never a successful fallback inference run. |

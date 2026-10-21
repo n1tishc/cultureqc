@@ -16,8 +16,8 @@ Render numeric values, action/reason, image/layer paths and exact record identit
 
 | Task | Stored ID | Expected result and visible qualification |
 |---|---|---|
-| Measure coverage (default) | `c2c12_normal_20_40` | 39.41%; stored continue recommendation; no calibrated error band; normal-source label is not contamination clearance |
-| Understand a review boundary | `evican_ht29` | 52.91%; band 23.51–82.31%; target 80%; human review; mixed-setup EVICAN calibration not fully blind, C2C12 anomaly bank not calibrated for HT29 |
+| Measure coverage | `c2c12_normal_20_40` | 39.41%; stored continue recommendation; no calibrated error band; normal-source label is not contamination clearance |
+| Understand a review boundary (default since 2026-10-20) | `evican_ht29` | 52.91%; band 23.51–82.31%; target 80%; human review; mixed-setup EVICAN calibration not fully blind, C2C12 anomaly bank not calibrated for HT29 |
 
 All seven existing IDs remain selectable in More examples and by deep link. Keep synthetic/oversized labels and relevant restrictions with those examples. Never create a passage-success fixture, treat different images as a time series, change historical output or add a threshold slider that appears to recompute it.
 
@@ -53,3 +53,9 @@ Example selection preserves unrelated query parameters, writes history once on a
 ## Change control
 
 Do not edit `site/src/data.json`, source metrics, records, weights, policy or generated files. If observed fixtures disagree with this packet, stop the affected claim and report the mismatch; do not edit the data to pass acceptance. Read the current working tree, not only HEAD, so unrelated local changes survive. Any contract change must be recorded here before dependent tasks consume it.
+
+## Recorded change, 2026-10-20 (owner direction, VP readability)
+
+- The default and first task is **Understand a review boundary** (`evican_ht29`); **Measure coverage** is second. Invalid IDs fall back to HT29 with the same visible notice.
+- The hero drops the licensing line; the footer and `#model-terms` keep it. Repeated scope sentences are cut to one line per example; each example keeps its material limit beside the result.
+- The homepage adds a cited problem statement (Jaccard et al., Biotechnol. Bioeng. 2014;111:504–517, doi:10.1002/bit.25115) ahead of Measure/Understand/Trace, and a second evidence finding: the fine-tuning within-5-points count, labelled experimental and non-deciding with its failed criteria beside it. All numbers are read from `data.json`.

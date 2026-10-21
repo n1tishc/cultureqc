@@ -71,10 +71,10 @@ export default function Home({ data }) {
         <section className="vp-demo" id="demo" aria-label="Explore an analysis">
           <div className="wrap">
             <Stage examples={ex} verify={verify} verifyError={verifyError} liveParity={liveParity} />
-            <p className="provenance-line">Research demonstration, not an instruction to actuate a culture. Real microscopy and an explicitly labelled synthetic stress test.</p>
+            <p className="provenance-line">Every recommendation is advisory: a person and your platform keep control of the flask.</p>
           </div>
         </section>
-        <Workflow />
+        <Workflow data={data} />
         <HostFit />
         <Evidence data={data} />
         <RecordHandoff />

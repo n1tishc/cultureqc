@@ -1,17 +1,17 @@
 export const GUIDED_SCENARIOS = [
   {
-    id: "c2c12_normal_20_40",
-    title: "Measure coverage",
-    specimen: "C2C12 · real frame · mid density",
-    note: "Switch between the raw image and its computed cutoff contour to inspect measured coverage.",
-    scope: "Research demonstration. This example has no calibrated error band. Its normal-source label is not a health finding or contamination clearance.",
-  },
-  {
     id: "evican_ht29",
     title: "Understand a review boundary",
     specimen: "EVICAN HT29 · real frame",
     note: "The setup-level band crosses the target. This demonstrates the review rule, not validated biological action.",
-    scope: "Research demonstration. Mixed-setup EVICAN calibration is not fully blind; the C2C12 anomaly bank is not calibrated for HT29.",
+    scope: "The band comes from EVICAN’s own calibration, fitted across mixed setups and not fully blind. The anomaly check is calibrated on C2C12, not HT29.",
+  },
+  {
+    id: "c2c12_normal_20_40",
+    title: "Measure coverage",
+    specimen: "C2C12 · real frame · mid density",
+    note: "Switch between the raw image and its computed cutoff contour to inspect measured coverage.",
+    scope: "From a normal culture in a public dataset; that label is not a health or contamination finding.",
   },
 ];
 

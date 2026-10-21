@@ -263,7 +263,7 @@ export default function Stage({ examples, verify, liveParity, verifyError }) {
   return (
     <div className="stage guided-stage" aria-label="Explore a stored analysis">
       <div className="guided-announcement" aria-live="polite" aria-atomic="true">{scenario?.title || ex.label}. Stored recommendation: {ex.action.replaceAll("_", " ")}. Confluency {c.pct.toFixed(2)} percent.</div>
-      {selection.invalid && <p className="guided-selection-notice" role="status">That example is unavailable. Showing the coverage example instead. <button type="button" onClick={() => selectScenario(DEFAULT_SCENARIO_ID)}>Open coverage example</button></p>}
+      {selection.invalid && <p className="guided-selection-notice" role="status">That example is unavailable. Showing the review-boundary example instead. <button type="button" onClick={() => selectScenario(DEFAULT_SCENARIO_ID)}>Open the review-boundary example</button></p>}
       <div className="stage-grid">
         <div className="viewer">
           <div className="frame-box">
@@ -296,16 +296,16 @@ export default function Stage({ examples, verify, liveParity, verifyError }) {
         <div className="rail">
           <div className="rail-head">
             <h2>{scenario?.title || ex.label}</h2>
-            <p>{scenario?.specimen || ex.label} · Research demo · stored analysis</p>
+            <p>{scenario?.specimen || ex.label} · stored analysis</p>
           </div>
           <div className="guided-measure">
             <div className="guided-numbers"><strong>{c.pct.toFixed(2)}%</strong><span>confluency<br />target {ex.target.toFixed(0)}%</span></div>
-            {c.interval ? <div className="guided-band"><span>Setup-level 90% error estimate</span><strong>{c.interval[0].toFixed(2)}–{c.interval[1].toFixed(2)}%</strong><ErrorBand c={c} target={ex.target} /></div> : <p className="guided-no-band">No calibrated error band for this example. The reading alone cannot clear an action.</p>}
+            {c.interval ? <div className="guided-band"><span>Setup-level 90% error estimate</span><strong>{c.interval[0].toFixed(2)}–{c.interval[1].toFixed(2)}%</strong><ErrorBand c={c} target={ex.target} /></div> : <p className="guided-no-band">No calibrated error band for this microscope yet, so a reading at or above the target would go to a person.</p>}
           </div>
           <div className="guided-result">
             <div className="guided-action"><span>Stored recommendation</span><Action a={ex.action} /></div>
             <p className="guided-reason">{ex.action_reason}</p>
-            <p className="guided-scope">{scenario?.scope || "Additional stored research example. An anomaly flag describes a score on the centre tile; it does not diagnose contamination. This reading has not validated an automated culture action."} Setup calibration estimates measurement error; it does not validate the recommended action.</p>
+            <p className="guided-scope">{scenario?.scope || "Additional stored example. An anomaly flag describes a score on the centre tile; it does not diagnose contamination."}</p>
           </div>
           <div className="guided-record">
             <VerifyLine v={v} rec={ex.record} total={examples.chain_order.length} error={verifyError} />
